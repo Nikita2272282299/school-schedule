@@ -22,7 +22,7 @@ CACHE_TTL = 300
 
 MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/","display":"standalone","background_color":"#0a0620","theme_color":"#6366f1","icons":[{"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}'
 
-ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="0.5" stop-color="#818cf8"/><stop offset="1" stop-color="#38bdf8"/></linearGradient><linearGradient id="page" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e0e7ff"/></linearGradient><filter id="s" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#1e1b4b" flood-opacity="0.28"/></filter></defs><rect width="512" height="512" rx="118" fill="url(#bg)"/><rect width="512" height="512" rx="118" fill="#ffffff" opacity="0.08"/><g filter="url(#s)"><rect x="100" y="150" width="312" height="272" rx="44" fill="url(#page)"/></g><path d="M100 194 Q100 150 144 150 L368 150 Q412 150 412 194 L412 226 L100 226 Z" fill="#1e1b4b"/><rect x="160" y="100" width="26" height="90" rx="13" fill="#1e1b4b"/><rect x="326" y="100" width="26" height="90" rx="13" fill="#1e1b4b"/><circle cx="173" cy="108" r="6" fill="#a78bfa"/><circle cx="339" cy="108" r="6" fill="#38bdf8"/><circle cx="200" cy="188" r="11" fill="#ffffff" opacity="0.92"/><circle cx="312" cy="188" r="11" fill="#ffffff" opacity="0.92"/><text x="256" y="398" font-family="Arial,sans-serif" font-size="196" font-weight="900" fill="#1e1b4b" text-anchor="middle" letter-spacing="-8">8Г</text><path d="M400 96 L406 116 L426 122 L406 128 L400 148 L394 128 L374 122 L394 116 Z" fill="#fde047"/><path d="M118 88 L122 100 L134 104 L122 108 L118 120 L114 108 L102 104 L114 100 Z" fill="#ffffff" opacity="0.85"/></svg>'''
+ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="0.5" stop-color="#818cf8"/><stop offset="1" stop-color="#38bdf8"/></linearGradient><linearGradient id="page" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e0e7ff"/></linearGradient></defs><rect width="512" height="512" rx="118" fill="url(#bg)"/><rect x="100" y="150" width="312" height="272" rx="44" fill="url(#page)"/><path d="M100 194 Q100 150 144 150 L368 150 Q412 150 412 194 L412 226 L100 226 Z" fill="#1e1b4b"/><rect x="160" y="100" width="26" height="90" rx="13" fill="#1e1b4b"/><rect x="326" y="100" width="26" height="90" rx="13" fill="#1e1b4b"/><circle cx="173" cy="108" r="6" fill="#a78bfa"/><circle cx="339" cy="108" r="6" fill="#38bdf8"/><circle cx="200" cy="188" r="11" fill="#ffffff"/><circle cx="312" cy="188" r="11" fill="#ffffff"/><text x="256" y="398" font-family="Arial,sans-serif" font-size="196" font-weight="900" fill="#1e1b4b" text-anchor="middle" letter-spacing="-8">8Г</text></svg>'''
 
 SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>{self.registration.unregister();caches.keys().then(k=>k.forEach(x=>caches.delete(x)));self.clients.claim();});"
 
@@ -92,19 +92,12 @@ def live_status(lessons):
             elapsed = (cur - ss) * 60 + sec
             prog = int(elapsed / max(total, 1) * 100)
             left_sec = total - elapsed
-            lm = left_sec // 60; ls = left_sec % 60
             return {"type": "now", "num": num, "lesson": lesson, "progress": prog,
-                    "left_min": lm, "left_sec": ls, "until": e}
+                    "left_min": left_sec // 60, "left_sec": left_sec % 60, "until": e}
         if cur < ss:
             return {"type": "before", "num": num, "lesson": lesson,
                     "wait": ss - cur, "start": s}
     return None
-
-
-def get_week_info():
-    now = datetime.now(PERM_TZ)
-    wk = now.isocalendar()[1]
-    return wk, ("чёт" if wk % 2 == 0 else "нечёт")
 
 
 PAGE = """<!DOCTYPE html>
@@ -124,146 +117,103 @@ PAGE = """<!DOCTYPE html>
 :root, [data-theme="light"] {
     --bg: #eef2f7; --card: #ffffff; --text: #0f172a; --muted: #64748b;
     --accent: #6366f1; --accent2: #a855f7;
-    --a-soft: rgba(99,102,241,0.10); --a-soft2: rgba(168,85,247,0.10);
+    --a-soft: rgba(99,102,241,0.10);
     --border: rgba(15,23,42,0.06);
     --green: #10b981; --green-soft: rgba(16,185,129,0.12);
     --orange: #f59e0b; --orange-soft: rgba(245,158,11,0.12);
-    --badge-bg: linear-gradient(135deg, var(--a-soft), var(--a-soft2));
-    --badge-color: var(--accent);
-    --num-radius: 12px;
-    --num-shadow: none;
-    --header-glow: none;
+    --badge-bg: rgba(99,102,241,0.10);
+    --badge-color: #6366f1;
 }
 [data-theme="dark"] {
     --bg: #0b0d12; --card: #1a1f2b; --text: #e8ecf3; --muted: #8b95a8;
     --accent: #818cf8; --accent2: #c084fc;
-    --a-soft: rgba(129,140,248,0.14); --a-soft2: rgba(192,132,252,0.14);
+    --a-soft: rgba(129,140,248,0.14);
     --border: rgba(255,255,255,0.06);
     --green: #34d399; --green-soft: rgba(52,211,153,0.14);
     --orange: #fbbf24; --orange-soft: rgba(251,191,36,0.14);
-    --badge-bg: linear-gradient(135deg, var(--a-soft), var(--a-soft2));
+    --badge-bg: rgba(129,140,248,0.14);
     --badge-color: #c7d2fe;
-    --num-radius: 12px;
-    --num-shadow: none;
-    --header-glow: none;
     color-scheme: dark;
 }
 [data-theme="cosmic"] {
-    --bg: #05021a; --card: rgba(30,20,65,0.95); --text: #ece6ff; --muted: #a89cc7;
+    --bg: #0a0620; --card: #18103a; --text: #ece6ff; --muted: #a89cc7;
     --accent: #b794f6; --accent2: #7cf5c0;
-    --a-soft: rgba(183,148,246,0.18); --a-soft2: rgba(124,245,192,0.14);
-    --border: rgba(183,148,246,0.16);
-    --green: #7cf5c0; --green-soft: rgba(124,245,192,0.14);
-    --orange: #fbbf77; --orange-soft: rgba(251,191,119,0.14);
-    --badge-bg: linear-gradient(135deg, rgba(183,148,246,0.35), rgba(124,245,192,0.2));
-    --badge-color: #e0d4ff;
-    --num-radius: 12px;
-    --num-shadow: 0 0 14px rgba(183,148,246,0.4);
-    --header-glow: 0 0 20px rgba(183,148,246,0.25);
+    --a-soft: rgba(183,148,246,0.14);
+    --border: rgba(183,148,246,0.14);
+    --green: #7cf5c0; --green-soft: rgba(124,245,192,0.12);
+    --orange: #fbbf77; --orange-soft: rgba(251,191,119,0.12);
+    --badge-bg: rgba(183,148,246,0.16);
+    --badge-color: #d9c8ff;
     color-scheme: dark;
 }
 [data-theme="forest"] {
-    --bg: linear-gradient(180deg,#e8f5e0 0%,#c8e6c0 60%,#a8d8a0 100%);
-    --card: rgba(255,255,255,0.96); --text: #0f2e1b; --muted: #5f7c68;
+    --bg: #e5f2dd; --card: #ffffff; --text: #0f2e1b; --muted: #5f7c68;
     --accent: #059669; --accent2: #84cc16;
-    --a-soft: rgba(5,150,105,0.12); --a-soft2: rgba(132,204,22,0.12);
-    --border: rgba(5,150,105,0.16);
-    --green: #16a34a; --green-soft: rgba(22,163,74,0.14);
-    --orange: #ca8a04; --orange-soft: rgba(202,138,4,0.14);
-    --badge-bg: linear-gradient(135deg,#059669,#84cc16);
-    --badge-color: #ffffff;
-    --num-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
-    --num-shadow: 0 3px 10px rgba(5,150,105,0.28);
-    --header-glow: none;
+    --a-soft: rgba(5,150,105,0.10);
+    --border: rgba(5,150,105,0.12);
+    --green: #16a34a; --green-soft: rgba(22,163,74,0.12);
+    --orange: #ca8a04; --orange-soft: rgba(202,138,4,0.12);
+    --badge-bg: rgba(5,150,105,0.12);
+    --badge-color: #059669;
 }
-html {
-    min-height: 100vh;
-    background: var(--bg);
-    background-attachment: scroll;
-}
-[data-theme="cosmic"] { background: #05021a; }
-[data-theme="dark"] { background: #0b0d12; }
+
+html { min-height: 100vh; }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: var(--bg);
-    background-attachment: scroll;
-    color: var(--text);
-    margin: 0;
+    color: var(--text); margin: 0;
     padding: 16px 14px 24px;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
-    transition: background 0.3s ease, color 0.3s ease;
-    position: relative;
-    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    transition: background-color 0.3s, color 0.3s;
 }
-.container { width: 100%; max-width: 520px; margin: 0 auto; position: relative; z-index: 1; }
 
-/* ==== ДЕКОРАТИВНЫЕ ФОНЫ (статические, без анимаций) ==== */
-[data-theme="ocean"] body::before {
-    content: ""; position: fixed; left: 0; right: 0; bottom: 0;
-    height: 200px; z-index: 0; pointer-events: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 220' preserveAspectRatio='none'><path d='M0,100 Q150,30 300,100 T600,100 T900,100 T1200,100 L1200,220 L0,220 Z' fill='%230891b2' opacity='0.28'/><path d='M0,140 Q200,80 400,140 T800,140 T1200,140 L1200,220 L0,220 Z' fill='%2306b6d4' opacity='0.38'/><path d='M0,180 Q250,140 500,180 T1000,180 T1200,180 L1200,220 L0,220 Z' fill='%230891b2' opacity='0.5'/></svg>");
-    background-size: 1200px 220px; background-repeat: repeat-x; background-position: bottom;
+/* === ФОНЫ (статичные, простые градиенты без декораций) === */
+body {
+    background-color: var(--bg);
+    background-attachment: scroll;
 }
-[data-theme="sunset"] body::before {
-    content: ""; position: fixed; top: 30px; right: 20px;
-    width: 150px; height: 150px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,230,140,0.95), rgba(255,150,90,0.45) 55%, transparent 75%);
-    pointer-events: none; z-index: 0;
+[data-theme="light"] body {
+    background-image: linear-gradient(180deg, #f1f5fa 0%, #e4ebf3 100%);
 }
-[data-theme="forest"] body::before {
-    content: ""; position: fixed; left: 0; right: 0; top: 0;
-    height: 140px; z-index: 0; pointer-events: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 140' preserveAspectRatio='none'><path d='M0,0 L0,70 Q100,100 200,70 Q300,40 400,70 Q500,100 600,70 Q700,40 800,70 Q900,100 1000,70 Q1100,40 1200,70 L1200,0 Z' fill='%23059669' opacity='0.24'/></svg>");
-    background-size: 1200px 140px; background-repeat: repeat-x;
+[data-theme="dark"] body {
+    background-image: linear-gradient(180deg, #10131a 0%, #0b0d12 100%);
 }
-[data-theme="sakura"] body::before {
-    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    background: radial-gradient(circle at 80% 15%, rgba(236,72,153,0.14), transparent 45%),
-                radial-gradient(circle at 15% 75%, rgba(168,85,247,0.10), transparent 45%);
-}
-[data-theme="cosmic"] body::before {
-    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+[data-theme="cosmic"] body {
     background-image:
-        radial-gradient(1.5px 1.5px at 24px 32px, rgba(255,255,255,0.9), transparent 60%),
-        radial-gradient(1px 1px at 118px 88px, rgba(255,255,255,0.7), transparent 60%),
-        radial-gradient(1.8px 1.8px at 210px 156px, rgba(183,148,246,0.95), transparent 60%),
-        radial-gradient(1px 1px at 60px 200px, rgba(255,255,255,0.6), transparent 60%),
-        radial-gradient(1.5px 1.5px at 260px 40px, rgba(124,245,192,0.9), transparent 60%),
-        radial-gradient(1px 1px at 180px 240px, rgba(255,255,255,0.8), transparent 60%),
-        radial-gradient(1.2px 1.2px at 320px 180px, rgba(255,255,255,0.7), transparent 60%),
-        radial-gradient(1.5px 1.5px at 90px 130px, rgba(183,148,246,0.8), transparent 60%);
-    background-size: 380px 300px; background-repeat: repeat;
+        radial-gradient(1.5px 1.5px at 15% 12%, #ffffff, transparent 55%),
+        radial-gradient(1px 1px at 32% 22%, #b794f6, transparent 55%),
+        radial-gradient(1.5px 1.5px at 48% 8%, #ffffff, transparent 55%),
+        radial-gradient(1.2px 1.2px at 65% 18%, #7cf5c0, transparent 55%),
+        radial-gradient(1px 1px at 82% 15%, #ffffff, transparent 55%),
+        radial-gradient(1.5px 1.5px at 12% 38%, #b794f6, transparent 55%),
+        radial-gradient(1px 1px at 42% 45%, #ffffff, transparent 55%),
+        radial-gradient(1.3px 1.3px at 72% 42%, #ffffff, transparent 55%),
+        radial-gradient(1px 1px at 25% 62%, #7cf5c0, transparent 55%),
+        radial-gradient(1.5px 1.5px at 55% 68%, #ffffff, transparent 55%),
+        radial-gradient(1.2px 1.2px at 88% 62%, #b794f6, transparent 55%),
+        radial-gradient(1px 1px at 18% 85%, #ffffff, transparent 55%),
+        radial-gradient(1.5px 1.5px at 62% 88%, #ffffff, transparent 55%),
+        radial-gradient(1px 1px at 85% 92%, #7cf5c0, transparent 55%),
+        linear-gradient(180deg, #0a0424 0%, #05021a 55%, #01000a 100%);
+}
+[data-theme="forest"] body {
+    background-image:
+        radial-gradient(ellipse 80% 30% at 50% 0%, rgba(255,255,255,0.4), transparent 60%),
+        linear-gradient(180deg, #dff0d0 0%, #b8dfa8 35%, #8ec57f 70%, #6ba85c 100%);
 }
 
-/* ==== ЧАСТИЦЫ (только на мобильных и десктопе, но мало) ==== */
-#particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-.particle {
-    position: absolute; top: -40px; user-select: none;
-    will-change: transform;
-    animation-name: fall;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-}
-@keyframes fall {
-    0% { transform: translate3d(0, -40px, 0) rotate(0deg); opacity: 0; }
-    10% { opacity: 0.85; }
-    90% { opacity: 0.85; }
-    100% { transform: translate3d(30px, 110vh, 0) rotate(360deg); opacity: 0; }
-}
+.container { width: 100%; max-width: 520px; margin: 0 auto; }
 
-/* ==== HEADER ==== */
+/* HEADER */
 .header {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 22px;
-    padding: 14px 18px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.05), var(--header-glow);
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 14px 18px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
     margin-bottom: 12px;
     display: flex; align-items: center; justify-content: space-between;
     gap: 10px;
-    position: relative;
 }
 .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .brand-logo {
@@ -271,76 +221,39 @@ body {
     background: linear-gradient(135deg, var(--accent), var(--accent2));
     display: flex; align-items: center; justify-content: center;
     font-size: 1.5rem;
-    box-shadow: 0 4px 14px var(--a-soft);
 }
-.brand-text { min-width: 0; }
 .brand-title { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
-.brand-sub { font-size: 0.72rem; color: var(--muted); font-weight: 700; margin-top: 2px; }
-.brand-week {
-    display: inline-block; margin-left: 6px;
-    background: var(--a-soft); color: var(--accent);
-    padding: 1px 7px; border-radius: 6px;
-    font-size: 0.65rem; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 0.04em;
-}
-.header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.brand-sub { font-size: 0.75rem; color: var(--muted); font-weight: 600; margin-top: 2px; }
+.header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .badge-class {
     background: var(--badge-bg); color: var(--badge-color);
     padding: 8px 14px; border-radius: 12px;
-    font-weight: 800; font-size: 0.95rem; letter-spacing: 0.02em;
+    font-weight: 800; font-size: 0.95rem;
     border: 1px solid var(--border);
-}
-[data-theme="ocean"] .badge-class {
-    border: 2px solid rgba(255,255,255,0.9);
-    box-shadow: 0 3px 12px rgba(8,145,178,0.32), inset -2px -3px 6px rgba(8,145,178,0.25), inset 2px 2px 8px rgba(255,255,255,0.7);
-    width: 42px; height: 42px; padding: 0;
-    display: flex; align-items: center; justify-content: center;
-    position: relative;
-}
-[data-theme="ocean"] .badge-class::before {
-    content: ""; position: absolute; top: 7px; left: 9px;
-    width: 14px; height: 7px; border-radius: 50%;
-    background: rgba(255,255,255,0.85);
 }
 .icon-btn {
     background: var(--card); color: var(--muted);
     border: 1px solid var(--border);
-    width: 42px; height: 42px;
-    border-radius: 13px; font-size: 1.1rem;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    width: 42px; height: 42px; border-radius: 13px;
+    font-size: 1.1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
     font-family: inherit;
     transition: background 0.15s, color 0.15s;
 }
 .icon-btn:active { background: var(--a-soft); color: var(--accent); }
-.icon-btn.spinning { animation: rotate 0.6s linear; }
-@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-[data-theme="ocean"] .icon-btn {
-    border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.9);
-    background: var(--badge-bg); color: #fff;
-    box-shadow: 0 3px 12px rgba(8,145,178,0.32), inset -2px -3px 6px rgba(8,145,178,0.25), inset 2px 2px 8px rgba(255,255,255,0.7);
-    position: relative;
-}
-[data-theme="ocean"] .icon-btn::before {
-    content: ""; position: absolute; top: 6px; left: 8px;
-    width: 12px; height: 6px; border-radius: 50%;
-    background: rgba(255,255,255,0.85);
-}
 
-/* ==== SETTINGS ==== */
+/* SETTINGS */
 .settings {
     display: grid; grid-template-rows: 0fr;
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 20px;
-    margin-bottom: 0;
+    border-radius: 20px; margin-bottom: 0;
     transition: grid-template-rows 0.3s cubic-bezier(0.4,0,0.2,1),
                 margin-bottom 0.3s cubic-bezier(0.4,0,0.2,1);
 }
 .settings.open { grid-template-rows: 1fr; margin-bottom: 12px; }
 .settings-inner {
-    overflow: hidden; min-height: 0;
-    padding: 0 16px;
+    overflow: hidden; min-height: 0; padding: 0 16px;
     transition: padding 0.3s cubic-bezier(0.4,0,0.2,1);
 }
 .settings.open .settings-inner { padding: 16px; }
@@ -352,7 +265,8 @@ body {
 .settings-title:not(:first-child) { margin-top: 16px; }
 .theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .theme-btn {
-    padding: 10px 2px; border-radius: 12px; border: 2px solid transparent;
+    padding: 10px 2px; border-radius: 12px;
+    border: 2px solid transparent;
     background: var(--bg); color: var(--text);
     font-weight: 700; font-size: 0.62rem;
     cursor: pointer; display: flex; flex-direction: column;
@@ -364,7 +278,8 @@ body {
 .theme-btn.active { border-color: var(--accent); background: var(--a-soft); }
 .size-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .size-btn {
-    padding: 11px; border-radius: 12px; border: 2px solid var(--border);
+    padding: 11px; border-radius: 12px;
+    border: 2px solid var(--border);
     background: var(--bg); color: var(--text);
     font-weight: 800; cursor: pointer; font-family: inherit;
     transition: background 0.15s, border-color 0.15s;
@@ -389,77 +304,63 @@ body {
     content: ""; position: absolute; top: 2px; left: 2px;
     width: 22px; height: 22px; background: #fff; border-radius: 50%;
     transition: transform 0.2s;
-    transform: translate3d(0,0,0);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
-.toggle.on { background: linear-gradient(135deg, var(--accent), var(--accent2)); }
-.toggle.on::after { transform: translate3d(20px, 0, 0); }
+.toggle.on { background: var(--accent); }
+.toggle.on::after { transform: translateX(20px); }
 .install-btn {
     display: flex; align-items: center; gap: 12px;
-    width: 100%; padding: 13px 16px; border-radius: 14px; border: none;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: #fff; font-weight: 800; cursor: pointer;
+    width: 100%; padding: 13px 16px; border-radius: 14px;
+    border: none;
+    background: var(--accent); color: #fff;
+    font-weight: 800; cursor: pointer;
     font-family: inherit; text-align: left;
-    box-shadow: 0 4px 16px var(--a-soft);
 }
 .install-btn .ib-emoji { font-size: 1.5rem; }
 .install-btn .ib-text { display: block; font-size: 0.95rem; font-weight: 800; }
 .install-btn .ib-sub { display: block; font-size: 0.7rem; font-weight: 600; opacity: 0.8; margin-top: 2px; }
 .install-tip {
     max-height: 0; overflow: hidden; opacity: 0;
-    background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
-    padding: 0 14px; font-size: 0.83rem; line-height: 1.5;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 0 14px;
+    font-size: 0.83rem; line-height: 1.5;
     color: var(--muted); font-weight: 600;
     transition: max-height 0.3s, opacity 0.2s, padding 0.3s, margin-top 0.3s;
 }
 .install-tip.show { max-height: 200px; opacity: 1; padding: 12px 14px; margin-top: 8px; }
 .installed-badge { color: var(--green); font-weight: 700; font-size: 0.9rem; padding: 8px 0; }
 
-/* ==== LIVE BANNER ==== */
+/* LIVE */
 .live-banner {
     border-radius: 18px; padding: 14px 16px; margin-bottom: 12px;
     display: flex; align-items: center; gap: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
     border: 1px solid var(--border);
-    animation: fadeIn 0.3s ease;
+    background: var(--card);
 }
-@keyframes fadeIn { from { opacity: 0; transform: translate3d(0,-6px,0); } to { opacity: 1; transform: none; } }
-.live-banner.now { background: linear-gradient(135deg, var(--green-soft), var(--a-soft)); }
-.live-banner.before { background: linear-gradient(135deg, var(--orange-soft), var(--a-soft)); }
-.live-dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: var(--green); flex-shrink: 0;
-    animation: pulse 1.8s infinite;
-}
+.live-banner.now { border-left: 4px solid var(--green); }
+.live-banner.before { border-left: 4px solid var(--orange); }
+.live-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
 .live-banner.before .live-dot { background: var(--orange); }
-@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
 .live-info { flex: 1; min-width: 0; }
 .live-label {
     font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
     letter-spacing: 0.08em; color: var(--green); margin-bottom: 2px;
 }
 .live-banner.before .live-label { color: var(--orange); }
-.live-lesson {
-    font-size: 1.02rem; font-weight: 800;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
+.live-lesson { font-size: 1.02rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .live-time { font-size: 0.76rem; color: var(--muted); font-weight: 700; margin-top: 2px; }
-.live-timer {
-    font-weight: 800; color: var(--green);
-    font-variant-numeric: tabular-nums;
-}
+.live-timer { font-weight: 800; color: var(--green); }
 .live-banner.before .live-timer { color: var(--orange); }
 .progress-bar { height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; margin-top: 7px; }
-.progress-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--accent2)); border-radius: 2px; }
+.progress-fill { height: 100%; background: var(--accent); }
 
-/* ==== TABS ==== */
+/* TABS */
 .tabs {
     display: flex; gap: 5px; margin-bottom: 12px;
     overflow-x: auto; padding: 4px;
     scrollbar-width: none; -ms-overflow-style: none;
     background: var(--card); border-radius: 16px;
     border: 1px solid var(--border);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
 }
 .tabs::-webkit-scrollbar { display: none; }
 .tab {
@@ -474,11 +375,7 @@ body {
     transition: background 0.15s, color 0.15s;
 }
 .tab .tab-day { font-size: 0.62rem; font-weight: 700; opacity: 0.7; }
-.tab.active {
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: white;
-    box-shadow: 0 3px 12px var(--a-soft);
-}
+.tab.active { background: var(--accent); color: white; }
 .tab.active .tab-day { opacity: 0.9; }
 .tab.today:not(.active)::after {
     content: ""; position: absolute; bottom: 3px; left: 50%;
@@ -487,13 +384,9 @@ body {
     background: var(--accent);
 }
 
-/* ==== CARDS ==== */
+/* CARDS */
 .day-block { display: none; }
-.day-block.active { display: block; animation: fadeUp 0.25s ease; }
-@keyframes fadeUp {
-    from { opacity: 0; transform: translate3d(0, 6px, 0); }
-    to { opacity: 1; transform: none; }
-}
+.day-block.active { display: block; }
 .day-title {
     font-size: 1.08rem; font-weight: 800;
     margin: 4px 4px 10px;
@@ -501,8 +394,7 @@ body {
 }
 .today-pill {
     font-size: 0.64rem;
-    background: linear-gradient(135deg, var(--a-soft), var(--a-soft2));
-    color: var(--accent);
+    background: var(--a-soft); color: var(--accent);
     padding: 4px 10px; border-radius: 20px;
     font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
     border: 1px solid var(--border);
@@ -511,40 +403,22 @@ body {
     background: var(--card);
     padding: 13px 15px; margin-bottom: 8px;
     border-radius: 16px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     display: flex; align-items: center; gap: 12px;
     border: 1px solid var(--border);
-    position: relative; overflow: hidden;
 }
-[data-theme="ocean"] .card::after {
-    content: ""; position: absolute; top: 5px; left: 12px;
-    width: 26px; height: 9px; border-radius: 50%;
-    background: rgba(255,255,255,0.7); pointer-events: none;
-}
-.card.now {
-    background: linear-gradient(135deg, var(--green-soft), var(--card));
-    box-shadow: 0 3px 14px var(--green-soft), 0 0 0 1.5px var(--green);
-}
-.card.now::before {
-    content: ""; position: absolute; left: 0; top: 0; bottom: 0;
-    width: 3px;
-    background: linear-gradient(180deg, var(--green), var(--accent2));
-}
-.card.next-up { box-shadow: 0 2px 12px var(--orange-soft), 0 0 0 1.5px var(--orange); }
+.card.now { background: var(--green-soft); border-color: var(--green); }
+.card.next-up { background: var(--orange-soft); border-color: var(--orange); }
 .num {
     min-width: 40px; height: 40px;
-    border-radius: var(--num-radius);
+    border-radius: 12px;
     background: var(--badge-bg); color: var(--badge-color);
     display: flex; align-items: center; justify-content: center;
     font-weight: 800; font-size: 1rem;
     flex-shrink: 0;
     border: 1px solid var(--border);
-    box-shadow: var(--num-shadow);
 }
-.card.now .num {
-    background: linear-gradient(135deg, var(--green), var(--accent2));
-    color: white; border-color: transparent;
-}
+.card.now .num { background: var(--green); color: white; border-color: transparent; }
 .left-side { display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0; }
 .time { font-size: 0.75rem; color: var(--muted); font-weight: 700; }
 .lesson { font-size: 0.98rem; font-weight: 800; word-wrap: break-word; }
@@ -555,10 +429,10 @@ body {
     margin-left: auto; flex-shrink: 0;
 }
 
-/* ==== INFO ==== */
+/* INFO */
 .info-box {
     background: var(--card); padding: 28px 20px; border-radius: 18px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     text-align: center; font-size: 1rem; font-weight: 700;
     color: var(--muted); border: 1px solid var(--border);
     line-height: 1.5;
@@ -570,7 +444,7 @@ body {
     text-align: center; border: 1px solid var(--border);
 }
 
-/* ==== SIZE MODES ==== */
+/* SIZE */
 html.font-small .lesson { font-size: 0.88rem; }
 html.font-small .live-lesson { font-size: 0.92rem; }
 html.font-large .lesson { font-size: 1.14rem; }
@@ -580,7 +454,7 @@ html.compact .card { padding: 9px 13px; margin-bottom: 6px; }
 html.compact .num { min-width: 34px; height: 34px; font-size: 0.9rem; }
 html.hide-time .time { display: none; }
 
-/* ==== FOOTER ==== */
+/* FOOTER */
 .sheet-link {
     display: flex; align-items: center; justify-content: center;
     gap: 6px; margin-top: 16px; padding: 12px;
@@ -588,77 +462,6 @@ html.hide-time .time { display: none; }
     font-size: 0.82rem; font-weight: 700;
     border-radius: 14px;
     border: 1px dashed var(--border);
-    background: var(--card);
-    transition: color 0.15s, border-color 0.15s;
-}
-.sheet-link:active { color: var(--accent); border-color: var(--accent); border-style: solid; }
-
-/* === ТЕМЫ: 4 штуки, статично, без fixed === */
-
-/* СВЕТЛАЯ */
-[data-theme="light"] body {
-    background:
-        radial-gradient(ellipse at 50% 0%, rgba(200,215,255,0.6), transparent 55%),
-        linear-gradient(180deg, #f1f5fa 0%, #e4ebf3 100%);
-}
-
-/* ТЁМНАЯ */
-[data-theme="dark"] body {
-    background:
-        radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.10), transparent 55%),
-        linear-gradient(180deg, #10131a 0%, #0b0d12 100%);
-}
-
-/* КОСМОС — звёзды через multiple radial-gradient прямо в background */
-[data-theme="cosmic"] body {
-    background-color: #05021a;
-    background-image:
-        radial-gradient(2px 2px at 12% 8%, #ffffff, transparent 55%),
-        radial-gradient(1.5px 1.5px at 28% 18%, #b794f6, transparent 55%),
-        radial-gradient(1px 1px at 45% 6%, #ffffff, transparent 55%),
-        radial-gradient(2px 2px at 62% 22%, #7cf5c0, transparent 55%),
-        radial-gradient(1.2px 1.2px at 78% 12%, #ffffff, transparent 55%),
-        radial-gradient(1.5px 1.5px at 90% 28%, #b794f6, transparent 55%),
-        radial-gradient(1px 1px at 8% 35%, #ffffff, transparent 55%),
-        radial-gradient(1.8px 1.8px at 38% 42%, #ffffff, transparent 55%),
-        radial-gradient(1.2px 1.2px at 68% 48%, #7cf5c0, transparent 55%),
-        radial-gradient(1.5px 1.5px at 18% 55%, #b794f6, transparent 55%),
-        radial-gradient(1px 1px at 52% 62%, #ffffff, transparent 55%),
-        radial-gradient(2px 2px at 82% 58%, #ffffff, transparent 55%),
-        radial-gradient(1.3px 1.3px at 25% 72%, #7cf5c0, transparent 55%),
-        radial-gradient(1.5px 1.5px at 55% 78%, #ffffff, transparent 55%),
-        radial-gradient(1px 1px at 88% 82%, #b794f6, transparent 55%),
-        radial-gradient(1.8px 1.8px at 15% 92%, #ffffff, transparent 55%),
-        radial-gradient(1.2px 1.2px at 72% 95%, #7cf5c0, transparent 55%),
-        radial-gradient(ellipse 60% 40% at 25% 12%, rgba(139,92,246,0.28), transparent 65%),
-        radial-gradient(ellipse 50% 35% at 80% 78%, rgba(56,189,248,0.20), transparent 65%),
-        radial-gradient(ellipse 70% 50% at 55% 50%, rgba(124,245,192,0.08), transparent 70%),
-        linear-gradient(180deg, #0a0424 0%, #05021a 55%, #01000a 100%);
-    background-attachment: scroll;
-}
-
-/* ЛЕС — градиент + деревья через SVG прямо в background (без псевдоэлементов) */
-[data-theme="forest"] body {
-    background-color: #8ec57f;
-    background-image:
-        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><g fill='%232d5a1f' opacity='0.85'><path d='M50,400 L50,240 L30,240 L70,160 L110,240 L90,240 L90,400 Z'/><path d='M50,240 L10,240 L70,120 L130,240 L90,240 Z'/><path d='M70,160 L40,160 L70,90 L100,160 Z'/></g><g fill='%232d5a1f' opacity='0.85'><path d='M350,400 L350,220 L325,220 L370,130 L415,220 L390,220 L390,400 Z'/><path d='M350,220 L305,220 L370,100 L435,220 L390,220 Z'/><path d='M370,130 L340,130 L370,60 L400,130 Z'/></g></svg>"),
-        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'><path d='M0,0 L0,70 Q75,100 150,70 Q225,40 300,70 Q375,100 450,70 Q525,40 600,70 Q675,100 750,70 Q825,40 900,70 Q975,100 1050,70 Q1125,40 1200,70 L1200,0 Z' fill='%232d5a1f' opacity='0.55'/><path d='M0,0 L0,45 Q100,75 200,45 Q300,15 400,45 Q500,75 600,45 Q700,15 800,45 Q900,75 1000,45 Q1100,15 1200,45 L1200,0 Z' fill='%233d6b30' opacity='0.7'/></svg>"),
-        radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,255,255,0.35), transparent 60%),
-        linear-gradient(180deg, #dff0d0 0%, #b8dfa8 35%, #8ec57f 70%, #6ba85c 100%);
-    background-attachment: scroll;
-    background-size: auto 100%, 100% 140px, 100% 100%, 100% 100%;
-    background-position: 0 100%, 0 0, 0 0, 0 0;
-    background-repeat: no-repeat, repeat-x, no-repeat, no-repeat;
-}
-
-/* Карточки в тёмных темах — чуть плотнее */
-[data-theme="cosmic"] .card {
-    background: rgba(30,22,65,0.75);
-    border-color: rgba(183,148,246,0.18);
-}
-[data-theme="dark"] .card,
-[data-theme="light"] .card,
-[data-theme="forest"] .card {
     background: var(--card);
 }
 </style>
@@ -676,8 +479,7 @@ html.hide-time .time { display: none; }
     </div>
     <div class="header-right">
         <div class="badge-class">8Г</div>
-        
-        <button class="icon-btn" onclick="toggleSettings()" title="Настройки">⚙️</button>
+        <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
     </div>
 </div>
 
@@ -688,10 +490,7 @@ html.hide-time .time { display: none; }
             <button class="theme-btn" data-theme-btn="light" onclick="setTheme('light')"><span class="emoji">☀️</span>Светлая</button>
             <button class="theme-btn" data-theme-btn="dark" onclick="setTheme('dark')"><span class="emoji">🌙</span>Тёмная</button>
             <button class="theme-btn" data-theme-btn="cosmic" onclick="setTheme('cosmic')"><span class="emoji">🌌</span>Космос</button>
-            <button class="theme-btn" data-theme-btn="ocean" onclick="setTheme('ocean')"><span class="emoji">🌊</span>Океан</button>
-            <button class="theme-btn" data-theme-btn="sunset" onclick="setTheme('sunset')"><span class="emoji">🌅</span>Закат</button>
             <button class="theme-btn" data-theme-btn="forest" onclick="setTheme('forest')"><span class="emoji">🌿</span>Лес</button>
-            <button class="theme-btn" data-theme-btn="sakura" onclick="setTheme('sakura')"><span class="emoji">🌸</span>Сакура</button>
         </div>
 
         <div class="settings-title">🔤 Размер текста</div>
@@ -727,12 +526,14 @@ html.hide-time .time { display: none; }
 </div>
 
 <script>
-var THEME_COLORS = {light:'#eef2f7', dark:'#0b0d12', cosmic:'#05021a'};
+var THEME_COLORS = {light:'#eef2f7', dark:'#0b0d12', cosmic:'#0a0620', forest:'#e5f2dd'};
 
 (function init() {
     var saved = localStorage.getItem('rs_theme') || 'light';
-    var allowed = ['light','dark','cosmic','forest'];
-    if (allowed.indexOf(saved) === -1) { saved = 'light'; localStorage.setItem('rs_theme', 'light'); }
+    if (['light','dark','cosmic','forest'].indexOf(saved) === -1) {
+        saved = 'light';
+        localStorage.setItem('rs_theme', 'light');
+    }
     document.documentElement.setAttribute('data-theme', saved);
     var meta = document.getElementById('tcMeta');
     if (meta) meta.setAttribute('content', THEME_COLORS[saved] || '#eef2f7');
@@ -790,10 +591,6 @@ function showDay(day) {
         x.classList.toggle('active', x.getAttribute('data-day') === day);
     });
 }
-document.addEventListener('visibilitychange', function() {
-    var ps = document.hidden ? 'paused' : 'running';
-    document.querySelectorAll('.particle').forEach(function(p) { p.style.animationPlayState = ps; });
-});
 
 var deferredPrompt = null;
 var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -819,21 +616,18 @@ function doInstall() {
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then(function(c) {
             if (c.outcome === 'accepted') localStorage.setItem('rs_installed', '1');
-            deferredPrompt = null;
-            renderInstall();
+            deferredPrompt = null; renderInstall();
         });
         return;
     }
     var tip = document.getElementById('installTip');
     if (!tip) return;
     if (tip.classList.contains('show')) { tip.classList.remove('show'); return; }
-    var ua = navigator.userAgent;
-    var text;
-    if (/iPhone|iPad|iPod/i.test(ua)) text = '📱 Открой меню «Поделиться» (квадрат со стрелкой внизу) → «На экран Домой»';
-    else if (/Android/i.test(ua)) text = '📱 Меню <b>⋮</b> в правом верхнем углу → «Установить приложение»';
+    var ua = navigator.userAgent, text;
+    if (/iPhone|iPad|iPod/i.test(ua)) text = '📱 Открой меню «Поделиться» → «На экран Домой»';
+    else if (/Android/i.test(ua)) text = '📱 Меню <b>⋮</b> → «Установить приложение»';
     else text = '💻 В Chrome — иконка ⊕ справа в адресной строке';
-    tip.innerHTML = text;
-    tip.classList.add('show');
+    tip.innerHTML = text; tip.classList.add('show');
 }
 renderInstall();
 if ('serviceWorker' in navigator) {
@@ -862,11 +656,10 @@ def build_tabs(active, days):
 def build_live(st):
     if not st: return ""
     if st["type"] == "now":
-        lm = st["left_min"]; ls = st["left_sec"]
         return ('<div class="live-banner now"><div class="live-dot"></div>'
             '<div class="live-info"><div class="live-label">Сейчас идёт</div>'
             f'<div class="live-lesson">{st["lesson"]}</div>'
-            f'<div class="live-time">Осталось <span class="live-timer">{lm}:{ls:02d}</span> · до {st["until"]}</div>'
+            f'<div class="live-time">Осталось <span class="live-timer">{st["left_min"]}:{st["left_sec"]:02d}</span> · до {st["until"]}</div>'
             f'<div class="progress-bar"><div class="progress-fill" style="width:{st["progress"]}%"></div></div>'
             '</div></div>')
     if st["type"] == "before":
@@ -935,8 +728,6 @@ class Handler(BaseHTTPRequestHandler):
             refresh = "<meta http-equiv='refresh' content='900'>" if not (1 <= hour < 5) else ""
 
             days, err = get_schedule()
-            wk_num, wk_label = get_week_info()
-
             months = ["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"]
             header_date = f"{cur_day}, {now.day} {months[now.month-1]}"
 
@@ -962,7 +753,6 @@ class Handler(BaseHTTPRequestHandler):
             html = PAGE
             html = html.replace("{refresh_tag}", refresh)
             html = html.replace("{header_date}", header_date)
-            html = html.replace("{week_label}", "")
             html = html.replace("{live_banner}", live_html)
             html = html.replace("{tabs}", tabs_html)
             html = html.replace("{content}", content)
