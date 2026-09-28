@@ -11,6 +11,7 @@ CLASS_CODE = "8г"
 
 TIME_TO_NUM = {"8:00-8:40":1,"8:50-9:30":2,"9:45-10:25":3,"10:40-11:20":4,
     "11:35-12:15":5,"12:25-13:05":6,"13:15-13:55":7,"14:00-14:40":8}
+DAY_SHORT = {"Понедельник":"Пн","Вторник":"Вт","Среда":"Ср","Четверг":"Чт","Пятница":"Пт","Суббота":"Сб"}
 DAY_FULL = ["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"]
 
 cache = {"days_schedule": {}, "error_msg": "", "last_update": 0}
@@ -20,7 +21,7 @@ MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/
 
 ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="0.5" stop-color="#8b5cf6"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs><rect width="512" height="512" rx="118" fill="url(#bg)"/><rect x="98" y="128" width="316" height="288" rx="36" fill="#ffffff"/><rect x="98" y="128" width="316" height="76" rx="36" fill="#1e1b4b"/><rect x="98" y="176" width="316" height="28" fill="#1e1b4b"/><circle cx="168" cy="166" r="12" fill="#ffffff"/><circle cx="344" cy="166" r="12" fill="#ffffff"/><rect x="152" y="86" width="22" height="72" rx="11" fill="#1e1b4b"/><rect x="338" y="86" width="22" height="72" rx="11" fill="#1e1b4b"/><text x="256" y="358" font-family="Arial,Helvetica,sans-serif" font-size="180" font-weight="900" fill="#1e1b4b" text-anchor="middle" letter-spacing="-8">8Г</text></svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>{self.registration.unregister();caches.keys().then(k=>k.forEach(x=>caches.delete(x)));self.clients.claim();});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>self.clients.claim());self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});"
 
 
 def get_schedule():
@@ -103,12 +104,18 @@ def get_live_status(today_lessons):
     return None
 
 
+def get_week_info():
+    now = datetime.now(PERM_TZ)
+    wk = now.isocalendar()[1]
+    return wk, ("чёт" if wk % 2 == 0 else "нечёт")
+
+
 PAGE_TEMPLATE = """<!DOCTYPE html>
 <html lang="ru" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#eef2f7" id="tcMeta">
+<meta name="theme-color" content="#eef2f7" id="themeColorMeta">
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/icon.svg">
@@ -121,53 +128,137 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --bg:#eef2f7; --bg2:#e0e7f0; --card:#ffffff;
     --text:#0f172a; --muted:#64748b; --accent:#6366f1; --accent2:#a855f7;
     --accent-soft:rgba(99,102,241,0.10); --accent-soft2:rgba(168,85,247,0.10);
-    --border:rgba(15,23,42,0.06); --shadow:0 2px 12px rgba(15,23,42,0.06);
+    --border:rgba(15,23,42,0.06); --shadow:0 4px 20px rgba(15,23,42,0.06);
     --green:#10b981; --green-soft:rgba(16,185,129,0.12);
     --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.12);
+    --danger:#ef4444;
 }
 [data-theme="dark"] {
     --bg:#0b0d12; --bg2:#131720; --card:#1a1f2b;
     --text:#e8ecf3; --muted:#8b95a8; --accent:#818cf8; --accent2:#c084fc;
     --accent-soft:rgba(129,140,248,0.14); --accent-soft2:rgba(192,132,252,0.14);
-    --border:rgba(255,255,255,0.06); --shadow:0 2px 12px rgba(0,0,0,0.4);
+    --border:rgba(255,255,255,0.06); --shadow:0 4px 20px rgba(0,0,0,0.4);
     --green:#34d399; --green-soft:rgba(52,211,153,0.14);
     --orange:#fbbf24; --orange-soft:rgba(251,191,36,0.14);
-    color-scheme:dark;
+    --danger:#f87171; color-scheme:dark;
 }
 [data-theme="cosmic"] {
-    --bg:#05021a; --bg2:#0f0730; --card:#18103a;
+    --bg:#05021a; --bg2:#0f0730; --card:rgba(30,20,65,0.72);
     --text:#ece6ff; --muted:#a89cc7; --accent:#b794f6; --accent2:#7cf5c0;
     --accent-soft:rgba(183,148,246,0.16); --accent-soft2:rgba(124,245,192,0.12);
-    --border:rgba(183,148,246,0.14); --shadow:0 4px 20px rgba(120,60,220,0.25);
+    --border:rgba(183,148,246,0.14); --shadow:0 8px 32px rgba(120,60,220,0.25);
     --green:#7cf5c0; --green-soft:rgba(124,245,192,0.14);
     --orange:#fbbf77; --orange-soft:rgba(251,191,119,0.14);
-    color-scheme:dark;
+    --danger:#ff8ab5; color-scheme:dark;
+}
+[data-theme="ocean"] {
+    --bg:#e6f4fb; --bg2:#cfe8f6; --card:#ffffff;
+    --text:#062b3d; --muted:#5a7d92; --accent:#0891b2; --accent2:#22d3ee;
+    --accent-soft:rgba(8,145,178,0.10); --accent-soft2:rgba(34,211,238,0.10);
+    --border:rgba(6,43,61,0.06); --shadow:0 4px 20px rgba(8,145,178,0.10);
+    --green:#10b981; --green-soft:rgba(16,185,129,0.12);
+    --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.12);
+    --danger:#ef4444;
+}
+[data-theme="sunset"] {
+    --bg:#fff1e6; --bg2:#ffe1cc; --card:#ffffff;
+    --text:#3d1a0a; --muted:#8a6550; --accent:#f97316; --accent2:#ec4899;
+    --accent-soft:rgba(249,115,22,0.10); --accent-soft2:rgba(236,72,153,0.10);
+    --border:rgba(61,26,10,0.06); --shadow:0 4px 20px rgba(249,115,22,0.12);
+    --green:#059669; --green-soft:rgba(5,150,105,0.12);
+    --orange:#d97706; --orange-soft:rgba(217,119,6,0.12);
+    --danger:#dc2626;
+}
+[data-theme="forest"] {
+    --bg:#eef7ee; --bg2:#d9ecd9; --card:#ffffff;
+    --text:#0f2e1b; --muted:#5f7c68; --accent:#059669; --accent2:#84cc16;
+    --accent-soft:rgba(5,150,105,0.10); --accent-soft2:rgba(132,204,22,0.10);
+    --border:rgba(15,46,27,0.06); --shadow:0 4px 20px rgba(5,150,105,0.10);
+    --green:#16a34a; --green-soft:rgba(22,163,74,0.12);
+    --orange:#ca8a04; --orange-soft:rgba(202,138,4,0.12);
+    --danger:#dc2626;
+}
+[data-theme="sakura"] {
+    --bg:#fff5f8; --bg2:#ffe1ec; --card:#ffffff;
+    --text:#3d1029; --muted:#9a6782; --accent:#ec4899; --accent2:#a855f7;
+    --accent-soft:rgba(236,72,153,0.10); --accent-soft2:rgba(168,85,247,0.10);
+    --border:rgba(61,16,41,0.06); --shadow:0 4px 20px rgba(236,72,153,0.10);
+    --green:#059669; --green-soft:rgba(5,150,105,0.12);
+    --orange:#ea580c; --orange-soft:rgba(234,88,12,0.12);
+    --danger:#dc2626;
 }
 html { min-height:100%; background:var(--bg); }
 * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 body {
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--bg); color:var(--text); margin:0;
-    padding:20px 14px 30px; min-height:100vh; -webkit-font-smoothing:antialiased;
-    transition:background 0.3s ease, color 0.3s ease;
+    padding:20px 14px 40px;
+    min-height:100vh; -webkit-font-smoothing:antialiased;
+    transition:background 0.5s ease, color 0.3s ease;
+    position:relative; overflow-x:hidden;
 }
-[data-theme="light"] body { background-image:linear-gradient(180deg,#f1f5fa 0%,#e4ebf3 100%); }
-[data-theme="dark"] body { background-image:linear-gradient(180deg,#10131a 0%,#0b0d12 100%); }
-[data-theme="cosmic"] body {
+[data-theme="ocean"] body { background:linear-gradient(180deg,#c7e8f5 0%,#94d0e6 45%,#5aafd0 100%); background-attachment:scroll; }
+[data-theme="sunset"] body { background:linear-gradient(180deg,#ffe0a8 0%,#ffb572 35%,#ff8a6c 65%,#d9708a 100%); background-attachment:scroll; }
+[data-theme="forest"] body { background:linear-gradient(180deg,#dff0d0 0%,#b8dfa8 40%,#90ca80 70%,#7abb6c 100%); background-attachment:scroll; }
+[data-theme="sakura"] body { background:linear-gradient(180deg,#ffeaf0 0%,#ffd0dd 50%,#ffb0c8 100%); background-attachment:scroll; }
+[data-theme="cosmic"] body { background:linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%); background-attachment:scroll; }
+[data-theme="dark"] body { background:linear-gradient(180deg,#10131a 0%,#0b0d12 100%); background-attachment:scroll; }
+[data-theme="light"] body { background:linear-gradient(180deg,#f1f5fa 0%,#e4ebf3 100%); background-attachment:scroll; }
+
+/* Декор: волны океана */
+[data-theme="ocean"] body::after {
+    content:""; position:fixed; left:0; bottom:0; width:200%; height:140px;
+    z-index:0; pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 140' preserveAspectRatio='none'><path d='M0,70 Q75,40 150,70 T300,70 T450,70 T600,70 L600,140 L0,140 Z' fill='%230891b2' opacity='0.35'/><path d='M0,100 Q75,70 150,100 T300,100 T450,100 T600,100 L600,140 L0,140 Z' fill='%2306b6d4' opacity='0.5'/></svg>");
+    background-size:50% 100%; background-repeat:repeat-x;
+}
+[data-theme="sunset"] body::after {
+    content:""; position:fixed; top:50px; right:40px;
+    width:150px; height:150px; border-radius:50%;
+    z-index:0; pointer-events:none;
+    background:radial-gradient(circle,rgba(255,245,200,0.9) 0%,rgba(255,190,110,0.55) 45%,transparent 75%);
+}
+[data-theme="forest"] body::after {
+    content:""; position:fixed; left:0; right:0; bottom:0;
+    height:150px; z-index:0; pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 150' preserveAspectRatio='none'><g fill='%232d5a1f' opacity='0.6'><path d='M30,150 L30,100 L15,100 L40,65 L65,100 L50,100 L50,150 Z'/><path d='M110,150 L110,90 L90,90 L120,50 L150,90 L130,90 L130,150 Z'/><path d='M200,150 L200,110 L185,110 L210,75 L235,110 L220,110 L220,150 Z'/><path d='M290,150 L290,95 L270,95 L300,55 L330,95 L310,95 L310,150 Z'/><path d='M370,150 L370,105 L355,105 L380,70 L405,105 L390,105 L390,150 Z'/></g></svg>");
+    background-size:100% 100%; background-repeat:repeat-x;
+}
+[data-theme="sakura"] body::after {
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
     background-image:
-        radial-gradient(1.5px 1.5px at 24px 32px, rgba(255,255,255,0.9), transparent 60%),
-        radial-gradient(1px 1px at 118px 88px, rgba(255,255,255,0.7), transparent 60%),
-        radial-gradient(1.8px 1.8px at 210px 156px, rgba(183,148,246,0.95), transparent 60%),
-        radial-gradient(1px 1px at 60px 200px, rgba(255,255,255,0.6), transparent 60%),
-        radial-gradient(1.5px 1.5px at 260px 40px, rgba(124,245,192,0.9), transparent 60%),
-        radial-gradient(1px 1px at 180px 240px, rgba(255,255,255,0.8), transparent 60%),
-        linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%);
-    background-size:380px 300px, 380px 300px, 380px 300px, 380px 300px, 380px 300px, 380px 300px, 100% 100%;
-    background-repeat:repeat, repeat, repeat, repeat, repeat, repeat, no-repeat;
+        radial-gradient(4px 4px at 15% 20%, rgba(236,72,153,0.45), transparent 70%),
+        radial-gradient(5px 5px at 80% 15%, rgba(249,168,212,0.5), transparent 70%),
+        radial-gradient(3px 3px at 30% 55%, rgba(255,192,220,0.55), transparent 70%),
+        radial-gradient(6px 6px at 75% 70%, rgba(236,72,153,0.35), transparent 70%),
+        radial-gradient(4px 4px at 25% 85%, rgba(249,168,212,0.45), transparent 70%);
+    background-size:500px 500px;
 }
-.container { width:100%; max-width:520px; margin:0 auto; }
+[data-theme="cosmic"] body::after {
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+        radial-gradient(1.5px 1.5px at 24px 32px, #ffffff, transparent 60%),
+        radial-gradient(1px 1px at 118px 88px, rgba(255,255,255,0.8), transparent 60%),
+        radial-gradient(2px 2px at 210px 156px, #b794f6, transparent 60%),
+        radial-gradient(1px 1px at 60px 200px, rgba(255,255,255,0.7), transparent 60%),
+        radial-gradient(1.5px 1.5px at 260px 40px, #7cf5c0, transparent 60%),
+        radial-gradient(1.2px 1.2px at 180px 240px, rgba(255,255,255,0.85), transparent 60%);
+    background-size:380px 300px;
+}
+#particles { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.particle {
+    position:absolute; top:-40px; user-select:none;
+    animation-name:fall; animation-timing-function:linear; animation-iteration-count:infinite;
+}
+@keyframes fall {
+    0% { transform:translateY(0) rotate(0deg); opacity:0; }
+    10% { opacity:0.85; }
+    90% { opacity:0.85; }
+    100% { transform:translateY(110vh) rotate(360deg); opacity:0; }
+}
+.container { width:100%; max-width:520px; margin:0 auto; position:relative; z-index:1; }
 .header {
-    background:var(--card); border:1px solid var(--border); border-radius:22px;
+    background:var(--card); border:1px solid var(--border); border-radius:24px;
     padding:16px 20px; box-shadow:var(--shadow); margin-bottom:14px;
     display:flex; align-items:center; justify-content:space-between; gap:12px;
 }
@@ -175,7 +266,8 @@ body {
 .brand-logo {
     width:46px; height:46px; border-radius:14px; flex-shrink:0;
     background:linear-gradient(135deg,var(--accent),var(--accent2));
-    display:flex; align-items:center; justify-content:center; font-size:1.5rem;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.5rem;
 }
 .brand-title { font-size:1.05rem; font-weight:800; line-height:1.1; }
 .brand-sub { font-size:0.75rem; color:var(--muted); font-weight:600; margin-top:2px; }
@@ -202,36 +294,48 @@ body {
 .settings.open .settings-inner { padding:18px; }
 .settings-title { font-weight:800; font-size:0.8rem; color:var(--muted);
     text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; }
-.settings-title:not(:first-child) { margin-top:16px; }
-.theme-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.settings-title:not(:first-child) { margin-top:18px; }
+.theme-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
 .theme-btn {
-    padding:14px 6px; border-radius:12px; border:2px solid transparent;
-    background:var(--bg2); color:var(--text); font-weight:700; font-size:0.75rem;
-    cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px;
+    padding:10px 2px; border-radius:12px; border:2px solid transparent;
+    background:var(--bg2); color:var(--text); font-weight:700; font-size:0.62rem;
+    cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;
     font-family:inherit;
 }
-.theme-btn .emoji { font-size:1.4rem; line-height:1; }
+.theme-btn .emoji { font-size:1.25rem; line-height:1; }
 .theme-btn.active { border-color:var(--accent); background:var(--accent-soft); }
+.size-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.size-btn {
+    padding:11px; border-radius:12px; border:2px solid var(--border);
+    background:var(--bg2); color:var(--text); font-weight:800; cursor:pointer;
+    font-family:inherit;
+}
+.size-btn[data-size-btn="small"] { font-size:0.85rem; }
+.size-btn[data-size-btn="normal"] { font-size:1.05rem; }
+.size-btn[data-size-btn="large"] { font-size:1.25rem; }
+.size-btn.active { border-color:var(--accent); background:var(--accent-soft); }
+.toggle-row { display:flex; justify-content:space-between; align-items:center;
+    padding:10px 0; border-bottom:1px solid var(--border); }
+.toggle-row:last-child { border-bottom:none; }
+.toggle-label { font-weight:700; font-size:0.9rem; }
+.toggle {
+    position:relative; width:48px; height:28px; background:var(--bg2); border-radius:14px;
+    cursor:pointer; border:1px solid var(--border); flex-shrink:0;
+}
+.toggle::after {
+    content:""; position:absolute; top:2px; left:2px; width:22px; height:22px;
+    background:var(--card); border-radius:50%; transition:transform 0.25s;
+}
+.toggle.on { background:linear-gradient(135deg,var(--accent),var(--accent2)); border-color:transparent; }
+.toggle.on::after { transform:translateX(20px); background:white; }
 .install-btn {
     width:100%; padding:13px; border-radius:14px; border:none;
     background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white;
     font-weight:800; font-size:0.9rem; cursor:pointer; font-family:inherit;
 }
-.install-btn:active { opacity:0.85; }
 .installed-badge { color:var(--green); font-weight:700; font-size:0.9rem;
     padding:10px 0; display:flex; align-items:center; gap:6px; }
 .hint-text { color:var(--muted); font-size:0.82rem; line-height:1.5; }
-.switcher {
-    display:flex; gap:6px; margin-bottom:14px; padding:4px;
-    background:var(--card); border-radius:16px; border:1px solid var(--border);
-    box-shadow:var(--shadow);
-}
-.switch-btn {
-    flex:1; padding:11px; border-radius:12px; border:none;
-    background:transparent; color:var(--muted); font-weight:800; font-size:0.88rem;
-    cursor:pointer; font-family:inherit;
-}
-.switch-btn.active { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; }
 .live-banner {
     border-radius:20px; padding:16px 18px; margin-bottom:14px;
     display:flex; align-items:center; gap:14px; box-shadow:var(--shadow);
@@ -250,6 +354,27 @@ body {
 .live-time { font-size:0.78rem; color:var(--muted); font-weight:700; margin-top:2px; }
 .progress-bar { height:5px; border-radius:3px; background:var(--border); overflow:hidden; margin-top:8px; }
 .progress-fill { height:100%; background:linear-gradient(90deg,var(--green),var(--accent2)); border-radius:3px; }
+.tabs {
+    display:flex; gap:6px; margin-bottom:16px; overflow-x:auto;
+    padding:4px; scrollbar-width:none;
+    background:var(--card); border-radius:18px; border:1px solid var(--border);
+    box-shadow:var(--shadow);
+}
+.tabs::-webkit-scrollbar { display:none; }
+.tab {
+    flex:1; min-width:52px; padding:11px 8px; border-radius:13px; border:none;
+    background:transparent; color:var(--muted); font-weight:800; font-size:0.88rem;
+    cursor:pointer; font-family:inherit;
+    display:flex; flex-direction:column; align-items:center; gap:3px; position:relative;
+}
+.tab .tab-day { font-size:0.68rem; font-weight:700; opacity:0.7; }
+.tab.active { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; }
+.tab.today:not(.active)::after {
+    content:""; position:absolute; bottom:4px; left:50%; transform:translateX(-50%);
+    width:5px; height:5px; border-radius:50%; background:var(--accent);
+}
+.day-block { display:none; }
+.day-block.active { display:block; }
 .day-title {
     font-size:1.15rem; font-weight:800; color:var(--text);
     margin:4px 4px 12px; display:flex; justify-content:space-between; align-items:center;
@@ -290,7 +415,7 @@ body {
 }
 .info-box .big { font-size:2.2rem; display:block; margin-bottom:8px; }
 .error { background:linear-gradient(135deg,rgba(239,68,68,0.1),var(--card));
-    color:#ef4444; padding:20px; border-radius:18px; font-weight:700;
+    color:var(--danger); padding:20px; border-radius:18px; font-weight:700;
     text-align:center; border:1px solid var(--border); }
 .sheet-link {
     display:flex; align-items:center; justify-content:center; gap:6px;
@@ -301,6 +426,7 @@ body {
 </style>
 </head>
 <body>
+<div id="particles"></div>
 <div class="container">
 <div class="header">
     <div class="brand">
@@ -323,14 +449,40 @@ body {
             <button class="theme-btn" data-theme-btn="light" onclick="setTheme('light')"><span class="emoji">☀️</span>Светлая</button>
             <button class="theme-btn" data-theme-btn="dark" onclick="setTheme('dark')"><span class="emoji">🌙</span>Тёмная</button>
             <button class="theme-btn" data-theme-btn="cosmic" onclick="setTheme('cosmic')"><span class="emoji">🌌</span>Космос</button>
+            <button class="theme-btn" data-theme-btn="ocean" onclick="setTheme('ocean')"><span class="emoji">🌊</span>Океан</button>
+            <button class="theme-btn" data-theme-btn="sunset" onclick="setTheme('sunset')"><span class="emoji">🌅</span>Закат</button>
+            <button class="theme-btn" data-theme-btn="forest" onclick="setTheme('forest')"><span class="emoji">🌿</span>Лес</button>
+            <button class="theme-btn" data-theme-btn="sakura" onclick="setTheme('sakura')"><span class="emoji">🌸</span>Сакура</button>
         </div>
+
+        <div class="settings-title">🔤 Размер текста</div>
+        <div class="size-grid">
+            <button class="size-btn" data-size-btn="small" onclick="setSize('small')">A</button>
+            <button class="size-btn" data-size-btn="normal" onclick="setSize('normal')">A</button>
+            <button class="size-btn" data-size-btn="large" onclick="setSize('large')">A</button>
+        </div>
+
+        <div class="settings-title">🔧 Дополнительно</div>
+        <div class="toggle-row">
+            <div class="toggle-label">Компактный режим</div>
+            <div class="toggle" id="toggleCompact" onclick="toggleCompact()"></div>
+        </div>
+        <div class="toggle-row">
+            <div class="toggle-label">Скрыть время уроков</div>
+            <div class="toggle" id="toggleHideTime" onclick="toggleHideTime()"></div>
+        </div>
+        <div class="toggle-row">
+            <div class="toggle-label">Анимация фона</div>
+            <div class="toggle" id="toggleAnim" onclick="toggleAnim()"></div>
+        </div>
+
         <div class="settings-title">📱 Приложение</div>
         <div id="installSection"></div>
     </div>
 </div>
 
 {live_banner}
-{switcher}
+{tabs}
 {content}
 
 <a class="sheet-link" href="{sheet_url}" target="_blank" rel="noopener">
@@ -339,16 +491,28 @@ body {
 </div>
 
 <script>
-var THEME_COLORS = {light:'#eef2f7',dark:'#0b0d12',cosmic:'#05021a'};
+var THEME_COLORS = {light:'#eef2f7',dark:'#0b0d12',cosmic:'#05021a',ocean:'#e6f4fb',sunset:'#fff1e6',forest:'#eef7ee',sakura:'#fff5f8'};
 (function init() {
-    var s = localStorage.getItem('rs_theme') || 'light';
-    if (['light','dark','cosmic'].indexOf(s) === -1) { s = 'light'; localStorage.setItem('rs_theme','light'); }
-    document.documentElement.setAttribute('data-theme', s);
-    var m = document.getElementById('tcMeta');
-    if (m) m.setAttribute('content', THEME_COLORS[s] || '#eef2f7');
+    var saved = localStorage.getItem('rs_theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    var meta = document.getElementById('themeColorMeta');
+    if (meta) meta.setAttribute('content', THEME_COLORS[saved] || '#eef2f7');
     document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
-        b.classList.toggle('active', b.getAttribute('data-theme-btn') === s);
+        if (b.getAttribute('data-theme-btn') === saved) b.classList.add('active');
     });
+    if (localStorage.getItem('rs_compact') === '1') document.documentElement.classList.add('compact');
+    if (localStorage.getItem('rs_hide_time') === '1') document.documentElement.classList.add('hide-time');
+    var size = localStorage.getItem('rs_size') || 'normal';
+    if (size === 'small') document.documentElement.classList.add('font-small');
+    if (size === 'large') document.documentElement.classList.add('font-large');
+    document.querySelectorAll('[data-size-btn]').forEach(function(b) {
+        if (b.getAttribute('data-size-btn') === size) b.classList.add('active');
+    });
+    document.getElementById('toggleCompact').classList.toggle('on', localStorage.getItem('rs_compact') === '1');
+    document.getElementById('toggleHideTime').classList.toggle('on', localStorage.getItem('rs_hide_time') === '1');
+    var animOn = localStorage.getItem('rs_anim') !== '0';
+    document.getElementById('toggleAnim').classList.toggle('on', animOn);
+    if (animOn) spawnParticles(saved);
 })();
 function setTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
@@ -356,19 +520,84 @@ function setTheme(t) {
     document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
         b.classList.toggle('active', b.getAttribute('data-theme-btn') === t);
     });
-    var m = document.getElementById('tcMeta');
-    if (m) m.setAttribute('content', THEME_COLORS[t] || '#eef2f7');
+    var meta = document.getElementById('themeColorMeta');
+    if (meta) meta.setAttribute('content', THEME_COLORS[t] || '#eef2f7');
+    if (localStorage.getItem('rs_anim') !== '0') spawnParticles(t);
+}
+function setSize(s) {
+    document.documentElement.classList.remove('font-small','font-large');
+    if (s === 'small') document.documentElement.classList.add('font-small');
+    if (s === 'large') document.documentElement.classList.add('font-large');
+    localStorage.setItem('rs_size', s);
+    document.querySelectorAll('[data-size-btn]').forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('data-size-btn') === s);
+    });
+}
+function toggleCompact() {
+    var on = document.documentElement.classList.toggle('compact');
+    localStorage.setItem('rs_compact', on ? '1' : '0');
+    document.getElementById('toggleCompact').classList.toggle('on', on);
+}
+function toggleHideTime() {
+    var on = document.documentElement.classList.toggle('hide-time');
+    localStorage.setItem('rs_hide_time', on ? '1' : '0');
+    document.getElementById('toggleHideTime').classList.toggle('on', on);
+}
+function toggleAnim() {
+    var t = document.documentElement.getAttribute('data-theme');
+    var on = localStorage.getItem('rs_anim') !== '0';
+    on = !on;
+    localStorage.setItem('rs_anim', on ? '1' : '0');
+    document.getElementById('toggleAnim').classList.toggle('on', on);
+    if (on) spawnParticles(t);
+    else document.getElementById('particles').innerHTML = '';
+}
+function spawnParticles(theme) {
+    var container = document.getElementById('particles');
+    if (!container) return;
+    container.innerHTML = '';
+    if (localStorage.getItem('rs_anim') === '0') return;
+    if (window.innerWidth < 300) return;
+    var configs = {
+        cosmic: { chars: ['✦','✧','·','+'], colors: ['#ffffff','#b794f6','#7cf5c0','#e0d4ff'], count: 20, sizes: [10,18], dur: [15,28] },
+        sakura: { chars: ['🌸','🌸','❀'], colors: ['#ec4899','#f9a8d4','#fbcfe8'], count: 16, sizes: [14,22], dur: [11,20] },
+        forest: { chars: ['🍃','🌿'], colors: ['#059669','#16a34a','#84cc16'], count: 14, sizes: [14,22], dur: [13,24] },
+        ocean:  { chars: ['●','○','·'], colors: ['rgba(34,211,238,0.75)','rgba(8,145,178,0.65)'], count: 14, sizes: [8,16], dur: [11,20] },
+        sunset: { chars: ['✨','·','✦'], colors: ['#f97316','#ec4899','#fbbf24'], count: 12, sizes: [10,18], dur: [13,22] }
+    };
+    var cfg = configs[theme];
+    if (!cfg) return;
+    var isMobile = window.innerWidth < 820;
+    var n = isMobile ? Math.max(8, Math.round(cfg.count * 0.6)) : cfg.count;
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < n; i++) {
+        var el = document.createElement('span');
+        el.className = 'particle';
+        el.textContent = cfg.chars[Math.floor(Math.random() * cfg.chars.length)];
+        el.style.left = (Math.random() * 100) + '%';
+        var size = cfg.sizes[0] + Math.random() * (cfg.sizes[1] - cfg.sizes[0]);
+        el.style.fontSize = size + 'px';
+        el.style.color = cfg.colors[Math.floor(Math.random() * cfg.colors.length)];
+        var dur = cfg.dur[0] + Math.random() * (cfg.dur[1] - cfg.dur[0]);
+        el.style.animationDuration = dur + 's';
+        el.style.animationDelay = (-Math.random() * dur) + 's';
+        frag.appendChild(el);
+    }
+    container.appendChild(frag);
 }
 function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
-function switchDay(tmr) {
-    document.querySelectorAll('.switch-btn').forEach(function(b, i) {
-        b.classList.toggle('active', (i === 1) === tmr);
+function showDay(day) {
+    document.querySelectorAll('.day-block').forEach(function(el) { el.classList.remove('active'); });
+    var target = document.getElementById('day-' + day);
+    if (target) target.classList.add('active');
+    document.querySelectorAll('.tab').forEach(function(t) {
+        t.classList.toggle('active', t.getAttribute('data-day') === day);
     });
-    document.getElementById('dayToday').style.display = tmr ? 'none' : 'block';
-    document.getElementById('dayTomorrow').style.display = tmr ? 'block' : 'none';
-    var lb = document.getElementById('liveBannerWrap');
-    if (lb) lb.style.display = tmr ? 'none' : 'block';
 }
+document.addEventListener('visibilitychange', function() {
+    var ps = document.hidden ? 'paused' : 'running';
+    document.querySelectorAll('.particle').forEach(function(p) { p.style.animationPlayState = ps; });
+});
 var deferredPrompt = null;
 var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); deferredPrompt = e; renderInstall(); });
@@ -383,9 +612,9 @@ function renderInstall() {
         el.innerHTML = '<button class="install-btn" onclick="doInstall()">📲 Установить приложение</button>'; return;
     }
     var ua = navigator.userAgent, hint;
-    if (/iPhone|iPad|iPod/i.test(ua)) hint = '📱 <b>iPhone:</b> Safari → «Поделиться» → «На экран Домой».';
-    else if (/Android/i.test(ua)) hint = '📱 <b>Android:</b> Chrome → ⋮ → «Установить приложение».';
-    else hint = '💻 <b>ПК:</b> в Chrome — иконка в адресной строке.';
+    if (/iPhone|iPad|iPod/i.test(ua)) hint = '📱 iPhone: Safari → «Поделиться» → «На экран Домой».';
+    else if (/Android/i.test(ua)) hint = '📱 Android: Chrome → ⋮ → «Установить приложение».';
+    else hint = '💻 ПК: в Chrome — иконка в адресной строке.';
     el.innerHTML = '<div class="hint-text">' + hint + '</div>';
 }
 function doInstall() {
@@ -398,22 +627,28 @@ function doInstall() {
 }
 renderInstall();
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(x){x.unregister();});});
-    if (window.caches) caches.keys().then(function(k){k.forEach(function(x){caches.delete(x);});});
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').catch(function() {});
+    });
 }
 </script>
 </body>
 </html>"""
 
 
-def build_switcher(today_name, tomorrow_name, show_tomorrow):
-    t1 = '' if show_tomorrow else ' active'
-    t2 = ' active' if show_tomorrow else ''
-    h = '<div class="switcher">'
-    h += f'<button class="switch-btn{t1}" onclick="switchDay(false)">Сегодня · {today_name[:2]}</button>'
-    h += f'<button class="switch-btn{t2}" onclick="switchDay(true)">Завтра · {tomorrow_name[:2]}</button>'
-    h += '</div>'
-    return h
+def build_tabs(active_day, days_schedule):
+    today_idx = datetime.now(PERM_TZ).weekday()
+    html = '<div class="tabs">'
+    for i, full in enumerate(DAY_FULL):
+        short = DAY_SHORT[full]
+        has = full in days_schedule and len(days_schedule[full]) > 0
+        cls = "tab"
+        if full == active_day: cls += " active"
+        if i == today_idx: cls += " today"
+        html += f'<button class="{cls}" data-day="{full}" onclick="showDay(\'{full}\')">'
+        html += f'{short}<span class="tab-day">{"•" if has else "—"}</span></button>'
+    html += '</div>'
+    return html
 
 
 def build_live_banner(status):
@@ -434,82 +669,90 @@ def build_live_banner(status):
     return ""
 
 
-def build_day_block(day_name, lessons, is_today, live_status):
-    h = '<div>'
-    pill = '<span class="today-pill">✨ Сегодня</span>' if is_today else ''
-    h += f'<div class="day-title">{day_name}{pill}</div>'
-    if not lessons:
-        h += '<div class="info-box"><span class="big">📭</span>Нет уроков</div>'
-    else:
-        for tv, num, lesson in lessons:
-            cc = "card"; np = ""
-            if is_today and live_status and live_status["type"] == "now" and num == live_status["num"]:
-                cc += " now"; np = '<span class="now-pill">сейчас</span>'
-            elif is_today and live_status and live_status["type"] == "before" and num == live_status["num"]:
-                cc += " next-up"
-            h += f'<div class="{cc}"><div class="num">{num}</div>'
-            h += f'<div class="left-side"><div class="time">{tv}</div>'
-            h += f'<div class="lesson">{lesson}</div></div>{np}</div>'
-    h += '</div>'
-    return h
+def build_content(days_schedule, active_day, error_msg, live_status):
+    if error_msg and not days_schedule:
+        return f"<div class='error'>{error_msg}</div>"
+    today_full = DAY_FULL[datetime.now(PERM_TZ).weekday()] if datetime.now(PERM_TZ).weekday() < 6 else ""
+    html = ""
+    for full in DAY_FULL:
+        lessons = days_schedule.get(full, [])
+        is_active = " active" if full == active_day else ""
+        html += f'<div class="day-block{is_active}" id="day-{full}">'
+        if full == today_full:
+            html += f'<div class="day-title">{full}<span class="today-pill">✨ Сегодня</span></div>'
+        else:
+            html += f'<div class="day-title">{full}</div>'
+        if not lessons:
+            html += '<div class="info-box"><span class="big">📭</span>Нет уроков</div>'
+        else:
+            for tv, num, lesson in lessons:
+                cc = "card"; np = ""
+                if full == today_full and live_status and live_status["type"] == "now" and num == live_status["num"]:
+                    cc += " now"; np = '<span class="now-pill">сейчас</span>'
+                elif full == today_full and live_status and live_status["type"] == "before" and num == live_status["num"]:
+                    cc += " next-up"
+                html += f'<div class="{cc}"><div class="num">{num}</div>'
+                html += f'<div class="left-side"><div class="time">{tv}</div>'
+                html += f'<div class="lesson">{lesson}</div></div>{np}</div>'
+        html += '</div>'
+    return html
 
 
 class SimpleHandler(BaseHTTPRequestHandler):
-    def log_message(self, *a): return
-    def _send(self, ct, body):
-        self.send_response(200); self.send_header("Content-type", ct)
+    def log_message(self, format, *args): return
+    def _send(self, content_type, body):
+        self.send_response(200)
+        self.send_header("Content-type", content_type)
         self.send_header("Cache-Control", "public, max-age=3600")
-        self.end_headers(); self.wfile.write(body)
+        self.end_headers()
+        self.wfile.write(body)
 
     def do_GET(self):
         try:
             path = self.path.split("?")[0]
             if path == "/manifest.json":
-                self._send("application/manifest+json; charset=utf-8", MANIFEST.encode()); return
+                self._send("application/manifest+json; charset=utf-8", MANIFEST.encode("utf-8")); return
             if path == "/sw.js":
-                self._send("application/javascript; charset=utf-8", SW_JS.encode()); return
+                self._send("application/javascript; charset=utf-8", SW_JS.encode("utf-8")); return
             if path == "/icon.svg":
-                self._send("image/svg+xml; charset=utf-8", ICON_SVG.encode()); return
+                self._send("image/svg+xml; charset=utf-8", ICON_SVG.encode("utf-8")); return
 
-            now = datetime.now(PERM_TZ)
-            hour, minute = now.hour, now.minute
-            wi = now.weekday()
-            today_name = DAY_FULL[wi] if wi < 6 else "Суббота"
-            is_weekend = wi >= 5
+            now_perm = datetime.now(PERM_TZ)
+            hour, minute = now_perm.hour, now_perm.minute
+            weekday_idx = now_perm.weekday()
+            current_day_name = DAY_FULL[weekday_idx] if weekday_idx < 6 else "Суббота"
+            is_weekend = (weekday_idx >= 5)
             refresh_tag = "<meta http-equiv='refresh' content='900'>" if not (1 <= hour < 5) else ""
+
             days_schedule, error_msg = get_schedule()
-
             months = ["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"]
-            header_date = f"{today_name}, {now.day} {months[now.month-1]}"
+            header_date = f"{current_day_name}, {now_perm.day} {months[now_perm.month-1]}"
 
-            if wi < 5:
-                tomorrow_name = DAY_FULL[wi + 1]
-            else:
-                tomorrow_name = "Понедельник"
-
-            today_lessons = days_schedule.get(today_name, [])
-            tomorrow_lessons = days_schedule.get(tomorrow_name, [])
+            today_lessons = days_schedule.get(current_day_name, [])
             school_over = (hour > 14 or (hour == 14 and minute >= 40) or is_weekend or not today_lessons)
-            show_tomorrow = bool(school_over and tomorrow_lessons)
+            if school_over and weekday_idx < 5:
+                next_idx = weekday_idx + 1
+                if next_idx < 6:
+                    tomorrow = DAY_FULL[next_idx]
+                    active_day = tomorrow if days_schedule.get(tomorrow) else current_day_name
+                else:
+                    active_day = current_day_name
+            else:
+                active_day = current_day_name
+            if active_day not in DAY_FULL: active_day = current_day_name
+            if not days_schedule.get(active_day) and days_schedule.get(current_day_name):
+                active_day = current_day_name
 
             live_status = get_live_status(today_lessons) if not is_weekend else None
-            live_html = build_live_banner(live_status)
-            if live_html:
-                live_html = '<div id="liveBannerWrap">' + live_html + '</div>'
-            switcher = build_switcher(today_name, tomorrow_name, show_tomorrow)
-
-            content = '<div id="dayToday" style="display:%s">' % ('none' if show_tomorrow else 'block')
-            content += build_day_block(today_name, today_lessons, True, live_status)
-            content += '</div>'
-            content += '<div id="dayTomorrow" style="display:%s">' % ('block' if show_tomorrow else 'none')
-            content += build_day_block(tomorrow_name, tomorrow_lessons, False, None)
-            content += '</div>'
+            live_banner = build_live_banner(live_status)
+            tabs = build_tabs(active_day, days_schedule)
+            content = build_content(days_schedule, active_day, error_msg, live_status)
 
             html = PAGE_TEMPLATE
             html = html.replace("{refresh_tag}", refresh_tag)
             html = html.replace("{header_date}", header_date)
-            html = html.replace("{live_banner}", live_html)
-            html = html.replace("{switcher}", switcher)
+            html = html.replace("{live_banner}", live_banner)
+            html = html.replace("{tabs}", tabs)
             html = html.replace("{content}", content)
             html = html.replace("{sheet_url}", SHEET_URL)
 
