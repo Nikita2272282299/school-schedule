@@ -1,7 +1,6 @@
 import threading, urllib.request, csv, io, time, os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, timezone, timedelta
-from urllib.parse import urlparse, parse_qs
 
 SPREADSHEET_ID = "1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE"
 CSV_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/export?format=csv"
@@ -13,10 +12,9 @@ TIME_TO_NUM = {"8:00-8:40":1,"8:50-9:30":2,"9:45-10:25":3,"10:40-11:20":4,
     "11:35-12:15":5,"12:25-13:05":6,"13:15-13:55":7,"14:00-14:40":8}
 DAY_SHORT = {"Понедельник":"Пн","Вторник":"Вт","Среда":"Ср","Четверг":"Чт","Пятница":"Пт","Суббота":"Сб"}
 DAY_FULL = ["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"]
-CLASSES = ["8а","8б","8в","8г"]
-DEFAULT_CLASS = "8г"
+CLASS_CODE = "8г"
 
-class_cache = {}
+cache = {"days_schedule": {}, "error_msg": "", "last_update": 0}
 CACHE_TTL = 300
 
 MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/","display":"standalone","background_color":"#0a0620","theme_color":"#6366f1","icons":[{"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}'
@@ -26,13 +24,10 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><def
 SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>self.clients.claim());self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});"
 
 
-def get_schedule(class_code):
-    class_code = class_code.lower()
+def get_schedule():
     now = time.time()
-    if class_code in class_cache:
-        sched, msg, ts = class_cache[class_code]
-        if now - ts < CACHE_TTL:
-            return sched, msg
+    if cache["days_schedule"] and (now - cache["last_update"] < CACHE_TTL):
+        return cache["days_schedule"], cache["error_msg"]
     days_schedule = {}
     error_msg = ""
     try:
@@ -42,11 +37,10 @@ def get_schedule(class_code):
         col_index = -1
         for row in reader:
             for c_idx, cell in enumerate(row):
-                if cell.replace(" ", "").lower() == class_code:
+                if cell.replace(" ", "").lower() == CLASS_CODE:
                     col_index = c_idx
                     break
-            if col_index != -1:
-                break
+            if col_index != -1: break
         if col_index != -1:
             current_day = ""
             days_list = ["понедельник","вторник","среда","четверг","пятница","суббота"]
@@ -56,8 +50,7 @@ def get_schedule(class_code):
                 found_day = None
                 for d in days_list:
                     if d in row_text:
-                        found_day = d.capitalize()
-                        break
+                        found_day = d.capitalize(); break
                 if found_day:
                     current_day = found_day
                     if current_day not in days_schedule:
@@ -68,29 +61,29 @@ def get_schedule(class_code):
                 for cell in row:
                     cell_clean = cell.strip()
                     if cell_clean in TIME_TO_NUM:
-                        time_val = cell_clean
-                        break
+                        time_val = cell_clean; break
                 if not time_val: continue
                 if len(row) > col_index:
                     lesson_val = row[col_index].strip()
-                    if not lesson_val or len(lesson_val) < 2 or ":" in lesson_val:
-                        continue
-                    if lesson_val.lower() in ["урок","-","—",""]:
-                        continue
+                    if not lesson_val or len(lesson_val) < 2 or ":" in lesson_val: continue
+                    if lesson_val.lower() in ["урок","-","—",""]: continue
                     lesson_num = TIME_TO_NUM[time_val]
                     existing = [n for t,n,l in days_schedule[current_day]]
                     if lesson_num not in existing:
                         days_schedule[current_day].append((time_val, lesson_num, lesson_val))
             for d in days_schedule:
                 days_schedule[d].sort(key=lambda x: x[1])
+            cache["days_schedule"] = days_schedule
+            cache["error_msg"] = ""
+            cache["last_update"] = now
         else:
-            error_msg = f"Класс {class_code.upper()} не найден в таблице."
+            error_msg = f"Класс {CLASS_CODE.upper()} не найден."
+            cache["error_msg"] = error_msg
     except Exception:
-        if class_cache.get(class_code):
-            return class_cache[class_code][0], ""
-        error_msg = "Офлайн-режим (нет сети)"
-    class_cache[class_code] = (days_schedule, error_msg, now)
-    return days_schedule, error_msg
+        if cache["days_schedule"]:
+            return cache["days_schedule"], ""
+        cache["error_msg"] = "Офлайн-режим (нет сети)"
+    return cache["days_schedule"], cache["error_msg"]
 
 
 def get_live_status(today_lessons):
@@ -110,6 +103,12 @@ def get_live_status(today_lessons):
         if cur < s:
             return {"type":"before","num":num,"lesson":lesson,"wait":s-cur,"start":start}
     return None
+
+
+def get_week_number():
+    now = datetime.now(PERM_TZ)
+    week = now.isocalendar()[1]
+    return ("Чётная" if week % 2 == 0 else "Нечётная"), week
 
 
 PAGE_TEMPLATE = """<!DOCTYPE html>
@@ -134,7 +133,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --border:rgba(15,23,42,0.06); --shadow:0 4px 20px rgba(15,23,42,0.06);
     --green:#10b981; --green-soft:rgba(16,185,129,0.12);
     --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.12);
-    --danger:#ef4444; --glow:transparent;
+    --danger:#ef4444;
 }
 [data-theme="dark"] {
     --bg:#0b0d12; --bg2:#131720; --card:#1a1f2b; --card-hover:#202633;
@@ -153,7 +152,6 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --green:#7cf5c0; --green-soft:rgba(124,245,192,0.14);
     --orange:#fbbf77; --orange-soft:rgba(251,191,119,0.14);
     --danger:#ff8ab5; color-scheme:dark;
-    --glow:1;
 }
 [data-theme="ocean"] {
     --bg:#e6f4fb; --bg2:#cfe8f6; --card:#ffffff; --card-hover:#f7fcff;
@@ -198,22 +196,26 @@ body {
     background:var(--bg); color:var(--text); margin:0;
     padding:20px 14px 40px; display:flex; justify-content:center;
     min-height:100vh; -webkit-font-smoothing:antialiased;
-    transition:background 0.4s ease, color 0.3s ease;
+    transition:background 0.5s ease, color 0.3s ease;
     position:relative; overflow-x:hidden;
 }
-[data-theme="cosmic"] body::before {
-    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
-    background-image:
-        radial-gradient(1.2px 1.2px at 24px 32px, rgba(255,255,255,0.9), transparent 60%),
-        radial-gradient(0.8px 0.8px at 118px 88px, rgba(255,255,255,0.7), transparent 60%),
-        radial-gradient(1.5px 1.5px at 210px 156px, rgba(183,148,246,0.9), transparent 60%),
-        radial-gradient(1px 1px at 60px 200px, rgba(255,255,255,0.6), transparent 60%),
-        radial-gradient(1.3px 1.3px at 260px 40px, rgba(124,245,192,0.9), transparent 60%),
-        radial-gradient(0.9px 0.9px at 180px 240px, rgba(255,255,255,0.8), transparent 60%);
-    background-size:300px 300px; background-repeat:repeat;
-    animation:twinkle 5s ease-in-out infinite;
+#particles { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.particle {
+    position:absolute; top:-60px; user-select:none;
+    will-change:transform; opacity:0.85;
+    animation-name:fall; animation-timing-function:linear; animation-iteration-count:infinite;
 }
-@keyframes twinkle { 0%,100% { opacity:0.55; } 50% { opacity:0.95; } }
+@keyframes fall {
+    0% { transform:translateY(0) translateX(0) rotate(0deg); }
+    50% { transform:translateY(50vh) translateX(20px) rotate(180deg); }
+    100% { transform:translateY(110vh) translateX(-10px) rotate(360deg); }
+}
+@keyframes rise {
+    0% { transform:translateY(0) translateX(0); opacity:0; }
+    10% { opacity:0.8; }
+    100% { transform:translateY(-110vh) translateX(30px); opacity:0; }
+}
+@keyframes twinkle { 0%,100% { opacity:0.3; } 50% { opacity:1; } }
 .container { width:100%; max-width:520px; position:relative; z-index:1; }
 
 .header {
@@ -238,9 +240,12 @@ body {
     background:linear-gradient(135deg,var(--accent-soft),var(--accent-soft2));
     color:var(--accent); padding:7px 13px; border-radius:12px;
     font-weight:800; font-size:0.95rem; letter-spacing:0.02em;
-    border:1px solid var(--border); cursor:pointer; transition:transform 0.15s;
+    border:1px solid var(--border);
 }
-.badge-class:active { transform:scale(0.94); }
+.badge-week {
+    background:var(--bg2); color:var(--muted); padding:5px 10px; border-radius:10px;
+    font-weight:800; font-size:0.7rem; letter-spacing:0.04em; text-transform:uppercase;
+}
 .icon-btn {
     background:var(--card); color:var(--muted); border:1px solid var(--border);
     width:42px; height:42px; border-radius:13px; font-size:1.15rem;
@@ -255,10 +260,10 @@ body {
     background:var(--card); border:1px solid var(--border); border-radius:20px;
     padding:0 18px; margin-bottom:14px; box-shadow:var(--shadow);
     max-height:0; overflow:hidden; opacity:0;
-    transition:max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
+    transition:max-height 0.5s ease, opacity 0.3s ease, padding 0.3s ease;
     backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
 }
-.settings.open { max-height:900px; opacity:1; padding:18px; }
+.settings.open { max-height:1400px; opacity:1; padding:18px; }
 .settings-title { font-weight:800; font-size:0.8rem; color:var(--muted);
     text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; }
 .settings-title:not(:first-child) { margin-top:18px; }
@@ -287,15 +292,17 @@ body {
 }
 .toggle.on { background:linear-gradient(135deg,var(--accent),var(--accent2)); border-color:transparent; }
 .toggle.on::after { transform:translateX(20px); background:white; }
-.class-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
-.class-btn {
-    padding:12px 4px; border-radius:12px; border:2px solid var(--border);
-    background:var(--bg2); color:var(--text); font-weight:800; font-size:0.9rem;
-    cursor:pointer; font-family:inherit; transition:all 0.2s; text-transform:uppercase;
+.size-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.size-btn {
+    padding:12px; border-radius:12px; border:2px solid var(--border);
+    background:var(--bg2); color:var(--text); font-weight:800; cursor:pointer;
+    font-family:inherit; transition:all 0.2s;
 }
-.class-btn.active { background:linear-gradient(135deg,var(--accent),var(--accent2));
-    color:white; border-color:transparent; box-shadow:0 4px 14px var(--accent-soft); }
-.class-btn:active { transform:scale(0.95); }
+.size-btn:nth-child(1) { font-size:0.85rem; }
+.size-btn:nth-child(2) { font-size:1.05rem; }
+.size-btn:nth-child(3) { font-size:1.25rem; }
+.size-btn.active { border-color:var(--accent); background:var(--accent-soft); }
+.size-btn:active { transform:scale(0.95); }
 .install-btn {
     width:100%; padding:13px; border-radius:14px; border:none;
     background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white;
@@ -409,8 +416,12 @@ body {
 }
 html.compact .card { padding:10px 14px; margin-bottom:6px; }
 html.compact .num { min-width:34px; height:34px; font-size:0.9rem; border-radius:10px; }
-html.compact .lesson { font-size:0.95rem; }
 html.hide-time .time { display:none; }
+html.font-small .lesson { font-size:0.9rem; }
+html.font-small .live-lesson { font-size:0.95rem; }
+html.font-large .lesson { font-size:1.15rem; }
+html.font-large .live-lesson { font-size:1.2rem; }
+html.font-large .day-title { font-size:1.3rem; }
 
 .info-box {
     background:var(--card); padding:32px 20px; border-radius:20px;
@@ -435,6 +446,7 @@ html.hide-time .time { display:none; }
 </style>
 </head>
 <body>
+<div id="particles"></div>
 <div class="container">
 
 <div class="header">
@@ -446,7 +458,7 @@ html.hide-time .time { display:none; }
         </div>
     </div>
     <div class="header-right">
-        <div class="badge-class" onclick="toggleSettings()">{class_upper}</div>
+        <div class="badge-class">{class_upper}</div>
         <button class="icon-btn" id="settingsBtn" onclick="toggleSettings()">⚙️</button>
     </div>
 </div>
@@ -463,12 +475,11 @@ html.hide-time .time { display:none; }
         <button class="theme-btn" data-theme-btn="sakura" onclick="setTheme('sakura')"><span class="emoji">🌸</span>Сакура</button>
     </div>
 
-    <div class="settings-title">👥 Класс</div>
-    <div class="class-grid">
-        <button class="class-btn" data-class-btn="8а" onclick="setClass('8а')">8А</button>
-        <button class="class-btn" data-class-btn="8б" onclick="setClass('8б')">8Б</button>
-        <button class="class-btn" data-class-btn="8в" onclick="setClass('8в')">8В</button>
-        <button class="class-btn" data-class-btn="8г" onclick="setClass('8г')">8Г</button>
+    <div class="settings-title">🔤 Размер текста</div>
+    <div class="size-grid">
+        <button class="size-btn" data-size-btn="small" onclick="setSize('small')">A</button>
+        <button class="size-btn" data-size-btn="normal" onclick="setSize('normal')">A</button>
+        <button class="size-btn" data-size-btn="large" onclick="setSize('large')">A</button>
     </div>
 
     <div class="settings-title">🔧 Дополнительно</div>
@@ -479,6 +490,10 @@ html.hide-time .time { display:none; }
     <div class="toggle-row">
         <div class="toggle-label">Скрыть время уроков</div>
         <div class="toggle" id="toggleHideTime" onclick="toggleHideTime()"></div>
+    </div>
+    <div class="toggle-row">
+        <div class="toggle-label">Анимация фона</div>
+        <div class="toggle" id="toggleAnim" onclick="toggleAnim()"></div>
     </div>
 
     <div class="settings-title">📱 Приложение</div>
@@ -496,24 +511,30 @@ html.hide-time .time { display:none; }
 </div>
 
 <script>
-(function() {
+var THEME_COLORS = {light:'#eef2f7',dark:'#0b0d12',cosmic:'#05021a',ocean:'#e6f4fb',sunset:'#fff1e6',forest:'#eef7ee',sakura:'#fff5f8'};
+(function init() {
     var saved = localStorage.getItem('rs_theme') || 'light';
     document.documentElement.setAttribute('data-theme', saved);
     var meta = document.getElementById('themeColorMeta');
-    var colors = {light:'#eef2f7',dark:'#0b0d12',cosmic:'#05021a',ocean:'#e6f4fb',sunset:'#fff1e6',forest:'#eef7ee',sakura:'#fff5f8'};
-    if (meta) meta.setAttribute('content', colors[saved] || '#eef2f7');
+    if (meta) meta.setAttribute('content', THEME_COLORS[saved] || '#eef2f7');
     document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
         if (b.getAttribute('data-theme-btn') === saved) b.classList.add('active');
     });
     if (localStorage.getItem('rs_compact') === '1') document.documentElement.classList.add('compact');
     if (localStorage.getItem('rs_hide_time') === '1') document.documentElement.classList.add('hide-time');
+    var size = localStorage.getItem('rs_size') || 'normal';
+    if (size === 'small') document.documentElement.classList.add('font-small');
+    if (size === 'large') document.documentElement.classList.add('font-large');
+    document.querySelectorAll('[data-size-btn]').forEach(function(b) {
+        if (b.getAttribute('data-size-btn') === size) b.classList.add('active');
+    });
     document.getElementById('toggleCompact').classList.toggle('on', localStorage.getItem('rs_compact') === '1');
     document.getElementById('toggleHideTime').classList.toggle('on', localStorage.getItem('rs_hide_time') === '1');
-    var cl = '{class_code}';
-    document.querySelectorAll('[data-class-btn]').forEach(function(b) {
-        if (b.getAttribute('data-class-btn') === cl) b.classList.add('active');
-    });
+    var animOn = localStorage.getItem('rs_anim') !== '0';
+    document.getElementById('toggleAnim').classList.toggle('on', animOn);
+    if (animOn) spawnParticles(saved);
 })();
+
 function setTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
     localStorage.setItem('rs_theme', t);
@@ -521,8 +542,17 @@ function setTheme(t) {
         b.classList.toggle('active', b.getAttribute('data-theme-btn') === t);
     });
     var meta = document.getElementById('themeColorMeta');
-    var colors = {light:'#eef2f7',dark:'#0b0d12',cosmic:'#05021a',ocean:'#e6f4fb',sunset:'#fff1e6',forest:'#eef7ee',sakura:'#fff5f8'};
-    if (meta) meta.setAttribute('content', colors[t] || '#eef2f7');
+    if (meta) meta.setAttribute('content', THEME_COLORS[t] || '#eef2f7');
+    if (localStorage.getItem('rs_anim') !== '0') spawnParticles(t);
+}
+function setSize(s) {
+    document.documentElement.classList.remove('font-small','font-large');
+    if (s === 'small') document.documentElement.classList.add('font-small');
+    if (s === 'large') document.documentElement.classList.add('font-large');
+    localStorage.setItem('rs_size', s);
+    document.querySelectorAll('[data-size-btn]').forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('data-size-btn') === s);
+    });
 }
 function toggleCompact() {
     var on = document.documentElement.classList.toggle('compact');
@@ -534,11 +564,57 @@ function toggleHideTime() {
     localStorage.setItem('rs_hide_time', on ? '1' : '0');
     document.getElementById('toggleHideTime').classList.toggle('on', on);
 }
-function setClass(c) {
-    localStorage.setItem('rs_class', c);
-    var url = new URL(window.location.href);
-    url.searchParams.set('class', c);
-    window.location.href = url.toString();
+function toggleAnim() {
+    var t = document.documentElement.getAttribute('data-theme');
+    var on = localStorage.getItem('rs_anim') !== '0';
+    on = !on;
+    localStorage.setItem('rs_anim', on ? '1' : '0');
+    document.getElementById('toggleAnim').classList.toggle('on', on);
+    if (on) spawnParticles(t);
+    else document.getElementById('particles').innerHTML = '';
+}
+function spawnParticles(theme) {
+    var container = document.getElementById('particles');
+    if (!container) return;
+    container.innerHTML = '';
+    if (localStorage.getItem('rs_anim') === '0') return;
+    if (window.innerWidth < 300) return;
+    var configs = {
+        cosmic: { chars: ['✦','✧','·','+'], colors: ['#ffffff','#b794f6','#7cf5c0','#e0d4ff'],
+                  count: 25, sizes: [10,20], dur: [15,30], mode: 'fall' },
+        sakura: { chars: ['🌸','🌸','🌸','❀'], colors: ['#ec4899','#f9a8d4','#fbcfe8'],
+                  count: 20, sizes: [14,24], dur: [10,20], mode: 'fall' },
+        forest: { chars: ['🍃','🌿','🍃'], colors: ['#059669','#16a34a','#84cc16'],
+                  count: 16, sizes: [16,26], dur: [12,24], mode: 'fall' },
+        ocean:  { chars: ['●','○','·'], colors: ['rgba(34,211,238,0.7)','rgba(8,145,178,0.6)','rgba(255,255,255,0.5)'],
+                  count: 18, sizes: [8,18], dur: [10,20], mode: 'rise' },
+        sunset: { chars: ['✨','·','✦'], colors: ['#f97316','#ec4899','#fbbf24'],
+                  count: 15, sizes: [10,20], dur: [12,22], mode: 'fall' }
+    };
+    var cfg = configs[theme];
+    if (!cfg) return;
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < cfg.count; i++) {
+        var el = document.createElement('span');
+        el.className = 'particle';
+        var c = cfg.chars[Math.floor(Math.random() * cfg.chars.length)];
+        el.textContent = c;
+        el.style.left = (Math.random() * 100) + '%';
+        var size = cfg.sizes[0] + Math.random() * (cfg.sizes[1] - cfg.sizes[0]);
+        el.style.fontSize = size + 'px';
+        el.style.color = cfg.colors[Math.floor(Math.random() * cfg.colors.length)];
+        el.style.opacity = 0.5 + Math.random() * 0.5;
+        var dur = cfg.dur[0] + Math.random() * (cfg.dur[1] - cfg.dur[0]);
+        el.style.animationDuration = dur + 's';
+        el.style.animationDelay = (-Math.random() * dur) + 's';
+        if (cfg.mode === 'rise') {
+            el.style.top = 'auto';
+            el.style.bottom = '-40px';
+            el.style.animationName = 'rise';
+        }
+        frag.appendChild(el);
+    }
+    container.appendChild(frag);
 }
 function toggleSettings() {
     document.getElementById('settingsPanel').classList.toggle('open');
@@ -690,8 +766,7 @@ class SimpleHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         try:
-            parsed = urlparse(self.path)
-            path = parsed.path
+            path = self.path.split("?")[0]
             if path == "/manifest.json":
                 self._send("application/manifest+json; charset=utf-8", MANIFEST.encode("utf-8")); return
             if path == "/sw.js":
@@ -699,20 +774,14 @@ class SimpleHandler(BaseHTTPRequestHandler):
             if path == "/icon.svg":
                 self._send("image/svg+xml; charset=utf-8", ICON_SVG.encode("utf-8")); return
 
-            params = parse_qs(parsed.query)
-            class_code = params.get("class", [DEFAULT_CLASS])[0].lower()
-            if class_code not in CLASSES:
-                class_code = DEFAULT_CLASS
-
             now_perm = datetime.now(PERM_TZ)
             hour, minute = now_perm.hour, now_perm.minute
             weekday_idx = now_perm.weekday()
-
             current_day_name = DAY_FULL[weekday_idx] if weekday_idx < 6 else "Суббота"
             is_weekend = (weekday_idx >= 5)
             refresh_tag = "<meta http-equiv='refresh' content='900'>" if not (1 <= hour < 5) else ""
 
-            days_schedule, error_msg = get_schedule(class_code)
+            days_schedule, error_msg = get_schedule()
 
             months = ["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"]
             header_date = f"{current_day_name}, {now_perm.day} {months[now_perm.month-1]}"
@@ -740,8 +809,7 @@ class SimpleHandler(BaseHTTPRequestHandler):
             html = PAGE_TEMPLATE
             html = html.replace("{refresh_tag}", refresh_tag)
             html = html.replace("{header_date}", header_date)
-            html = html.replace("{class_upper}", class_code.upper())
-            html = html.replace("{class_code}", class_code)
+            html = html.replace("{class_upper}", CLASS_CODE.upper())
             html = html.replace("{live_banner}", live_banner)
             html = html.replace("{tabs}", tabs)
             html = html.replace("{content}", content)
