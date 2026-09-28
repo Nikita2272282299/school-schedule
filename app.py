@@ -464,35 +464,31 @@ html.hide-time .time { display:none; }
 
 /* === КОСМОС — светящиеся плашки === */
 [data-theme="cosmic"] .theme-btn {
-    background:rgba(30,20,65,0.6);
-    border-color:rgba(183,148,246,0.25);
-    box-shadow:inset 0 0 12px rgba(183,148,246,0.15);
+    background:rgba(30,20,65,0.75);
+    border-color:rgba(183,148,246,0.3);
     border-radius:50%;
     aspect-ratio:1;
     padding:8px 4px;
 }
 [data-theme="cosmic"] .theme-btn.active {
     border-color:#b794f6;
-    background:radial-gradient(circle at 30% 25%, rgba(183,148,246,0.5), rgba(124,245,192,0.25));
-    box-shadow:0 0 18px rgba(183,148,246,0.6), inset 0 0 12px rgba(124,245,192,0.3);
+    background:linear-gradient(135deg,#b794f6,#7cf5c0);
+    color:#1a1030;
 }
-[data-theme="cosmic"] .theme-btn .emoji { filter:drop-shadow(0 0 6px rgba(183,148,246,0.7)); }
 [data-theme="cosmic"] .theme-btn:not(.active) { color:#a89cc7; }
 [data-theme="cosmic"] .size-btn {
-    background:rgba(30,20,65,0.6);
-    border-color:rgba(183,148,246,0.25);
-    box-shadow:inset 0 0 10px rgba(183,148,246,0.12);
+    background:rgba(30,20,65,0.75);
+    border-color:rgba(183,148,246,0.3);
     border-radius:50%;
 }
 [data-theme="cosmic"] .size-btn.active {
     border-color:#b794f6;
-    background:radial-gradient(circle at 30% 25%, rgba(183,148,246,0.5), rgba(124,245,192,0.25));
-    box-shadow:0 0 16px rgba(183,148,246,0.55);
+    background:linear-gradient(135deg,#b794f6,#7cf5c0);
+    color:#1a1030;
 }
-[data-theme="cosmic"] .toggle { background:rgba(183,148,246,0.2); }
+[data-theme="cosmic"] .toggle { background:rgba(183,148,246,0.25); }
 [data-theme="cosmic"] .toggle.on {
     background:linear-gradient(135deg,#b794f6,#7cf5c0);
-    box-shadow:0 0 12px rgba(183,148,246,0.5);
 }
 
 /* === ОКЕАН — пузырьки с бликом === */
