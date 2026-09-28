@@ -195,14 +195,13 @@ body {
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--bg); color:var(--text); margin:0;
     padding:20px 14px 40px; display:flex; justify-content:center;
-    min-height:100vh; -webkit-font-smoothing:antialiased;
-    transition:background 0.5s ease, color 0.3s ease;
+     -webkit-font-smoothing:antialiased;
+    transition:color 0.3s ease;
     position:relative; overflow-x:hidden;
 }
-#particles { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+#particles { position:absolute; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
 .particle {
-    position:absolute; top:-60px; user-select:none;
-    will-change:transform; opacity:0.85;
+    position:absolute; top:-60px; user-select:none; opacity:0.85;
     animation-name:fall; animation-timing-function:linear; animation-iteration-count:infinite;
 }
 @keyframes fall {
@@ -445,14 +444,13 @@ body { position:relative; }
 /* ОКЕАН — волны, пузыри */
 [data-theme="ocean"] body {
     background: linear-gradient(180deg,#c7e8f5 0%,#94d0e6 40%,#5aafd0 100%);
-    background-attachment: fixed;
 }
 [data-theme="ocean"] body::before {
-    content:""; position:fixed; left:0; right:0; bottom:-10px;
+    content:""; position:absolute; left:0; right:0; bottom:-10px;
     height:220px; z-index:0; pointer-events:none;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 220' preserveAspectRatio='none'><path d='M0,100 Q150,30 300,100 T600,100 T900,100 T1200,100 L1200,220 L0,220 Z' fill='%230891b2' opacity='0.35'/><path d='M0,140 Q200,80 400,140 T800,140 T1200,140 L1200,220 L0,220 Z' fill='%2306b6d4' opacity='0.45'/><path d='M0,180 Q250,140 500,180 T1000,180 T1200,180 L1200,220 L0,220 Z' fill='%230891b2' opacity='0.55'/></svg>");
     background-size:1200px 220px; background-repeat:repeat-x;
-    animation:oceanWave 18s linear infinite;
+    
 }
 @keyframes oceanWave { from { background-position:0 0; } to { background-position:1200px 0; } }
 [data-theme="ocean"] .header,
@@ -462,7 +460,7 @@ body { position:relative; }
     box-shadow:0 10px 40px rgba(8,145,178,0.25),inset 0 2px 12px rgba(255,255,255,0.9);
     border-radius:28px;
 }
-[data-theme="ocean"] .header { animation:floaty 5s ease-in-out infinite; position:relative; overflow:hidden; }
+[data-theme="ocean"] .header {  position:relative; overflow:hidden; }
 [data-theme="ocean"] .header::before {
     content:""; position:absolute; top:8px; left:22px;
     width:60px; height:18px; border-radius:50%;
@@ -475,7 +473,7 @@ body { position:relative; }
     border:2px solid rgba(255,255,255,0.85);
     box-shadow:0 4px 16px rgba(8,145,178,0.35),inset -4px -6px 12px rgba(8,145,178,0.25),inset 4px 4px 12px rgba(255,255,255,0.8);
     color:#0e7490; display:flex; align-items:center; justify-content:center;
-    position:relative; animation:floaty 4s ease-in-out infinite;
+    position:relative; 
 }
 [data-theme="ocean"] .badge-class::before {
     content:""; position:absolute; top:7px; left:9px;
@@ -487,7 +485,7 @@ body { position:relative; }
     background:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.95),rgba(34,211,238,0.4) 60%,rgba(8,145,178,0.5));
     border:2px solid rgba(255,255,255,0.85);
     box-shadow:0 4px 16px rgba(8,145,178,0.3),inset -4px -6px 12px rgba(8,145,178,0.2),inset 4px 4px 12px rgba(255,255,255,0.8);
-    color:#0e7490; position:relative; animation:floaty 6s ease-in-out infinite;
+    color:#0e7490; position:relative; 
 }
 [data-theme="ocean"] .icon-btn::before {
     content:""; position:absolute; top:6px; left:8px;
@@ -545,14 +543,13 @@ body { position:relative; }
 /* ЗАКАТ — тёплое небо */
 [data-theme="sunset"] body {
     background:linear-gradient(180deg,#ffe4b8 0%,#ffc896 30%,#ffa07a 65%,#e88898 100%);
-    background-attachment:fixed;
 }
 [data-theme="sunset"] body::before {
-    content:""; position:fixed; top:5%; right:8%;
+    content:""; position:absolute; top:5%; right:8%;
     width:140px; height:140px; border-radius:50%;
     background:radial-gradient(circle,rgba(255,220,120,0.95),rgba(255,140,80,0.35) 60%,transparent 75%);
     filter:blur(10px); pointer-events:none; z-index:0;
-    animation:sunPulse 6s ease-in-out infinite;
+    
 }
 @keyframes sunPulse { 0%,100% { transform:scale(1); opacity:0.85; } 50% { transform:scale(1.08); opacity:1; } }
 [data-theme="sunset"] .header,
@@ -580,10 +577,9 @@ body { position:relative; }
 /* ЛЕС — органичный */
 [data-theme="forest"] body {
     background:linear-gradient(180deg,#e8f5e0 0%,#c8e6c0 60%,#a8d8a0 100%);
-    background-attachment:fixed;
 }
 [data-theme="forest"] body::before {
-    content:""; position:fixed; left:0; right:0; top:0;
+    content:""; position:absolute; left:0; right:0; top:0;
     height:200px; z-index:0; pointer-events:none;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 200' preserveAspectRatio='none'><path d='M0,0 L0,80 Q100,120 200,80 Q300,40 400,80 Q500,120 600,80 Q700,40 800,80 Q900,120 1000,80 Q1100,40 1200,80 L1200,0 Z' fill='%23059669' opacity='0.28'/></svg>");
     background-size:1200px 200px; background-repeat:repeat-x;
@@ -615,10 +611,9 @@ body { position:relative; }
 /* САКУРА — мягкая */
 [data-theme="sakura"] body {
     background:linear-gradient(180deg,#ffe8ef 0%,#ffd0e0 50%,#ffb8d0 100%);
-    background-attachment:fixed;
 }
 [data-theme="sakura"] body::before {
-    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
     background:radial-gradient(circle at 80% 15%,rgba(236,72,153,0.15),transparent 40%),
                radial-gradient(circle at 15% 75%,rgba(168,85,247,0.12),transparent 40%);
 }
@@ -669,7 +664,7 @@ body { position:relative; }
 .header, .settings, .card, .tabs, .live-banner { transform:translateZ(0); }
 
 /* Частицы на GPU */
-.particle { will-change:transform; transform:translateZ(0); backface-visibility:hidden; }
+.particle { transform:translateZ(0); backface-visibility:hidden; }
 
 @media (max-width: 820px) {
     /* На телефоне делаем фоны тем более плотными вместо blur */
@@ -701,6 +696,37 @@ body { position:relative; }
     [data-theme="sunset"] body::before,
     [data-theme="ocean"] .badge-class,
     [data-theme="ocean"] .icon-btn { animation:none !important; }
+}
+
+/* === FINAL LIGHT LAYER === */
+html { overscroll-behavior:none; }
+body { 
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+}
+.header, .settings, .card, .tabs, .live-banner {
+    transform: translateZ(0);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+[data-theme="cosmic"] .header, [data-theme="cosmic"] .settings, [data-theme="cosmic"] .card {
+    box-shadow: 0 2px 10px rgba(120,60,220,0.2);
+}
+[data-theme="ocean"] .card, [data-theme="sunset"] .card, [data-theme="forest"] .card, [data-theme="sakura"] .card {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+@media (max-width: 820px) {
+    .header, .settings, .card, .tabs, .live-banner, .info-box {
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+    }
+    .card.now { box-shadow: 0 0 0 1.5px var(--green) !important; }
+    .card.next-up { box-shadow: 0 0 0 1.5px var(--orange) !important; }
+    /* Убираем декоративные градиентные подложки у пузырей — они тоже дорогие */
+    [data-theme="ocean"] .badge-class,
+    [data-theme="ocean"] .icon-btn,
+    [data-theme="ocean"] .num {
+        background: linear-gradient(135deg, #22d3ee, #0891b2) !important;
+        border: none !important;
+    }
 }
 </style>
 </head>
@@ -853,7 +879,7 @@ function spawnParticles(theme) {
     var cfg = configs[theme];
     if (!cfg) return;
     var isMobile = window.innerWidth < 820;
-    var count = isMobile ? Math.max(10, Math.round(cfg.count * 0.7)) : cfg.count;
+    var count = isMobile ? Math.max(6, Math.round(cfg.count * 0.4)) : cfg.count;
     var frag = document.createDocumentFragment();
     for (var i = 0; i < count; i++) {
         var el = document.createElement('span');
