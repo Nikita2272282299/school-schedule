@@ -456,6 +456,175 @@ html.compact .card { padding:11px 14px; margin-bottom:7px; }
 html.compact .num { min-width:34px; height:34px; font-size:0.9rem; }
 html.compact .header-card { padding:14px 18px; }
 html.hide-time .time { display:none; }
+
+/* ========== ТЕМАТИЧЕСКИЕ НАСТРОЙКИ ========== */
+
+/* ОБЩЕЕ — базовое скругление для кнопок-тем */
+.theme-btn, .size-btn { position:relative; overflow:hidden; }
+
+/* === КОСМОС — светящиеся плашки === */
+[data-theme="cosmic"] .theme-btn {
+    background:rgba(30,20,65,0.6);
+    border-color:rgba(183,148,246,0.25);
+    box-shadow:inset 0 0 12px rgba(183,148,246,0.15);
+    border-radius:50%;
+    aspect-ratio:1;
+    padding:8px 4px;
+}
+[data-theme="cosmic"] .theme-btn.active {
+    border-color:#b794f6;
+    background:radial-gradient(circle at 30% 25%, rgba(183,148,246,0.5), rgba(124,245,192,0.25));
+    box-shadow:0 0 18px rgba(183,148,246,0.6), inset 0 0 12px rgba(124,245,192,0.3);
+}
+[data-theme="cosmic"] .theme-btn .emoji { filter:drop-shadow(0 0 6px rgba(183,148,246,0.7)); }
+[data-theme="cosmic"] .theme-btn:not(.active) { color:#a89cc7; }
+[data-theme="cosmic"] .size-btn {
+    background:rgba(30,20,65,0.6);
+    border-color:rgba(183,148,246,0.25);
+    box-shadow:inset 0 0 10px rgba(183,148,246,0.12);
+    border-radius:50%;
+}
+[data-theme="cosmic"] .size-btn.active {
+    border-color:#b794f6;
+    background:radial-gradient(circle at 30% 25%, rgba(183,148,246,0.5), rgba(124,245,192,0.25));
+    box-shadow:0 0 16px rgba(183,148,246,0.55);
+}
+[data-theme="cosmic"] .toggle { background:rgba(183,148,246,0.2); }
+[data-theme="cosmic"] .toggle.on {
+    background:linear-gradient(135deg,#b794f6,#7cf5c0);
+    box-shadow:0 0 12px rgba(183,148,246,0.5);
+}
+
+/* === ОКЕАН — пузырьки с бликом === */
+[data-theme="ocean"] .theme-btn {
+    border-radius:50% !important;
+    aspect-ratio:1;
+    padding:8px 4px;
+    background:radial-gradient(circle at 30% 25%, rgba(255,255,255,0.95), rgba(34,211,238,0.45) 55%, rgba(8,145,178,0.7));
+    border:2px solid rgba(255,255,255,0.85);
+    box-shadow:0 3px 10px rgba(8,145,178,0.3), inset -3px -4px 8px rgba(8,145,178,0.25), inset 3px 3px 10px rgba(255,255,255,0.7);
+    color:#0e7490;
+}
+[data-theme="ocean"] .theme-btn::before {
+    content:""; position:absolute; top:5px; left:8px;
+    width:11px; height:6px; border-radius:50%;
+    background:rgba(255,255,255,0.9);
+    pointer-events:none;
+}
+[data-theme="ocean"] .theme-btn.active {
+    border-color:#fff;
+    background:radial-gradient(circle at 30% 25%, #fff, #22d3ee 55%, #0891b2);
+    box-shadow:0 0 0 3px rgba(255,255,255,0.4), 0 4px 14px rgba(8,145,178,0.5);
+}
+[data-theme="ocean"] .size-btn {
+    border-radius:50% !important;
+    background:radial-gradient(circle at 30% 25%, rgba(255,255,255,0.95), rgba(34,211,238,0.45) 55%, rgba(8,145,178,0.7));
+    border:2px solid rgba(255,255,255,0.85);
+    box-shadow:0 3px 10px rgba(8,145,178,0.3), inset -3px -4px 8px rgba(8,145,178,0.25), inset 3px 3px 10px rgba(255,255,255,0.7);
+    color:#0e7490;
+}
+[data-theme="ocean"] .size-btn.active { border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,0.4), 0 4px 14px rgba(8,145,178,0.5); }
+[data-theme="ocean"] .toggle { background:rgba(8,145,178,0.2); }
+[data-theme="ocean"] .toggle.on { background:linear-gradient(135deg,#22d3ee,#0891b2); }
+[data-theme="ocean"] .settings-panel { background:rgba(255,255,255,0.97); }
+
+/* === ЗАКАТ — тёплые градиентные кнопки === */
+[data-theme="sunset"] .theme-btn {
+    background:linear-gradient(135deg,#ffe4b8,#ffb572);
+    border-color:rgba(249,115,22,0.2);
+    color:#7c2d12;
+    border-radius:14px 14px 14px 4px;
+    box-shadow:0 3px 10px rgba(249,115,22,0.18);
+}
+[data-theme="sunset"] .theme-btn.active {
+    background:linear-gradient(135deg,#f97316,#ec4899);
+    color:white; border-color:transparent;
+    box-shadow:0 4px 14px rgba(249,115,22,0.45), 0 0 0 2px rgba(255,255,255,0.5);
+}
+[data-theme="sunset"] .size-btn {
+    background:linear-gradient(135deg,#ffe4b8,#ffb572);
+    border-color:rgba(249,115,22,0.2);
+    color:#7c2d12;
+    border-radius:14px 14px 14px 4px;
+}
+[data-theme="sunset"] .size-btn.active {
+    background:linear-gradient(135deg,#f97316,#ec4899);
+    color:white; border-color:transparent;
+    box-shadow:0 4px 14px rgba(249,115,22,0.45);
+}
+[data-theme="sunset"] .toggle.on { background:linear-gradient(135deg,#f97316,#ec4899); }
+[data-theme="sunset"] .settings-panel { background:rgba(255,251,245,0.98); }
+
+/* === ЛЕС — листочки (асимметричные скругления) === */
+[data-theme="forest"] .theme-btn {
+    background:linear-gradient(135deg,rgba(220,245,210,0.9),rgba(132,204,22,0.4));
+    border-color:rgba(5,150,105,0.25);
+    color:#064e3b;
+    border-radius:24px 8px 24px 8px;
+    box-shadow:0 3px 10px rgba(5,150,105,0.15);
+}
+[data-theme="forest"] .theme-btn.active {
+    background:linear-gradient(135deg,#059669,#84cc16);
+    color:white; border-color:transparent;
+    box-shadow:0 4px 14px rgba(5,150,105,0.4), 0 0 0 2px rgba(255,255,255,0.5);
+}
+[data-theme="forest"] .size-btn {
+    background:linear-gradient(135deg,rgba(220,245,210,0.9),rgba(132,204,22,0.4));
+    border-color:rgba(5,150,105,0.25);
+    color:#064e3b;
+    border-radius:24px 8px 24px 8px;
+}
+[data-theme="forest"] .size-btn.active {
+    background:linear-gradient(135deg,#059669,#84cc16);
+    color:white; border-color:transparent;
+    box-shadow:0 4px 14px rgba(5,150,105,0.4);
+}
+[data-theme="forest"] .toggle.on { background:linear-gradient(135deg,#059669,#84cc16); }
+[data-theme="forest"] .settings-panel { background:rgba(255,255,255,0.97); }
+
+/* === САКУРА — лепестки (мягкие круглые) === */
+[data-theme="sakura"] .theme-btn {
+    background:radial-gradient(circle at 30% 25%, #fff, #ffd0dd 60%, #f9a8d4);
+    border-color:rgba(236,72,153,0.15);
+    color:#831843;
+    border-radius:50% 50% 50% 12px;
+    aspect-ratio:1;
+    padding:8px 4px;
+    box-shadow:0 3px 10px rgba(236,72,153,0.2);
+}
+[data-theme="sakura"] .theme-btn::before {
+    content:""; position:absolute; top:6px; left:50%;
+    transform:translateX(-50%);
+    width:14px; height:4px;
+    background:rgba(255,255,255,0.9);
+    border-radius:50%;
+    filter:blur(2px);
+    pointer-events:none;
+}
+[data-theme="sakura"] .theme-btn.active {
+    background:radial-gradient(circle at 30% 25%, #fff, #ec4899 60%, #a855f7);
+    color:white; border-color:transparent;
+    box-shadow:0 4px 14px rgba(236,72,153,0.45), 0 0 0 2px rgba(255,255,255,0.5);
+}
+[data-theme="sakura"] .size-btn {
+    background:radial-gradient(circle at 30% 25%, #fff, #ffd0dd 60%, #f9a8d4);
+    border-color:rgba(236,72,153,0.15);
+    color:#831843;
+    border-radius:50% 50% 50% 12px;
+}
+[data-theme="sakura"] .size-btn.active {
+    background:radial-gradient(circle at 30% 25%, #fff, #ec4899 60%, #a855f7);
+    color:white; border-color:transparent;
+    box-shadow:0 4px 14px rgba(236,72,153,0.45);
+}
+[data-theme="sakura"] .toggle.on { background:linear-gradient(135deg,#ec4899,#a855f7); }
+[data-theme="sakura"] .settings-panel { background:rgba(255,255,255,0.97); }
+
+/* === СВЕТЛАЯ / ТЁМНАЯ — чистый минимализм === */
+[data-theme="light"] .theme-btn,
+[data-theme="dark"] .theme-btn {
+    border-radius:12px;
+}
 </style>
 </head>
 <body>
