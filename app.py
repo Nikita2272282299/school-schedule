@@ -366,10 +366,22 @@ class SimpleHandler(BaseHTTPRequestHandler):
             pass
 
 
+SELF_URL = "https://school-schedule-4ldw.onrender.com/"
+
+def keep_alive():
+    while True:
+        time.sleep(600)
+        try:
+            urllib.request.urlopen(SELF_URL, timeout=30)
+            print(f"[keep-alive] {datetime.now(PERM_TZ).strftime('%H:%M')}")
+        except Exception:
+            pass
+
 import os
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"Сервер запущен на порту {port}")
+    threading.Thread(target=keep_alive, daemon=True).start()
     server = HTTPServer(('0.0.0.0', port), SimpleHandler)
     server.serve_forever()
