@@ -11,7 +11,6 @@ CLASS_CODE = "8г"
 
 TIME_TO_NUM = {"8:00-8:40":1,"8:50-9:30":2,"9:45-10:25":3,"10:40-11:20":4,
     "11:35-12:15":5,"12:25-13:05":6,"13:15-13:55":7,"14:00-14:40":8}
-DAY_SHORT = {"Понедельник":"Пн","Вторник":"Вт","Среда":"Ср","Четверг":"Чт","Пятница":"Пт","Суббота":"Сб"}
 DAY_FULL = ["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"]
 
 cache = {"days_schedule": {}, "error_msg": "", "last_update": 0}
@@ -59,18 +58,17 @@ def get_schedule():
                 if not current_day: continue
                 time_val = ""
                 for cell in row:
-                    cell_clean = cell.strip()
-                    if cell_clean in TIME_TO_NUM:
-                        time_val = cell_clean; break
+                    cc = cell.strip()
+                    if cc in TIME_TO_NUM:
+                        time_val = cc; break
                 if not time_val: continue
                 if len(row) > col_index:
-                    lesson_val = row[col_index].strip()
-                    if not lesson_val or len(lesson_val) < 2 or ":" in lesson_val: continue
-                    if lesson_val.lower() in ["урок","-","—",""]: continue
-                    lesson_num = TIME_TO_NUM[time_val]
-                    existing = [n for t,n,l in days_schedule[current_day]]
-                    if lesson_num not in existing:
-                        days_schedule[current_day].append((time_val, lesson_num, lesson_val))
+                    lv = row[col_index].strip()
+                    if not lv or len(lv) < 2 or ":" in lv: continue
+                    if lv.lower() in ["урок","-","—",""]: continue
+                    n = TIME_TO_NUM[time_val]
+                    if n not in [x[1] for x in days_schedule[current_day]]:
+                        days_schedule[current_day].append((time_val, n, lv))
             for d in days_schedule:
                 days_schedule[d].sort(key=lambda x: x[1])
             cache["days_schedule"] = days_schedule
@@ -90,9 +88,9 @@ def get_live_status(today_lessons):
     if not today_lessons: return None
     now = datetime.now(PERM_TZ)
     cur = now.hour * 60 + now.minute
-    for time_str, num, lesson in today_lessons:
+    for tv, num, lesson in today_lessons:
         try:
-            start, end = time_str.split("-")
+            start, end = tv.split("-")
             sh, sm = map(int, start.split(":"))
             eh, em = map(int, end.split(":"))
         except Exception: continue
@@ -126,7 +124,6 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --border:rgba(15,23,42,0.06); --shadow:0 2px 12px rgba(15,23,42,0.06);
     --green:#10b981; --green-soft:rgba(16,185,129,0.12);
     --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.12);
-    --danger:#ef4444;
 }
 [data-theme="dark"] {
     --bg:#0b0d12; --bg2:#131720; --card:#1a1f2b;
@@ -135,7 +132,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --border:rgba(255,255,255,0.06); --shadow:0 2px 12px rgba(0,0,0,0.4);
     --green:#34d399; --green-soft:rgba(52,211,153,0.14);
     --orange:#fbbf24; --orange-soft:rgba(251,191,36,0.14);
-    --danger:#f87171; color-scheme:dark;
+    color-scheme:dark;
 }
 [data-theme="cosmic"] {
     --bg:#05021a; --bg2:#0f0730; --card:#18103a;
@@ -144,23 +141,19 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --border:rgba(183,148,246,0.14); --shadow:0 4px 20px rgba(120,60,220,0.25);
     --green:#7cf5c0; --green-soft:rgba(124,245,192,0.14);
     --orange:#fbbf77; --orange-soft:rgba(251,191,119,0.14);
-    --danger:#ff8ab5; color-scheme:dark;
+    color-scheme:dark;
 }
-
 html { min-height:100%; background:var(--bg); }
 * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 body {
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--bg); color:var(--text); margin:0;
-    padding:20px 14px 30px;
-    min-height:100vh; -webkit-font-smoothing:antialiased;
-    transition:background 0.4s ease, color 0.3s ease;
+    padding:20px 14px 30px; min-height:100vh; -webkit-font-smoothing:antialiased;
+    transition:background 0.3s ease, color 0.3s ease;
 }
 [data-theme="light"] body { background-image:linear-gradient(180deg,#f1f5fa 0%,#e4ebf3 100%); }
 [data-theme="dark"] body { background-image:linear-gradient(180deg,#10131a 0%,#0b0d12 100%); }
-[data-theme="cosmic"] body { background-image:linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%); }
-[data-theme="cosmic"] body::before {
-    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+[data-theme="cosmic"] body {
     background-image:
         radial-gradient(1.5px 1.5px at 24px 32px, rgba(255,255,255,0.9), transparent 60%),
         radial-gradient(1px 1px at 118px 88px, rgba(255,255,255,0.7), transparent 60%),
@@ -168,11 +161,11 @@ body {
         radial-gradient(1px 1px at 60px 200px, rgba(255,255,255,0.6), transparent 60%),
         radial-gradient(1.5px 1.5px at 260px 40px, rgba(124,245,192,0.9), transparent 60%),
         radial-gradient(1px 1px at 180px 240px, rgba(255,255,255,0.8), transparent 60%),
-        radial-gradient(1.2px 1.2px at 320px 180px, rgba(255,255,255,0.7), transparent 60%),
-        radial-gradient(1.5px 1.5px at 90px 130px, rgba(183,148,246,0.8), transparent 60%);
-    background-size:380px 300px; background-repeat:repeat;
+        linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%);
+    background-size:380px 300px, 380px 300px, 380px 300px, 380px 300px, 380px 300px, 380px 300px, 100% 100%;
+    background-repeat:repeat, repeat, repeat, repeat, repeat, repeat, no-repeat;
 }
-.container { width:100%; max-width:520px; margin:0 auto; position:relative; z-index:1; }
+.container { width:100%; max-width:520px; margin:0 auto; }
 
 .header {
     background:var(--card); border:1px solid var(--border); border-radius:22px;
@@ -185,7 +178,7 @@ body {
     background:linear-gradient(135deg,var(--accent),var(--accent2));
     display:flex; align-items:center; justify-content:center; font-size:1.5rem;
 }
-.brand-title { font-size:1.05rem; font-weight:800; letter-spacing:-0.02em; line-height:1.1; }
+.brand-title { font-size:1.05rem; font-weight:800; line-height:1.1; }
 .brand-sub { font-size:0.75rem; color:var(--muted); font-weight:600; margin-top:2px; }
 .header-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
 .badge-class {
@@ -204,53 +197,23 @@ body {
     background:var(--card); border:1px solid var(--border); border-radius:20px;
     padding:0 18px; margin-bottom:0; box-shadow:none;
     display:grid; grid-template-rows:0fr;
-    transition:grid-template-rows 0.3s cubic-bezier(0.4,0,0.2,1),
-               margin-bottom 0.3s cubic-bezier(0.4,0,0.2,1),
-               box-shadow 0.3s cubic-bezier(0.4,0,0.2,1);
+    transition:grid-template-rows 0.3s ease, margin-bottom 0.3s ease, box-shadow 0.3s ease;
 }
 .settings.open { grid-template-rows:1fr; margin-bottom:14px; box-shadow:var(--shadow); }
-.settings-inner {
-    overflow:hidden; min-height:0; padding:0 18px;
-    transition:padding 0.3s cubic-bezier(0.4,0,0.2,1);
-}
+.settings-inner { overflow:hidden; min-height:0; padding:0 18px; transition:padding 0.3s ease; }
 .settings.open .settings-inner { padding:18px; }
 .settings-title { font-weight:800; font-size:0.8rem; color:var(--muted);
     text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; }
-.settings-title:not(:first-child) { margin-top:18px; }
+.settings-title:not(:first-child) { margin-top:16px; }
 .theme-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
 .theme-btn {
     padding:14px 6px; border-radius:12px; border:2px solid transparent;
     background:var(--bg2); color:var(--text); font-weight:700; font-size:0.75rem;
     cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px;
-    transition:background 0.15s, border-color 0.15s; font-family:inherit;
+    font-family:inherit;
 }
 .theme-btn .emoji { font-size:1.4rem; line-height:1; }
 .theme-btn.active { border-color:var(--accent); background:var(--accent-soft); }
-.size-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-.size-btn {
-    padding:11px; border-radius:12px; border:2px solid var(--border);
-    background:var(--bg2); color:var(--text); font-weight:800; cursor:pointer;
-    font-family:inherit; transition:background 0.15s, border-color 0.15s;
-}
-.size-btn[data-size-btn="small"] { font-size:0.85rem; }
-.size-btn[data-size-btn="normal"] { font-size:1.05rem; }
-.size-btn[data-size-btn="large"] { font-size:1.25rem; }
-.size-btn.active { border-color:var(--accent); background:var(--accent-soft); }
-.toggle-row { display:flex; justify-content:space-between; align-items:center;
-    padding:10px 0; border-bottom:1px solid var(--border); }
-.toggle-row:last-child { border-bottom:none; }
-.toggle-label { font-weight:700; font-size:0.9rem; }
-.toggle {
-    position:relative; width:48px; height:28px; background:var(--bg2); border-radius:14px;
-    cursor:pointer; transition:background 0.25s; border:1px solid var(--border); flex-shrink:0;
-}
-.toggle::after {
-    content:""; position:absolute; top:2px; left:2px; width:22px; height:22px;
-    background:var(--card); border-radius:50%; transition:transform 0.25s;
-    box-shadow:0 2px 6px rgba(0,0,0,0.15);
-}
-.toggle.on { background:linear-gradient(135deg,var(--accent),var(--accent2)); border-color:transparent; }
-.toggle.on::after { transform:translateX(20px); background:white; }
 .install-btn {
     width:100%; padding:13px; border-radius:14px; border:none;
     background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white;
@@ -259,7 +222,19 @@ body {
 .install-btn:active { opacity:0.85; }
 .installed-badge { color:var(--green); font-weight:700; font-size:0.9rem;
     padding:10px 0; display:flex; align-items:center; gap:6px; }
-.hint-text { color:var(--muted); font-size:0.82rem; line-height:1.5; margin-bottom:6px; }
+.hint-text { color:var(--muted); font-size:0.82rem; line-height:1.5; }
+
+.switcher {
+    display:flex; gap:6px; margin-bottom:14px; padding:4px;
+    background:var(--card); border-radius:16px; border:1px solid var(--border);
+    box-shadow:var(--shadow);
+}
+.switch-btn {
+    flex:1; padding:11px; border-radius:12px; border:none;
+    background:transparent; color:var(--muted); font-weight:800; font-size:0.88rem;
+    cursor:pointer; font-family:inherit;
+}
+.switch-btn.active { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; }
 
 .live-banner {
     border-radius:20px; padding:16px 18px; margin-bottom:14px;
@@ -280,29 +255,6 @@ body {
 .progress-bar { height:5px; border-radius:3px; background:var(--border); overflow:hidden; margin-top:8px; }
 .progress-fill { height:100%; background:linear-gradient(90deg,var(--green),var(--accent2)); border-radius:3px; }
 
-.tabs {
-    display:flex; gap:6px; margin-bottom:16px; overflow-x:auto;
-    padding:4px; scrollbar-width:none; -ms-overflow-style:none;
-    background:var(--card); border-radius:18px; border:1px solid var(--border);
-    box-shadow:var(--shadow);
-}
-.tabs::-webkit-scrollbar { display:none; }
-.tab {
-    flex:1; min-width:52px; padding:11px 8px; border-radius:13px; border:none;
-    background:transparent; color:var(--muted); font-weight:800; font-size:0.88rem;
-    cursor:pointer; font-family:inherit; transition:background 0.15s, color 0.15s;
-    display:flex; flex-direction:column; align-items:center; gap:3px; position:relative;
-}
-.tab .tab-day { font-size:0.68rem; font-weight:700; opacity:0.7; }
-.tab.active { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; }
-.tab.active .tab-day { opacity:0.9; }
-.tab.today:not(.active)::after {
-    content:""; position:absolute; bottom:4px; left:50%; transform:translateX(-50%);
-    width:5px; height:5px; border-radius:50%; background:var(--accent);
-}
-
-.day-block { display:none; }
-.day-block.active { display:block; }
 .day-title {
     font-size:1.15rem; font-weight:800; color:var(--text);
     margin:4px 4px 12px; display:flex; justify-content:space-between; align-items:center;
@@ -316,14 +268,10 @@ body {
 .card {
     background:var(--card); padding:14px 16px; margin-bottom:9px; border-radius:18px;
     box-shadow:var(--shadow); display:flex; align-items:center; gap:14px;
-    border:1px solid var(--border); position:relative; overflow:hidden;
+    border:1px solid var(--border);
 }
 .card.now { box-shadow:0 8px 28px var(--green-soft),0 0 0 1px var(--green);
     background:linear-gradient(135deg,var(--green-soft),var(--card)); }
-.card.now::before {
-    content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
-    background:linear-gradient(180deg,var(--green),var(--accent2));
-}
 .card.next-up { box-shadow:0 6px 22px var(--orange-soft),0 0 0 1px var(--orange); }
 .num {
     min-width:40px; height:40px; border-radius:12px;
@@ -340,15 +288,6 @@ body {
     border-radius:20px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em;
     margin-left:auto; flex-shrink:0;
 }
-html.compact .card { padding:10px 14px; margin-bottom:6px; }
-html.compact .num { min-width:34px; height:34px; font-size:0.9rem; border-radius:10px; }
-html.hide-time .time { display:none; }
-html.font-small .lesson { font-size:0.9rem; }
-html.font-small .live-lesson { font-size:0.95rem; }
-html.font-large .lesson { font-size:1.15rem; }
-html.font-large .live-lesson { font-size:1.2rem; }
-html.font-large .day-title { font-size:1.3rem; }
-
 .info-box {
     background:var(--card); padding:32px 20px; border-radius:20px;
     box-shadow:var(--shadow); text-align:center; font-size:1rem; font-weight:700;
@@ -356,9 +295,8 @@ html.font-large .day-title { font-size:1.3rem; }
 }
 .info-box .big { font-size:2.2rem; display:block; margin-bottom:8px; }
 .error { background:linear-gradient(135deg,rgba(239,68,68,0.1),var(--card));
-    color:var(--danger); padding:20px; border-radius:18px; font-weight:700;
+    color:#ef4444; padding:20px; border-radius:18px; font-weight:700;
     text-align:center; border:1px solid var(--border); }
-
 .sheet-link {
     display:flex; align-items:center; justify-content:center; gap:6px;
     margin-top:20px; padding:13px; color:var(--muted); text-decoration:none;
@@ -369,7 +307,6 @@ html.font-large .day-title { font-size:1.3rem; }
 </head>
 <body>
 <div class="container">
-
 <div class="header">
     <div class="brand">
         <div class="brand-logo">📅</div>
@@ -392,135 +329,70 @@ html.font-large .day-title { font-size:1.3rem; }
             <button class="theme-btn" data-theme-btn="dark" onclick="setTheme('dark')"><span class="emoji">🌙</span>Тёмная</button>
             <button class="theme-btn" data-theme-btn="cosmic" onclick="setTheme('cosmic')"><span class="emoji">🌌</span>Космос</button>
         </div>
-
-        <div class="settings-title">🔤 Размер текста</div>
-        <div class="size-grid">
-            <button class="size-btn" data-size-btn="small" onclick="setSize('small')">A</button>
-            <button class="size-btn" data-size-btn="normal" onclick="setSize('normal')">A</button>
-            <button class="size-btn" data-size-btn="large" onclick="setSize('large')">A</button>
-        </div>
-
-        <div class="settings-title">🔧 Дополнительно</div>
-        <div class="toggle-row">
-            <div class="toggle-label">Компактный режим</div>
-            <div class="toggle" id="toggleCompact" onclick="toggleCompact()"></div>
-        </div>
-        <div class="toggle-row">
-            <div class="toggle-label">Скрыть время уроков</div>
-            <div class="toggle" id="toggleHideTime" onclick="toggleHideTime()"></div>
-        </div>
-
         <div class="settings-title">📱 Приложение</div>
         <div id="installSection"></div>
     </div>
 </div>
 
 {live_banner}
-{tabs}
+{switcher}
 {content}
 
 <a class="sheet-link" href="{sheet_url}" target="_blank" rel="noopener">
     <span>📊</span> Открыть таблицу в Google Sheets
 </a>
-
 </div>
 
 <script>
 var THEME_COLORS = {light:'#eef2f7',dark:'#0b0d12',cosmic:'#05021a'};
-
 (function init() {
-    var saved = localStorage.getItem('rs_theme') || 'light';
-    if (['light','dark','cosmic'].indexOf(saved) === -1) {
-        saved = 'light'; localStorage.setItem('rs_theme', 'light');
-    }
-    document.documentElement.setAttribute('data-theme', saved);
-    var meta = document.getElementById('tcMeta');
-    if (meta) meta.setAttribute('content', THEME_COLORS[saved] || '#eef2f7');
+    var s = localStorage.getItem('rs_theme') || 'light';
+    if (['light','dark','cosmic'].indexOf(s) === -1) { s = 'light'; localStorage.setItem('rs_theme','light'); }
+    document.documentElement.setAttribute('data-theme', s);
+    var m = document.getElementById('tcMeta');
+    if (m) m.setAttribute('content', THEME_COLORS[s] || '#eef2f7');
     document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
-        b.classList.toggle('active', b.getAttribute('data-theme-btn') === saved);
+        b.classList.toggle('active', b.getAttribute('data-theme-btn') === s);
     });
-    if (localStorage.getItem('rs_compact') === '1') document.documentElement.classList.add('compact');
-    if (localStorage.getItem('rs_hide_time') === '1') document.documentElement.classList.add('hide-time');
-    var size = localStorage.getItem('rs_size') || 'normal';
-    if (size === 'small') document.documentElement.classList.add('font-small');
-    if (size === 'large') document.documentElement.classList.add('font-large');
-    document.querySelectorAll('[data-size-btn]').forEach(function(b) {
-        b.classList.toggle('active', b.getAttribute('data-size-btn') === size);
-    });
-    document.getElementById('toggleCompact').classList.toggle('on', localStorage.getItem('rs_compact') === '1');
-    document.getElementById('toggleHideTime').classList.toggle('on', localStorage.getItem('rs_hide_time') === '1');
 })();
-
 function setTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
     localStorage.setItem('rs_theme', t);
     document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
         b.classList.toggle('active', b.getAttribute('data-theme-btn') === t);
     });
-    var meta = document.getElementById('tcMeta');
-    if (meta) meta.setAttribute('content', THEME_COLORS[t] || '#eef2f7');
+    var m = document.getElementById('tcMeta');
+    if (m) m.setAttribute('content', THEME_COLORS[t] || '#eef2f7');
 }
-function setSize(s) {
-    document.documentElement.classList.remove('font-small','font-large');
-    if (s === 'small') document.documentElement.classList.add('font-small');
-    if (s === 'large') document.documentElement.classList.add('font-large');
-    localStorage.setItem('rs_size', s);
-    document.querySelectorAll('[data-size-btn]').forEach(function(b) {
-        b.classList.toggle('active', b.getAttribute('data-size-btn') === s);
-    });
-}
-function toggleCompact() {
-    var on = document.documentElement.classList.toggle('compact');
-    localStorage.setItem('rs_compact', on ? '1' : '0');
-    document.getElementById('toggleCompact').classList.toggle('on', on);
-}
-function toggleHideTime() {
-    var on = document.documentElement.classList.toggle('hide-time');
-    localStorage.setItem('rs_hide_time', on ? '1' : '0');
-    document.getElementById('toggleHideTime').classList.toggle('on', on);
-}
-function toggleSettings() {
-    document.getElementById('settingsPanel').classList.toggle('open');
-}
-function showDay(day) {
-    document.querySelectorAll('.day-block').forEach(function(el) { el.classList.remove('active'); });
-    var target = document.getElementById('day-' + day);
-    if (target) target.classList.add('active');
-    document.querySelectorAll('.tab').forEach(function(t) {
-        t.classList.toggle('active', t.getAttribute('data-day') === day);
-    });
-}
+function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
 var deferredPrompt = null;
 var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); deferredPrompt = e; renderInstallSection(); });
-window.addEventListener('appinstalled', function() { deferredPrompt = null; localStorage.setItem('rs_installed', '1'); renderInstallSection(); });
-function renderInstallSection() {
+window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); deferredPrompt = e; renderInstall(); });
+window.addEventListener('appinstalled', function() { deferredPrompt = null; localStorage.setItem('rs_installed','1'); renderInstall(); });
+function renderInstall() {
     var el = document.getElementById('installSection');
     if (!el) return;
     if (isStandalone || localStorage.getItem('rs_installed') === '1') {
-        el.innerHTML = '<div class="installed-badge">✅ Приложение установлено</div>';
-        return;
+        el.innerHTML = '<div class="installed-badge">✅ Приложение установлено</div>'; return;
     }
     if (deferredPrompt) {
-        el.innerHTML = '<button class="install-btn" onclick="doInstall()">📲 Установить приложение</button>';
-        return;
+        el.innerHTML = '<button class="install-btn" onclick="doInstall()">📲 Установить приложение</button>'; return;
     }
-    var ua = navigator.userAgent;
-    var hint = '';
+    var ua = navigator.userAgent, hint;
     if (/iPhone|iPad|iPod/i.test(ua)) hint = '📱 <b>iPhone:</b> Safari → «Поделиться» → «На экран Домой».';
-    else if (/Android/i.test(ua)) hint = '📱 <b>Android:</b> Chrome → меню <b>⋮</b> → «Установить приложение».';
-    else hint = '💻 <b>ПК:</b> открой в Chrome — иконка в адресной строке.';
+    else if (/Android/i.test(ua)) hint = '📱 <b>Android:</b> Chrome → ⋮ → «Установить приложение».';
+    else hint = '💻 <b>ПК:</b> в Chrome — иконка в адресной строке.';
     el.innerHTML = '<div class="hint-text">' + hint + '</div>';
 }
 function doInstall() {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then(function(c) {
-        if (c.outcome === 'accepted') localStorage.setItem('rs_installed', '1');
-        deferredPrompt = null; renderInstallSection();
+        if (c.outcome === 'accepted') localStorage.setItem('rs_installed','1');
+        deferredPrompt = null; renderInstall();
     });
 }
-renderInstallSection();
+renderInstall();
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(x){x.unregister();});});
     if (window.caches) caches.keys().then(function(k){k.forEach(function(x){caches.delete(x);});});
@@ -530,19 +402,14 @@ if ('serviceWorker' in navigator) {
 </html>"""
 
 
-def build_tabs(active_day, days_schedule):
-    today_idx = datetime.now(PERM_TZ).weekday()
-    html = '<div class="tabs">'
-    for i, full in enumerate(DAY_FULL):
-        short = DAY_SHORT[full]
-        has = full in days_schedule and len(days_schedule[full]) > 0
-        cls = "tab"
-        if full == active_day: cls += " active"
-        if i == today_idx: cls += " today"
-        html += f'<button class="{cls}" data-day="{full}" onclick="showDay(\'{full}\')">'
-        html += f'{short}<span class="tab-day">{"•" if has else "—"}</span></button>'
-    html += '</div>'
-    return html
+def build_switcher(today_name, tomorrow_name, show_tomorrow):
+    t1 = ' active' if not show_tomorrow else ''
+    t2 = ' active' if show_tomorrow else ''
+    h = '<div class="switcher">'
+    h += f'<button class="switch-btn{t1}" onclick="switchDay(false)">Сегодня · {today_name[:2]}</button>'
+    h += f'<button class="switch-btn{t2}" onclick="switchDay(true)">Завтра · {tomorrow_name[:2]}</button>'
+    h += '</div>'
+    return h
 
 
 def build_live_banner(status):
@@ -563,94 +430,94 @@ def build_live_banner(status):
     return ""
 
 
-def build_content(days_schedule, active_day, error_msg, live_status):
-    if error_msg and not days_schedule:
-        return f"<div class='error'>{error_msg}</div>"
-    today_full = DAY_FULL[datetime.now(PERM_TZ).weekday()] if datetime.now(PERM_TZ).weekday() < 6 else ""
-    html = ""
-    for full in DAY_FULL:
-        lessons = days_schedule.get(full, [])
-        is_active = " active" if full == active_day else ""
-        html += f'<div class="day-block{is_active}" id="day-{full}">'
-        if full == today_full:
-            html += f'<div class="day-title">{full}<span class="today-pill">✨ Сегодня</span></div>'
-        else:
-            html += f'<div class="day-title">{full}</div>'
-        if not lessons:
-            html += '<div class="info-box"><span class="big">📭</span>Нет уроков на этот день</div>'
-        else:
-            for time_str, num, lesson in lessons:
-                card_cls = "card"
-                now_pill = ""
-                if full == today_full and live_status and live_status["type"] == "now" and num == live_status["num"]:
-                    card_cls += " now"; now_pill = '<span class="now-pill">сейчас</span>'
-                elif full == today_full and live_status and live_status["type"] == "before" and num == live_status["num"]:
-                    card_cls += " next-up"
-                html += f'<div class="{card_cls}"><div class="num">{num}</div>'
-                html += f'<div class="left-side"><div class="time">{time_str}</div>'
-                html += f'<div class="lesson">{lesson}</div></div>'
-                html += now_pill + '</div>'
-        html += '</div>'
-    return html
+def build_day_block(day_name, lessons, is_today, live_status):
+    h = f'<div class="day-block active" id="day-block">'
+    pill = '<span class="today-pill">✨ Сегодня</span>' if is_today else ''
+    h += f'<div class="day-title">{day_name}{pill}</div>'
+    if not lessons:
+        h += '<div class="info-box"><span class="big">📭</span>Нет уроков</div>'
+    else:
+        for tv, num, lesson in lessons:
+            cc = "card"; np = ""
+            if is_today and live_status and live_status["type"] == "now" and num == live_status["num"]:
+                cc += " now"; np = '<span class="now-pill">сейчас</span>'
+            elif is_today and live_status and live_status["type"] == "before" and num == live_status["num"]:
+                cc += " next-up"
+            h += f'<div class="{cc}"><div class="num">{num}</div>'
+            h += f'<div class="left-side"><div class="time">{tv}</div>'
+            h += f'<div class="lesson">{lesson}</div></div>{np}</div>'
+    h += '</div>'
+    return h
 
 
 class SimpleHandler(BaseHTTPRequestHandler):
-    def log_message(self, format, *args): return
-    def _send(self, content_type, body):
-        self.send_response(200)
-        self.send_header("Content-type", content_type)
+    def log_message(self, *a): return
+    def _send(self, ct, body):
+        self.send_response(200); self.send_header("Content-type", ct)
         self.send_header("Cache-Control", "public, max-age=3600")
-        self.end_headers()
-        self.wfile.write(body)
+        self.end_headers(); self.wfile.write(body)
 
     def do_GET(self):
         try:
             path = self.path.split("?")[0]
             if path == "/manifest.json":
-                self._send("application/manifest+json; charset=utf-8", MANIFEST.encode("utf-8")); return
+                self._send("application/manifest+json; charset=utf-8", MANIFEST.encode()); return
             if path == "/sw.js":
-                self._send("application/javascript; charset=utf-8", SW_JS.encode("utf-8")); return
+                self._send("application/javascript; charset=utf-8", SW_JS.encode()); return
             if path == "/icon.svg":
-                self._send("image/svg+xml; charset=utf-8", ICON_SVG.encode("utf-8")); return
+                self._send("image/svg+xml; charset=utf-8", ICON_SVG.encode()); return
 
-            now_perm = datetime.now(PERM_TZ)
-            hour, minute = now_perm.hour, now_perm.minute
-            weekday_idx = now_perm.weekday()
-            current_day_name = DAY_FULL[weekday_idx] if weekday_idx < 6 else "Суббота"
-            is_weekend = (weekday_idx >= 5)
+            now = datetime.now(PERM_TZ)
+            hour, minute = now.hour, now.minute
+            wi = now.weekday()
+            today_name = DAY_FULL[wi] if wi < 6 else "Суббота"
+            is_weekend = wi >= 5
             refresh_tag = "<meta http-equiv='refresh' content='900'>" if not (1 <= hour < 5) else ""
-
             days_schedule, error_msg = get_schedule()
-            months = ["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"]
-            header_date = f"{current_day_name}, {now_perm.day} {months[now_perm.month-1]}"
 
-            today_lessons = days_schedule.get(current_day_name, [])
+            months = ["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"]
+            header_date = f"{today_name}, {now.day} {months[now.month-1]}"
+
+            tomorrow_idx = (wi + 1) % 6
+            tomorrow_name = DAY_FULL[tomorrow_idx] if wi < 5 else "Понедельник"
+            if wi == 5: tomorrow_name = "Понедельник"
+
+            today_lessons = days_schedule.get(today_name, [])
+            tomorrow_lessons = days_schedule.get(tomorrow_name, [])
             school_over = (hour > 14 or (hour == 14 and minute >= 40) or is_weekend or not today_lessons)
-            if school_over and weekday_idx < 5:
-                next_idx = weekday_idx + 1
-                if next_idx < 6:
-                    tomorrow = DAY_FULL[next_idx]
-                    active_day = tomorrow if days_schedule.get(tomorrow) else current_day_name
-                else:
-                    active_day = current_day_name
-            else:
-                active_day = current_day_name
-            if active_day not in DAY_FULL: active_day = current_day_name
-            if not days_schedule.get(active_day) and days_schedule.get(current_day_name):
-                active_day = current_day_name
+            show_tomorrow = school_over and bool(tomorrow_lessons)
 
             live_status = get_live_status(today_lessons) if not is_weekend else None
             live_banner = build_live_banner(live_status)
-            tabs = build_tabs(active_day, days_schedule)
-            content = build_content(days_schedule, active_day, error_msg, live_status)
+            switcher = build_switcher(today_name, tomorrow_name, show_tomorrow)
+
+            # Оба блока — показываем сразу, JS переключает
+            content = '<div id="dayToday" style="display:%s">' % ('none' if show_tomorrow else 'block')
+            content += build_day_block(today_name, today_lessons, True, live_status).replace(' active','') 
+            content += '</div>'
+            content += '<div id="dayTomorrow" style="display:%s">' % ('block' if show_tomorrow else 'none')
+            content += build_day_block(tomorrow_name, tomorrow_lessons, False, None).replace(' active','')
+            content += '</div>'
 
             html = PAGE_TEMPLATE
             html = html.replace("{refresh_tag}", refresh_tag)
             html = html.replace("{header_date}", header_date)
             html = html.replace("{live_banner}", live_banner)
-            html = html.replace("{tabs}", tabs)
+            html = html.replace("{switcher}", switcher)
             html = html.replace("{content}", content)
             html = html.replace("{sheet_url}", SHEET_URL)
+
+            # Добавляем switchDay в JS
+            js_add = '''
+function switchDay(tmr) {
+    document.querySelectorAll('.switch-btn').forEach(function(b,i){
+        b.classList.toggle('active', (i===1)===tmr);
+    });
+    document.getElementById('dayToday').style.display = tmr ? 'none' : 'block';
+    document.getElementById('dayTomorrow').style.display = tmr ? 'block' : 'none';
+}
+'''
+            html = html.replace("function toggleSettings()", js_add + "function toggleSettings()")
 
             self.send_response(200)
             self.send_header("Content-type", "text/html; charset=utf-8")
