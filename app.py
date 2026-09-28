@@ -112,7 +112,7 @@ def get_week_number():
 
 
 PAGE_TEMPLATE = """<!DOCTYPE html>
-<html lang="ru" data-theme="light">
+<html lang="ru" data-theme="light" class="{device_class}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -754,6 +754,120 @@ body { position:relative; }
         box-shadow: 0 2px 12px rgba(120,60,220,0.25) !important;
     }
 }
+
+/* === SMART PERFORMANCE: на мобильных — статично и быстро === */
+/* Оставляем все цвета, градиенты, пузыри, свечения — но без анимаций */
+
+.is-mobile [data-theme="ocean"] body::before,
+.is-mobile [data-theme="sunset"] body::before,
+.is-mobile [data-theme="forest"] body::before,
+.is-mobile [data-theme="sakura"] body::before {
+    animation: none !important;
+}
+/* Волны в океане остаются, но не двигаются */
+.is-mobile [data-theme="ocean"] body::before { transform: translate3d(0,0,0) !important; }
+/* Солнце в закате остаётся, но не пульсирует */
+.is-mobile [data-theme="sunset"] body::before { animation: none !important; }
+
+/* Пузыри-кнопки: остаются в стиле, но не качаются */
+.is-mobile [data-theme="ocean"] .header,
+.is-mobile [data-theme="ocean"] .badge-class,
+.is-mobile [data-theme="ocean"] .icon-btn { animation: none !important; }
+
+/* Космические звёзды: статичные, без мерцания */
+.is-mobile [data-theme="cosmic"] body::before { animation: none !important; }
+
+/* Частицы на мобильных — вообще не создаём (скроем через JS) */
+.is-mobile #particles { display: none !important; }
+
+/* Отключаем fixed background — дёргает при скролле */
+.is-mobile body,
+.is-mobile html { background-attachment: scroll !important; }
+
+/* На мобильных — минимум box-shadow (рендер дешевле) */
+.is-mobile .header,
+.is-mobile .settings,
+.is-mobile .card,
+.is-mobile .tabs,
+.is-mobile .live-banner {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important;
+}
+.is-mobile [data-theme="cosmic"] .header,
+.is-mobile [data-theme="cosmic"] .settings,
+.is-mobile [data-theme="cosmic"] .card {
+    box-shadow: 0 2px 10px rgba(120,60,220,0.2) !important;
+}
+.is-mobile .card.now { box-shadow: 0 0 0 1.5px var(--green) !important; }
+.is-mobile .card.next-up { box-shadow: 0 0 0 1.5px var(--orange) !important; }
+
+/* Слабое устройство (определяется через JS) */
+html.low-power [data-theme] body::before,
+html.low-power body::before { animation: none !important; }
+html.low-power [data-theme="ocean"] .header,
+html.low-power [data-theme="ocean"] .badge-class,
+html.low-power [data-theme="ocean"] .icon-btn { animation: none !important; }
+html.low-power #particles { display: none !important; }
+html.low-power .header,
+html.low-power .settings,
+html.low-power .card,
+html.low-power .tabs { box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important; }
+
+/* === SMART PERFORMANCE: на мобильных — статично и быстро === */
+/* Оставляем все цвета, градиенты, пузыри, свечения — но без анимаций */
+
+.is-mobile [data-theme="ocean"] body::before,
+.is-mobile [data-theme="sunset"] body::before,
+.is-mobile [data-theme="forest"] body::before,
+.is-mobile [data-theme="sakura"] body::before {
+    animation: none !important;
+}
+/* Волны в океане остаются, но не двигаются */
+.is-mobile [data-theme="ocean"] body::before { transform: translate3d(0,0,0) !important; }
+/* Солнце в закате остаётся, но не пульсирует */
+.is-mobile [data-theme="sunset"] body::before { animation: none !important; }
+
+/* Пузыри-кнопки: остаются в стиле, но не качаются */
+.is-mobile [data-theme="ocean"] .header,
+.is-mobile [data-theme="ocean"] .badge-class,
+.is-mobile [data-theme="ocean"] .icon-btn { animation: none !important; }
+
+/* Космические звёзды: статичные, без мерцания */
+.is-mobile [data-theme="cosmic"] body::before { animation: none !important; }
+
+/* Частицы на мобильных — вообще не создаём (скроем через JS) */
+.is-mobile #particles { display: none !important; }
+
+/* Отключаем fixed background — дёргает при скролле */
+.is-mobile body,
+.is-mobile html { background-attachment: scroll !important; }
+
+/* На мобильных — минимум box-shadow (рендер дешевле) */
+.is-mobile .header,
+.is-mobile .settings,
+.is-mobile .card,
+.is-mobile .tabs,
+.is-mobile .live-banner {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important;
+}
+.is-mobile [data-theme="cosmic"] .header,
+.is-mobile [data-theme="cosmic"] .settings,
+.is-mobile [data-theme="cosmic"] .card {
+    box-shadow: 0 2px 10px rgba(120,60,220,0.2) !important;
+}
+.is-mobile .card.now { box-shadow: 0 0 0 1.5px var(--green) !important; }
+.is-mobile .card.next-up { box-shadow: 0 0 0 1.5px var(--orange) !important; }
+
+/* Слабое устройство (определяется через JS) */
+html.low-power [data-theme] body::before,
+html.low-power body::before { animation: none !important; }
+html.low-power [data-theme="ocean"] .header,
+html.low-power [data-theme="ocean"] .badge-class,
+html.low-power [data-theme="ocean"] .icon-btn { animation: none !important; }
+html.low-power #particles { display: none !important; }
+html.low-power .header,
+html.low-power .settings,
+html.low-power .card,
+html.low-power .tabs { box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important; }
 </style>
 </head>
 <body>
@@ -888,6 +1002,10 @@ function toggleAnim() {
 function spawnParticles(theme) {
     var container = document.getElementById('particles');
     if (!container) return;
+    if (document.documentElement.classList.contains('is-mobile')) return;
+    if (document.documentElement.classList.contains('low-power')) return;
+    if (document.documentElement.classList.contains('is-mobile')) return;
+    if (document.documentElement.classList.contains('low-power')) return;
     container.innerHTML = '';
     if (localStorage.getItem('rs_anim') === '0') return;
     if (window.innerWidth < 300) return;
@@ -1125,7 +1243,12 @@ class SimpleHandler(BaseHTTPRequestHandler):
             tabs = build_tabs(active_day, days_schedule)
             content = build_content(days_schedule, active_day, error_msg, live_status)
 
+            ua = self.headers.get('User-Agent', '').lower()
+            is_mobile_ua = any(x in ua for x in ['iphone', 'ipad', 'ipod', 'android', 'mobile', 'windows phone', 'opera mini'])
+            device_class = "is-mobile" if is_mobile_ua else "is-desktop"
+
             html = PAGE_TEMPLATE
+            html = html.replace("{device_class}", device_class)
             html = html.replace("{refresh_tag}", refresh_tag)
             html = html.replace("{header_date}", header_date)
             html = html.replace("{class_upper}", CLASS_CODE.upper())
