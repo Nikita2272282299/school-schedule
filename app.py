@@ -282,7 +282,17 @@ body {
 }
 
 /* ==== ЧАСТИЦЫ (только на мобильных и десктопе, но мало) ==== */
-10% { opacity: 0.85; }
+#particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.particle {
+    position: absolute; top: -40px; user-select: none;
+    will-change: transform;
+    animation-name: fall;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+@keyframes fall {
+    0% { transform: translate3d(0, -40px, 0) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.85; }
     90% { opacity: 0.85; }
     100% { transform: translate3d(30px, 110vh, 0) rotate(360deg); opacity: 0; }
 }
@@ -310,6 +320,13 @@ body {
 .brand-text { min-width: 0; }
 .brand-title { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
 .brand-sub { font-size: 0.72rem; color: var(--muted); font-weight: 700; margin-top: 2px; }
+.brand-week {
+    display: inline-block; margin-left: 6px;
+    background: var(--a-soft); color: var(--accent);
+    padding: 1px 7px; border-radius: 6px;
+    font-size: 0.65rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.04em;
+}
 .header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .badge-class {
     background: var(--badge-bg); color: var(--badge-color);
@@ -788,6 +805,7 @@ html.hide-time .time { display: none; }
     </div>
     <div class="header-right">
         <div class="badge-class">8Г</div>
+        
         <button class="icon-btn" onclick="toggleSettings()" title="Настройки">⚙️</button>
     </div>
 </div>
@@ -858,7 +876,7 @@ var THEME_COLORS = {light:'#eef2f7', dark:'#0b0d12', cosmic:'#05021a'};
     if (localStorage.getItem('rs_hide_time') === '1') document.documentElement.classList.add('hide-time');
     document.getElementById('tCompact').classList.toggle('on', localStorage.getItem('rs_compact') === '1');
     document.getElementById('tHideTime').classList.toggle('on', localStorage.getItem('rs_hide_time') === '1');
-    })();
+})();
 
 function setTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
@@ -891,8 +909,6 @@ function toggleHideTime() {
 function toggleSettings() {
     document.getElementById('settingsPanel').classList.toggle('open');
 }
-, 400);
-}
 function showDay(day) {
     document.querySelectorAll('.day-block').forEach(function(el) { el.classList.remove('active'); });
     var t = document.getElementById('day-' + day);
@@ -901,6 +917,11 @@ function showDay(day) {
         x.classList.toggle('active', x.getAttribute('data-day') === day);
     });
 }
+document.addEventListener('visibilitychange', function() {
+    var ps = document.hidden ? 'paused' : 'running';
+    document.querySelectorAll('.particle').forEach(function(p) { p.style.animationPlayState = ps; });
+});
+
 var deferredPrompt = null;
 var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); deferredPrompt = e; renderInstall(); });
