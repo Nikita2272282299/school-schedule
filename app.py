@@ -16,6 +16,13 @@ TIME_TO_NUM = {
 cache = {"days_schedule": {}, "error_msg": "", "last_update": 0}
 CACHE_TTL = 300
 
+MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/","display":"standalone","background_color":"#0a0620","theme_color":"#4c6ef5","icons":[{"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}'
+
+ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4c6ef5"/><stop offset="1" stop-color="#7950f2"/></linearGradient></defs><rect width="512" height="512" rx="110" fill="url(#g)"/><rect x="130" y="110" width="252" height="46" rx="23" fill="#ffffff" opacity="0.25"/><text x="256" y="360" font-family="Arial,Helvetica,sans-serif" font-size="230" font-weight="900" fill="#ffffff" text-anchor="middle">8Г</text></svg>'''
+
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>self.clients.claim());self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});"
+
+
 def get_schedule():
     current_time = time.time()
     if cache["days_schedule"] and (current_time - cache["last_update"] < CACHE_TTL):
@@ -92,6 +99,12 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f0f4f8" id="themeColorMeta">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="8Г">
 {refresh_tag}
 <title>Расписание 8Г</title>
 <style>
@@ -151,7 +164,7 @@ h2 span { background: linear-gradient(135deg, #4c6ef5, #7950f2); -webkit-backgro
 .settings-panel {
     background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px;
     padding: 16px 18px; margin-bottom: 16px; box-shadow: var(--shadow); display: none;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px); position: relative;
 }
 .settings-panel.open { display: block; animation: slideDown 0.25s ease; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
@@ -166,6 +179,23 @@ h2 span { background: linear-gradient(135deg, #4c6ef5, #7950f2); -webkit-backgro
 .theme-btn.active { border-color: var(--accent); background: var(--accent-light); }
 .theme-btn:active { transform: scale(0.96); }
 .theme-btn .emoji { font-size: 1.4rem; }
+.install-btn {
+    width: 100%; padding: 14px; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, var(--accent), #7950f2); color: white;
+    font-weight: 800; font-size: 0.95rem; cursor: pointer; margin-top: 4px;
+    transition: transform 0.15s, opacity 0.2s;
+}
+.install-btn:active { transform: scale(0.97); }
+.link-btn {
+    background: none; border: none; color: var(--text-muted); font-weight: 600;
+    font-size: 0.85rem; cursor: pointer; padding: 6px 4px; text-decoration: underline;
+    margin-top: 6px; display: inline-block;
+}
+.installed-badge {
+    color: var(--today-badge); font-weight: 700; font-size: 0.9rem;
+    padding: 10px 0; display: flex; align-items: center; gap: 6px;
+}
+.hint-text { color: var(--text-muted); font-size: 0.82rem; line-height: 1.4; margin-top: 4px; }
 .notification-banner {
     background: var(--banner-bg); border: 1px solid var(--banner-border);
     padding: 14px 18px; border-radius: 16px; margin-bottom: 16px;
@@ -235,6 +265,8 @@ h2 span { background: linear-gradient(135deg, #4c6ef5, #7950f2); -webkit-backgro
 <button class="theme-btn" data-theme-btn="dark" onclick="setTheme('dark')"><span class="emoji">🌙</span>Тёмная</button>
 <button class="theme-btn" data-theme-btn="cosmic" onclick="setTheme('cosmic')"><span class="emoji">🌌</span>Космос</button>
 </div>
+<div class="settings-title" style="margin-top:18px;">📱 Приложение</div>
+<div id="installSection"></div>
 </div>
 {content}
 <a class="sheet-link" href="{sheet_url}" target="_blank" rel="noopener">📊 Открыть таблицу в Google Sheets</a>
@@ -283,6 +315,70 @@ function showDayByName(dayName) {
         if (banner) banner.style.display = 'flex';
         if (footer) footer.style.display = 'none';
     }
+}
+var deferredPrompt = null;
+var isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                   || window.navigator.standalone === true;
+window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    renderInstallSection();
+});
+window.addEventListener('appinstalled', function() {
+    deferredPrompt = null;
+    localStorage.setItem('rs_installed', '1');
+    renderInstallSection();
+});
+function renderInstallSection() {
+    var el = document.getElementById('installSection');
+    if (!el) return;
+    var installed = isStandalone || localStorage.getItem('rs_installed') === '1';
+    if (installed) {
+        el.innerHTML = '<div class="installed-badge">✅ Приложение установлено</div>' +
+                       '<button class="link-btn" onclick="resetInstallFlag()">Сбросить (показать кнопку установки)</button>';
+        return;
+    }
+    var hidden = localStorage.getItem('rs_install_hidden') === '1';
+    if (hidden) {
+        el.innerHTML = '<button class="link-btn" onclick="showInstall()">Показать кнопку установки</button>';
+        return;
+    }
+    if (deferredPrompt) {
+        el.innerHTML = '<button class="install-btn" onclick="doInstall()">📲 Добавить на рабочий стол</button>' +
+                       '<button class="link-btn" onclick="hideInstall()">Скрыть</button>';
+    } else {
+        el.innerHTML = '<div class="hint-text">Если кнопка не появилась — откройте сайт в Chrome и выберите «Установить приложение» или «Добавить на главный экран» через меню ⋮ браузера.</div>' +
+                       '<button class="link-btn" onclick="hideInstall()">Скрыть это сообщение</button>';
+    }
+}
+function doInstall() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(choice) {
+        if (choice.outcome === 'accepted') {
+            localStorage.setItem('rs_installed', '1');
+        }
+        deferredPrompt = null;
+        renderInstallSection();
+    });
+}
+function hideInstall() {
+    localStorage.setItem('rs_install_hidden', '1');
+    renderInstallSection();
+}
+function showInstall() {
+    localStorage.removeItem('rs_install_hidden');
+    renderInstallSection();
+}
+function resetInstallFlag() {
+    localStorage.removeItem('rs_installed');
+    renderInstallSection();
+}
+renderInstallSection();
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').catch(function() {});
+    });
 }
 </script>
 </body>
@@ -335,11 +431,25 @@ class SimpleHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         return
 
+    def _send(self, content_type, body):
+        self.send_response(200)
+        self.send_header("Content-type", content_type)
+        self.send_header("Cache-Control", "public, max-age=3600")
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self):
         try:
-            self.send_response(200)
-            self.send_header("Content-type", "text/html; charset=utf-8")
-            self.end_headers()
+            path = self.path.split("?")[0]
+            if path == "/manifest.json":
+                self._send("application/manifest+json; charset=utf-8", MANIFEST.encode("utf-8"))
+                return
+            if path == "/sw.js":
+                self._send("application/javascript; charset=utf-8", SW_JS.encode("utf-8"))
+                return
+            if path == "/icon.svg":
+                self._send("image/svg+xml; charset=utf-8", ICON_SVG.encode("utf-8"))
+                return
 
             now_perm = datetime.now(PERM_TZ)
             hour = now_perm.hour
@@ -349,9 +459,7 @@ class SimpleHandler(BaseHTTPRequestHandler):
             days_order = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
             current_day_name = days_order[weekday_idx] if weekday_idx < 6 else "Суббота"
             is_weekend = (weekday_idx >= 5)
-
             refresh_tag = "<meta http-equiv='refresh' content='900'>" if not (1 <= hour < 5) else ""
-
             days_schedule, error_msg = get_schedule()
 
             if weekday_idx == 4:
@@ -374,6 +482,9 @@ class SimpleHandler(BaseHTTPRequestHandler):
             html = html.replace("{sheet_url}", SHEET_URL)
             html = html.replace("{current_day_name}", current_day_name)
 
+            self.send_response(200)
+            self.send_header("Content-type", "text/html; charset=utf-8")
+            self.end_headers()
             self.wfile.write(html.encode('utf-8'))
         except Exception:
             pass
