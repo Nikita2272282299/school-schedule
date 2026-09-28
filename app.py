@@ -222,6 +222,7 @@ body {
     background:var(--card); border:1px solid var(--border); border-radius:24px;
     padding:16px 20px; box-shadow:var(--shadow); margin-bottom:14px;
     display:flex; align-items:center; justify-content:space-between; gap:12px;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
 }
 .brand { display:flex; align-items:center; gap:12px; min-width:0; }
 .brand-logo {
@@ -256,20 +257,13 @@ body {
 @keyframes spin { to { transform:rotate(360deg) scale(0.94); } }
 
 .settings {
-    display:grid; grid-template-rows:0fr;
     background:var(--card); border:1px solid var(--border); border-radius:20px;
-    margin-bottom:0; box-shadow:none;
-    transition:grid-template-rows 0.3s cubic-bezier(0.4,0,0.2,1),
-               margin-bottom 0.3s cubic-bezier(0.4,0,0.2,1),
-               box-shadow 0.3s cubic-bezier(0.4,0,0.2,1);
+    padding:0 18px; margin-bottom:14px; box-shadow:var(--shadow);
+    max-height:0; overflow:hidden; opacity:0;
+    transition:max-height 0.5s ease, opacity 0.3s ease, padding 0.3s ease;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
 }
-.settings.open { grid-template-rows:1fr; margin-bottom:14px; box-shadow:var(--shadow); }
-.settings-inner {
-    overflow:hidden; min-height:0; padding:0 18px;
-    transition:padding 0.3s cubic-bezier(0.4,0,0.2,1);
-    will-change:padding;
-}
-.settings.open .settings-inner { padding:18px; }
+.settings.open { max-height:1400px; opacity:1; padding:18px; }
 .settings-title { font-weight:800; font-size:0.8rem; color:var(--muted);
     text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; }
 .settings-title:not(:first-child) { margin-top:18px; }
@@ -278,11 +272,11 @@ body {
     padding:12px 4px; border-radius:12px; border:2px solid transparent;
     background:var(--bg2); color:var(--text); font-weight:700; font-size:0.7rem;
     cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px;
-    transition:background 0.15s, border-color 0.15s; font-family:inherit;
+    transition:all 0.25s; font-family:inherit;
 }
 .theme-btn .emoji { font-size:1.35rem; line-height:1; }
 .theme-btn.active { border-color:var(--accent); background:var(--accent-soft); box-shadow:0 0 0 3px var(--accent-soft); }
-
+.theme-btn:active { transform:scale(0.95); }
 .toggle-row { display:flex; justify-content:space-between; align-items:center;
     padding:10px 0; border-bottom:1px solid var(--border); }
 .toggle-row:last-child { border-bottom:none; }
@@ -302,13 +296,13 @@ body {
 .size-btn {
     padding:12px; border-radius:12px; border:2px solid var(--border);
     background:var(--bg2); color:var(--text); font-weight:800; cursor:pointer;
-    font-family:inherit; transition:background 0.15s, border-color 0.15s;
+    font-family:inherit; transition:all 0.2s;
 }
 .size-btn:nth-child(1) { font-size:0.85rem; }
 .size-btn:nth-child(2) { font-size:1.05rem; }
 .size-btn:nth-child(3) { font-size:1.25rem; }
 .size-btn.active { border-color:var(--accent); background:var(--accent-soft); }
-
+.size-btn:active { transform:scale(0.95); }
 .install-btn {
     width:100%; padding:13px; border-radius:14px; border:none;
     background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white;
@@ -328,6 +322,7 @@ body {
 .live-banner {
     border-radius:20px; padding:16px 18px; margin-bottom:14px;
     display:flex; align-items:center; gap:14px; box-shadow:var(--shadow);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
     border:1px solid var(--border); animation:slideDown 0.4s ease;
 }
 @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:none; } }
@@ -356,7 +351,7 @@ body {
     display:flex; gap:6px; margin-bottom:16px; overflow-x:auto;
     padding:4px; scrollbar-width:none; -ms-overflow-style:none;
     background:var(--card); border-radius:18px; border:1px solid var(--border);
-    box-shadow:var(--shadow);
+    box-shadow:var(--shadow); backdrop-filter:blur(14px);
 }
 .tabs::-webkit-scrollbar { display:none; }
 .tab {
@@ -373,7 +368,7 @@ body {
     content:""; position:absolute; bottom:4px; left:50%; transform:translateX(-50%);
     width:5px; height:5px; border-radius:50%; background:var(--accent);
 }
-
+.tab:active { transform:scale(0.94); }
 
 .day-block { display:none; }
 .day-block.active { display:block; animation:fadeUp 0.35s ease; }
@@ -392,6 +387,7 @@ body {
     background:var(--card); padding:14px 16px; margin-bottom:9px; border-radius:18px;
     box-shadow:var(--shadow); display:flex; align-items:center; gap:14px;
     border:1px solid var(--border); transition:all 0.25s;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
     position:relative; overflow:hidden;
 }
 .card.now {
@@ -431,6 +427,7 @@ html.font-large .day-title { font-size:1.3rem; }
     background:var(--card); padding:32px 20px; border-radius:20px;
     box-shadow:var(--shadow); text-align:center; font-size:1rem; font-weight:700;
     color:var(--muted); border:1px solid var(--border);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
     line-height:1.5;
 }
 .info-box .big { font-size:2.2rem; display:block; margin-bottom:8px; }
@@ -466,6 +463,8 @@ body { position:relative; }
 [data-theme="ocean"] .header,
 [data-theme="ocean"] .settings {
     background:rgba(255,255,255,0.45);
+    backdrop-filter:blur(24px) saturate(1.6);
+    -webkit-backdrop-filter:blur(24px) saturate(1.6);
     border:2px solid rgba(255,255,255,0.65);
     box-shadow:0 10px 40px rgba(8,145,178,0.25),inset 0 2px 12px rgba(255,255,255,0.9);
     border-radius:28px;
@@ -504,6 +503,8 @@ body { position:relative; }
 }
 [data-theme="ocean"] .card {
     background:rgba(255,255,255,0.6);
+    backdrop-filter:blur(14px) saturate(1.5);
+    -webkit-backdrop-filter:blur(14px) saturate(1.5);
     border:1.5px solid rgba(255,255,255,0.8);
     border-radius:24px;
     box-shadow:0 8px 24px rgba(8,145,178,0.18),inset 0 1px 6px rgba(255,255,255,0.9);
@@ -522,6 +523,7 @@ body { position:relative; }
 }
 [data-theme="ocean"] .tabs {
     background:rgba(255,255,255,0.55);
+    backdrop-filter:blur(14px) saturate(1.4);
     border:1.5px solid rgba(255,255,255,0.75);
     box-shadow:0 6px 20px rgba(8,145,178,0.15);
 }
@@ -566,6 +568,7 @@ body { position:relative; }
 [data-theme="sunset"] .header,
 [data-theme="sunset"] .settings {
     background:rgba(255,250,240,0.85);
+    backdrop-filter:blur(16px);
     border:1px solid rgba(249,115,22,0.2);
     box-shadow:0 8px 32px rgba(249,115,22,0.25),inset 0 1px 0 rgba(255,255,255,0.9);
 }
@@ -599,6 +602,7 @@ body { position:relative; }
 [data-theme="forest"] .header,
 [data-theme="forest"] .settings {
     background:rgba(255,255,255,0.8);
+    backdrop-filter:blur(14px);
     border:1px solid rgba(5,150,105,0.2);
     box-shadow:0 6px 24px rgba(5,150,105,0.2),inset 0 1px 0 rgba(255,255,255,0.9);
 }
@@ -633,6 +637,7 @@ body { position:relative; }
 [data-theme="sakura"] .header,
 [data-theme="sakura"] .settings {
     background:rgba(255,255,255,0.88);
+    backdrop-filter:blur(14px);
     border:2px solid rgba(236,72,153,0.18);
     box-shadow:0 8px 28px rgba(236,72,153,0.2),inset 0 1px 0 rgba(255,255,255,0.9);
     border-radius:26px;
@@ -685,6 +690,8 @@ body { position:relative; }
     [data-theme="ocean"] .settings,
     [data-theme="ocean"] .card,
     [data-theme="ocean"] .tabs {
+        backdrop-filter:blur(8px) !important;
+        -webkit-backdrop-filter:blur(8px) !important;
     }
     /* Ускоряем волну через transform вместо background-position */
     [data-theme="ocean"] body::before {
@@ -724,92 +731,6 @@ body { position:relative; }
     transition:max-height 0.35s ease, opacity 0.3s ease, padding 0.3s ease, margin-top 0.3s ease;
 }
 .install-tip.show { max-height:200px; opacity:1; padding:14px; margin-top:10px; }
-
-/* === HARD PERF MODE === */
-@media (max-width: 820px) {
-    /* 1. ГЛАВНОЕ — убираем backdrop-filter (самый тяжёлый эффект) */
-    .header, .settings, .card, .tabs, .live-banner,
-    [data-theme="ocean"] .header, [data-theme="ocean"] .settings,
-    [data-theme="ocean"] .card, [data-theme="ocean"] .tabs,
-    [data-theme="sunset"] .header, [data-theme="sunset"] .settings,
-    [data-theme="sunset"] .card,
-    [data-theme="forest"] .header, [data-theme="forest"] .settings,
-    [data-theme="forest"] .card,
-    [data-theme="sakura"] .header, [data-theme="sakura"] .settings,
-    [data-theme="sakura"] .card {
-    }
-    /* 2. Заменяем прозрачные стеклянные фоны на плотные */
-    [data-theme="ocean"] .header, [data-theme="ocean"] .settings,
-    [data-theme="ocean"] .card, [data-theme="ocean"] .tabs {
-        background: rgba(240, 251, 255, 0.97) !important;
-    }
-    [data-theme="sunset"] .header, [data-theme="sunset"] .settings,
-    [data-theme="sunset"] .card { background: rgba(255, 250, 242, 0.97) !important; }
-    [data-theme="forest"] .header, [data-theme="forest"] .settings,
-    [data-theme="forest"] .card { background: rgba(246, 252, 245, 0.97) !important; }
-    [data-theme="sakura"] .header, [data-theme="sakura"] .settings,
-    [data-theme="sakura"] .card { background: rgba(255, 249, 252, 0.97) !important; }
-    [data-theme="cosmic"] .header, [data-theme="cosmic"] .settings,
-    [data-theme="cosmic"] .card { background: rgba(30, 22, 65, 0.97) !important; }
-
-    /* 3. Убираем fixed background (тормозит скролл) */
-    body, html { background-attachment: scroll !important; }
-
-    /* 4. Убираем ВСЕ декоративные SVG-фоны (волны, солнце, крона) */
-    [data-theme="ocean"] body::before,
-    [data-theme="sunset"] body::before,
-    [data-theme="forest"] body::before,
-    [data-theme="sakura"] body::before { display: none !important; }
-
-    /* 5. Убираем анимации пузырей/покачиваний */
-    [data-theme="ocean"] .header,
-    [data-theme="ocean"] .badge-class,
-    [data-theme="ocean"] .icon-btn { animation: none !important; }
-
-    /* 6. Убираем тяжёлые радиальные градиенты у океана */
-    [data-theme="ocean"] .badge-class,
-    [data-theme="ocean"] .icon-btn,
-    [data-theme="ocean"] .num {
-        background: linear-gradient(135deg, #22d3ee, #0891b2) !important;
-        border: none !important;
-        box-shadow: 0 2px 6px rgba(8,145,178,0.25) !important;
-    }
-    /* Убираем декоративные блики у пузырей */
-    [data-theme="ocean"] .card::after,
-    [data-theme="ocean"] .header::before,
-    [data-theme="ocean"] .icon-btn::before,
-    [data-theme="ocean"] .badge-class::before { display: none !important; }
-
-    /* 7. Уменьшаем тени (тоже влияет на рендер) */
-    .card, .header, .settings, .tabs, .live-banner {
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
-    }
-    /* 8. Убираем will-change у карточек — там оно не нужно */
-    .header, .settings, .card, .tabs, .live-banner {
-        transform: none !important;
-    }
-}
-
-/* Лёгкий режим (переключатель) */
-html.light-mode [data-theme] body::before,
-html.light-mode body::before { display: none !important; }
-html.light-mode .header,
-html.light-mode .settings,
-html.light-mode .card,
-html.light-mode .tabs,
-html.light-mode .live-banner {
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
-}
-html.light-mode #particles { display: none !important; }
-html.light-mode [data-theme="ocean"] .header,
-html.light-mode [data-theme="ocean"] .badge-class,
-html.light-mode [data-theme="ocean"] .icon-btn { animation: none !important; }
-
-/* === SMOOTH === */
-.toggle { transition:background 0.2s ease; }
-.toggle::after { transition:transform 0.2s ease, background 0.2s ease; transform:translateZ(0); }
-.toggle.on::after { transform:translateX(20px) translateZ(0); }
-.settings-inner > * { transform:translateZ(0); }
 </style>
 </head>
 <body>
@@ -946,7 +867,6 @@ function spawnParticles(theme) {
     if (!container) return;
     container.innerHTML = '';
     if (localStorage.getItem('rs_anim') === '0') return;
-    if (document.documentElement.classList.contains('light-mode')) return;
     if (window.innerWidth < 300) return;
     var configs = {
         cosmic: { chars: ['✦','✧','·','+'], colors: ['#ffffff','#b794f6','#7cf5c0','#e0d4ff'],
@@ -962,8 +882,8 @@ function spawnParticles(theme) {
     };
     var cfg = configs[theme];
     if (!cfg) return;
-    var isMobile = window.innerWidth < 820 || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 6);
-    var count = isMobile ? Math.max(4, Math.round(cfg.count * 0.25)) : cfg.count;
+    var isMobile = window.innerWidth < 500 || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+    var count = isMobile ? Math.max(6, Math.round(cfg.count * 0.45)) : cfg.count;
     var frag = document.createDocumentFragment();
     for (var i = 0; i < count; i++) {
         var el = document.createElement('span');
@@ -990,7 +910,7 @@ function spawnParticles(theme) {
 function toggleSettings() {
     document.getElementById('settingsPanel').classList.toggle('open');
     var btn = document.getElementById('settingsBtn');
-    
+    btn.classList.remove('spin'); void btn.offsetWidth; btn.classList.add('spin');
 }
 function showDay(day) {
     document.querySelectorAll('.day-block').forEach(function(el) { el.classList.remove('active'); });
