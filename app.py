@@ -162,35 +162,6 @@ PAGE = """<!DOCTYPE html>
     --header-glow: 0 0 20px rgba(183,148,246,0.25);
     color-scheme: dark;
 }
-[data-theme="ocean"] {
-    --bg: linear-gradient(180deg,#c7e8f5 0%,#94d0e6 45%,#5aafd0 100%);
-    --card: rgba(255,255,255,0.97); --text: #062b3d; --muted: #4a7a8f;
-    --accent: #0891b2; --accent2: #22d3ee;
-    --a-soft: rgba(8,145,178,0.12); --a-soft2: rgba(34,211,238,0.12);
-    --border: rgba(8,145,178,0.14);
-    --green: #10b981; --green-soft: rgba(16,185,129,0.14);
-    --orange: #f59e0b; --orange-soft: rgba(245,158,11,0.14);
-    --badge-bg: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.95), rgba(34,211,238,0.55) 60%, rgba(8,145,178,0.8));
-    --badge-color: #ffffff;
-    --num-radius: 50%;
-    --num-shadow: 0 3px 10px rgba(8,145,178,0.28), inset -2px -3px 6px rgba(8,145,178,0.22), inset 2px 2px 8px rgba(255,255,255,0.7);
-    --header-glow: none;
-    color-scheme: light;
-}
-[data-theme="sunset"] {
-    --bg: linear-gradient(180deg,#ffe4b8 0%,#ffc896 30%,#ffa07a 65%,#e88898 100%);
-    --card: rgba(255,250,242,0.96); --text: #3d1a0a; --muted: #8a6550;
-    --accent: #f97316; --accent2: #ec4899;
-    --a-soft: rgba(249,115,22,0.12); --a-soft2: rgba(236,72,153,0.12);
-    --border: rgba(249,115,22,0.18);
-    --green: #059669; --green-soft: rgba(5,150,105,0.14);
-    --orange: #d97706; --orange-soft: rgba(217,119,6,0.14);
-    --badge-bg: linear-gradient(135deg,#f97316,#ec4899);
-    --badge-color: #ffffff;
-    --num-radius: 12px;
-    --num-shadow: 0 3px 10px rgba(249,115,22,0.32);
-    --header-glow: none;
-}
 [data-theme="forest"] {
     --bg: linear-gradient(180deg,#e8f5e0 0%,#c8e6c0 60%,#a8d8a0 100%);
     --card: rgba(255,255,255,0.96); --text: #0f2e1b; --muted: #5f7c68;
@@ -205,21 +176,6 @@ PAGE = """<!DOCTYPE html>
     --num-shadow: 0 3px 10px rgba(5,150,105,0.28);
     --header-glow: none;
 }
-[data-theme="sakura"] {
-    --bg: linear-gradient(180deg,#ffe8ef 0%,#ffd0e0 50%,#ffb8d0 100%);
-    --card: rgba(255,255,255,0.96); --text: #3d1029; --muted: #9a6782;
-    --accent: #ec4899; --accent2: #a855f7;
-    --a-soft: rgba(236,72,153,0.12); --a-soft2: rgba(168,85,247,0.12);
-    --border: rgba(236,72,153,0.16);
-    --green: #059669; --green-soft: rgba(5,150,105,0.14);
-    --orange: #ea580c; --orange-soft: rgba(234,88,12,0.14);
-    --badge-bg: linear-gradient(135deg,#ec4899,#a855f7);
-    --badge-color: #ffffff;
-    --num-radius: 14px;
-    --num-shadow: 0 3px 10px rgba(236,72,153,0.28);
-    --header-glow: none;
-}
-
 html {
     min-height: 100vh;
     background: var(--bg);
@@ -637,159 +593,74 @@ html.hide-time .time { display: none; }
 }
 .sheet-link:active { color: var(--accent); border-color: var(--accent); border-style: solid; }
 
-/* === КРАСИВЫЕ СТАТИЧНЫЕ ФОНЫ (без анимаций, без свечения) === */
+/* === ТЕМЫ: 4 штуки, статично, без fixed === */
 
-/* ЛЕС — деревья по бокам + крона сверху */
-[data-theme="forest"] {
-    background: linear-gradient(180deg, #dff0d0 0%, #b8dfa8 40%, #90ca80 70%, #7abb6c 100%);
-}
-[data-theme="forest"] body {
+/* СВЕТЛАЯ */
+[data-theme="light"] body {
     background:
-        linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 30%),
-        linear-gradient(180deg, #dff0d0 0%, #b8dfa8 40%, #90ca80 70%, #7abb6c 100%);
-    background-attachment: scroll;
-    position: relative;
-}
-[data-theme="forest"] body::before {
-    content: ""; position: fixed; left: 0; right: 0; top: 0;
-    height: 100vh; z-index: 0; pointer-events: none;
-    background-image:
-        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 400' preserveAspectRatio='xMidYMin slice'><g fill='%234a7a3a' opacity='0.35'><path d='M80,400 L80,200 L40,200 L100,120 L160,200 L120,200 L120,400 Z'/><path d='M80,200 L30,200 L100,90 L170,200 L120,200 Z'/><path d='M100,120 L60,120 L100,50 L140,120 Z'/></g><g fill='%233d6b30' opacity='0.4'><path d='M1100,400 L1100,180 L1050,180 L1120,80 L1190,180 L1140,180 L1140,400 Z'/><path d='M1100,180 L1040,180 L1120,60 L1200,180 L1140,180 Z'/></g></svg>"),
-        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 100' preserveAspectRatio='none'><path d='M0,0 L0,60 Q100,90 200,60 Q300,30 400,60 Q500,90 600,60 Q700,30 800,60 Q900,90 1000,60 Q1100,30 1200,60 L1200,0 Z' fill='%233d6b30' opacity='0.3'/></svg>");
-    background-size: 100vw 100vh, 100vw 100px;
-    background-position: 0 0, 0 0;
-    background-repeat: no-repeat, repeat-x;
+        radial-gradient(ellipse at 50% 0%, rgba(200,215,255,0.6), transparent 55%),
+        linear-gradient(180deg, #f1f5fa 0%, #e4ebf3 100%);
 }
 
-/* КОСМОС — глубокий градиент + статичные звёзды + туманность */
-[data-theme="cosmic"] {
-    background: #05021a;
+/* ТЁМНАЯ */
+[data-theme="dark"] body {
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.10), transparent 55%),
+        linear-gradient(180deg, #10131a 0%, #0b0d12 100%);
 }
+
+/* КОСМОС — звёзды через multiple radial-gradient прямо в background */
 [data-theme="cosmic"] body {
-    background:
-        radial-gradient(ellipse at 20% 15%, rgba(139,92,246,0.28), transparent 45%),
-        radial-gradient(ellipse at 85% 75%, rgba(56,189,248,0.18), transparent 50%),
-        radial-gradient(ellipse at 60% 40%, rgba(124,245,192,0.08), transparent 55%),
+    background-color: #05021a;
+    background-image:
+        radial-gradient(2px 2px at 12% 8%, #ffffff, transparent 55%),
+        radial-gradient(1.5px 1.5px at 28% 18%, #b794f6, transparent 55%),
+        radial-gradient(1px 1px at 45% 6%, #ffffff, transparent 55%),
+        radial-gradient(2px 2px at 62% 22%, #7cf5c0, transparent 55%),
+        radial-gradient(1.2px 1.2px at 78% 12%, #ffffff, transparent 55%),
+        radial-gradient(1.5px 1.5px at 90% 28%, #b794f6, transparent 55%),
+        radial-gradient(1px 1px at 8% 35%, #ffffff, transparent 55%),
+        radial-gradient(1.8px 1.8px at 38% 42%, #ffffff, transparent 55%),
+        radial-gradient(1.2px 1.2px at 68% 48%, #7cf5c0, transparent 55%),
+        radial-gradient(1.5px 1.5px at 18% 55%, #b794f6, transparent 55%),
+        radial-gradient(1px 1px at 52% 62%, #ffffff, transparent 55%),
+        radial-gradient(2px 2px at 82% 58%, #ffffff, transparent 55%),
+        radial-gradient(1.3px 1.3px at 25% 72%, #7cf5c0, transparent 55%),
+        radial-gradient(1.5px 1.5px at 55% 78%, #ffffff, transparent 55%),
+        radial-gradient(1px 1px at 88% 82%, #b794f6, transparent 55%),
+        radial-gradient(1.8px 1.8px at 15% 92%, #ffffff, transparent 55%),
+        radial-gradient(1.2px 1.2px at 72% 95%, #7cf5c0, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 25% 12%, rgba(139,92,246,0.28), transparent 65%),
+        radial-gradient(ellipse 50% 35% at 80% 78%, rgba(56,189,248,0.20), transparent 65%),
+        radial-gradient(ellipse 70% 50% at 55% 50%, rgba(124,245,192,0.08), transparent 70%),
         linear-gradient(180deg, #0a0424 0%, #05021a 55%, #01000a 100%);
     background-attachment: scroll;
 }
-[data-theme="cosmic"] body::before {
-    content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+
+/* ЛЕС — градиент + деревья через SVG прямо в background (без псевдоэлементов) */
+[data-theme="forest"] body {
+    background-color: #8ec57f;
     background-image:
-        radial-gradient(1.5px 1.5px at 24px 32px, rgba(255,255,255,0.95), transparent 60%),
-        radial-gradient(1px 1px at 118px 88px, rgba(255,255,255,0.8), transparent 60%),
-        radial-gradient(2px 2px at 210px 156px, rgba(183,148,246,1), transparent 60%),
-        radial-gradient(1px 1px at 60px 200px, rgba(255,255,255,0.7), transparent 60%),
-        radial-gradient(1.5px 1.5px at 260px 40px, rgba(124,245,192,1), transparent 60%),
-        radial-gradient(1.2px 1.2px at 180px 240px, rgba(255,255,255,0.85), transparent 60%),
-        radial-gradient(1px 1px at 340px 100px, rgba(255,255,255,0.6), transparent 60%),
-        radial-gradient(1.8px 1.8px at 90px 130px, rgba(183,148,246,0.95), transparent 60%),
-        radial-gradient(1px 1px at 400px 300px, rgba(255,255,255,0.75), transparent 60%),
-        radial-gradient(1.3px 1.3px at 30px 340px, rgba(124,245,192,0.85), transparent 60%);
-    background-size: 460px 380px; background-repeat: repeat;
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><g fill='%232d5a1f' opacity='0.85'><path d='M50,400 L50,240 L30,240 L70,160 L110,240 L90,240 L90,400 Z'/><path d='M50,240 L10,240 L70,120 L130,240 L90,240 Z'/><path d='M70,160 L40,160 L70,90 L100,160 Z'/></g><g fill='%232d5a1f' opacity='0.85'><path d='M350,400 L350,220 L325,220 L370,130 L415,220 L390,220 L390,400 Z'/><path d='M350,220 L305,220 L370,100 L435,220 L390,220 Z'/><path d='M370,130 L340,130 L370,60 L400,130 Z'/></g></svg>"),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'><path d='M0,0 L0,70 Q75,100 150,70 Q225,40 300,70 Q375,100 450,70 Q525,40 600,70 Q675,100 750,70 Q825,40 900,70 Q975,100 1050,70 Q1125,40 1200,70 L1200,0 Z' fill='%232d5a1f' opacity='0.55'/><path d='M0,0 L0,45 Q100,75 200,45 Q300,15 400,45 Q500,75 600,45 Q700,15 800,45 Q900,75 1000,45 Q1100,15 1200,45 L1200,0 Z' fill='%233d6b30' opacity='0.7'/></svg>"),
+        radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,255,255,0.35), transparent 60%),
+        linear-gradient(180deg, #dff0d0 0%, #b8dfa8 35%, #8ec57f 70%, #6ba85c 100%);
+    background-attachment: scroll;
+    background-size: auto 100%, 100% 140px, 100% 100%, 100% 100%;
+    background-position: 0 100%, 0 0, 0 0, 0 0;
+    background-repeat: no-repeat, repeat-x, no-repeat, no-repeat;
 }
+
+/* Карточки в тёмных темах — чуть плотнее */
 [data-theme="cosmic"] .card {
-    background: rgba(30,22,65,0.7);
+    background: rgba(30,22,65,0.75);
     border-color: rgba(183,148,246,0.18);
 }
-
-/* ОКЕАН — глубокий градиент сверху вниз + статичные волны снизу */
-[data-theme="ocean"] {
-    background: #5aafd0;
+[data-theme="dark"] .card,
+[data-theme="light"] .card,
+[data-theme="forest"] .card {
+    background: var(--card);
 }
-[data-theme="ocean"] body {
-    background:
-        linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 25%),
-        linear-gradient(180deg, #b8e0f0 0%, #7cc5e0 35%, #4ba8cc 65%, #2a8aad 100%);
-    background-attachment: scroll;
-}
-[data-theme="ocean"] body::before {
-    content: ""; position: fixed; left: 0; right: 0; bottom: 0;
-    height: 240px; z-index: 0; pointer-events: none;
-    background-image:
-        radial-gradient(ellipse at 50% 100%, rgba(255,255,255,0.35), transparent 60%),
-        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 240' preserveAspectRatio='none'><path d='M0,100 Q150,40 300,100 T600,100 T900,100 T1200,100 L1200,240 L0,240 Z' fill='%2312607a' opacity='0.35'/><path d='M0,150 Q200,90 400,150 T800,150 T1200,150 L1200,240 L0,240 Z' fill='%230891b2' opacity='0.5'/><path d='M0,190 Q250,150 500,190 T1000,190 T1200,190 L1200,240 L0,240 Z' fill='%23064a5c' opacity='0.65'/></svg>");
-    background-size: 100% 100%, 1200px 240px;
-    background-repeat: no-repeat, repeat-x;
-}
-
-/* ЗАКАТ — тёплый градиент + солнце */
-[data-theme="sunset"] {
-    background: #ffb088;
-}
-[data-theme="sunset"] body {
-    background:
-        radial-gradient(circle at 75% 25%, rgba(255,240,180,0.55), transparent 25%),
-        radial-gradient(circle at 75% 25%, rgba(255,180,90,0.4), transparent 40%),
-        linear-gradient(180deg, #ffe0a8 0%, #ffb572 35%, #ff8a6c 65%, #d9708a 100%);
-    background-attachment: scroll;
-}
-[data-theme="sunset"] body::before {
-    content: ""; position: fixed; top: 60px; right: 60px;
-    width: 160px; height: 160px; border-radius: 50%; z-index: 0; pointer-events: none;
-    background: radial-gradient(circle, rgba(255,245,200,0.9) 0%, rgba(255,200,120,0.5) 45%, transparent 70%);
-}
-
-/* САКУРА — мягкий градиент + пятна цветов */
-[data-theme="sakura"] {
-    background: #ffd0dd;
-}
-[data-theme="sakura"] body {
-    background:
-        radial-gradient(ellipse at 85% 20%, rgba(255,180,215,0.7), transparent 50%),
-        radial-gradient(ellipse at 10% 80%, rgba(220,180,255,0.5), transparent 45%),
-        radial-gradient(circle at 25% 35%, rgba(255,220,235,0.6), transparent 30%),
-        radial-gradient(circle at 70% 70%, rgba(255,200,225,0.55), transparent 30%),
-        linear-gradient(180deg, #ffeaf0 0%, #ffd0dd 50%, #ffb0c8 100%);
-    background-attachment: scroll;
-}
-[data-theme="sakura"] body::before {
-    content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-    background-image:
-        radial-gradient(3px 3px at 20% 15%, rgba(236,72,153,0.35), transparent 70%),
-        radial-gradient(4px 4px at 75% 25%, rgba(249,168,212,0.4), transparent 70%),
-        radial-gradient(3px 3px at 40% 60%, rgba(255,192,220,0.45), transparent 70%),
-        radial-gradient(5px 5px at 85% 80%, rgba(236,72,153,0.3), transparent 70%),
-        radial-gradient(3px 3px at 15% 85%, rgba(249,168,212,0.35), transparent 70%);
-    background-size: 300px 300px; background-repeat: no-repeat;
-}
-
-/* СВЕТЛАЯ — мягкий градиент */
-[data-theme="light"] body {
-    background:
-        radial-gradient(ellipse at 50% 0%, rgba(200,215,255,0.5), transparent 50%),
-        linear-gradient(180deg, #eef2f7 0%, #e4ebf3 100%);
-    background-attachment: scroll;
-}
-
-/* ТЁМНАЯ — глубокий градиент */
-[data-theme="dark"] body {
-    background:
-        radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.08), transparent 50%),
-        linear-gradient(180deg, #0f1117 0%, #0b0d12 100%);
-    background-attachment: scroll;
-}
-
-/* Карточки — красивые, но без яркого свечения */
-.card {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
-[data-theme="cosmic"] .card {
-    box-shadow: 0 2px 14px rgba(80,40,160,0.25);
-}
-[data-theme="forest"] .card,
-[data-theme="sakura"] .card,
-[data-theme="ocean"] .card,
-[data-theme="sunset"] .card {
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-}
-
-/* Убираем старые body::before от предыдущих версий (если остались) */
-[data-theme="ocean"] body::after,
-[data-theme="forest"] body::after,
-[data-theme="cosmic"] body::after,
-[data-theme="sakura"] body::after,
-[data-theme="sunset"] body::after { display: none; }
 </style>
 </head>
 <body>
@@ -860,6 +731,8 @@ var THEME_COLORS = {light:'#eef2f7', dark:'#0b0d12', cosmic:'#05021a'};
 
 (function init() {
     var saved = localStorage.getItem('rs_theme') || 'light';
+    var allowed = ['light','dark','cosmic','forest'];
+    if (allowed.indexOf(saved) === -1) { saved = 'light'; localStorage.setItem('rs_theme', 'light'); }
     document.documentElement.setAttribute('data-theme', saved);
     var meta = document.getElementById('tcMeta');
     if (meta) meta.setAttribute('content', THEME_COLORS[saved] || '#eef2f7');
