@@ -291,7 +291,8 @@ h2 span { background: linear-gradient(135deg, #4c6ef5, #7950f2); -webkit-backgro
 </div>
 <div class="settings-title" style="margin-top:18px;">📱 Приложение</div>
 <div class="settings-title" style="margin-top:18px;">🔔 Уведомления</div>
-<button class="install-btn" onclick="requestNotifPermission()" id="notifBtn">🔔 Включить уведомления</button>
+<div id="notifSection"></div>
+<div class="settings-title" style="margin-top:18px;">📱 Приложение</div>
 <div id="installSection"></div>
 </div>
 {content}
@@ -328,16 +329,53 @@ function requestNotifPermission() {
         return;
     }
     Notification.requestPermission().then(function(perm) {
-        var btn = document.getElementById('notifBtn');
+        var sec = document.getElementById('notifSection');
         if (perm === 'granted') {
-            btn.textContent = '✅ Уведомления включены';
-            btn.style.background = '#2b8a3e';
-            new Notification('📅 Расписание 8Г', { body: 'Уведомления включены!', icon: '/icon.svg' });
+            sec.style.transition = 'opacity 0.35s ease';
+            sec.style.opacity = '0';
+            setTimeout(function() {
+                localStorage.removeItem('rs_notif_disabled');
+                renderNotifSection();
+setTimeout(function() { if (deferredPrompt) renderInstallSection(); }, 3000);
+                sec.style.opacity = '1';
+            }, 350);
+            try {
+                new Notification('📅 Расписание 8Г', { body: 'Уведомления включены!', icon: '/icon.svg' });
+            } catch (e) {}
         } else {
-            btn.textContent = '❌ Уведомления запрещены';
+            renderNotifSection();
         }
     });
 }
+function disableNotifs() {
+    localStorage.setItem('rs_notif_disabled', '1');
+    renderNotifSection();
+}
+function enableNotifs() {
+    localStorage.removeItem('rs_notif_disabled');
+    renderNotifSection();
+}
+function renderNotifSection() {
+    var sec = document.getElementById('notifSection');
+    if (!sec) return;
+    if (!('Notification' in window)) {
+        sec.innerHTML = '<div class="hint-text">❌ Ваш браузер не поддерживает уведомления</div>';
+        return;
+    }
+    var disabled = localStorage.getItem('rs_notif_disabled') === '1';
+    if (Notification.permission === 'granted' && !disabled) {
+        sec.innerHTML = '<div class="installed-badge">✅ Уведомления включены</div>' +
+                        '<button class="link-btn" onclick="disableNotifs()">Отключить уведомления</button>';
+    } else if (Notification.permission === 'granted' && disabled) {
+        sec.innerHTML = '<div class="hint-text" style="margin-bottom:8px;">Уведомления выключены</div>' +
+                        '<button class="install-btn" onclick="enableNotifs()">🔔 Включить обратно</button>';
+    } else if (Notification.permission === 'denied') {
+        sec.innerHTML = '<div class="hint-text">❌ Уведомления запрещены в настройках браузера.<br>Разрешите их для этого сайта в настройках Chrome, чтобы получать оповещения.</div>';
+    } else {
+        sec.innerHTML = '<button class="install-btn" onclick="requestNotifPermission()">🔔 Включить уведомления</button>';
+    }
+}
+renderNotifSection();
 function toggleSettings() {
     document.getElementById('settingsPanel').classList.toggle('open');
 }
@@ -371,27 +409,42 @@ window.addEventListener('appinstalled', function() {
     localStorage.setItem('rs_installed', '1');
     renderInstallSection();
 });
+function detectPlatform() {
+    var ua = navigator.userAgent || '';
+    if (/iPhone|iPad|iPod/i.test(ua)) return 'ios';
+    if (/Android/i.test(ua)) return 'android';
+    return 'desktop';
+}
 function renderInstallSection() {
     var el = document.getElementById('installSection');
     if (!el) return;
     var installed = isStandalone || localStorage.getItem('rs_installed') === '1';
     if (installed) {
         el.innerHTML = '<div class="installed-badge">✅ Приложение установлено</div>' +
-                       '<button class="link-btn" onclick="resetInstallFlag()">Сбросить (показать кнопку установки)</button>';
+                       '<button class="link-btn" onclick="resetInstallFlag()">Сбросить флаг</button>';
         return;
     }
     var hidden = localStorage.getItem('rs_install_hidden') === '1';
     if (hidden) {
-        el.innerHTML = '<button class="link-btn" onclick="showInstall()">Показать кнопку установки</button>';
+        el.innerHTML = '<button class="link-btn" onclick="showInstall()">Показать инструкцию по установке</button>';
         return;
     }
     if (deferredPrompt) {
         el.innerHTML = '<button class="install-btn" onclick="doInstall()">📲 Добавить на рабочий стол</button>' +
                        '<button class="link-btn" onclick="hideInstall()">Скрыть</button>';
-    } else {
-        el.innerHTML = '<div class="hint-text">Если кнопка не появилась — откройте сайт в Chrome и выберите «Установить приложение» или «Добавить на главный экран» через меню ⋮ браузера.</div>' +
-                       '<button class="link-btn" onclick="hideInstall()">Скрыть это сообщение</button>';
+        return;
     }
+    var plat = detectPlatform();
+    var hint = '';
+    if (plat === 'ios') {
+        hint = '📱 <b>iPhone/iPad:</b> открой эту страницу в <b>Safari</b>, нажми кнопку «Поделиться» (квадрат со стрелкой вверх внизу экрана) и выбери <b>«На экран Домой»</b>.';
+    } else if (plat === 'android') {
+        hint = '📱 <b>Android:</b> открой эту страницу в <b>Chrome</b>, нажми <b>⋮</b> в правом верхнем углу и выбери <b>«Установить приложение»</b> (или «Добавить на главный экран»).';
+    } else {
+        hint = '💻 <b>Компьютер:</b> открой эту страницу в Chrome или Edge — в адресной строке справа появится иконка установки приложения.';
+    }
+    el.innerHTML = '<div class="hint-text">' + hint + '</div>' +
+                   '<button class="link-btn" onclick="hideInstall()">Скрыть инструкцию</button>';
 }
 function doInstall() {
     if (!deferredPrompt) return;
@@ -424,6 +477,7 @@ renderInstallSection();
     if (now - parseInt(lastCheck) < 60000) return;
     localStorage.setItem('rs_last_notif_check', now);
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    if (localStorage.getItem('rs_notif_disabled') === '1') return;
     fetch('/api/notifications').then(function(r) { return r.json(); }).then(function(changes) {
         if (!changes || changes.length === 0) return;
         var lastShown = localStorage.getItem('rs_last_notif_hash') || '';
