@@ -91,6 +91,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f0f4f8" id="themeColorMeta">
 {refresh_tag}
 <title>Расписание 8Г</title>
 <style>
@@ -117,6 +118,9 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --banner-bg: linear-gradient(135deg, rgba(124,245,192,0.15), rgba(183,148,246,0.15));
     --banner-border: rgba(124, 245, 192, 0.4); --banner-text: #7cf5c0; --btn-bg: #7c3aed;
 }
+html { min-height: 100%; background: var(--bg); background-attachment: fixed; }
+[data-theme="dark"] { color-scheme: dark; }
+[data-theme="cosmic"] { color-scheme: dark; background: #030014; }
 * { box-sizing: border-box; }
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -239,6 +243,11 @@ h2 span { background: linear-gradient(135deg, #4c6ef5, #7950f2); -webkit-backgro
 (function() {
     var saved = localStorage.getItem('rs_theme') || 'light';
     document.documentElement.setAttribute('data-theme', saved);
+    var meta = document.getElementById('themeColorMeta');
+    if (meta) {
+        var colors = {light: '#f0f4f8', dark: '#0f1115', cosmic: '#030014'};
+        meta.setAttribute('content', colors[saved] || '#f0f4f8');
+    }
     document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
         if (b.getAttribute('data-theme-btn') === saved) b.classList.add('active');
     });
@@ -249,6 +258,11 @@ function setTheme(t) {
     document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
         b.classList.toggle('active', b.getAttribute('data-theme-btn') === t);
     });
+    var meta = document.getElementById('themeColorMeta');
+    if (meta) {
+        var colors = {light: '#f0f4f8', dark: '#0f1115', cosmic: '#030014'};
+        meta.setAttribute('content', colors[t] || '#f0f4f8');
+    }
 }
 function toggleSettings() {
     document.getElementById('settingsPanel').classList.toggle('open');
