@@ -7,12 +7,12 @@ CSV_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/export?forma
 SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit"
 SELF_URL = "https://school-schedule-4ldw.onrender.com/"
 PERM_TZ = timezone(timedelta(hours=5))
+CLASS_CODE = "8г"
 
 TIME_TO_NUM = {"8:00-8:40":1,"8:50-9:30":2,"9:45-10:25":3,"10:40-11:20":4,
     "11:35-12:15":5,"12:25-13:05":6,"13:15-13:55":7,"14:00-14:40":8}
 DAY_SHORT = {"Понедельник":"Пн","Вторник":"Вт","Среда":"Ср","Четверг":"Чт","Пятница":"Пт","Суббота":"Сб"}
 DAY_FULL = ["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"]
-CLASS_CODE = "8г"
 
 cache = {"days_schedule": {}, "error_msg": "", "last_update": 0}
 CACHE_TTL = 300
@@ -105,14 +105,8 @@ def get_live_status(today_lessons):
     return None
 
 
-def get_week_number():
-    now = datetime.now(PERM_TZ)
-    week = now.isocalendar()[1]
-    return ("Чётная" if week % 2 == 0 else "Нечётная"), week
-
-
 PAGE_TEMPLATE = """<!DOCTYPE html>
-<html lang="ru" data-theme="light">
+<html lang="ru" data-theme="light" data-graphics="high">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -121,13 +115,12 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="8Г">
 {refresh_tag}
-<title>Расписание {class_upper}</title>
+<title>Расписание 8Г</title>
 <style>
 :root, [data-theme="light"] {
-    --bg:#eef2f7; --bg2:#e0e7f0; --card:#ffffff; --card-hover:#fafbff;
+    --bg:#eef2f7; --bg2:#e0e7f0; --card:#ffffff;
     --text:#0f172a; --muted:#64748b; --accent:#6366f1; --accent2:#a855f7;
     --accent-soft:rgba(99,102,241,0.10); --accent-soft2:rgba(168,85,247,0.10);
     --border:rgba(15,23,42,0.06); --shadow:0 4px 20px rgba(15,23,42,0.06);
@@ -136,7 +129,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --danger:#ef4444;
 }
 [data-theme="dark"] {
-    --bg:#0b0d12; --bg2:#131720; --card:#1a1f2b; --card-hover:#202633;
+    --bg:#0b0d12; --bg2:#131720; --card:#1a1f2b;
     --text:#e8ecf3; --muted:#8b95a8; --accent:#818cf8; --accent2:#c084fc;
     --accent-soft:rgba(129,140,248,0.14); --accent-soft2:rgba(192,132,252,0.14);
     --border:rgba(255,255,255,0.06); --shadow:0 4px 20px rgba(0,0,0,0.4);
@@ -145,7 +138,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --danger:#f87171; color-scheme:dark;
 }
 [data-theme="cosmic"] {
-    --bg:#05021a; --bg2:#0f0730; --card:rgba(30,20,65,0.72); --card-hover:rgba(40,28,80,0.85);
+    --bg:#05021a; --bg2:#0f0730; --card:rgba(30,20,65,0.72);
     --text:#ece6ff; --muted:#a89cc7; --accent:#b794f6; --accent2:#7cf5c0;
     --accent-soft:rgba(183,148,246,0.16); --accent-soft2:rgba(124,245,192,0.12);
     --border:rgba(183,148,246,0.14); --shadow:0 8px 32px rgba(120,60,220,0.25);
@@ -154,7 +147,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --danger:#ff8ab5; color-scheme:dark;
 }
 [data-theme="ocean"] {
-    --bg:#e6f4fb; --bg2:#cfe8f6; --card:#ffffff; --card-hover:#f7fcff;
+    --bg:#e6f4fb; --bg2:#cfe8f6; --card:#ffffff;
     --text:#062b3d; --muted:#5a7d92; --accent:#0891b2; --accent2:#22d3ee;
     --accent-soft:rgba(8,145,178,0.10); --accent-soft2:rgba(34,211,238,0.10);
     --border:rgba(6,43,61,0.06); --shadow:0 4px 20px rgba(8,145,178,0.10);
@@ -163,7 +156,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --danger:#ef4444;
 }
 [data-theme="sunset"] {
-    --bg:#fff1e6; --bg2:#ffe1cc; --card:#ffffff; --card-hover:#fff8f3;
+    --bg:#fff1e6; --bg2:#ffe1cc; --card:#ffffff;
     --text:#3d1a0a; --muted:#8a6550; --accent:#f97316; --accent2:#ec4899;
     --accent-soft:rgba(249,115,22,0.10); --accent-soft2:rgba(236,72,153,0.10);
     --border:rgba(61,26,10,0.06); --shadow:0 4px 20px rgba(249,115,22,0.12);
@@ -172,7 +165,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --danger:#dc2626;
 }
 [data-theme="forest"] {
-    --bg:#eef7ee; --bg2:#d9ecd9; --card:#ffffff; --card-hover:#f7fcf7;
+    --bg:#eef7ee; --bg2:#d9ecd9; --card:#ffffff;
     --text:#0f2e1b; --muted:#5f7c68; --accent:#059669; --accent2:#84cc16;
     --accent-soft:rgba(5,150,105,0.10); --accent-soft2:rgba(132,204,22,0.10);
     --border:rgba(15,46,27,0.06); --shadow:0 4px 20px rgba(5,150,105,0.10);
@@ -181,7 +174,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --danger:#dc2626;
 }
 [data-theme="sakura"] {
-    --bg:#fff5f8; --bg2:#ffe1ec; --card:#ffffff; --card-hover:#fffafc;
+    --bg:#fff5f8; --bg2:#ffe1ec; --card:#ffffff;
     --text:#3d1029; --muted:#9a6782; --accent:#ec4899; --accent2:#a855f7;
     --accent-soft:rgba(236,72,153,0.10); --accent-soft2:rgba(168,85,247,0.10);
     --border:rgba(61,16,41,0.06); --shadow:0 4px 20px rgba(236,72,153,0.10);
@@ -189,50 +182,125 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --orange:#ea580c; --orange-soft:rgba(234,88,12,0.12);
     --danger:#dc2626;
 }
+
+/* ГРАФИЧЕСКИЕ РЕЖИМЫ */
+/* Картошка — убираем backdrop, свечения, декорации */
+[data-graphics="potato"] .header,
+[data-graphics="potato"] .settings,
+[data-graphics="potato"] .card,
+[data-graphics="potato"] .tabs,
+[data-graphics="potato"] .live-banner {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+}
+[data-graphics="potato"] body::before { display: none !important; }
+[data-graphics="potato"] #particles { display: none !important; }
+[data-graphics="potato"] .particle { display: none !important; }
+
+/* Средняя — статичные декорации, без частиц, без анимаций */
+[data-graphics="medium"] #particles { display: none !important; }
+[data-graphics="medium"] .particle { display: none !important; }
+[data-graphics="medium"] body::before { animation: none !important; }
+[data-graphics="medium"] .header,
+[data-graphics="medium"] .badge-class,
+[data-graphics="medium"] .icon-btn { animation: none !important; }
+[data-graphics="medium"] .card,
+[data-graphics="medium"] .tabs,
+[data-graphics="medium"] .header,
+[data-graphics="medium"] .settings {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* Красивая — всё включено */
+
 html { min-height:100%; background:var(--bg); }
 * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 body {
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--bg); color:var(--text); margin:0;
-    padding:20px 14px 40px; display:flex; justify-content:center;
+    padding:20px 14px 40px;
     min-height:100vh; -webkit-font-smoothing:antialiased;
     transition:background 0.5s ease, color 0.3s ease;
     position:relative; overflow-x:hidden;
 }
-#particles { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+
+/* === ДЕКОРАТИВНЫЕ ФОНЫ (только medium и high) === */
+[data-theme="ocean"] body::before {
+    content:""; position:absolute; left:0; right:0; bottom:0;
+    height:200px; z-index:0; pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 220' preserveAspectRatio='none'><path d='M0,100 Q150,30 300,100 T600,100 T900,100 T1200,100 L1200,220 L0,220 Z' fill='%230891b2' opacity='0.28'/><path d='M0,140 Q200,80 400,140 T800,140 T1200,140 L1200,220 L0,220 Z' fill='%2306b6d4' opacity='0.38'/><path d='M0,180 Q250,140 500,180 T1000,180 T1200,180 L1200,220 L0,220 Z' fill='%230891b2' opacity='0.5'/></svg>");
+    background-size:1200px 220px; background-repeat:repeat-x; background-position:bottom;
+}
+[data-graphics="high"][data-theme="ocean"] body::before {
+    animation:oceanWave 22s linear infinite;
+}
+@keyframes oceanWave { from { transform:translate3d(0,0,0); } to { transform:translate3d(-600px,0,0); } }
+
+[data-theme="sunset"] body::before {
+    content:""; position:absolute; top:30px; right:20px;
+    width:150px; height:150px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,230,140,0.95), rgba(255,150,90,0.45) 55%, transparent 75%);
+    pointer-events:none; z-index:0;
+}
+[data-graphics="high"][data-theme="sunset"] body::before {
+    animation:sunPulse 8s ease-in-out infinite;
+}
+@keyframes sunPulse { 0%,100% { transform:scale(1); opacity:0.9; } 50% { transform:scale(1.08); opacity:1; } }
+
+[data-theme="forest"] body::before {
+    content:""; position:absolute; left:0; right:0; top:0;
+    height:140px; z-index:0; pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 140' preserveAspectRatio='none'><path d='M0,0 L0,70 Q100,100 200,70 Q300,40 400,70 Q500,100 600,70 Q700,40 800,70 Q900,100 1000,70 Q1100,40 1200,70 L1200,0 Z' fill='%23059669' opacity='0.24'/></svg>");
+    background-size:1200px 140px; background-repeat:repeat-x;
+}
+[data-theme="sakura"] body::before {
+    content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+    background:radial-gradient(circle at 80% 15%, rgba(236,72,153,0.14), transparent 45%),
+                radial-gradient(circle at 15% 75%, rgba(168,85,247,0.10), transparent 45%);
+}
+[data-theme="cosmic"] body::before {
+    content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+    background-image:
+        radial-gradient(1.5px 1.5px at 24px 32px, rgba(255,255,255,0.9), transparent 60%),
+        radial-gradient(1px 1px at 118px 88px, rgba(255,255,255,0.7), transparent 60%),
+        radial-gradient(1.8px 1.8px at 210px 156px, rgba(183,148,246,0.95), transparent 60%),
+        radial-gradient(1px 1px at 60px 200px, rgba(255,255,255,0.6), transparent 60%),
+        radial-gradient(1.5px 1.5px at 260px 40px, rgba(124,245,192,0.9), transparent 60%),
+        radial-gradient(1px 1px at 180px 240px, rgba(255,255,255,0.8), transparent 60%),
+        radial-gradient(1.2px 1.2px at 320px 180px, rgba(255,255,255,0.7), transparent 60%),
+        radial-gradient(1.5px 1.5px at 90px 130px, rgba(183,148,246,0.8), transparent 60%);
+    background-size:380px 300px; background-repeat:repeat;
+}
+
+#particles { position:absolute; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
 .particle {
-    position:absolute; top:-60px; user-select:none;
-    will-change:transform; opacity:0.85;
+    position:absolute; top:-40px; user-select:none;
     animation-name:fall; animation-timing-function:linear; animation-iteration-count:infinite;
 }
 @keyframes fall {
-    0% { transform:translateY(0) translateX(0) rotate(0deg); }
-    50% { transform:translateY(50vh) translateX(20px) rotate(180deg); }
-    100% { transform:translateY(110vh) translateX(-10px) rotate(360deg); }
+    0% { transform:translate3d(0,-40px,0) rotate(0deg); opacity:0; }
+    10% { opacity:0.85; }
+    90% { opacity:0.85; }
+    100% { transform:translate3d(30px,110vh,0) rotate(360deg); opacity:0; }
 }
-@keyframes rise {
-    0% { transform:translateY(0) translateX(0); opacity:0; }
-    10% { opacity:0.8; }
-    100% { transform:translateY(-110vh) translateX(30px); opacity:0; }
-}
-@keyframes twinkle { 0%,100% { opacity:0.3; } 50% { opacity:1; } }
-.container { width:100%; max-width:520px; position:relative; z-index:1; }
+
+.container { width:100%; max-width:520px; margin:0 auto; position:relative; z-index:1; }
 
 .header {
     background:var(--card); border:1px solid var(--border); border-radius:24px;
     padding:16px 20px; box-shadow:var(--shadow); margin-bottom:14px;
     display:flex; align-items:center; justify-content:space-between; gap:12px;
-    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
 }
 .brand { display:flex; align-items:center; gap:12px; min-width:0; }
 .brand-logo {
     width:46px; height:46px; border-radius:14px; flex-shrink:0;
     background:linear-gradient(135deg,var(--accent),var(--accent2));
     display:flex; align-items:center; justify-content:center;
-    box-shadow:0 6px 20px var(--accent-soft),inset 0 1px 0 rgba(255,255,255,0.25);
     font-size:1.5rem;
+    box-shadow:0 6px 20px var(--accent-soft);
 }
-.brand-text { min-width:0; }
 .brand-title { font-size:1.05rem; font-weight:800; letter-spacing:-0.02em; line-height:1.1; }
 .brand-sub { font-size:0.75rem; color:var(--muted); font-weight:600; margin-top:2px; }
 .header-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
@@ -242,41 +310,62 @@ body {
     font-weight:800; font-size:0.95rem; letter-spacing:0.02em;
     border:1px solid var(--border);
 }
-.badge-week {
-    background:var(--bg2); color:var(--muted); padding:5px 10px; border-radius:10px;
-    font-weight:800; font-size:0.7rem; letter-spacing:0.04em; text-transform:uppercase;
-}
 .icon-btn {
     background:var(--card); color:var(--muted); border:1px solid var(--border);
     width:42px; height:42px; border-radius:13px; font-size:1.15rem;
     cursor:pointer; display:flex; align-items:center; justify-content:center;
-    transition:transform 0.15s,color 0.2s,background 0.2s;
 }
-.icon-btn:hover, .icon-btn:active { color:var(--accent); background:var(--accent-soft); transform:scale(0.94); }
-.icon-btn.spin { animation:spin 0.5s ease; }
-@keyframes spin { to { transform:rotate(360deg) scale(0.94); } }
+.icon-btn:active { color:var(--accent); background:var(--accent-soft); }
 
 .settings {
     background:var(--card); border:1px solid var(--border); border-radius:20px;
-    padding:0 18px; margin-bottom:14px; box-shadow:var(--shadow);
-    max-height:0; overflow:hidden; opacity:0;
-    transition:max-height 0.5s ease, opacity 0.3s ease, padding 0.3s ease;
-    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    padding:0 18px; margin-bottom:0; box-shadow:none;
+    display:grid; grid-template-rows:0fr;
+    transition:grid-template-rows 0.3s cubic-bezier(0.4,0,0.2,1),
+               margin-bottom 0.3s cubic-bezier(0.4,0,0.2,1),
+               box-shadow 0.3s cubic-bezier(0.4,0,0.2,1);
 }
-.settings.open { max-height:1400px; opacity:1; padding:18px; }
+.settings.open { grid-template-rows:1fr; margin-bottom:14px; box-shadow:var(--shadow); }
+.settings-inner {
+    overflow:hidden; min-height:0; padding:0 18px;
+    transition:padding 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.settings.open .settings-inner { padding:18px; }
 .settings-title { font-weight:800; font-size:0.8rem; color:var(--muted);
     text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; }
 .settings-title:not(:first-child) { margin-top:18px; }
-.theme-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.theme-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
 .theme-btn {
-    padding:12px 4px; border-radius:12px; border:2px solid transparent;
-    background:var(--bg2); color:var(--text); font-weight:700; font-size:0.7rem;
-    cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px;
-    transition:all 0.25s; font-family:inherit;
+    padding:10px 2px; border-radius:12px; border:2px solid transparent;
+    background:var(--bg2); color:var(--text); font-weight:700; font-size:0.62rem;
+    cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;
+    transition:background 0.15s, border-color 0.15s; font-family:inherit;
 }
-.theme-btn .emoji { font-size:1.35rem; line-height:1; }
-.theme-btn.active { border-color:var(--accent); background:var(--accent-soft); box-shadow:0 0 0 3px var(--accent-soft); }
-.theme-btn:active { transform:scale(0.95); }
+.theme-btn .emoji { font-size:1.25rem; line-height:1; }
+.theme-btn.active { border-color:var(--accent); background:var(--accent-soft); }
+[data-graphics="potato"] .theme-btn[data-theme-btn="ocean"],
+[data-graphics="potato"] .theme-btn[data-theme-btn="sunset"],
+[data-graphics="potato"] .theme-btn[data-theme-btn="forest"],
+[data-graphics="potato"] .theme-btn[data-theme-btn="sakura"] { display:none; }
+.graphics-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+.graphics-btn {
+    padding:10px 4px; border-radius:12px; border:2px solid transparent;
+    background:var(--bg2); color:var(--text); font-weight:700; font-size:0.62rem;
+    cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;
+    transition:background 0.15s, border-color 0.15s; font-family:inherit;
+}
+.graphics-btn .emoji { font-size:1.25rem; line-height:1; }
+.graphics-btn.active { border-color:var(--accent); background:var(--accent-soft); }
+.size-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.size-btn {
+    padding:11px; border-radius:12px; border:2px solid var(--border);
+    background:var(--bg2); color:var(--text); font-weight:800; cursor:pointer;
+    font-family:inherit; transition:background 0.15s, border-color 0.15s;
+}
+.size-btn[data-size-btn="small"] { font-size:0.85rem; }
+.size-btn[data-size-btn="normal"] { font-size:1.05rem; }
+.size-btn[data-size-btn="large"] { font-size:1.25rem; }
+.size-btn.active { border-color:var(--accent); background:var(--accent-soft); }
 .toggle-row { display:flex; justify-content:space-between; align-items:center;
     padding:10px 0; border-bottom:1px solid var(--border); }
 .toggle-row:last-child { border-bottom:none; }
@@ -292,24 +381,12 @@ body {
 }
 .toggle.on { background:linear-gradient(135deg,var(--accent),var(--accent2)); border-color:transparent; }
 .toggle.on::after { transform:translateX(20px); background:white; }
-.size-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-.size-btn {
-    padding:12px; border-radius:12px; border:2px solid var(--border);
-    background:var(--bg2); color:var(--text); font-weight:800; cursor:pointer;
-    font-family:inherit; transition:all 0.2s;
-}
-.size-btn:nth-child(1) { font-size:0.85rem; }
-.size-btn:nth-child(2) { font-size:1.05rem; }
-.size-btn:nth-child(3) { font-size:1.25rem; }
-.size-btn.active { border-color:var(--accent); background:var(--accent-soft); }
-.size-btn:active { transform:scale(0.95); }
 .install-btn {
     width:100%; padding:13px; border-radius:14px; border:none;
     background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white;
     font-weight:800; font-size:0.9rem; cursor:pointer; font-family:inherit;
-    transition:transform 0.15s; box-shadow:0 6px 20px var(--accent-soft);
 }
-.install-btn:active { transform:scale(0.97); }
+.install-btn:active { opacity:0.85; }
 .link-btn {
     background:none; border:none; color:var(--muted); font-weight:600;
     font-size:0.82rem; cursor:pointer; padding:8px 4px; text-decoration:underline;
@@ -322,60 +399,47 @@ body {
 .live-banner {
     border-radius:20px; padding:16px 18px; margin-bottom:14px;
     display:flex; align-items:center; gap:14px; box-shadow:var(--shadow);
-    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
-    border:1px solid var(--border); animation:slideDown 0.4s ease;
+    border:1px solid var(--border);
 }
-@keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:none; } }
 .live-banner.now { background:linear-gradient(135deg,var(--green-soft),var(--accent-soft)); }
 .live-banner.before { background:linear-gradient(135deg,var(--orange-soft),var(--accent-soft)); }
-.live-dot { width:10px; height:10px; border-radius:50%; background:var(--green);
-    animation:pulse 1.6s infinite; flex-shrink:0; }
+.live-dot { width:10px; height:10px; border-radius:50%; background:var(--green); flex-shrink:0; }
 .live-banner.before .live-dot { background:var(--orange); }
-@keyframes pulse {
-    0% { box-shadow:0 0 0 0 var(--green); }
-    70% { box-shadow:0 0 0 12px transparent; }
-    100% { box-shadow:0 0 0 0 transparent; }
-}
 .live-info { flex:1; min-width:0; }
 .live-label { font-size:0.72rem; font-weight:800; text-transform:uppercase;
     letter-spacing:0.08em; color:var(--green); margin-bottom:3px; }
 .live-banner.before .live-label { color:var(--orange); }
-.live-lesson { font-size:1.05rem; font-weight:800; letter-spacing:-0.01em;
+.live-lesson { font-size:1.05rem; font-weight:800;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .live-time { font-size:0.78rem; color:var(--muted); font-weight:700; margin-top:2px; }
 .progress-bar { height:5px; border-radius:3px; background:var(--border); overflow:hidden; margin-top:8px; }
-.progress-fill { height:100%; background:linear-gradient(90deg,var(--green),var(--accent2));
-    border-radius:3px; transition:width 0.6s ease; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--green),var(--accent2)); border-radius:3px; }
 
 .tabs {
     display:flex; gap:6px; margin-bottom:16px; overflow-x:auto;
     padding:4px; scrollbar-width:none; -ms-overflow-style:none;
     background:var(--card); border-radius:18px; border:1px solid var(--border);
-    box-shadow:var(--shadow); backdrop-filter:blur(14px);
+    box-shadow:var(--shadow);
 }
 .tabs::-webkit-scrollbar { display:none; }
 .tab {
     flex:1; min-width:52px; padding:11px 8px; border-radius:13px; border:none;
     background:transparent; color:var(--muted); font-weight:800; font-size:0.88rem;
-    cursor:pointer; font-family:inherit; transition:all 0.25s;
+    cursor:pointer; font-family:inherit; transition:background 0.15s, color 0.15s;
     display:flex; flex-direction:column; align-items:center; gap:3px; position:relative;
 }
-.tab .tab-day { font-size:0.68rem; font-weight:700; opacity:0.7; letter-spacing:0.02em; }
-.tab.active { background:linear-gradient(135deg,var(--accent),var(--accent2));
-    color:white; box-shadow:0 6px 18px var(--accent-soft); }
+.tab .tab-day { font-size:0.68rem; font-weight:700; opacity:0.7; }
+.tab.active { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; }
 .tab.active .tab-day { opacity:0.9; }
 .tab.today:not(.active)::after {
     content:""; position:absolute; bottom:4px; left:50%; transform:translateX(-50%);
     width:5px; height:5px; border-radius:50%; background:var(--accent);
 }
-.tab:active { transform:scale(0.94); }
-
 .day-block { display:none; }
-.day-block.active { display:block; animation:fadeUp 0.35s ease; }
-@keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+.day-block.active { display:block; }
 .day-title {
     font-size:1.15rem; font-weight:800; color:var(--text);
-    margin:4px 4px 12px; letter-spacing:-0.02em; display:flex; justify-content:space-between; align-items:center;
+    margin:4px 4px 12px; display:flex; justify-content:space-between; align-items:center;
 }
 .today-pill {
     font-size:0.68rem; background:linear-gradient(135deg,var(--accent-soft),var(--accent-soft2));
@@ -386,14 +450,10 @@ body {
 .card {
     background:var(--card); padding:14px 16px; margin-bottom:9px; border-radius:18px;
     box-shadow:var(--shadow); display:flex; align-items:center; gap:14px;
-    border:1px solid var(--border); transition:all 0.25s;
-    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
-    position:relative; overflow:hidden;
+    border:1px solid var(--border); position:relative; overflow:hidden;
 }
-.card.now {
-    box-shadow:0 8px 28px var(--green-soft),0 0 0 1px var(--green);
-    background:linear-gradient(135deg,var(--green-soft),var(--card));
-}
+.card.now { box-shadow:0 8px 28px var(--green-soft),0 0 0 1px var(--green);
+    background:linear-gradient(135deg,var(--green-soft),var(--card)); }
 .card.now::before {
     content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
     background:linear-gradient(180deg,var(--green),var(--accent2));
@@ -407,8 +467,8 @@ body {
 }
 .card.now .num { background:linear-gradient(135deg,var(--green),var(--accent2)); color:white; border-color:transparent; }
 .left-side { display:flex; flex-direction:column; gap:2px; flex-grow:1; min-width:0; }
-.time { font-size:0.78rem; color:var(--muted); font-weight:700; letter-spacing:0.01em; }
-.lesson { font-size:1rem; font-weight:800; color:var(--text); letter-spacing:-0.01em; word-wrap:break-word; }
+.time { font-size:0.78rem; color:var(--muted); font-weight:700; }
+.lesson { font-size:1rem; font-weight:800; color:var(--text); word-wrap:break-word; }
 .now-pill {
     font-size:0.62rem; background:var(--green); color:white; padding:3px 8px;
     border-radius:20px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em;
@@ -426,9 +486,7 @@ html.font-large .day-title { font-size:1.3rem; }
 .info-box {
     background:var(--card); padding:32px 20px; border-radius:20px;
     box-shadow:var(--shadow); text-align:center; font-size:1rem; font-weight:700;
-    color:var(--muted); border:1px solid var(--border);
-    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
-    line-height:1.5;
+    color:var(--muted); border:1px solid var(--border); line-height:1.5;
 }
 .info-box .big { font-size:2.2rem; display:block; margin-bottom:8px; }
 .error { background:linear-gradient(135deg,rgba(239,68,68,0.1),var(--card));
@@ -439,10 +497,8 @@ html.font-large .day-title { font-size:1.3rem; }
     display:flex; align-items:center; justify-content:center; gap:6px;
     margin-top:20px; padding:13px; color:var(--muted); text-decoration:none;
     font-size:0.82rem; font-weight:700; border-radius:14px;
-    border:1px dashed var(--border); opacity:0.85; transition:all 0.25s;
-    background:var(--card);
+    border:1px dashed var(--border); background:var(--card);
 }
-.sheet-link:hover, .sheet-link:active { opacity:1; color:var(--accent); border-color:var(--accent); border-style:solid; }
 </style>
 </head>
 <body>
@@ -458,46 +514,51 @@ html.font-large .day-title { font-size:1.3rem; }
         </div>
     </div>
     <div class="header-right">
-        <div class="badge-class">{class_upper}</div>
-        <button class="icon-btn" id="settingsBtn" onclick="toggleSettings()">⚙️</button>
+        <div class="badge-class">8Г</div>
+        <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
     </div>
 </div>
 
 <div class="settings" id="settingsPanel">
-    <div class="settings-title">🎨 Тема оформления</div>
-    <div class="theme-grid">
-        <button class="theme-btn" data-theme-btn="light" onclick="setTheme('light')"><span class="emoji">☀️</span>Светлая</button>
-        <button class="theme-btn" data-theme-btn="dark" onclick="setTheme('dark')"><span class="emoji">🌙</span>Тёмная</button>
-        <button class="theme-btn" data-theme-btn="cosmic" onclick="setTheme('cosmic')"><span class="emoji">🌌</span>Космос</button>
-        <button class="theme-btn" data-theme-btn="ocean" onclick="setTheme('ocean')"><span class="emoji">🌊</span>Океан</button>
-        <button class="theme-btn" data-theme-btn="sunset" onclick="setTheme('sunset')"><span class="emoji">🌅</span>Закат</button>
-        <button class="theme-btn" data-theme-btn="forest" onclick="setTheme('forest')"><span class="emoji">🌿</span>Лес</button>
-        <button class="theme-btn" data-theme-btn="sakura" onclick="setTheme('sakura')"><span class="emoji">🌸</span>Сакура</button>
-    </div>
+    <div class="settings-inner">
+        <div class="settings-title">⚡ Графика</div>
+        <div class="graphics-grid">
+            <button class="graphics-btn" data-graphics-btn="potato" onclick="setGraphics('potato')"><span class="emoji">🥔</span>Картошка</button>
+            <button class="graphics-btn" data-graphics-btn="medium" onclick="setGraphics('medium')"><span class="emoji">⚖️</span>Средняя</button>
+            <button class="graphics-btn" data-graphics-btn="high" onclick="setGraphics('high')"><span class="emoji">✨</span>Красивая</button>
+        </div>
 
-    <div class="settings-title">🔤 Размер текста</div>
-    <div class="size-grid">
-        <button class="size-btn" data-size-btn="small" onclick="setSize('small')">A</button>
-        <button class="size-btn" data-size-btn="normal" onclick="setSize('normal')">A</button>
-        <button class="size-btn" data-size-btn="large" onclick="setSize('large')">A</button>
-    </div>
+        <div class="settings-title">🎨 Тема</div>
+        <div class="theme-grid">
+            <button class="theme-btn" data-theme-btn="light" onclick="setTheme('light')"><span class="emoji">☀️</span>Светлая</button>
+            <button class="theme-btn" data-theme-btn="dark" onclick="setTheme('dark')"><span class="emoji">🌙</span>Тёмная</button>
+            <button class="theme-btn" data-theme-btn="cosmic" onclick="setTheme('cosmic')"><span class="emoji">🌌</span>Космос</button>
+            <button class="theme-btn" data-theme-btn="ocean" onclick="setTheme('ocean')"><span class="emoji">🌊</span>Океан</button>
+            <button class="theme-btn" data-theme-btn="sunset" onclick="setTheme('sunset')"><span class="emoji">🌅</span>Закат</button>
+            <button class="theme-btn" data-theme-btn="forest" onclick="setTheme('forest')"><span class="emoji">🌿</span>Лес</button>
+            <button class="theme-btn" data-theme-btn="sakura" onclick="setTheme('sakura')"><span class="emoji">🌸</span>Сакура</button>
+        </div>
 
-    <div class="settings-title">🔧 Дополнительно</div>
-    <div class="toggle-row">
-        <div class="toggle-label">Компактный режим</div>
-        <div class="toggle" id="toggleCompact" onclick="toggleCompact()"></div>
-    </div>
-    <div class="toggle-row">
-        <div class="toggle-label">Скрыть время уроков</div>
-        <div class="toggle" id="toggleHideTime" onclick="toggleHideTime()"></div>
-    </div>
-    <div class="toggle-row">
-        <div class="toggle-label">Анимация фона</div>
-        <div class="toggle" id="toggleAnim" onclick="toggleAnim()"></div>
-    </div>
+        <div class="settings-title">🔤 Размер текста</div>
+        <div class="size-grid">
+            <button class="size-btn" data-size-btn="small" onclick="setSize('small')">A</button>
+            <button class="size-btn" data-size-btn="normal" onclick="setSize('normal')">A</button>
+            <button class="size-btn" data-size-btn="large" onclick="setSize('large')">A</button>
+        </div>
 
-    <div class="settings-title">📱 Приложение</div>
-    <div id="installSection"></div>
+        <div class="settings-title">🔧 Дополнительно</div>
+        <div class="toggle-row">
+            <div class="toggle-label">Компактный режим</div>
+            <div class="toggle" id="toggleCompact" onclick="toggleCompact()"></div>
+        </div>
+        <div class="toggle-row">
+            <div class="toggle-label">Скрыть время уроков</div>
+            <div class="toggle" id="toggleHideTime" onclick="toggleHideTime()"></div>
+        </div>
+
+        <div class="settings-title">📱 Приложение</div>
+        <div id="installSection"></div>
+    </div>
 </div>
 
 {live_banner}
@@ -512,27 +573,46 @@ html.font-large .day-title { font-size:1.3rem; }
 
 <script>
 var THEME_COLORS = {light:'#eef2f7',dark:'#0b0d12',cosmic:'#05021a',ocean:'#e6f4fb',sunset:'#fff1e6',forest:'#eef7ee',sakura:'#fff5f8'};
+var ALLOWED_POTATO = ['light','dark','cosmic'];
+
 (function init() {
-    var saved = localStorage.getItem('rs_theme') || 'light';
-    document.documentElement.setAttribute('data-theme', saved);
+    var savedTheme = localStorage.getItem('rs_theme') || 'light';
+    var savedGraphics = localStorage.getItem('rs_graphics') || 'high';
+
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.documentElement.setAttribute('data-graphics', savedGraphics);
+
+    // Если картошка и тема недоступна — переключаем на светлую
+    if (savedGraphics === 'potato' && ALLOWED_POTATO.indexOf(savedTheme) === -1) {
+        savedTheme = 'light';
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('rs_theme', 'light');
+    }
+
     var meta = document.getElementById('themeColorMeta');
-    if (meta) meta.setAttribute('content', THEME_COLORS[saved] || '#eef2f7');
+    if (meta) meta.setAttribute('content', THEME_COLORS[savedTheme] || '#eef2f7');
+
     document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
-        if (b.getAttribute('data-theme-btn') === saved) b.classList.add('active');
+        b.classList.toggle('active', b.getAttribute('data-theme-btn') === savedTheme);
     });
+    document.querySelectorAll('[data-graphics-btn]').forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('data-graphics-btn') === savedGraphics);
+    });
+
     if (localStorage.getItem('rs_compact') === '1') document.documentElement.classList.add('compact');
     if (localStorage.getItem('rs_hide_time') === '1') document.documentElement.classList.add('hide-time');
+
     var size = localStorage.getItem('rs_size') || 'normal';
     if (size === 'small') document.documentElement.classList.add('font-small');
     if (size === 'large') document.documentElement.classList.add('font-large');
     document.querySelectorAll('[data-size-btn]').forEach(function(b) {
-        if (b.getAttribute('data-size-btn') === size) b.classList.add('active');
+        b.classList.toggle('active', b.getAttribute('data-size-btn') === size);
     });
+
     document.getElementById('toggleCompact').classList.toggle('on', localStorage.getItem('rs_compact') === '1');
     document.getElementById('toggleHideTime').classList.toggle('on', localStorage.getItem('rs_hide_time') === '1');
-    var animOn = localStorage.getItem('rs_anim') !== '0';
-    document.getElementById('toggleAnim').classList.toggle('on', animOn);
-    if (animOn) spawnParticles(saved);
+
+    if (savedGraphics === 'high') spawnParticles(savedTheme);
 })();
 
 function setTheme(t) {
@@ -543,8 +623,27 @@ function setTheme(t) {
     });
     var meta = document.getElementById('themeColorMeta');
     if (meta) meta.setAttribute('content', THEME_COLORS[t] || '#eef2f7');
-    if (localStorage.getItem('rs_anim') !== '0') spawnParticles(t);
+    var g = document.documentElement.getAttribute('data-graphics');
+    if (g === 'high') spawnParticles(t);
+    else document.getElementById('particles').innerHTML = '';
 }
+
+function setGraphics(g) {
+    document.documentElement.setAttribute('data-graphics', g);
+    localStorage.setItem('rs_graphics', g);
+    document.querySelectorAll('[data-graphics-btn]').forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('data-graphics-btn') === g);
+    });
+    // Проверка темы
+    var cur = document.documentElement.getAttribute('data-theme');
+    if (g === 'potato' && ALLOWED_POTATO.indexOf(cur) === -1) {
+        setTheme('light');
+    }
+    // Частицы
+    if (g === 'high') spawnParticles(cur);
+    else document.getElementById('particles').innerHTML = '';
+}
+
 function setSize(s) {
     document.documentElement.classList.remove('font-small','font-large');
     if (s === 'small') document.documentElement.classList.add('font-small');
@@ -564,62 +663,41 @@ function toggleHideTime() {
     localStorage.setItem('rs_hide_time', on ? '1' : '0');
     document.getElementById('toggleHideTime').classList.toggle('on', on);
 }
-function toggleAnim() {
-    var t = document.documentElement.getAttribute('data-theme');
-    var on = localStorage.getItem('rs_anim') !== '0';
-    on = !on;
-    localStorage.setItem('rs_anim', on ? '1' : '0');
-    document.getElementById('toggleAnim').classList.toggle('on', on);
-    if (on) spawnParticles(t);
-    else document.getElementById('particles').innerHTML = '';
-}
 function spawnParticles(theme) {
     var container = document.getElementById('particles');
     if (!container) return;
     container.innerHTML = '';
-    if (localStorage.getItem('rs_anim') === '0') return;
+    if (document.documentElement.getAttribute('data-graphics') !== 'high') return;
     if (window.innerWidth < 300) return;
     var configs = {
-        cosmic: { chars: ['✦','✧','·','+'], colors: ['#ffffff','#b794f6','#7cf5c0','#e0d4ff'],
-                  count: 25, sizes: [10,20], dur: [15,30], mode: 'fall' },
-        sakura: { chars: ['🌸','🌸','🌸','❀'], colors: ['#ec4899','#f9a8d4','#fbcfe8'],
-                  count: 20, sizes: [14,24], dur: [10,20], mode: 'fall' },
-        forest: { chars: ['🍃','🌿','🍃'], colors: ['#059669','#16a34a','#84cc16'],
-                  count: 16, sizes: [16,26], dur: [12,24], mode: 'fall' },
-        ocean:  { chars: ['●','○','·'], colors: ['rgba(34,211,238,0.7)','rgba(8,145,178,0.6)','rgba(255,255,255,0.5)'],
-                  count: 18, sizes: [8,18], dur: [10,20], mode: 'rise' },
-        sunset: { chars: ['✨','·','✦'], colors: ['#f97316','#ec4899','#fbbf24'],
-                  count: 15, sizes: [10,20], dur: [12,22], mode: 'fall' }
+        cosmic: { chars: ['✦','✧','·','+'], colors: ['#ffffff','#b794f6','#7cf5c0','#e0d4ff'], count: 20, sizes: [10,18], dur: [15,28] },
+        sakura: { chars: ['🌸','🌸','🌸','❀'], colors: ['#ec4899','#f9a8d4','#fbcfe8'], count: 16, sizes: [14,22], dur: [11,20] },
+        forest: { chars: ['🍃','🌿','🍃'], colors: ['#059669','#16a34a','#84cc16'], count: 14, sizes: [14,22], dur: [13,24] },
+        ocean:  { chars: ['●','○','·'], colors: ['rgba(34,211,238,0.75)','rgba(8,145,178,0.65)','rgba(255,255,255,0.55)'], count: 14, sizes: [8,16], dur: [11,20] },
+        sunset: { chars: ['✨','·','✦'], colors: ['#f97316','#ec4899','#fbbf24'], count: 12, sizes: [10,18], dur: [13,22] }
     };
     var cfg = configs[theme];
     if (!cfg) return;
+    var isMobile = window.innerWidth < 820;
+    var n = isMobile ? Math.max(8, Math.round(cfg.count * 0.6)) : cfg.count;
     var frag = document.createDocumentFragment();
-    for (var i = 0; i < cfg.count; i++) {
+    for (var i = 0; i < n; i++) {
         var el = document.createElement('span');
         el.className = 'particle';
-        var c = cfg.chars[Math.floor(Math.random() * cfg.chars.length)];
-        el.textContent = c;
+        el.textContent = cfg.chars[Math.floor(Math.random() * cfg.chars.length)];
         el.style.left = (Math.random() * 100) + '%';
         var size = cfg.sizes[0] + Math.random() * (cfg.sizes[1] - cfg.sizes[0]);
         el.style.fontSize = size + 'px';
         el.style.color = cfg.colors[Math.floor(Math.random() * cfg.colors.length)];
-        el.style.opacity = 0.5 + Math.random() * 0.5;
         var dur = cfg.dur[0] + Math.random() * (cfg.dur[1] - cfg.dur[0]);
         el.style.animationDuration = dur + 's';
         el.style.animationDelay = (-Math.random() * dur) + 's';
-        if (cfg.mode === 'rise') {
-            el.style.top = 'auto';
-            el.style.bottom = '-40px';
-            el.style.animationName = 'rise';
-        }
         frag.appendChild(el);
     }
     container.appendChild(frag);
 }
 function toggleSettings() {
     document.getElementById('settingsPanel').classList.toggle('open');
-    var btn = document.getElementById('settingsBtn');
-    btn.classList.remove('spin'); void btn.offsetWidth; btn.classList.add('spin');
 }
 function showDay(day) {
     document.querySelectorAll('.day-block').forEach(function(el) { el.classList.remove('active'); });
@@ -629,6 +707,11 @@ function showDay(day) {
         t.classList.toggle('active', t.getAttribute('data-day') === day);
     });
 }
+document.addEventListener('visibilitychange', function() {
+    var ps = document.hidden ? 'paused' : 'running';
+    document.querySelectorAll('.particle').forEach(function(p) { p.style.animationPlayState = ps; });
+});
+
 var deferredPrompt = null;
 var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); deferredPrompt = e; renderInstallSection(); });
@@ -644,18 +727,11 @@ function renderInstallSection() {
     if (!el) return;
     var installed = isStandalone || localStorage.getItem('rs_installed') === '1';
     if (installed) {
-        el.innerHTML = '<div class="installed-badge">✅ Приложение установлено</div>' +
-                       '<button class="link-btn" onclick="resetInstallFlag()">Сбросить флаг</button>';
-        return;
-    }
-    var hidden = localStorage.getItem('rs_install_hidden') === '1';
-    if (hidden) {
-        el.innerHTML = '<button class="link-btn" onclick="showInstall()">Показать инструкцию</button>';
+        el.innerHTML = '<div class="installed-badge">✅ Приложение установлено</div>';
         return;
     }
     if (deferredPrompt) {
-        el.innerHTML = '<button class="install-btn" onclick="doInstall()">📲 Добавить на рабочий стол</button>' +
-                       '<button class="link-btn" onclick="hideInstall()">Скрыть</button>';
+        el.innerHTML = '<button class="install-btn" onclick="doInstall()">📲 Установить приложение</button>';
         return;
     }
     var plat = detectPlatform();
@@ -663,23 +739,17 @@ function renderInstallSection() {
     if (plat === 'ios') hint = '📱 <b>iPhone:</b> открой в <b>Safari</b> → «Поделиться» → «На экран Домой».';
     else if (plat === 'android') hint = '📱 <b>Android:</b> открой в <b>Chrome</b> → меню <b>⋮</b> → «Установить приложение».';
     else hint = '💻 <b>ПК:</b> открой в Chrome — иконка установки появится в адресной строке.';
-    el.innerHTML = '<div class="hint-text">' + hint + '</div>' +
-                   '<button class="link-btn" onclick="hideInstall()">Скрыть</button>';
+    el.innerHTML = '<div class="hint-text">' + hint + '</div>';
 }
 function doInstall() {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then(function(choice) {
         if (choice.outcome === 'accepted') localStorage.setItem('rs_installed', '1');
-        deferredPrompt = null;
-        renderInstallSection();
+        deferredPrompt = null; renderInstallSection();
     });
 }
-function hideInstall() { localStorage.setItem('rs_install_hidden', '1'); renderInstallSection(); }
-function showInstall() { localStorage.removeItem('rs_install_hidden'); renderInstallSection(); }
-function resetInstallFlag() { localStorage.removeItem('rs_installed'); renderInstallSection(); }
 renderInstallSection();
-setTimeout(function() { if (deferredPrompt) renderInstallSection(); }, 3000);
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
         navigator.serviceWorker.register('/sw.js').catch(function() {});
@@ -756,7 +826,6 @@ def build_content(days_schedule, active_day, error_msg, live_status):
 
 class SimpleHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args): return
-
     def _send(self, content_type, body):
         self.send_response(200)
         self.send_header("Content-type", content_type)
@@ -782,7 +851,6 @@ class SimpleHandler(BaseHTTPRequestHandler):
             refresh_tag = "<meta http-equiv='refresh' content='900'>" if not (1 <= hour < 5) else ""
 
             days_schedule, error_msg = get_schedule()
-
             months = ["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"]
             header_date = f"{current_day_name}, {now_perm.day} {months[now_perm.month-1]}"
 
@@ -809,7 +877,6 @@ class SimpleHandler(BaseHTTPRequestHandler):
             html = PAGE_TEMPLATE
             html = html.replace("{refresh_tag}", refresh_tag)
             html = html.replace("{header_date}", header_date)
-            html = html.replace("{class_upper}", CLASS_CODE.upper())
             html = html.replace("{live_banner}", live_banner)
             html = html.replace("{tabs}", tabs)
             html = html.replace("{content}", content)
