@@ -248,19 +248,26 @@ body {
     background:var(--card); color:var(--muted); border:1px solid var(--border);
     width:42px; height:42px; border-radius:13px; font-size:1.15rem;
     cursor:pointer; display:flex; align-items:center; justify-content:center;
-    transition:transform 0.15s,color 0.2s,background 0.2s;
+    transition:color 0.15s, background 0.15s;
 }
-.icon-btn:hover, .icon-btn:active { color:var(--accent); background:var(--accent-soft); transform:scale(0.94); }
-.icon-btn.spin { animation:spin 0.5s ease; }
+.icon-btn:hover, .icon-btn:active { color:var(--accent); background:var(--accent-soft); }
+
 @keyframes spin { to { transform:rotate(360deg) scale(0.94); } }
 
 .settings {
+    display:grid; grid-template-rows:0fr;
     background:var(--card); border:1px solid var(--border); border-radius:20px;
-    padding:0 18px; margin-bottom:14px; box-shadow:var(--shadow);
-    max-height:0; overflow:hidden; opacity:0;
-    transition:max-height 0.5s ease, opacity 0.3s ease, padding 0.3s ease;
+    margin-bottom:0; box-shadow:none;
+    transition:grid-template-rows 0.35s ease, margin-bottom 0.35s ease, box-shadow 0.35s ease;
 }
-.settings.open { max-height:1400px; opacity:1; padding:18px; }
+.settings.open {
+    grid-template-rows:1fr; margin-bottom:14px; box-shadow:var(--shadow);
+}
+.settings-inner {
+    overflow:hidden; min-height:0; padding:0 18px;
+    transition:padding 0.35s ease;
+}
+.settings.open .settings-inner { padding:18px; }
 .settings-title { font-weight:800; font-size:0.8rem; color:var(--muted);
     text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; }
 .settings-title:not(:first-child) { margin-top:18px; }
@@ -269,22 +276,22 @@ body {
     padding:12px 4px; border-radius:12px; border:2px solid transparent;
     background:var(--bg2); color:var(--text); font-weight:700; font-size:0.7rem;
     cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px;
-    transition:all 0.25s; font-family:inherit;
+    transition:background 0.2s, border-color 0.2s, transform 0.1s; font-family:inherit;
 }
 .theme-btn .emoji { font-size:1.35rem; line-height:1; }
 .theme-btn.active { border-color:var(--accent); background:var(--accent-soft); box-shadow:0 0 0 3px var(--accent-soft); }
-.theme-btn:active { transform:scale(0.95); }
+
 .toggle-row { display:flex; justify-content:space-between; align-items:center;
     padding:10px 0; border-bottom:1px solid var(--border); }
 .toggle-row:last-child { border-bottom:none; }
 .toggle-label { font-weight:700; font-size:0.9rem; }
 .toggle {
     position:relative; width:48px; height:28px; background:var(--bg2); border-radius:14px;
-    cursor:pointer; transition:background 0.25s; border:1px solid var(--border); flex-shrink:0;
+    cursor:pointer; border:1px solid var(--border); flex-shrink:0;
 }
 .toggle::after {
     content:""; position:absolute; top:2px; left:2px; width:22px; height:22px;
-    background:var(--card); border-radius:50%; transition:transform 0.25s;
+    background:var(--card); border-radius:50%;
     box-shadow:0 2px 6px rgba(0,0,0,0.15);
 }
 .toggle.on { background:linear-gradient(135deg,var(--accent),var(--accent2)); border-color:transparent; }
@@ -299,14 +306,14 @@ body {
 .size-btn:nth-child(2) { font-size:1.05rem; }
 .size-btn:nth-child(3) { font-size:1.25rem; }
 .size-btn.active { border-color:var(--accent); background:var(--accent-soft); }
-.size-btn:active { transform:scale(0.95); }
+
 .install-btn {
     width:100%; padding:13px; border-radius:14px; border:none;
     background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white;
     font-weight:800; font-size:0.9rem; cursor:pointer; font-family:inherit;
-    transition:transform 0.15s; box-shadow:0 6px 20px var(--accent-soft);
+    transition:background 0.15s; box-shadow:0 2px 8px var(--accent-soft);
 }
-.install-btn:active { transform:scale(0.97); }
+
 .link-btn {
     background:none; border:none; color:var(--muted); font-weight:600;
     font-size:0.82rem; cursor:pointer; padding:8px 4px; text-decoration:underline;
@@ -364,7 +371,7 @@ body {
     content:""; position:absolute; bottom:4px; left:50%; transform:translateX(-50%);
     width:5px; height:5px; border-radius:50%; background:var(--accent);
 }
-.tab:active { transform:scale(0.94); }
+
 
 .day-block { display:none; }
 .day-block.active { display:block; animation:fadeUp 0.35s ease; }
@@ -728,6 +735,15 @@ body {
         border: none !important;
     }
 }
+
+/* === SMOOTH TOGGLE === */
+.settings, .settings-inner { backface-visibility:hidden; }
+.settings.open .settings-inner { }
+.toggle::after { transform:translateZ(0); }
+.toggle.on::after { transform:translateX(20px) translateZ(0); }
+.toggle { transition:background 0.2s; }
+.toggle::after { transition:transform 0.2s, background 0.2s; }
+.theme-btn.active { transition:background 0.15s, border-color 0.15s, box-shadow 0.15s; }
 </style>
 </head>
 <body>
@@ -748,7 +764,7 @@ body {
     </div>
 </div>
 
-<div class="settings" id="settingsPanel">
+<div class="settings" id="settingsPanel"><div class="settings-inner">
     <div class="settings-title">🎨 Тема оформления</div>
     <div class="theme-grid">
         <button class="theme-btn" data-theme-btn="light" onclick="setTheme('light')"><span class="emoji">☀️</span>Светлая</button>
@@ -783,6 +799,7 @@ body {
 
     <div class="settings-title">📱 Приложение</div>
     <div id="installSection"></div>
+    </div>
 </div>
 
 {live_banner}
@@ -906,7 +923,7 @@ function spawnParticles(theme) {
 function toggleSettings() {
     document.getElementById('settingsPanel').classList.toggle('open');
     var btn = document.getElementById('settingsBtn');
-    btn.classList.remove('spin'); void btn.offsetWidth; btn.classList.add('spin');
+    
 }
 function showDay(day) {
     document.querySelectorAll('.day-block').forEach(function(el) { el.classList.remove('active'); });
