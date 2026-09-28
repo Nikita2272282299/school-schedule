@@ -112,7 +112,7 @@ def get_week_number():
 
 
 PAGE_TEMPLATE = """<!DOCTYPE html>
-<html lang="ru" data-theme="light" class="{device_class}">
+<html lang="ru" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -190,8 +190,8 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --danger:#dc2626;
 }
 html { 
-    min-height:100vh; 
-    background:var(--bg); 
+    min-height:100vh;
+    background:var(--bg);
     background-attachment:scroll;
 }
 [data-theme="ocean"] html, html[data-theme="ocean"] { background:linear-gradient(180deg,#c7e8f5 0%,#94d0e6 40%,#5aafd0 100%); }
@@ -210,7 +210,7 @@ body {
     transition:background 0.5s ease, color 0.3s ease;
     position:relative; overflow-x:hidden;
 }
-#particles { position:absolute; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+#particles { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
 .particle {
     position:absolute; top:-60px; user-select:none;
     will-change:transform; opacity:0.85;
@@ -233,6 +233,7 @@ body {
     background:var(--card); border:1px solid var(--border); border-radius:24px;
     padding:16px 20px; box-shadow:var(--shadow); margin-bottom:14px;
     display:flex; align-items:center; justify-content:space-between; gap:12px;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
 }
 .brand { display:flex; align-items:center; gap:12px; min-width:0; }
 .brand-logo {
@@ -262,20 +263,18 @@ body {
     cursor:pointer; display:flex; align-items:center; justify-content:center;
     transition:transform 0.15s,color 0.2s,background 0.2s;
 }
-
+.icon-btn:hover, .icon-btn:active { color:var(--accent); background:var(--accent-soft); transform:scale(0.94); }
 .icon-btn.spin { animation:spin 0.5s ease; }
 @keyframes spin { to { transform:rotate(360deg) scale(0.94); } }
 
 .settings {
-    display:grid; grid-template-rows:0fr;
     background:var(--card); border:1px solid var(--border); border-radius:20px;
-    margin-bottom:0;
-    transition:grid-template-rows 0.3s cubic-bezier(0.4,0,0.2,1), margin-bottom 0.3s cubic-bezier(0.4,0,0.2,1);
+    padding:0 18px; margin-bottom:14px; box-shadow:var(--shadow);
+    max-height:0; overflow:hidden; opacity:0;
+    transition:max-height 0.5s ease, opacity 0.3s ease, padding 0.3s ease;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
 }
-.settings.open { grid-template-rows:1fr; margin-bottom:14px; }
-.settings-inner { overflow:hidden; min-height:0; padding:0 18px;
-    transition:padding 0.3s cubic-bezier(0.4,0,0.2,1); }
-.settings.open .settings-inner { padding:18px; }
+.settings.open { max-height:1400px; opacity:1; padding:18px; }
 .settings-title { font-weight:800; font-size:0.8rem; color:var(--muted);
     text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; }
 .settings-title:not(:first-child) { margin-top:18px; }
@@ -284,11 +283,11 @@ body {
     padding:12px 4px; border-radius:12px; border:2px solid transparent;
     background:var(--bg2); color:var(--text); font-weight:700; font-size:0.7rem;
     cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px;
-    transition:background 0.15s, border-color 0.15s, color 0.15s; font-family:inherit;
+    transition:all 0.25s; font-family:inherit;
 }
 .theme-btn .emoji { font-size:1.35rem; line-height:1; }
 .theme-btn.active { border-color:var(--accent); background:var(--accent-soft); box-shadow:0 0 0 3px var(--accent-soft); }
-
+.theme-btn:active { transform:scale(0.95); }
 .toggle-row { display:flex; justify-content:space-between; align-items:center;
     padding:10px 0; border-bottom:1px solid var(--border); }
 .toggle-row:last-child { border-bottom:none; }
@@ -308,20 +307,20 @@ body {
 .size-btn {
     padding:12px; border-radius:12px; border:2px solid var(--border);
     background:var(--bg2); color:var(--text); font-weight:800; cursor:pointer;
-    font-family:inherit; transition:background 0.15s, border-color 0.15s, color 0.15s;
+    font-family:inherit; transition:all 0.2s;
 }
 .size-btn:nth-child(1) { font-size:0.85rem; }
 .size-btn:nth-child(2) { font-size:1.05rem; }
 .size-btn:nth-child(3) { font-size:1.25rem; }
 .size-btn.active { border-color:var(--accent); background:var(--accent-soft); }
-
+.size-btn:active { transform:scale(0.95); }
 .install-btn {
     width:100%; padding:13px; border-radius:14px; border:none;
     background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white;
     font-weight:800; font-size:0.9rem; cursor:pointer; font-family:inherit;
     transition:transform 0.15s; box-shadow:0 6px 20px var(--accent-soft);
 }
-
+.install-btn:active { transform:scale(0.97); }
 .link-btn {
     background:none; border:none; color:var(--muted); font-weight:600;
     font-size:0.82rem; cursor:pointer; padding:8px 4px; text-decoration:underline;
@@ -334,6 +333,7 @@ body {
 .live-banner {
     border-radius:20px; padding:16px 18px; margin-bottom:14px;
     display:flex; align-items:center; gap:14px; box-shadow:var(--shadow);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
     border:1px solid var(--border); animation:slideDown 0.4s ease;
 }
 @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:none; } }
@@ -362,13 +362,13 @@ body {
     display:flex; gap:6px; margin-bottom:16px; overflow-x:auto;
     padding:4px; scrollbar-width:none; -ms-overflow-style:none;
     background:var(--card); border-radius:18px; border:1px solid var(--border);
-    box-shadow:var(--shadow);
+    box-shadow:var(--shadow); backdrop-filter:blur(14px);
 }
 .tabs::-webkit-scrollbar { display:none; }
 .tab {
     flex:1; min-width:52px; padding:11px 8px; border-radius:13px; border:none;
     background:transparent; color:var(--muted); font-weight:800; font-size:0.88rem;
-    cursor:pointer; font-family:inherit; transition:background 0.15s, border-color 0.15s, color 0.15s;
+    cursor:pointer; font-family:inherit; transition:all 0.25s;
     display:flex; flex-direction:column; align-items:center; gap:3px; position:relative;
 }
 .tab .tab-day { font-size:0.68rem; font-weight:700; opacity:0.7; letter-spacing:0.02em; }
@@ -379,7 +379,7 @@ body {
     content:""; position:absolute; bottom:4px; left:50%; transform:translateX(-50%);
     width:5px; height:5px; border-radius:50%; background:var(--accent);
 }
-
+.tab:active { transform:scale(0.94); }
 
 .day-block { display:none; }
 .day-block.active { display:block; animation:fadeUp 0.35s ease; }
@@ -397,7 +397,8 @@ body {
 .card {
     background:var(--card); padding:14px 16px; margin-bottom:9px; border-radius:18px;
     box-shadow:var(--shadow); display:flex; align-items:center; gap:14px;
-    border:1px solid var(--border); transition:background 0.15s, border-color 0.15s, color 0.15s;
+    border:1px solid var(--border); transition:all 0.25s;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
     position:relative; overflow:hidden;
 }
 .card.now {
@@ -437,6 +438,7 @@ html.font-large .day-title { font-size:1.3rem; }
     background:var(--card); padding:32px 20px; border-radius:20px;
     box-shadow:var(--shadow); text-align:center; font-size:1rem; font-weight:700;
     color:var(--muted); border:1px solid var(--border);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
     line-height:1.5;
 }
 .info-box .big { font-size:2.2rem; display:block; margin-bottom:8px; }
@@ -448,7 +450,7 @@ html.font-large .day-title { font-size:1.3rem; }
     display:flex; align-items:center; justify-content:center; gap:6px;
     margin-top:20px; padding:13px; color:var(--muted); text-decoration:none;
     font-size:0.82rem; font-weight:700; border-radius:14px;
-    border:1px dashed var(--border); opacity:0.85; transition:background 0.15s, border-color 0.15s, color 0.15s;
+    border:1px dashed var(--border); opacity:0.85; transition:all 0.25s;
     background:var(--card);
 }
 .sheet-link:hover, .sheet-link:active { opacity:1; color:var(--accent); border-color:var(--accent); border-style:solid; }
@@ -459,37 +461,39 @@ body { position:relative; }
 /* ОКЕАН — волны, пузыри */
 [data-theme="ocean"] body {
     background: linear-gradient(180deg,#c7e8f5 0%,#94d0e6 40%,#5aafd0 100%);
+    background-attachment: fixed;
 }
 [data-theme="ocean"] body::before {
-    content:""; position:absolute; left:0; bottom:0;
-    width:200%; height:220px; z-index:0; pointer-events:none;
+    content:""; position:fixed; left:0; right:0; bottom:0;
+    height:220px; z-index:0; pointer-events:none;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 220' preserveAspectRatio='none'><path d='M0,100 Q150,30 300,100 T600,100 T900,100 T1200,100 L1200,220 L0,220 Z' fill='%230891b2' opacity='0.35'/><path d='M0,140 Q200,80 400,140 T800,140 T1200,140 L1200,220 L0,220 Z' fill='%2306b6d4' opacity='0.45'/><path d='M0,180 Q250,140 500,180 T1000,180 T1200,180 L1200,220 L0,220 Z' fill='%230891b2' opacity='0.55'/></svg>");
-    background-size:600px 220px; background-repeat:repeat-x;
-    animation:none;
-    will-change:transform;
+    background-size:1200px 220px; background-repeat:repeat-x;
+    animation:oceanWave 18s linear infinite;
 }
-@keyframes oceanWave { from { transform:translate3d(0,0,0); } to { transform:translate3d(-600px,0,0); } }
+@keyframes oceanWave { from { background-position:0 0; } to { background-position:1200px 0; } }
 [data-theme="ocean"] .header,
 [data-theme="ocean"] .settings {
     background:rgba(255,255,255,0.45);
+    backdrop-filter:blur(24px) saturate(1.6);
+    -webkit-backdrop-filter:blur(24px) saturate(1.6);
     border:2px solid rgba(255,255,255,0.65);
     box-shadow:0 10px 40px rgba(8,145,178,0.25),inset 0 2px 12px rgba(255,255,255,0.9);
     border-radius:28px;
 }
-[data-theme="ocean"] .header { animation:none; position:relative; overflow:hidden; }
+[data-theme="ocean"] .header { animation:floaty 5s ease-in-out infinite; position:relative; overflow:hidden; }
 [data-theme="ocean"] .header::before {
     content:""; position:absolute; top:8px; left:22px;
     width:60px; height:18px; border-radius:50%;
     background:rgba(255,255,255,0.75); filter:blur(8px); pointer-events:none;
 }
-@keyframes floaty { 0%,100% { transform:translate3d(0,0,0); } 50% { transform:translate3d(0,-5px,0); } }
+@keyframes floaty { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
 [data-theme="ocean"] .badge-class {
     width:44px; height:44px; padding:0; border-radius:50%;
     background:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.95),rgba(34,211,238,0.4) 60%,rgba(8,145,178,0.55));
     border:2px solid rgba(255,255,255,0.85);
     box-shadow:0 4px 16px rgba(8,145,178,0.35),inset -4px -6px 12px rgba(8,145,178,0.25),inset 4px 4px 12px rgba(255,255,255,0.8);
     color:#0e7490; display:flex; align-items:center; justify-content:center;
-    position:relative; animation:none;
+    position:relative; animation:floaty 4s ease-in-out infinite;
 }
 [data-theme="ocean"] .badge-class::before {
     content:""; position:absolute; top:7px; left:9px;
@@ -501,7 +505,7 @@ body { position:relative; }
     background:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.95),rgba(34,211,238,0.4) 60%,rgba(8,145,178,0.5));
     border:2px solid rgba(255,255,255,0.85);
     box-shadow:0 4px 16px rgba(8,145,178,0.3),inset -4px -6px 12px rgba(8,145,178,0.2),inset 4px 4px 12px rgba(255,255,255,0.8);
-    color:#0e7490; position:relative; animation:none;
+    color:#0e7490; position:relative; animation:floaty 6s ease-in-out infinite;
 }
 [data-theme="ocean"] .icon-btn::before {
     content:""; position:absolute; top:6px; left:8px;
@@ -510,6 +514,8 @@ body { position:relative; }
 }
 [data-theme="ocean"] .card {
     background:rgba(255,255,255,0.6);
+    backdrop-filter:blur(14px) saturate(1.5);
+    -webkit-backdrop-filter:blur(14px) saturate(1.5);
     border:1.5px solid rgba(255,255,255,0.8);
     border-radius:24px;
     box-shadow:0 8px 24px rgba(8,145,178,0.18),inset 0 1px 6px rgba(255,255,255,0.9);
@@ -528,6 +534,7 @@ body { position:relative; }
 }
 [data-theme="ocean"] .tabs {
     background:rgba(255,255,255,0.55);
+    backdrop-filter:blur(14px) saturate(1.4);
     border:1.5px solid rgba(255,255,255,0.75);
     box-shadow:0 6px 20px rgba(8,145,178,0.15);
 }
@@ -559,18 +566,20 @@ body { position:relative; }
 /* ЗАКАТ — тёплое небо */
 [data-theme="sunset"] body {
     background:linear-gradient(180deg,#ffe4b8 0%,#ffc896 30%,#ffa07a 65%,#e88898 100%);
+    background-attachment:fixed;
 }
 [data-theme="sunset"] body::before {
-    content:""; position:absolute; top:5%; right:8%;
+    content:""; position:fixed; top:5%; right:8%;
     width:140px; height:140px; border-radius:50%;
     background:radial-gradient(circle,rgba(255,220,120,0.95),rgba(255,140,80,0.35) 60%,transparent 75%);
     filter:blur(10px); pointer-events:none; z-index:0;
-    animation:none;
+    animation:sunPulse 6s ease-in-out infinite;
 }
-@keyframes sunPulse { 0%,100% { transform:scale3d(1,1,1); opacity:0.85; } 50% { transform:scale3d(1.08,1.08,1); opacity:1; } }
+@keyframes sunPulse { 0%,100% { transform:scale(1); opacity:0.85; } 50% { transform:scale(1.08); opacity:1; } }
 [data-theme="sunset"] .header,
 [data-theme="sunset"] .settings {
     background:rgba(255,250,240,0.85);
+    backdrop-filter:blur(16px);
     border:1px solid rgba(249,115,22,0.2);
     box-shadow:0 8px 32px rgba(249,115,22,0.25),inset 0 1px 0 rgba(255,255,255,0.9);
 }
@@ -593,9 +602,10 @@ body { position:relative; }
 /* ЛЕС — органичный */
 [data-theme="forest"] body {
     background:linear-gradient(180deg,#e8f5e0 0%,#c8e6c0 60%,#a8d8a0 100%);
+    background-attachment:fixed;
 }
 [data-theme="forest"] body::before {
-    content:""; position:absolute; left:0; right:0; top:0;
+    content:""; position:fixed; left:0; right:0; top:0;
     height:200px; z-index:0; pointer-events:none;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 200' preserveAspectRatio='none'><path d='M0,0 L0,80 Q100,120 200,80 Q300,40 400,80 Q500,120 600,80 Q700,40 800,80 Q900,120 1000,80 Q1100,40 1200,80 L1200,0 Z' fill='%23059669' opacity='0.28'/></svg>");
     background-size:1200px 200px; background-repeat:repeat-x;
@@ -603,6 +613,7 @@ body { position:relative; }
 [data-theme="forest"] .header,
 [data-theme="forest"] .settings {
     background:rgba(255,255,255,0.8);
+    backdrop-filter:blur(14px);
     border:1px solid rgba(5,150,105,0.2);
     box-shadow:0 6px 24px rgba(5,150,105,0.2),inset 0 1px 0 rgba(255,255,255,0.9);
 }
@@ -627,15 +638,17 @@ body { position:relative; }
 /* САКУРА — мягкая */
 [data-theme="sakura"] body {
     background:linear-gradient(180deg,#ffe8ef 0%,#ffd0e0 50%,#ffb8d0 100%);
+    background-attachment:fixed;
 }
 [data-theme="sakura"] body::before {
-    content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
     background:radial-gradient(circle at 80% 15%,rgba(236,72,153,0.15),transparent 40%),
                radial-gradient(circle at 15% 75%,rgba(168,85,247,0.12),transparent 40%);
 }
 [data-theme="sakura"] .header,
 [data-theme="sakura"] .settings {
     background:rgba(255,255,255,0.88);
+    backdrop-filter:blur(14px);
     border:2px solid rgba(236,72,153,0.18);
     box-shadow:0 8px 28px rgba(236,72,153,0.2),inset 0 1px 0 rgba(255,255,255,0.9);
     border-radius:26px;
@@ -676,33 +689,143 @@ body { position:relative; }
 .container, #particles { position:relative; z-index:1; }
 #particles { z-index:0; }
 
-
-/* === ЧИСТЫЙ ФОН БЕЗ ПОЛОС === */
-html, body {
-    background-color: var(--bg);
+/* === PERFORMANCE OPTIMIZATIONS === */
+.particle { will-change:transform; transform:translateZ(0); backface-visibility:hidden; }
+@media (max-width: 768px) {
+    /* Убираем самые тяжёлые эффекты на мобильных */
+    [data-theme="ocean"] .header { animation:none; }
+    [data-theme="ocean"] .badge-class,
+    [data-theme="ocean"] .icon-btn { animation-duration:8s; }
+    /* Уменьшаем blur — самый тормозящий эффект */
+    [data-theme="ocean"] .header,
+    [data-theme="ocean"] .settings,
+    [data-theme="ocean"] .card,
+    [data-theme="ocean"] .tabs {
+        backdrop-filter:blur(8px) !important;
+        -webkit-backdrop-filter:blur(8px) !important;
+    }
+    /* Ускоряем волну через transform вместо background-position */
+    [data-theme="ocean"] body::before {
+        animation-duration:35s;
+        will-change:transform;
+    }
+    /* Отключаем тяжёлый пульс у закатного солнца */
+    [data-theme="sunset"] body::before { animation-duration:12s; }
 }
-body {
-    padding-bottom: 24px !important;
+@media (prefers-reduced-motion: reduce) {
+    .particle, [data-theme="ocean"] body::before, [data-theme="ocean"] .badge-class,
+    [data-theme="ocean"] .icon-btn, [data-theme="sunset"] body::before {
+        animation:none !important;
+    }
 }
-.container { padding-bottom: 8px; }
+/* Плавный transition только там где нужно */
+.header, .settings, .card, .tabs, .live-banner { transform:translateZ(0); }
 
-/* Волны океана — приклеены к низу контейнера, а не body */
-[data-theme="ocean"] body::before {
-    position: absolute;
-    bottom: 0;
-    height: 180px;
+.install-btn {
+    display:flex; align-items:center; gap:12px; position:relative;
+    width:100%; padding:15px 18px; border-radius:16px; border:none;
+    background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff;
+    font-weight:800; cursor:pointer; font-family:inherit;
+    box-shadow:0 8px 26px var(--accent-soft),inset 0 1px 0 rgba(255,255,255,0.25);
+    transition:transform 0.15s, box-shadow 0.2s;
+    text-align:left;
+}
+.install-btn:hover { box-shadow:0 12px 34px var(--accent-soft); }
+.install-btn:active { transform:scale(0.97); }
+.install-btn .ib-emoji { font-size:1.6rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+.install-btn .ib-text { font-size:1rem; font-weight:800; letter-spacing:-0.01em; }
+.install-btn .ib-sub { display:block; font-size:0.72rem; font-weight:600; opacity:0.75; margin-top:2px; }
+.install-tip {
+    max-height:0; overflow:hidden; opacity:0; margin-top:0;
+    background:var(--bg2); border:1px solid var(--border); border-radius:14px;
+    padding:0 14px; font-size:0.85rem; line-height:1.5; color:var(--muted); font-weight:600;
+    transition:max-height 0.35s ease, opacity 0.3s ease, padding 0.3s ease, margin-top 0.3s ease;
+}
+.install-tip.show { max-height:200px; opacity:1; padding:14px; margin-top:10px; }
+
+/* === HARD PERF MODE === */
+@media (max-width: 820px) {
+    /* 1. ГЛАВНОЕ — убираем backdrop-filter (самый тяжёлый эффект) */
+    .header, .settings, .card, .tabs, .live-banner,
+    [data-theme="ocean"] .header, [data-theme="ocean"] .settings,
+    [data-theme="ocean"] .card, [data-theme="ocean"] .tabs,
+    [data-theme="sunset"] .header, [data-theme="sunset"] .settings,
+    [data-theme="sunset"] .card,
+    [data-theme="forest"] .header, [data-theme="forest"] .settings,
+    [data-theme="forest"] .card,
+    [data-theme="sakura"] .header, [data-theme="sakura"] .settings,
+    [data-theme="sakura"] .card {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+    /* 2. Заменяем прозрачные стеклянные фоны на плотные */
+    [data-theme="ocean"] .header, [data-theme="ocean"] .settings,
+    [data-theme="ocean"] .card, [data-theme="ocean"] .tabs {
+        background: rgba(240, 251, 255, 0.97) !important;
+    }
+    [data-theme="sunset"] .header, [data-theme="sunset"] .settings,
+    [data-theme="sunset"] .card { background: rgba(255, 250, 242, 0.97) !important; }
+    [data-theme="forest"] .header, [data-theme="forest"] .settings,
+    [data-theme="forest"] .card { background: rgba(246, 252, 245, 0.97) !important; }
+    [data-theme="sakura"] .header, [data-theme="sakura"] .settings,
+    [data-theme="sakura"] .card { background: rgba(255, 249, 252, 0.97) !important; }
+    [data-theme="cosmic"] .header, [data-theme="cosmic"] .settings,
+    [data-theme="cosmic"] .card { background: rgba(30, 22, 65, 0.97) !important; }
+
+    /* 3. Убираем fixed background (тормозит скролл) */
+    body, html { background-attachment: scroll !important; }
+
+    /* 4. Убираем ВСЕ декоративные SVG-фоны (волны, солнце, крона) */
+    [data-theme="ocean"] body::before,
+    [data-theme="sunset"] body::before,
+    [data-theme="forest"] body::before,
+    [data-theme="sakura"] body::before { display: none !important; }
+
+    /* 5. Убираем анимации пузырей/покачиваний */
+    [data-theme="ocean"] .header,
+    [data-theme="ocean"] .badge-class,
+    [data-theme="ocean"] .icon-btn { animation: none !important; }
+
+    /* 6. Убираем тяжёлые радиальные градиенты у океана */
+    [data-theme="ocean"] .badge-class,
+    [data-theme="ocean"] .icon-btn,
+    [data-theme="ocean"] .num {
+        background: linear-gradient(135deg, #22d3ee, #0891b2) !important;
+        border: none !important;
+        box-shadow: 0 2px 6px rgba(8,145,178,0.25) !important;
+    }
+    /* Убираем декоративные блики у пузырей */
+    [data-theme="ocean"] .card::after,
+    [data-theme="ocean"] .header::before,
+    [data-theme="ocean"] .icon-btn::before,
+    [data-theme="ocean"] .badge-class::before { display: none !important; }
+
+    /* 7. Уменьшаем тени (тоже влияет на рендер) */
+    .card, .header, .settings, .tabs, .live-banner {
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+    }
+    /* 8. Убираем will-change у карточек — там оно не нужно */
+    .header, .settings, .card, .tabs, .live-banner {
+        transform: none !important;
+    }
 }
 
-/* Убираем возможные артефакты сверху */
-.header-card, .header, .tabs, .settings {
-    background-clip: padding-box;
+/* Лёгкий режим (переключатель) */
+html.light-mode [data-theme] body::before,
+html.light-mode body::before { display: none !important; }
+html.light-mode .header,
+html.light-mode .settings,
+html.light-mode .card,
+html.light-mode .tabs,
+html.light-mode .live-banner {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
 }
-
-/* Настройки — плавные через grid (без max-height) */
-.settings { contain: layout style; }
-
-/* Частицы работают на GPU (если будут) */
-.particle { will-change: auto; }
+html.light-mode #particles { display: none !important; }
+html.light-mode [data-theme="ocean"] .header,
+html.light-mode [data-theme="ocean"] .badge-class,
+html.light-mode [data-theme="ocean"] .icon-btn { animation: none !important; }
 </style>
 </head>
 <body>
@@ -723,7 +846,7 @@ body {
     </div>
 </div>
 
-<div class="settings" id="settingsPanel"><div class="settings-inner">
+<div class="settings" id="settingsPanel">
     <div class="settings-title">🎨 Тема оформления</div>
     <div class="theme-grid">
         <button class="theme-btn" data-theme-btn="light" onclick="setTheme('light')"><span class="emoji">☀️</span>Светлая</button>
@@ -755,10 +878,13 @@ body {
         <div class="toggle-label">Анимация фона</div>
         <div class="toggle" id="toggleAnim" onclick="toggleAnim()"></div>
     </div>
+    <div class="toggle-row">
+        <div class="toggle-label">⚡ Лёгкий режим<br><span style="font-size:0.7rem;color:var(--muted);font-weight:500;">убирает все тяжёлые эффекты</span></div>
+        <div class="toggle" id="toggleLight" onclick="toggleLightMode()"></div>
+    </div>
 
     <div class="settings-title">📱 Приложение</div>
     <div id="installSection"></div>
-    </div>
 </div>
 
 {live_banner}
@@ -781,6 +907,7 @@ var THEME_COLORS = {light:'#eef2f7',dark:'#0b0d12',cosmic:'#05021a',ocean:'#e6f4
     document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
         if (b.getAttribute('data-theme-btn') === saved) b.classList.add('active');
     });
+    if (localStorage.getItem('rs_light_mode') === '1') document.documentElement.classList.add('light-mode');
     if (localStorage.getItem('rs_compact') === '1') document.documentElement.classList.add('compact');
     if (localStorage.getItem('rs_hide_time') === '1') document.documentElement.classList.add('hide-time');
     var size = localStorage.getItem('rs_size') || 'normal';
@@ -793,6 +920,7 @@ var THEME_COLORS = {light:'#eef2f7',dark:'#0b0d12',cosmic:'#05021a',ocean:'#e6f4
     document.getElementById('toggleHideTime').classList.toggle('on', localStorage.getItem('rs_hide_time') === '1');
     var animOn = localStorage.getItem('rs_anim') !== '0';
     document.getElementById('toggleAnim').classList.toggle('on', animOn);
+    document.getElementById('toggleLight').classList.toggle('on', localStorage.getItem('rs_light_mode') === '1');
     if (animOn) spawnParticles(saved);
 })();
 
@@ -837,12 +965,9 @@ function toggleAnim() {
 function spawnParticles(theme) {
     var container = document.getElementById('particles');
     if (!container) return;
-    if (document.documentElement.classList.contains('is-mobile')) return;
-    if (document.documentElement.classList.contains('low-power')) return;
-    if (document.documentElement.classList.contains('is-mobile')) return;
-    if (document.documentElement.classList.contains('low-power')) return;
     container.innerHTML = '';
     if (localStorage.getItem('rs_anim') === '0') return;
+    if (document.documentElement.classList.contains('light-mode')) return;
     if (window.innerWidth < 300) return;
     var configs = {
         cosmic: { chars: ['✦','✧','·','+'], colors: ['#ffffff','#b794f6','#7cf5c0','#e0d4ff'],
@@ -858,8 +983,8 @@ function spawnParticles(theme) {
     };
     var cfg = configs[theme];
     if (!cfg) return;
-    var isMobile = window.innerWidth < 500 || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
-    var count = isMobile ? Math.max(6, Math.round(cfg.count * 0.45)) : cfg.count;
+    var isMobile = window.innerWidth < 820 || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 6);
+    var count = isMobile ? Math.max(4, Math.round(cfg.count * 0.25)) : cfg.count;
     var frag = document.createDocumentFragment();
     for (var i = 0; i < count; i++) {
         var el = document.createElement('span');
@@ -883,10 +1008,20 @@ function spawnParticles(theme) {
     }
     container.appendChild(frag);
 }
+function toggleLightMode() {
+    var on = document.documentElement.classList.toggle('light-mode');
+    localStorage.setItem('rs_light_mode', on ? '1' : '0');
+    document.getElementById('toggleLight').classList.toggle('on', on);
+    if (on) { document.getElementById('particles').innerHTML = ''; }
+    else {
+        var t = document.documentElement.getAttribute('data-theme');
+        if (localStorage.getItem('rs_anim') !== '0') spawnParticles(t);
+    }
+}
 function toggleSettings() {
     document.getElementById('settingsPanel').classList.toggle('open');
     var btn = document.getElementById('settingsBtn');
-    
+    btn.classList.remove('spin'); void btn.offsetWidth; btn.classList.add('spin');
 }
 function showDay(day) {
     document.querySelectorAll('.day-block').forEach(function(el) { el.classList.remove('active'); });
@@ -947,11 +1082,6 @@ function doInstall() {
 function resetInstallFlag() { localStorage.removeItem('rs_installed'); renderInstallSection(); }
 renderInstallSection();
 setTimeout(function() { if (deferredPrompt) renderInstallSection(); }, 3000);
-document.addEventListener('visibilitychange', function() {
-    var ps = document.hidden ? 'paused' : 'running';
-    document.querySelectorAll('.particle, [data-theme="ocean"] body::before').forEach && 
-    document.querySelectorAll('.particle').forEach(function(p) { p.style.animationPlayState = ps; });
-});
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
         navigator.serviceWorker.register('/sw.js').catch(function() {});
@@ -1078,12 +1208,7 @@ class SimpleHandler(BaseHTTPRequestHandler):
             tabs = build_tabs(active_day, days_schedule)
             content = build_content(days_schedule, active_day, error_msg, live_status)
 
-            ua = self.headers.get('User-Agent', '').lower()
-            is_mobile_ua = any(x in ua for x in ['iphone', 'ipad', 'ipod', 'android', 'mobile', 'windows phone', 'opera mini'])
-            device_class = "is-mobile" if is_mobile_ua else "is-desktop"
-
             html = PAGE_TEMPLATE
-            html = html.replace("{device_class}", device_class)
             html = html.replace("{refresh_tag}", refresh_tag)
             html = html.replace("{header_date}", header_date)
             html = html.replace("{class_upper}", CLASS_CODE.upper())
