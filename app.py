@@ -189,12 +189,23 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --orange:#ea580c; --orange-soft:rgba(234,88,12,0.12);
     --danger:#dc2626;
 }
-html { min-height:100%; background:var(--bg); }
+html { 
+    min-height:100vh; 
+    background:var(--bg); 
+    background-attachment:scroll;
+}
+[data-theme="ocean"] html, html[data-theme="ocean"] { background:linear-gradient(180deg,#c7e8f5 0%,#94d0e6 40%,#5aafd0 100%); }
+[data-theme="sunset"] html, html[data-theme="sunset"] { background:linear-gradient(180deg,#ffe4b8 0%,#ffc896 30%,#ffa07a 65%,#e88898 100%); }
+[data-theme="forest"] html, html[data-theme="forest"] { background:linear-gradient(180deg,#e8f5e0 0%,#c8e6c0 60%,#a8d8a0 100%); }
+[data-theme="sakura"] html, html[data-theme="sakura"] { background:linear-gradient(180deg,#ffe8ef 0%,#ffd0e0 50%,#ffb8d0 100%); }
+[data-theme="cosmic"] html, html[data-theme="cosmic"] { background:#05021a; }
+[data-theme="dark"] html, html[data-theme="dark"] { background:#0b0d12; }
+[data-theme="light"] html, html[data-theme="light"] { background:#eef2f7; }
 * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 body {
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--bg); color:var(--text); margin:0;
-    padding:20px 14px 40px; display:flex; justify-content:center;
+    padding:20px 14px 24px; display:flex; justify-content:center;
     min-height:100vh; -webkit-font-smoothing:antialiased;
     transition:background 0.5s ease, color 0.3s ease;
     position:relative; overflow-x:hidden;
@@ -222,7 +233,6 @@ body {
     background:var(--card); border:1px solid var(--border); border-radius:24px;
     padding:16px 20px; box-shadow:var(--shadow); margin-bottom:14px;
     display:flex; align-items:center; justify-content:space-between; gap:12px;
-    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
 }
 .brand { display:flex; align-items:center; gap:12px; min-width:0; }
 .brand-logo {
@@ -324,7 +334,6 @@ body {
 .live-banner {
     border-radius:20px; padding:16px 18px; margin-bottom:14px;
     display:flex; align-items:center; gap:14px; box-shadow:var(--shadow);
-    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
     border:1px solid var(--border); animation:slideDown 0.4s ease;
 }
 @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:none; } }
@@ -353,7 +362,7 @@ body {
     display:flex; gap:6px; margin-bottom:16px; overflow-x:auto;
     padding:4px; scrollbar-width:none; -ms-overflow-style:none;
     background:var(--card); border-radius:18px; border:1px solid var(--border);
-    box-shadow:var(--shadow); backdrop-filter:blur(14px);
+    box-shadow:var(--shadow);
 }
 .tabs::-webkit-scrollbar { display:none; }
 .tab {
@@ -389,7 +398,6 @@ body {
     background:var(--card); padding:14px 16px; margin-bottom:9px; border-radius:18px;
     box-shadow:var(--shadow); display:flex; align-items:center; gap:14px;
     border:1px solid var(--border); transition:background 0.15s, border-color 0.15s, color 0.15s;
-    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
     position:relative; overflow:hidden;
 }
 .card.now {
@@ -429,7 +437,6 @@ html.font-large .day-title { font-size:1.3rem; }
     background:var(--card); padding:32px 20px; border-radius:20px;
     box-shadow:var(--shadow); text-align:center; font-size:1rem; font-weight:700;
     color:var(--muted); border:1px solid var(--border);
-    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
     line-height:1.5;
 }
 .info-box .big { font-size:2.2rem; display:block; margin-bottom:8px; }
@@ -452,27 +459,24 @@ body { position:relative; }
 /* ОКЕАН — волны, пузыри */
 [data-theme="ocean"] body {
     background: linear-gradient(180deg,#c7e8f5 0%,#94d0e6 40%,#5aafd0 100%);
-    background-attachment: fixed;
 }
 [data-theme="ocean"] body::before {
-    content:""; position:absolute; left:0; bottom:-10px;
+    content:""; position:absolute; left:0; bottom:0;
     width:200%; height:220px; z-index:0; pointer-events:none;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 220' preserveAspectRatio='none'><path d='M0,100 Q150,30 300,100 T600,100 T900,100 T1200,100 L1200,220 L0,220 Z' fill='%230891b2' opacity='0.35'/><path d='M0,140 Q200,80 400,140 T800,140 T1200,140 L1200,220 L0,220 Z' fill='%2306b6d4' opacity='0.45'/><path d='M0,180 Q250,140 500,180 T1000,180 T1200,180 L1200,220 L0,220 Z' fill='%230891b2' opacity='0.55'/></svg>");
     background-size:600px 220px; background-repeat:repeat-x;
-    animation:oceanWave 22s linear infinite;
+    animation:none;
     will-change:transform;
 }
 @keyframes oceanWave { from { transform:translate3d(0,0,0); } to { transform:translate3d(-600px,0,0); } }
 [data-theme="ocean"] .header,
 [data-theme="ocean"] .settings {
     background:rgba(255,255,255,0.45);
-    backdrop-filter:blur(24px) saturate(1.6);
-    -webkit-backdrop-filter:blur(24px) saturate(1.6);
     border:2px solid rgba(255,255,255,0.65);
     box-shadow:0 10px 40px rgba(8,145,178,0.25),inset 0 2px 12px rgba(255,255,255,0.9);
     border-radius:28px;
 }
-[data-theme="ocean"] .header { animation:floaty 5s ease-in-out infinite; position:relative; overflow:hidden; }
+[data-theme="ocean"] .header { animation:none; position:relative; overflow:hidden; }
 [data-theme="ocean"] .header::before {
     content:""; position:absolute; top:8px; left:22px;
     width:60px; height:18px; border-radius:50%;
@@ -485,7 +489,7 @@ body { position:relative; }
     border:2px solid rgba(255,255,255,0.85);
     box-shadow:0 4px 16px rgba(8,145,178,0.35),inset -4px -6px 12px rgba(8,145,178,0.25),inset 4px 4px 12px rgba(255,255,255,0.8);
     color:#0e7490; display:flex; align-items:center; justify-content:center;
-    position:relative; animation:floaty 4s ease-in-out infinite;
+    position:relative; animation:none;
 }
 [data-theme="ocean"] .badge-class::before {
     content:""; position:absolute; top:7px; left:9px;
@@ -497,7 +501,7 @@ body { position:relative; }
     background:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.95),rgba(34,211,238,0.4) 60%,rgba(8,145,178,0.5));
     border:2px solid rgba(255,255,255,0.85);
     box-shadow:0 4px 16px rgba(8,145,178,0.3),inset -4px -6px 12px rgba(8,145,178,0.2),inset 4px 4px 12px rgba(255,255,255,0.8);
-    color:#0e7490; position:relative; animation:floaty 6s ease-in-out infinite;
+    color:#0e7490; position:relative; animation:none;
 }
 [data-theme="ocean"] .icon-btn::before {
     content:""; position:absolute; top:6px; left:8px;
@@ -506,8 +510,6 @@ body { position:relative; }
 }
 [data-theme="ocean"] .card {
     background:rgba(255,255,255,0.6);
-    backdrop-filter:blur(14px) saturate(1.5);
-    -webkit-backdrop-filter:blur(14px) saturate(1.5);
     border:1.5px solid rgba(255,255,255,0.8);
     border-radius:24px;
     box-shadow:0 8px 24px rgba(8,145,178,0.18),inset 0 1px 6px rgba(255,255,255,0.9);
@@ -526,7 +528,6 @@ body { position:relative; }
 }
 [data-theme="ocean"] .tabs {
     background:rgba(255,255,255,0.55);
-    backdrop-filter:blur(14px) saturate(1.4);
     border:1.5px solid rgba(255,255,255,0.75);
     box-shadow:0 6px 20px rgba(8,145,178,0.15);
 }
@@ -558,20 +559,18 @@ body { position:relative; }
 /* ЗАКАТ — тёплое небо */
 [data-theme="sunset"] body {
     background:linear-gradient(180deg,#ffe4b8 0%,#ffc896 30%,#ffa07a 65%,#e88898 100%);
-    background-attachment:fixed;
 }
 [data-theme="sunset"] body::before {
     content:""; position:absolute; top:5%; right:8%;
     width:140px; height:140px; border-radius:50%;
     background:radial-gradient(circle,rgba(255,220,120,0.95),rgba(255,140,80,0.35) 60%,transparent 75%);
     filter:blur(10px); pointer-events:none; z-index:0;
-    animation:sunPulse 6s ease-in-out infinite;
+    animation:none;
 }
 @keyframes sunPulse { 0%,100% { transform:scale3d(1,1,1); opacity:0.85; } 50% { transform:scale3d(1.08,1.08,1); opacity:1; } }
 [data-theme="sunset"] .header,
 [data-theme="sunset"] .settings {
     background:rgba(255,250,240,0.85);
-    backdrop-filter:blur(16px);
     border:1px solid rgba(249,115,22,0.2);
     box-shadow:0 8px 32px rgba(249,115,22,0.25),inset 0 1px 0 rgba(255,255,255,0.9);
 }
@@ -594,7 +593,6 @@ body { position:relative; }
 /* ЛЕС — органичный */
 [data-theme="forest"] body {
     background:linear-gradient(180deg,#e8f5e0 0%,#c8e6c0 60%,#a8d8a0 100%);
-    background-attachment:fixed;
 }
 [data-theme="forest"] body::before {
     content:""; position:absolute; left:0; right:0; top:0;
@@ -605,7 +603,6 @@ body { position:relative; }
 [data-theme="forest"] .header,
 [data-theme="forest"] .settings {
     background:rgba(255,255,255,0.8);
-    backdrop-filter:blur(14px);
     border:1px solid rgba(5,150,105,0.2);
     box-shadow:0 6px 24px rgba(5,150,105,0.2),inset 0 1px 0 rgba(255,255,255,0.9);
 }
@@ -630,7 +627,6 @@ body { position:relative; }
 /* САКУРА — мягкая */
 [data-theme="sakura"] body {
     background:linear-gradient(180deg,#ffe8ef 0%,#ffd0e0 50%,#ffb8d0 100%);
-    background-attachment:fixed;
 }
 [data-theme="sakura"] body::before {
     content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
@@ -640,7 +636,6 @@ body { position:relative; }
 [data-theme="sakura"] .header,
 [data-theme="sakura"] .settings {
     background:rgba(255,255,255,0.88);
-    backdrop-filter:blur(14px);
     border:2px solid rgba(236,72,153,0.18);
     box-shadow:0 8px 28px rgba(236,72,153,0.2),inset 0 1px 0 rgba(255,255,255,0.9);
     border-radius:26px;
@@ -681,193 +676,33 @@ body { position:relative; }
 .container, #particles { position:relative; z-index:1; }
 #particles { z-index:0; }
 
-/* === PERFORMANCE OPTIMIZATIONS === */
-.particle { will-change:transform; transform:translateZ(0); backface-visibility:hidden; }
-@media (max-width: 768px) {
-    /* Убираем самые тяжёлые эффекты на мобильных */
-    [data-theme="ocean"] .header { animation:none; }
-    [data-theme="ocean"] .badge-class,
-    [data-theme="ocean"] .icon-btn { animation-duration:8s; }
-    /* Уменьшаем blur — самый тормозящий эффект */
-    [data-theme="ocean"] .header,
-    [data-theme="ocean"] .settings,
-    [data-theme="ocean"] .card,
-    [data-theme="ocean"] .tabs {
-        backdrop-filter:blur(8px) !important;
-        -webkit-backdrop-filter:blur(8px) !important;
-    }
-    /* Ускоряем волну через transform вместо background-position */
-    [data-theme="ocean"] body::before {
-        animation-duration:35s;
-        will-change:transform;
-    }
-    /* Отключаем тяжёлый пульс у закатного солнца */
-    [data-theme="sunset"] body::before { animation-duration:12s; }
-}
-@media (prefers-reduced-motion: reduce) {
-    .particle, [data-theme="ocean"] body::before, [data-theme="ocean"] .badge-class,
-    [data-theme="ocean"] .icon-btn, [data-theme="sunset"] body::before {
-        animation:none !important;
-    }
-}
-/* Плавный transition только там где нужно */
-.header, .settings, .card, .tabs, .live-banner { transform:translateZ(0); }
 
-.install-btn {
-    display:flex; align-items:center; gap:12px; position:relative;
-    width:100%; padding:15px 18px; border-radius:16px; border:none;
-    background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff;
-    font-weight:800; cursor:pointer; font-family:inherit;
-    box-shadow:0 8px 26px var(--accent-soft),inset 0 1px 0 rgba(255,255,255,0.25);
-    transition:transform 0.15s, box-shadow 0.2s;
-    text-align:left;
+/* === ЧИСТЫЙ ФОН БЕЗ ПОЛОС === */
+html, body {
+    background-color: var(--bg);
 }
-.install-btn:hover { box-shadow:0 12px 34px var(--accent-soft); }
+body {
+    padding-bottom: 24px !important;
+}
+.container { padding-bottom: 8px; }
 
-.install-btn .ib-emoji { font-size:1.6rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-.install-btn .ib-text { font-size:1rem; font-weight:800; letter-spacing:-0.01em; }
-.install-btn .ib-sub { display:block; font-size:0.72rem; font-weight:600; opacity:0.75; margin-top:2px; }
-.install-tip {
-    max-height:0; overflow:hidden; opacity:0; margin-top:0;
-    background:var(--bg2); border:1px solid var(--border); border-radius:14px;
-    padding:0 14px; font-size:0.85rem; line-height:1.5; color:var(--muted); font-weight:600;
-    transition:max-height 0.35s ease, opacity 0.3s ease, padding 0.3s ease, margin-top 0.3s ease;
-}
-.install-tip.show { max-height:200px; opacity:1; padding:14px; margin-top:10px; }
-
-/* === FINAL PERF BOOST (сохраняет красоту) === */
-.header, .settings, .card, .tabs, .live-banner {
-    contain: layout paint style;
-    transform: translateZ(0);
-}
-.day-block {
-    content-visibility: auto;
-    contain-intrinsic-size: 0 400px;
-}
-.particle { will-change: transform; transform: translateZ(0); }
-/* Пауза волн когда скроллим — экономим CPU */
-@media (max-width: 820px) {
-    [data-theme="ocean"] body::before { animation-duration: 30s; }
-    [data-theme="sunset"] body::before { animation-duration: 14s; }
-    .header, .settings, .card, .tabs { box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important; }
-    [data-theme="cosmic"] .header, [data-theme="cosmic"] .settings, [data-theme="cosmic"] .card {
-        box-shadow: 0 2px 12px rgba(120,60,220,0.25) !important;
-    }
+/* Волны океана — приклеены к низу контейнера, а не body */
+[data-theme="ocean"] body::before {
+    position: absolute;
+    bottom: 0;
+    height: 180px;
 }
 
-/* === SMART PERFORMANCE: на мобильных — статично и быстро === */
-/* Оставляем все цвета, градиенты, пузыри, свечения — но без анимаций */
-
-.is-mobile [data-theme="ocean"] body::before,
-.is-mobile [data-theme="sunset"] body::before,
-.is-mobile [data-theme="forest"] body::before,
-.is-mobile [data-theme="sakura"] body::before {
-    animation: none !important;
+/* Убираем возможные артефакты сверху */
+.header-card, .header, .tabs, .settings {
+    background-clip: padding-box;
 }
-/* Волны в океане остаются, но не двигаются */
-.is-mobile [data-theme="ocean"] body::before { transform: translate3d(0,0,0) !important; }
-/* Солнце в закате остаётся, но не пульсирует */
-.is-mobile [data-theme="sunset"] body::before { animation: none !important; }
 
-/* Пузыри-кнопки: остаются в стиле, но не качаются */
-.is-mobile [data-theme="ocean"] .header,
-.is-mobile [data-theme="ocean"] .badge-class,
-.is-mobile [data-theme="ocean"] .icon-btn { animation: none !important; }
+/* Настройки — плавные через grid (без max-height) */
+.settings { contain: layout style; }
 
-/* Космические звёзды: статичные, без мерцания */
-.is-mobile [data-theme="cosmic"] body::before { animation: none !important; }
-
-/* Частицы на мобильных — вообще не создаём (скроем через JS) */
-.is-mobile #particles { display: none !important; }
-
-/* Отключаем fixed background — дёргает при скролле */
-.is-mobile body,
-.is-mobile html { background-attachment: scroll !important; }
-
-/* На мобильных — минимум box-shadow (рендер дешевле) */
-.is-mobile .header,
-.is-mobile .settings,
-.is-mobile .card,
-.is-mobile .tabs,
-.is-mobile .live-banner {
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important;
-}
-.is-mobile [data-theme="cosmic"] .header,
-.is-mobile [data-theme="cosmic"] .settings,
-.is-mobile [data-theme="cosmic"] .card {
-    box-shadow: 0 2px 10px rgba(120,60,220,0.2) !important;
-}
-.is-mobile .card.now { box-shadow: 0 0 0 1.5px var(--green) !important; }
-.is-mobile .card.next-up { box-shadow: 0 0 0 1.5px var(--orange) !important; }
-
-/* Слабое устройство (определяется через JS) */
-html.low-power [data-theme] body::before,
-html.low-power body::before { animation: none !important; }
-html.low-power [data-theme="ocean"] .header,
-html.low-power [data-theme="ocean"] .badge-class,
-html.low-power [data-theme="ocean"] .icon-btn { animation: none !important; }
-html.low-power #particles { display: none !important; }
-html.low-power .header,
-html.low-power .settings,
-html.low-power .card,
-html.low-power .tabs { box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important; }
-
-/* === SMART PERFORMANCE: на мобильных — статично и быстро === */
-/* Оставляем все цвета, градиенты, пузыри, свечения — но без анимаций */
-
-.is-mobile [data-theme="ocean"] body::before,
-.is-mobile [data-theme="sunset"] body::before,
-.is-mobile [data-theme="forest"] body::before,
-.is-mobile [data-theme="sakura"] body::before {
-    animation: none !important;
-}
-/* Волны в океане остаются, но не двигаются */
-.is-mobile [data-theme="ocean"] body::before { transform: translate3d(0,0,0) !important; }
-/* Солнце в закате остаётся, но не пульсирует */
-.is-mobile [data-theme="sunset"] body::before { animation: none !important; }
-
-/* Пузыри-кнопки: остаются в стиле, но не качаются */
-.is-mobile [data-theme="ocean"] .header,
-.is-mobile [data-theme="ocean"] .badge-class,
-.is-mobile [data-theme="ocean"] .icon-btn { animation: none !important; }
-
-/* Космические звёзды: статичные, без мерцания */
-.is-mobile [data-theme="cosmic"] body::before { animation: none !important; }
-
-/* Частицы на мобильных — вообще не создаём (скроем через JS) */
-.is-mobile #particles { display: none !important; }
-
-/* Отключаем fixed background — дёргает при скролле */
-.is-mobile body,
-.is-mobile html { background-attachment: scroll !important; }
-
-/* На мобильных — минимум box-shadow (рендер дешевле) */
-.is-mobile .header,
-.is-mobile .settings,
-.is-mobile .card,
-.is-mobile .tabs,
-.is-mobile .live-banner {
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important;
-}
-.is-mobile [data-theme="cosmic"] .header,
-.is-mobile [data-theme="cosmic"] .settings,
-.is-mobile [data-theme="cosmic"] .card {
-    box-shadow: 0 2px 10px rgba(120,60,220,0.2) !important;
-}
-.is-mobile .card.now { box-shadow: 0 0 0 1.5px var(--green) !important; }
-.is-mobile .card.next-up { box-shadow: 0 0 0 1.5px var(--orange) !important; }
-
-/* Слабое устройство (определяется через JS) */
-html.low-power [data-theme] body::before,
-html.low-power body::before { animation: none !important; }
-html.low-power [data-theme="ocean"] .header,
-html.low-power [data-theme="ocean"] .badge-class,
-html.low-power [data-theme="ocean"] .icon-btn { animation: none !important; }
-html.low-power #particles { display: none !important; }
-html.low-power .header,
-html.low-power .settings,
-html.low-power .card,
-html.low-power .tabs { box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important; }
+/* Частицы работают на GPU (если будут) */
+.particle { will-change: auto; }
 </style>
 </head>
 <body>
