@@ -166,7 +166,6 @@ body {
     background-repeat:repeat, repeat, repeat, repeat, repeat, repeat, no-repeat;
 }
 .container { width:100%; max-width:520px; margin:0 auto; }
-
 .header {
     background:var(--card); border:1px solid var(--border); border-radius:22px;
     padding:16px 20px; box-shadow:var(--shadow); margin-bottom:14px;
@@ -192,7 +191,6 @@ body {
     cursor:pointer; display:flex; align-items:center; justify-content:center;
 }
 .icon-btn:active { color:var(--accent); background:var(--accent-soft); }
-
 .settings {
     background:var(--card); border:1px solid var(--border); border-radius:20px;
     padding:0 18px; margin-bottom:0; box-shadow:none;
@@ -223,7 +221,6 @@ body {
 .installed-badge { color:var(--green); font-weight:700; font-size:0.9rem;
     padding:10px 0; display:flex; align-items:center; gap:6px; }
 .hint-text { color:var(--muted); font-size:0.82rem; line-height:1.5; }
-
 .switcher {
     display:flex; gap:6px; margin-bottom:14px; padding:4px;
     background:var(--card); border-radius:16px; border:1px solid var(--border);
@@ -235,7 +232,6 @@ body {
     cursor:pointer; font-family:inherit;
 }
 .switch-btn.active { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; }
-
 .live-banner {
     border-radius:20px; padding:16px 18px; margin-bottom:14px;
     display:flex; align-items:center; gap:14px; box-shadow:var(--shadow);
@@ -254,7 +250,6 @@ body {
 .live-time { font-size:0.78rem; color:var(--muted); font-weight:700; margin-top:2px; }
 .progress-bar { height:5px; border-radius:3px; background:var(--border); overflow:hidden; margin-top:8px; }
 .progress-fill { height:100%; background:linear-gradient(90deg,var(--green),var(--accent2)); border-radius:3px; }
-
 .day-title {
     font-size:1.15rem; font-weight:800; color:var(--text);
     margin:4px 4px 12px; display:flex; justify-content:space-between; align-items:center;
@@ -365,6 +360,15 @@ function setTheme(t) {
     if (m) m.setAttribute('content', THEME_COLORS[t] || '#eef2f7');
 }
 function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
+function switchDay(tmr) {
+    document.querySelectorAll('.switch-btn').forEach(function(b, i) {
+        b.classList.toggle('active', (i === 1) === tmr);
+    });
+    document.getElementById('dayToday').style.display = tmr ? 'none' : 'block';
+    document.getElementById('dayTomorrow').style.display = tmr ? 'block' : 'none';
+    var lb = document.getElementById('liveBannerWrap');
+    if (lb) lb.style.display = tmr ? 'none' : 'block';
+}
 var deferredPrompt = null;
 var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); deferredPrompt = e; renderInstall(); });
@@ -403,7 +407,7 @@ if ('serviceWorker' in navigator) {
 
 
 def build_switcher(today_name, tomorrow_name, show_tomorrow):
-    t1 = ' active' if not show_tomorrow else ''
+    t1 = '' if show_tomorrow else ' active'
     t2 = ' active' if show_tomorrow else ''
     h = '<div class="switcher">'
     h += f'<button class="switch-btn{t1}" onclick="switchDay(false)">Сегодня · {today_name[:2]}</button>'
@@ -431,7 +435,7 @@ def build_live_banner(status):
 
 
 def build_day_block(day_name, lessons, is_today, live_status):
-    h = f'<div class="day-block active" id="day-block">'
+    h = '<div>'
     pill = '<span class="today-pill">✨ Сегодня</span>' if is_today else ''
     h += f'<div class="day-title">{day_name}{pill}</div>'
     if not lessons:
@@ -478,46 +482,36 @@ class SimpleHandler(BaseHTTPRequestHandler):
             months = ["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"]
             header_date = f"{today_name}, {now.day} {months[now.month-1]}"
 
-            tomorrow_idx = (wi + 1) % 6
-            tomorrow_name = DAY_FULL[tomorrow_idx] if wi < 5 else "Понедельник"
-            if wi == 5: tomorrow_name = "Понедельник"
+            if wi < 5:
+                tomorrow_name = DAY_FULL[wi + 1]
+            else:
+                tomorrow_name = "Понедельник"
 
             today_lessons = days_schedule.get(today_name, [])
             tomorrow_lessons = days_schedule.get(tomorrow_name, [])
             school_over = (hour > 14 or (hour == 14 and minute >= 40) or is_weekend or not today_lessons)
-            show_tomorrow = school_over and bool(tomorrow_lessons)
+            show_tomorrow = bool(school_over and tomorrow_lessons)
 
             live_status = get_live_status(today_lessons) if not is_weekend else None
-            live_banner = build_live_banner(live_status)
+            live_html = build_live_banner(live_status)
+            if live_html:
+                live_html = '<div id="liveBannerWrap">' + live_html + '</div>'
             switcher = build_switcher(today_name, tomorrow_name, show_tomorrow)
 
-            # Оба блока — показываем сразу, JS переключает
             content = '<div id="dayToday" style="display:%s">' % ('none' if show_tomorrow else 'block')
-            content += build_day_block(today_name, today_lessons, True, live_status).replace(' active','') 
+            content += build_day_block(today_name, today_lessons, True, live_status)
             content += '</div>'
             content += '<div id="dayTomorrow" style="display:%s">' % ('block' if show_tomorrow else 'none')
-            content += build_day_block(tomorrow_name, tomorrow_lessons, False, None).replace(' active','')
+            content += build_day_block(tomorrow_name, tomorrow_lessons, False, None)
             content += '</div>'
 
             html = PAGE_TEMPLATE
             html = html.replace("{refresh_tag}", refresh_tag)
             html = html.replace("{header_date}", header_date)
-            html = html.replace("{live_banner}", live_banner)
+            html = html.replace("{live_banner}", live_html)
             html = html.replace("{switcher}", switcher)
             html = html.replace("{content}", content)
             html = html.replace("{sheet_url}", SHEET_URL)
-
-            # Добавляем switchDay в JS
-            js_add = '''
-function switchDay(tmr) {
-    document.querySelectorAll('.switch-btn').forEach(function(b,i){
-        b.classList.toggle('active', (i===1)===tmr);
-    });
-    document.getElementById('dayToday').style.display = tmr ? 'none' : 'block';
-    document.getElementById('dayTomorrow').style.display = tmr ? 'block' : 'none';
-}
-'''
-            html = html.replace("function toggleSettings()", js_add + "function toggleSettings()")
 
             self.send_response(200)
             self.send_header("Content-type", "text/html; charset=utf-8")
