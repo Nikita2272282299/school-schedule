@@ -282,17 +282,7 @@ body {
 }
 
 /* ==== ЧАСТИЦЫ (только на мобильных и десктопе, но мало) ==== */
-#particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-.particle {
-    position: absolute; top: -40px; user-select: none;
-    will-change: transform;
-    animation-name: fall;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-}
-@keyframes fall {
-    0% { transform: translate3d(0, -40px, 0) rotate(0deg); opacity: 0; }
-    10% { opacity: 0.85; }
+10% { opacity: 0.85; }
     90% { opacity: 0.85; }
     100% { transform: translate3d(30px, 110vh, 0) rotate(360deg); opacity: 0; }
 }
@@ -320,13 +310,6 @@ body {
 .brand-text { min-width: 0; }
 .brand-title { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
 .brand-sub { font-size: 0.72rem; color: var(--muted); font-weight: 700; margin-top: 2px; }
-.brand-week {
-    display: inline-block; margin-left: 6px;
-    background: var(--a-soft); color: var(--accent);
-    padding: 1px 7px; border-radius: 6px;
-    font-size: 0.65rem; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 0.04em;
-}
 .header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .badge-class {
     background: var(--badge-bg); color: var(--badge-color);
@@ -793,20 +776,18 @@ html.hide-time .time { display: none; }
 </style>
 </head>
 <body>
-<div id="particles"></div>
 <div class="container">
 
 <div class="header">
     <div class="brand">
         <div class="brand-logo">📅</div>
         <div class="brand-text">
-            <div class="brand-title">Расписание<span class="brand-week">{week_label}</span></div>
+            <div class="brand-title">Расписание</div>
             <div class="brand-sub">{header_date}</div>
         </div>
     </div>
     <div class="header-right">
         <div class="badge-class">8Г</div>
-        <button class="icon-btn" id="refreshBtn" onclick="refreshPage()" title="Обновить">🔄</button>
         <button class="icon-btn" onclick="toggleSettings()" title="Настройки">⚙️</button>
     </div>
 </div>
@@ -839,10 +820,6 @@ html.hide-time .time { display: none; }
         <div class="toggle-row">
             <div class="toggle-label">Скрыть время уроков</div>
             <div class="toggle" id="tHideTime" onclick="toggleHideTime()"></div>
-        </div>
-        <div class="toggle-row">
-            <div class="toggle-label">✨ Падающие частицы</div>
-            <div class="toggle" id="tParticles" onclick="toggleParticles()"></div>
         </div>
 
         <div class="settings-title">📱 Приложение</div>
@@ -881,10 +858,7 @@ var THEME_COLORS = {light:'#eef2f7', dark:'#0b0d12', cosmic:'#05021a'};
     if (localStorage.getItem('rs_hide_time') === '1') document.documentElement.classList.add('hide-time');
     document.getElementById('tCompact').classList.toggle('on', localStorage.getItem('rs_compact') === '1');
     document.getElementById('tHideTime').classList.toggle('on', localStorage.getItem('rs_hide_time') === '1');
-    var particlesOn = localStorage.getItem('rs_particles') !== '0';
-    document.getElementById('tParticles').classList.toggle('on', particlesOn);
-    if (particlesOn) spawnParticles(saved);
-})();
+    })();
 
 function setTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
@@ -894,7 +868,6 @@ function setTheme(t) {
     });
     var meta = document.getElementById('tcMeta');
     if (meta) meta.setAttribute('content', THEME_COLORS[t] || '#eef2f7');
-    if (localStorage.getItem('rs_particles') !== '0') spawnParticles(t);
 }
 function setSize(s) {
     document.documentElement.classList.remove('font-small','font-large');
@@ -915,55 +888,10 @@ function toggleHideTime() {
     localStorage.setItem('rs_hide_time', on ? '1' : '0');
     document.getElementById('tHideTime').classList.toggle('on', on);
 }
-function toggleParticles() {
-    var on = localStorage.getItem('rs_particles') !== '0';
-    on = !on;
-    localStorage.setItem('rs_particles', on ? '1' : '0');
-    document.getElementById('tParticles').classList.toggle('on', on);
-    if (on) {
-        spawnParticles(document.documentElement.getAttribute('data-theme'));
-    } else {
-        document.getElementById('particles').innerHTML = '';
-    }
-}
-function spawnParticles(theme) {
-    var c = document.getElementById('particles');
-    if (!c) return;
-    c.innerHTML = '';
-    if (localStorage.getItem('rs_particles') === '0') return;
-    if (window.innerWidth < 320) return;
-    var cfg = {
-        cosmic: { chars: ['✦','✧','·','+'], colors: ['#ffffff','#b794f6','#7cf5c0','#e0d4ff'], count: 14, sizes: [8,16], dur: [14,26] },
-        sakura: { chars: ['🌸','🌸','🌸','❀'], colors: ['#ec4899','#f9a8d4','#fbcfe8'], count: 12, sizes: [12,20], dur: [10,20] },
-        forest: { chars: ['🍃','🌿','🍃'], colors: ['#059669','#16a34a','#84cc16'], count: 10, sizes: [14,22], dur: [12,22] },
-        sunset: { chars: ['✨','·','✦'], colors: ['#f97316','#ec4899','#fbbf24'], count: 10, sizes: [8,16], dur: [12,22] }
-    }[theme];
-    if (!cfg) return;
-    var isMobile = window.innerWidth < 820;
-    var n = isMobile ? Math.max(6, Math.round(cfg.count * 0.6)) : cfg.count;
-    var frag = document.createDocumentFragment();
-    for (var i = 0; i < n; i++) {
-        var el = document.createElement('span');
-        el.className = 'particle';
-        el.textContent = cfg.chars[Math.floor(Math.random() * cfg.chars.length)];
-        el.style.left = (Math.random() * 100) + '%';
-        var size = cfg.sizes[0] + Math.random() * (cfg.sizes[1] - cfg.sizes[0]);
-        el.style.fontSize = size + 'px';
-        el.style.color = cfg.colors[Math.floor(Math.random() * cfg.colors.length)];
-        var dur = cfg.dur[0] + Math.random() * (cfg.dur[1] - cfg.dur[0]);
-        el.style.animationDuration = dur + 's';
-        el.style.animationDelay = (-Math.random() * dur) + 's';
-        frag.appendChild(el);
-    }
-    c.appendChild(frag);
-}
 function toggleSettings() {
     document.getElementById('settingsPanel').classList.toggle('open');
 }
-function refreshPage() {
-    var b = document.getElementById('refreshBtn');
-    b.classList.remove('spinning'); void b.offsetWidth; b.classList.add('spinning');
-    setTimeout(function() { location.reload(); }, 400);
+, 400);
 }
 function showDay(day) {
     document.querySelectorAll('.day-block').forEach(function(el) { el.classList.remove('active'); });
@@ -973,11 +901,6 @@ function showDay(day) {
         x.classList.toggle('active', x.getAttribute('data-day') === day);
     });
 }
-document.addEventListener('visibilitychange', function() {
-    var ps = document.hidden ? 'paused' : 'running';
-    document.querySelectorAll('.particle').forEach(function(p) { p.style.animationPlayState = ps; });
-});
-
 var deferredPrompt = null;
 var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); deferredPrompt = e; renderInstall(); });
@@ -1145,7 +1068,7 @@ class Handler(BaseHTTPRequestHandler):
             html = PAGE
             html = html.replace("{refresh_tag}", refresh)
             html = html.replace("{header_date}", header_date)
-            html = html.replace("{week_label}", f"нед {wk_num} · {wk_label}")
+            html = html.replace("{week_label}", "")
             html = html.replace("{live_banner}", live_html)
             html = html.replace("{tabs}", tabs_html)
             html = html.replace("{content}", content)
