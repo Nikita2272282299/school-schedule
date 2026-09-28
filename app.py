@@ -14,6 +14,8 @@ TIME_TO_NUM = {
 }
 
 cache = {"days_schedule": {}, "error_msg": "", "last_update": 0}
+previous_schedule = {}
+pending_notifications = []
 CACHE_TTL = 300
 
 MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/","display":"standalone","background_color":"#0a0620","theme_color":"#4c6ef5","icons":[{"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}'
@@ -90,6 +92,28 @@ def get_schedule():
         if cache["days_schedule"]:
             return cache["days_schedule"], ""
         cache["error_msg"] = "Офлайн-режим (нет сети)"
+
+    global previous_schedule, pending_notifications
+    if days_schedule and previous_schedule:
+        changes = []
+        for day, lessons in days_schedule.items():
+            old_lessons = previous_schedule.get(day, [])
+            if lessons != old_lessons:
+                if not old_lessons:
+                    changes.append({"day": day, "type": "new"})
+                else:
+                    for i, lesson in enumerate(lessons):
+                        if i < len(old_lessons) and lesson != old_lessons[i]:
+                            changes.append({"day": day, "type": "changed", "index": i + 1, "old": old_lessons[i][2], "new": lesson[2]})
+        if changes:
+            pending_notifications = changes
+            try:
+                with open('notifications.json', 'w', encoding='utf-8') as nf:
+                    json.dump(pending_notifications, nf, ensure_ascii=False)
+            except Exception:
+                pass
+    previous_schedule = days_schedule
+
     return cache["days_schedule"], cache["error_msg"]
 
 
@@ -266,6 +290,8 @@ h2 span { background: linear-gradient(135deg, #4c6ef5, #7950f2); -webkit-backgro
 <button class="theme-btn" data-theme-btn="cosmic" onclick="setTheme('cosmic')"><span class="emoji">🌌</span>Космос</button>
 </div>
 <div class="settings-title" style="margin-top:18px;">📱 Приложение</div>
+<div class="settings-title" style="margin-top:18px;">🔔 Уведомления</div>
+<button class="install-btn" onclick="requestNotifPermission()" id="notifBtn">🔔 Включить уведомления</button>
 <div id="installSection"></div>
 </div>
 {content}
@@ -295,6 +321,22 @@ function setTheme(t) {
         var colors = {light: '#f0f4f8', dark: '#0f1115', cosmic: '#030014'};
         meta.setAttribute('content', colors[t] || '#f0f4f8');
     }
+}
+function requestNotifPermission() {
+    if (!('Notification' in window)) {
+        alert('Ваш браузер не поддерживает уведомления');
+        return;
+    }
+    Notification.requestPermission().then(function(perm) {
+        var btn = document.getElementById('notifBtn');
+        if (perm === 'granted') {
+            btn.textContent = '✅ Уведомления включены';
+            btn.style.background = '#2b8a3e';
+            new Notification('📅 Расписание 8Г', { body: 'Уведомления включены!', icon: '/icon.svg' });
+        } else {
+            btn.textContent = '❌ Уведомления запрещены';
+        }
+    });
 }
 function toggleSettings() {
     document.getElementById('settingsPanel').classList.toggle('open');
@@ -375,6 +417,28 @@ function resetInstallFlag() {
     renderInstallSection();
 }
 renderInstallSection();
+
+(function() {
+    var lastCheck = localStorage.getItem('rs_last_notif_check') || '0';
+    var now = Date.now().toString();
+    if (now - parseInt(lastCheck) < 60000) return;
+    localStorage.setItem('rs_last_notif_check', now);
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    fetch('/api/notifications').then(function(r) { return r.json(); }).then(function(changes) {
+        if (!changes || changes.length === 0) return;
+        var lastShown = localStorage.getItem('rs_last_notif_hash') || '';
+        var hash = JSON.stringify(changes);
+        if (hash === lastShown) return;
+        localStorage.setItem('rs_last_notif_hash', hash);
+        changes.forEach(function(c) {
+            var body = '';
+            if (c.type === 'new') body = 'Появилось расписание на ' + c.day + '!';
+            else if (c.type === 'changed') body = c.day + ': урок ' + c.index + ' заменён (' + c.old + ' → ' + c.new + ')';
+            new Notification('📅 Расписание 8Г', { body: body, icon: '/icon.svg' });
+        });
+    }).catch(function() {});
+})();
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
         navigator.serviceWorker.register('/sw.js').catch(function() {});
@@ -449,6 +513,14 @@ class SimpleHandler(BaseHTTPRequestHandler):
                 return
             if path == "/icon.svg":
                 self._send("image/svg+xml; charset=utf-8", ICON_SVG.encode("utf-8"))
+                return
+            if path == "/api/notifications":
+                try:
+                    with open('notifications.json', 'r', encoding='utf-8') as nf:
+                        data = nf.read()
+                except Exception:
+                    data = "[]"
+                self._send("application/json; charset=utf-8", data.encode("utf-8"))
                 return
 
             now_perm = datetime.now(PERM_TZ)
