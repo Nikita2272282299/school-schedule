@@ -731,6 +731,90 @@ body { position:relative; }
     transition:max-height 0.35s ease, opacity 0.3s ease, padding 0.3s ease, margin-top 0.3s ease;
 }
 .install-tip.show { max-height:200px; opacity:1; padding:14px; margin-top:10px; }
+
+/* === HARD PERF MODE === */
+@media (max-width: 820px) {
+    /* 1. ГЛАВНОЕ — убираем backdrop-filter (самый тяжёлый эффект) */
+    .header, .settings, .card, .tabs, .live-banner,
+    [data-theme="ocean"] .header, [data-theme="ocean"] .settings,
+    [data-theme="ocean"] .card, [data-theme="ocean"] .tabs,
+    [data-theme="sunset"] .header, [data-theme="sunset"] .settings,
+    [data-theme="sunset"] .card,
+    [data-theme="forest"] .header, [data-theme="forest"] .settings,
+    [data-theme="forest"] .card,
+    [data-theme="sakura"] .header, [data-theme="sakura"] .settings,
+    [data-theme="sakura"] .card {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+    /* 2. Заменяем прозрачные стеклянные фоны на плотные */
+    [data-theme="ocean"] .header, [data-theme="ocean"] .settings,
+    [data-theme="ocean"] .card, [data-theme="ocean"] .tabs {
+        background: rgba(240, 251, 255, 0.97) !important;
+    }
+    [data-theme="sunset"] .header, [data-theme="sunset"] .settings,
+    [data-theme="sunset"] .card { background: rgba(255, 250, 242, 0.97) !important; }
+    [data-theme="forest"] .header, [data-theme="forest"] .settings,
+    [data-theme="forest"] .card { background: rgba(246, 252, 245, 0.97) !important; }
+    [data-theme="sakura"] .header, [data-theme="sakura"] .settings,
+    [data-theme="sakura"] .card { background: rgba(255, 249, 252, 0.97) !important; }
+    [data-theme="cosmic"] .header, [data-theme="cosmic"] .settings,
+    [data-theme="cosmic"] .card { background: rgba(30, 22, 65, 0.97) !important; }
+
+    /* 3. Убираем fixed background (тормозит скролл) */
+    body, html { background-attachment: scroll !important; }
+
+    /* 4. Убираем ВСЕ декоративные SVG-фоны (волны, солнце, крона) */
+    [data-theme="ocean"] body::before,
+    [data-theme="sunset"] body::before,
+    [data-theme="forest"] body::before,
+    [data-theme="sakura"] body::before { display: none !important; }
+
+    /* 5. Убираем анимации пузырей/покачиваний */
+    [data-theme="ocean"] .header,
+    [data-theme="ocean"] .badge-class,
+    [data-theme="ocean"] .icon-btn { animation: none !important; }
+
+    /* 6. Убираем тяжёлые радиальные градиенты у океана */
+    [data-theme="ocean"] .badge-class,
+    [data-theme="ocean"] .icon-btn,
+    [data-theme="ocean"] .num {
+        background: linear-gradient(135deg, #22d3ee, #0891b2) !important;
+        border: none !important;
+        box-shadow: 0 2px 6px rgba(8,145,178,0.25) !important;
+    }
+    /* Убираем декоративные блики у пузырей */
+    [data-theme="ocean"] .card::after,
+    [data-theme="ocean"] .header::before,
+    [data-theme="ocean"] .icon-btn::before,
+    [data-theme="ocean"] .badge-class::before { display: none !important; }
+
+    /* 7. Уменьшаем тени (тоже влияет на рендер) */
+    .card, .header, .settings, .tabs, .live-banner {
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+    }
+    /* 8. Убираем will-change у карточек — там оно не нужно */
+    .header, .settings, .card, .tabs, .live-banner {
+        transform: none !important;
+    }
+}
+
+/* Лёгкий режим (переключатель) */
+html.light-mode [data-theme] body::before,
+html.light-mode body::before { display: none !important; }
+html.light-mode .header,
+html.light-mode .settings,
+html.light-mode .card,
+html.light-mode .tabs,
+html.light-mode .live-banner {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+}
+html.light-mode #particles { display: none !important; }
+html.light-mode [data-theme="ocean"] .header,
+html.light-mode [data-theme="ocean"] .badge-class,
+html.light-mode [data-theme="ocean"] .icon-btn { animation: none !important; }
 </style>
 </head>
 <body>
@@ -783,6 +867,10 @@ body { position:relative; }
         <div class="toggle-label">Анимация фона</div>
         <div class="toggle" id="toggleAnim" onclick="toggleAnim()"></div>
     </div>
+    <div class="toggle-row">
+        <div class="toggle-label">⚡ Лёгкий режим<br><span style="font-size:0.7rem;color:var(--muted);font-weight:500;">убирает все тяжёлые эффекты</span></div>
+        <div class="toggle" id="toggleLight" onclick="toggleLightMode()"></div>
+    </div>
 
     <div class="settings-title">📱 Приложение</div>
     <div id="installSection"></div>
@@ -808,6 +896,7 @@ var THEME_COLORS = {light:'#eef2f7',dark:'#0b0d12',cosmic:'#05021a',ocean:'#e6f4
     document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
         if (b.getAttribute('data-theme-btn') === saved) b.classList.add('active');
     });
+    if (localStorage.getItem('rs_light_mode') === '1') document.documentElement.classList.add('light-mode');
     if (localStorage.getItem('rs_compact') === '1') document.documentElement.classList.add('compact');
     if (localStorage.getItem('rs_hide_time') === '1') document.documentElement.classList.add('hide-time');
     var size = localStorage.getItem('rs_size') || 'normal';
@@ -820,6 +909,7 @@ var THEME_COLORS = {light:'#eef2f7',dark:'#0b0d12',cosmic:'#05021a',ocean:'#e6f4
     document.getElementById('toggleHideTime').classList.toggle('on', localStorage.getItem('rs_hide_time') === '1');
     var animOn = localStorage.getItem('rs_anim') !== '0';
     document.getElementById('toggleAnim').classList.toggle('on', animOn);
+    document.getElementById('toggleLight').classList.toggle('on', localStorage.getItem('rs_light_mode') === '1');
     if (animOn) spawnParticles(saved);
 })();
 
@@ -866,6 +956,7 @@ function spawnParticles(theme) {
     if (!container) return;
     container.innerHTML = '';
     if (localStorage.getItem('rs_anim') === '0') return;
+    if (document.documentElement.classList.contains('light-mode')) return;
     if (window.innerWidth < 300) return;
     var configs = {
         cosmic: { chars: ['✦','✧','·','+'], colors: ['#ffffff','#b794f6','#7cf5c0','#e0d4ff'],
@@ -881,8 +972,8 @@ function spawnParticles(theme) {
     };
     var cfg = configs[theme];
     if (!cfg) return;
-    var isMobile = window.innerWidth < 500 || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
-    var count = isMobile ? Math.max(6, Math.round(cfg.count * 0.45)) : cfg.count;
+    var isMobile = window.innerWidth < 820 || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 6);
+    var count = isMobile ? Math.max(4, Math.round(cfg.count * 0.25)) : cfg.count;
     var frag = document.createDocumentFragment();
     for (var i = 0; i < count; i++) {
         var el = document.createElement('span');
@@ -905,6 +996,16 @@ function spawnParticles(theme) {
         frag.appendChild(el);
     }
     container.appendChild(frag);
+}
+function toggleLightMode() {
+    var on = document.documentElement.classList.toggle('light-mode');
+    localStorage.setItem('rs_light_mode', on ? '1' : '0');
+    document.getElementById('toggleLight').classList.toggle('on', on);
+    if (on) { document.getElementById('particles').innerHTML = ''; }
+    else {
+        var t = document.documentElement.getAttribute('data-theme');
+        if (localStorage.getItem('rs_anim') !== '0') spawnParticles(t);
+    }
 }
 function toggleSettings() {
     document.getElementById('settingsPanel').classList.toggle('open');
