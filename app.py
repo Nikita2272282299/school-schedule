@@ -443,6 +443,240 @@ html.font-large .day-title { font-size:1.3rem; }
     background:var(--card);
 }
 .sheet-link:hover, .sheet-link:active { opacity:1; color:var(--accent); border-color:var(--accent); border-style:solid; }
+
+/* === THEME-SPECIFIC STYLES === */
+body { position:relative; }
+
+/* ОКЕАН — волны, пузыри */
+[data-theme="ocean"] body {
+    background: linear-gradient(180deg,#c7e8f5 0%,#94d0e6 40%,#5aafd0 100%);
+    background-attachment: fixed;
+}
+[data-theme="ocean"] body::before {
+    content:""; position:fixed; left:0; right:0; bottom:-10px;
+    height:220px; z-index:0; pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 220' preserveAspectRatio='none'><path d='M0,100 Q150,30 300,100 T600,100 T900,100 T1200,100 L1200,220 L0,220 Z' fill='%230891b2' opacity='0.35'/><path d='M0,140 Q200,80 400,140 T800,140 T1200,140 L1200,220 L0,220 Z' fill='%2306b6d4' opacity='0.45'/><path d='M0,180 Q250,140 500,180 T1000,180 T1200,180 L1200,220 L0,220 Z' fill='%230891b2' opacity='0.55'/></svg>");
+    background-size:1200px 220px; background-repeat:repeat-x;
+    animation:oceanWave 18s linear infinite;
+}
+@keyframes oceanWave { from { background-position:0 0; } to { background-position:1200px 0; } }
+[data-theme="ocean"] .header,
+[data-theme="ocean"] .settings {
+    background:rgba(255,255,255,0.45);
+    backdrop-filter:blur(24px) saturate(1.6);
+    -webkit-backdrop-filter:blur(24px) saturate(1.6);
+    border:2px solid rgba(255,255,255,0.65);
+    box-shadow:0 10px 40px rgba(8,145,178,0.25),inset 0 2px 12px rgba(255,255,255,0.9);
+    border-radius:28px;
+}
+[data-theme="ocean"] .header { animation:floaty 5s ease-in-out infinite; position:relative; overflow:hidden; }
+[data-theme="ocean"] .header::before {
+    content:""; position:absolute; top:8px; left:22px;
+    width:60px; height:18px; border-radius:50%;
+    background:rgba(255,255,255,0.75); filter:blur(8px); pointer-events:none;
+}
+@keyframes floaty { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
+[data-theme="ocean"] .badge-class {
+    width:44px; height:44px; padding:0; border-radius:50%;
+    background:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.95),rgba(34,211,238,0.4) 60%,rgba(8,145,178,0.55));
+    border:2px solid rgba(255,255,255,0.85);
+    box-shadow:0 4px 16px rgba(8,145,178,0.35),inset -4px -6px 12px rgba(8,145,178,0.25),inset 4px 4px 12px rgba(255,255,255,0.8);
+    color:#0e7490; display:flex; align-items:center; justify-content:center;
+    position:relative; animation:floaty 4s ease-in-out infinite;
+}
+[data-theme="ocean"] .badge-class::before {
+    content:""; position:absolute; top:7px; left:9px;
+    width:14px; height:7px; border-radius:50%;
+    background:rgba(255,255,255,0.9); filter:blur(1.5px);
+}
+[data-theme="ocean"] .icon-btn {
+    border-radius:50%;
+    background:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.95),rgba(34,211,238,0.4) 60%,rgba(8,145,178,0.5));
+    border:2px solid rgba(255,255,255,0.85);
+    box-shadow:0 4px 16px rgba(8,145,178,0.3),inset -4px -6px 12px rgba(8,145,178,0.2),inset 4px 4px 12px rgba(255,255,255,0.8);
+    color:#0e7490; position:relative; animation:floaty 6s ease-in-out infinite;
+}
+[data-theme="ocean"] .icon-btn::before {
+    content:""; position:absolute; top:6px; left:8px;
+    width:12px; height:6px; border-radius:50%;
+    background:rgba(255,255,255,0.9); filter:blur(1.5px);
+}
+[data-theme="ocean"] .card {
+    background:rgba(255,255,255,0.6);
+    backdrop-filter:blur(14px) saturate(1.5);
+    -webkit-backdrop-filter:blur(14px) saturate(1.5);
+    border:1.5px solid rgba(255,255,255,0.8);
+    border-radius:24px;
+    box-shadow:0 8px 24px rgba(8,145,178,0.18),inset 0 1px 6px rgba(255,255,255,0.9);
+    position:relative; overflow:hidden;
+}
+[data-theme="ocean"] .card::after {
+    content:""; position:absolute; top:6px; left:14px;
+    width:32px; height:12px; border-radius:50%;
+    background:rgba(255,255,255,0.75); filter:blur(5px); pointer-events:none;
+}
+[data-theme="ocean"] .num {
+    border-radius:50%; width:42px; height:42px; min-width:42px;
+    background:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.95),rgba(34,211,238,0.5) 60%,rgba(8,145,178,0.75));
+    border:2px solid rgba(255,255,255,0.9); color:white;
+    box-shadow:0 4px 14px rgba(8,145,178,0.35),inset -3px -4px 8px rgba(8,145,178,0.3),inset 3px 3px 10px rgba(255,255,255,0.7);
+}
+[data-theme="ocean"] .tabs {
+    background:rgba(255,255,255,0.55);
+    backdrop-filter:blur(14px) saturate(1.4);
+    border:1.5px solid rgba(255,255,255,0.75);
+    box-shadow:0 6px 20px rgba(8,145,178,0.15);
+}
+[data-theme="ocean"] .theme-btn,
+[data-theme="ocean"] .size-btn { background:rgba(255,255,255,0.55); }
+
+/* КОСМОС — свечение */
+[data-theme="cosmic"] .header,
+[data-theme="cosmic"] .settings {
+    border:1px solid rgba(183,148,246,0.4);
+    box-shadow:0 10px 40px rgba(140,80,255,0.4),inset 0 1px 0 rgba(255,255,255,0.1);
+}
+[data-theme="cosmic"] .card {
+    border:1px solid rgba(183,148,246,0.35);
+    box-shadow:0 6px 24px rgba(120,60,220,0.4),inset 0 1px 0 rgba(255,255,255,0.08);
+}
+[data-theme="cosmic"] .badge-class {
+    background:linear-gradient(135deg,rgba(183,148,246,0.35),rgba(124,245,192,0.2));
+    box-shadow:0 0 24px rgba(183,148,246,0.55),inset 0 1px 0 rgba(255,255,255,0.2);
+    border:1px solid rgba(183,148,246,0.5); color:#e0d4ff;
+}
+[data-theme="cosmic"] .num {
+    background:linear-gradient(135deg,rgba(183,148,246,0.35),rgba(124,245,192,0.25));
+    color:#ece6ff; border:1px solid rgba(183,148,246,0.5);
+    box-shadow:0 0 16px rgba(183,148,246,0.4),inset 0 1px 0 rgba(255,255,255,0.15);
+}
+[data-theme="cosmic"] .tabs { box-shadow:0 6px 28px rgba(120,60,220,0.3); }
+
+/* ЗАКАТ — тёплое небо */
+[data-theme="sunset"] body {
+    background:linear-gradient(180deg,#ffe4b8 0%,#ffc896 30%,#ffa07a 65%,#e88898 100%);
+    background-attachment:fixed;
+}
+[data-theme="sunset"] body::before {
+    content:""; position:fixed; top:5%; right:8%;
+    width:140px; height:140px; border-radius:50%;
+    background:radial-gradient(circle,rgba(255,220,120,0.95),rgba(255,140,80,0.35) 60%,transparent 75%);
+    filter:blur(10px); pointer-events:none; z-index:0;
+    animation:sunPulse 6s ease-in-out infinite;
+}
+@keyframes sunPulse { 0%,100% { transform:scale(1); opacity:0.85; } 50% { transform:scale(1.08); opacity:1; } }
+[data-theme="sunset"] .header,
+[data-theme="sunset"] .settings {
+    background:rgba(255,250,240,0.85);
+    backdrop-filter:blur(16px);
+    border:1px solid rgba(249,115,22,0.2);
+    box-shadow:0 8px 32px rgba(249,115,22,0.25),inset 0 1px 0 rgba(255,255,255,0.9);
+}
+[data-theme="sunset"] .card {
+    background:rgba(255,250,240,0.88);
+    border:1px solid rgba(249,115,22,0.15);
+    box-shadow:0 6px 22px rgba(249,115,22,0.2),inset 0 1px 0 rgba(255,255,255,0.9);
+    border-radius:20px;
+}
+[data-theme="sunset"] .num {
+    background:linear-gradient(135deg,#f97316,#ec4899);
+    color:white; border:none;
+    box-shadow:0 4px 14px rgba(249,115,22,0.4);
+}
+[data-theme="sunset"] .badge-class {
+    background:linear-gradient(135deg,#f97316,#ec4899);
+    color:white; box-shadow:0 4px 16px rgba(249,115,22,0.4);
+}
+
+/* ЛЕС — органичный */
+[data-theme="forest"] body {
+    background:linear-gradient(180deg,#e8f5e0 0%,#c8e6c0 60%,#a8d8a0 100%);
+    background-attachment:fixed;
+}
+[data-theme="forest"] body::before {
+    content:""; position:fixed; left:0; right:0; top:0;
+    height:200px; z-index:0; pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 200' preserveAspectRatio='none'><path d='M0,0 L0,80 Q100,120 200,80 Q300,40 400,80 Q500,120 600,80 Q700,40 800,80 Q900,120 1000,80 Q1100,40 1200,80 L1200,0 Z' fill='%23059669' opacity='0.28'/></svg>");
+    background-size:1200px 200px; background-repeat:repeat-x;
+}
+[data-theme="forest"] .header,
+[data-theme="forest"] .settings {
+    background:rgba(255,255,255,0.8);
+    backdrop-filter:blur(14px);
+    border:1px solid rgba(5,150,105,0.2);
+    box-shadow:0 6px 24px rgba(5,150,105,0.2),inset 0 1px 0 rgba(255,255,255,0.9);
+}
+[data-theme="forest"] .card {
+    background:rgba(255,255,255,0.85);
+    border:1px solid rgba(5,150,105,0.15);
+    border-left:4px solid #059669;
+    border-radius:20px;
+    box-shadow:0 4px 18px rgba(5,150,105,0.15);
+}
+[data-theme="forest"] .num {
+    background:linear-gradient(135deg,#059669,#84cc16);
+    color:white; border:none;
+    border-radius:30% 70% 70% 30% / 30% 30% 70% 70%;
+    box-shadow:0 4px 14px rgba(5,150,105,0.3);
+}
+[data-theme="forest"] .badge-class {
+    background:linear-gradient(135deg,#059669,#84cc16);
+    color:white; box-shadow:0 4px 16px rgba(5,150,105,0.35);
+}
+
+/* САКУРА — мягкая */
+[data-theme="sakura"] body {
+    background:linear-gradient(180deg,#ffe8ef 0%,#ffd0e0 50%,#ffb8d0 100%);
+    background-attachment:fixed;
+}
+[data-theme="sakura"] body::before {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:radial-gradient(circle at 80% 15%,rgba(236,72,153,0.15),transparent 40%),
+               radial-gradient(circle at 15% 75%,rgba(168,85,247,0.12),transparent 40%);
+}
+[data-theme="sakura"] .header,
+[data-theme="sakura"] .settings {
+    background:rgba(255,255,255,0.88);
+    backdrop-filter:blur(14px);
+    border:2px solid rgba(236,72,153,0.18);
+    box-shadow:0 8px 28px rgba(236,72,153,0.2),inset 0 1px 0 rgba(255,255,255,0.9);
+    border-radius:26px;
+}
+[data-theme="sakura"] .card {
+    background:rgba(255,255,255,0.92);
+    border:1px solid rgba(236,72,153,0.12);
+    border-radius:22px;
+    box-shadow:0 6px 20px rgba(236,72,153,0.15),inset 0 1px 0 rgba(255,255,255,0.9);
+}
+[data-theme="sakura"] .num {
+    background:linear-gradient(135deg,#ec4899,#a855f7);
+    color:white; border:none;
+    box-shadow:0 4px 14px rgba(236,72,153,0.35);
+}
+[data-theme="sakura"] .badge-class {
+    background:linear-gradient(135deg,#ec4899,#a855f7);
+    color:white; box-shadow:0 4px 16px rgba(236,72,153,0.4);
+}
+
+/* ТЁМНАЯ — глянец */
+[data-theme="dark"] .header,
+[data-theme="dark"] .settings,
+[data-theme="dark"] .card {
+    border:1px solid rgba(255,255,255,0.08);
+    box-shadow:0 8px 32px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.05);
+}
+[data-theme="dark"] .num {
+    background:linear-gradient(135deg,rgba(129,140,248,0.25),rgba(192,132,252,0.25));
+    border:1px solid rgba(129,140,248,0.3);
+}
+[data-theme="dark"] .badge-class {
+    background:linear-gradient(135deg,rgba(129,140,248,0.25),rgba(192,132,252,0.25));
+    border:1px solid rgba(129,140,248,0.3); color:#c7d2fe;
+}
+
+/* Убеждаемся что контейнер выше декора */
+.container, #particles { position:relative; z-index:1; }
+#particles { z-index:0; }
 </style>
 </head>
 <body>
