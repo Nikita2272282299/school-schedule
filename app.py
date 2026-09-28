@@ -195,13 +195,14 @@ body {
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--bg); color:var(--text); margin:0;
     padding:20px 14px 40px; display:flex; justify-content:center;
-     -webkit-font-smoothing:antialiased;
-    transition:color 0.3s ease;
+    min-height:100vh; -webkit-font-smoothing:antialiased;
+    transition:background 0.5s ease, color 0.3s ease;
     position:relative; overflow-x:hidden;
 }
-#particles { position:absolute; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+#particles { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
 .particle {
-    position:absolute; top:-60px; user-select:none; opacity:0.85;
+    position:absolute; top:-60px; user-select:none;
+    will-change:transform; opacity:0.85;
     animation-name:fall; animation-timing-function:linear; animation-iteration-count:infinite;
 }
 @keyframes fall {
@@ -248,24 +249,25 @@ body {
     background:var(--card); color:var(--muted); border:1px solid var(--border);
     width:42px; height:42px; border-radius:13px; font-size:1.15rem;
     cursor:pointer; display:flex; align-items:center; justify-content:center;
-    transition:color 0.15s, background 0.15s;
+    transition:transform 0.15s,color 0.2s,background 0.2s;
 }
-.icon-btn:hover, .icon-btn:active { color:var(--accent); background:var(--accent-soft); }
-
+.icon-btn:hover, .icon-btn:active { color:var(--accent); background:var(--accent-soft); transform:scale(0.94); }
+.icon-btn.spin { animation:spin 0.5s ease; }
 @keyframes spin { to { transform:rotate(360deg) scale(0.94); } }
 
 .settings {
     display:grid; grid-template-rows:0fr;
     background:var(--card); border:1px solid var(--border); border-radius:20px;
     margin-bottom:0; box-shadow:none;
-    transition:grid-template-rows 0.35s ease, margin-bottom 0.35s ease, box-shadow 0.35s ease;
+    transition:grid-template-rows 0.3s cubic-bezier(0.4,0,0.2,1),
+               margin-bottom 0.3s cubic-bezier(0.4,0,0.2,1),
+               box-shadow 0.3s cubic-bezier(0.4,0,0.2,1);
 }
-.settings.open {
-    grid-template-rows:1fr; margin-bottom:14px; box-shadow:var(--shadow);
-}
+.settings.open { grid-template-rows:1fr; margin-bottom:14px; box-shadow:var(--shadow); }
 .settings-inner {
     overflow:hidden; min-height:0; padding:0 18px;
-    transition:padding 0.35s ease;
+    transition:padding 0.3s cubic-bezier(0.4,0,0.2,1);
+    will-change:padding;
 }
 .settings.open .settings-inner { padding:18px; }
 .settings-title { font-weight:800; font-size:0.8rem; color:var(--muted);
@@ -276,7 +278,7 @@ body {
     padding:12px 4px; border-radius:12px; border:2px solid transparent;
     background:var(--bg2); color:var(--text); font-weight:700; font-size:0.7rem;
     cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px;
-    transition:background 0.2s, border-color 0.2s, transform 0.1s; font-family:inherit;
+    transition:background 0.15s, border-color 0.15s; font-family:inherit;
 }
 .theme-btn .emoji { font-size:1.35rem; line-height:1; }
 .theme-btn.active { border-color:var(--accent); background:var(--accent-soft); box-shadow:0 0 0 3px var(--accent-soft); }
@@ -287,11 +289,11 @@ body {
 .toggle-label { font-weight:700; font-size:0.9rem; }
 .toggle {
     position:relative; width:48px; height:28px; background:var(--bg2); border-radius:14px;
-    cursor:pointer; border:1px solid var(--border); flex-shrink:0;
+    cursor:pointer; transition:background 0.25s; border:1px solid var(--border); flex-shrink:0;
 }
 .toggle::after {
     content:""; position:absolute; top:2px; left:2px; width:22px; height:22px;
-    background:var(--card); border-radius:50%;
+    background:var(--card); border-radius:50%; transition:transform 0.25s;
     box-shadow:0 2px 6px rgba(0,0,0,0.15);
 }
 .toggle.on { background:linear-gradient(135deg,var(--accent),var(--accent2)); border-color:transparent; }
@@ -300,7 +302,7 @@ body {
 .size-btn {
     padding:12px; border-radius:12px; border:2px solid var(--border);
     background:var(--bg2); color:var(--text); font-weight:800; cursor:pointer;
-    font-family:inherit; transition:all 0.2s;
+    font-family:inherit; transition:background 0.15s, border-color 0.15s;
 }
 .size-btn:nth-child(1) { font-size:0.85rem; }
 .size-btn:nth-child(2) { font-size:1.05rem; }
@@ -311,9 +313,9 @@ body {
     width:100%; padding:13px; border-radius:14px; border:none;
     background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white;
     font-weight:800; font-size:0.9rem; cursor:pointer; font-family:inherit;
-    transition:background 0.15s; box-shadow:0 2px 8px var(--accent-soft);
+    transition:transform 0.15s; box-shadow:0 6px 20px var(--accent-soft);
 }
-
+.install-btn:active { transform:scale(0.97); }
 .link-btn {
     background:none; border:none; color:var(--muted); font-weight:600;
     font-size:0.82rem; cursor:pointer; padding:8px 4px; text-decoration:underline;
@@ -451,13 +453,14 @@ body { position:relative; }
 /* ОКЕАН — волны, пузыри */
 [data-theme="ocean"] body {
     background: linear-gradient(180deg,#c7e8f5 0%,#94d0e6 40%,#5aafd0 100%);
+    background-attachment: fixed;
 }
 [data-theme="ocean"] body::before {
-    content:""; position:absolute; left:0; right:0; bottom:-10px;
+    content:""; position:fixed; left:0; right:0; bottom:-10px;
     height:220px; z-index:0; pointer-events:none;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 220' preserveAspectRatio='none'><path d='M0,100 Q150,30 300,100 T600,100 T900,100 T1200,100 L1200,220 L0,220 Z' fill='%230891b2' opacity='0.35'/><path d='M0,140 Q200,80 400,140 T800,140 T1200,140 L1200,220 L0,220 Z' fill='%2306b6d4' opacity='0.45'/><path d='M0,180 Q250,140 500,180 T1000,180 T1200,180 L1200,220 L0,220 Z' fill='%230891b2' opacity='0.55'/></svg>");
     background-size:1200px 220px; background-repeat:repeat-x;
-    
+    animation:oceanWave 18s linear infinite;
 }
 @keyframes oceanWave { from { background-position:0 0; } to { background-position:1200px 0; } }
 [data-theme="ocean"] .header,
@@ -467,7 +470,7 @@ body { position:relative; }
     box-shadow:0 10px 40px rgba(8,145,178,0.25),inset 0 2px 12px rgba(255,255,255,0.9);
     border-radius:28px;
 }
-[data-theme="ocean"] .header {  position:relative; overflow:hidden; }
+[data-theme="ocean"] .header { animation:floaty 5s ease-in-out infinite; position:relative; overflow:hidden; }
 [data-theme="ocean"] .header::before {
     content:""; position:absolute; top:8px; left:22px;
     width:60px; height:18px; border-radius:50%;
@@ -480,7 +483,7 @@ body { position:relative; }
     border:2px solid rgba(255,255,255,0.85);
     box-shadow:0 4px 16px rgba(8,145,178,0.35),inset -4px -6px 12px rgba(8,145,178,0.25),inset 4px 4px 12px rgba(255,255,255,0.8);
     color:#0e7490; display:flex; align-items:center; justify-content:center;
-    position:relative; 
+    position:relative; animation:floaty 4s ease-in-out infinite;
 }
 [data-theme="ocean"] .badge-class::before {
     content:""; position:absolute; top:7px; left:9px;
@@ -492,7 +495,7 @@ body { position:relative; }
     background:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.95),rgba(34,211,238,0.4) 60%,rgba(8,145,178,0.5));
     border:2px solid rgba(255,255,255,0.85);
     box-shadow:0 4px 16px rgba(8,145,178,0.3),inset -4px -6px 12px rgba(8,145,178,0.2),inset 4px 4px 12px rgba(255,255,255,0.8);
-    color:#0e7490; position:relative; 
+    color:#0e7490; position:relative; animation:floaty 6s ease-in-out infinite;
 }
 [data-theme="ocean"] .icon-btn::before {
     content:""; position:absolute; top:6px; left:8px;
@@ -550,13 +553,14 @@ body { position:relative; }
 /* ЗАКАТ — тёплое небо */
 [data-theme="sunset"] body {
     background:linear-gradient(180deg,#ffe4b8 0%,#ffc896 30%,#ffa07a 65%,#e88898 100%);
+    background-attachment:fixed;
 }
 [data-theme="sunset"] body::before {
-    content:""; position:absolute; top:5%; right:8%;
+    content:""; position:fixed; top:5%; right:8%;
     width:140px; height:140px; border-radius:50%;
     background:radial-gradient(circle,rgba(255,220,120,0.95),rgba(255,140,80,0.35) 60%,transparent 75%);
     filter:blur(10px); pointer-events:none; z-index:0;
-    
+    animation:sunPulse 6s ease-in-out infinite;
 }
 @keyframes sunPulse { 0%,100% { transform:scale(1); opacity:0.85; } 50% { transform:scale(1.08); opacity:1; } }
 [data-theme="sunset"] .header,
@@ -584,9 +588,10 @@ body { position:relative; }
 /* ЛЕС — органичный */
 [data-theme="forest"] body {
     background:linear-gradient(180deg,#e8f5e0 0%,#c8e6c0 60%,#a8d8a0 100%);
+    background-attachment:fixed;
 }
 [data-theme="forest"] body::before {
-    content:""; position:absolute; left:0; right:0; top:0;
+    content:""; position:fixed; left:0; right:0; top:0;
     height:200px; z-index:0; pointer-events:none;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 200' preserveAspectRatio='none'><path d='M0,0 L0,80 Q100,120 200,80 Q300,40 400,80 Q500,120 600,80 Q700,40 800,80 Q900,120 1000,80 Q1100,40 1200,80 L1200,0 Z' fill='%23059669' opacity='0.28'/></svg>");
     background-size:1200px 200px; background-repeat:repeat-x;
@@ -618,9 +623,10 @@ body { position:relative; }
 /* САКУРА — мягкая */
 [data-theme="sakura"] body {
     background:linear-gradient(180deg,#ffe8ef 0%,#ffd0e0 50%,#ffb8d0 100%);
+    background-attachment:fixed;
 }
 [data-theme="sakura"] body::before {
-    content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
     background:radial-gradient(circle at 80% 15%,rgba(236,72,153,0.15),transparent 40%),
                radial-gradient(circle at 15% 75%,rgba(168,85,247,0.12),transparent 40%);
 }
@@ -667,83 +673,143 @@ body { position:relative; }
 .container, #particles { position:relative; z-index:1; }
 #particles { z-index:0; }
 
-/* Компенсация отсутствия blur: делаем фоны плотнее, но сохраняем "стекло" */
-.header, .settings, .card, .tabs, .live-banner { transform:translateZ(0); }
-
-/* Частицы на GPU */
-.particle { transform:translateZ(0); backface-visibility:hidden; }
-
-@media (max-width: 820px) {
-    /* На телефоне делаем фоны тем более плотными вместо blur */
+/* === PERFORMANCE OPTIMIZATIONS === */
+.particle { will-change:transform; transform:translateZ(0); backface-visibility:hidden; }
+@media (max-width: 768px) {
+    /* Убираем самые тяжёлые эффекты на мобильных */
+    [data-theme="ocean"] .header { animation:none; }
+    [data-theme="ocean"] .badge-class,
+    [data-theme="ocean"] .icon-btn { animation-duration:8s; }
+    /* Уменьшаем blur — самый тормозящий эффект */
     [data-theme="ocean"] .header,
     [data-theme="ocean"] .settings,
     [data-theme="ocean"] .card,
-    [data-theme="ocean"] .tabs { background: rgba(240, 251, 255, 0.94) !important; }
-    [data-theme="sunset"] .header,
-    [data-theme="sunset"] .settings,
-    [data-theme="sunset"] .card { background: rgba(255, 250, 242, 0.94) !important; }
-    [data-theme="forest"] .header,
-    [data-theme="forest"] .settings,
-    [data-theme="forest"] .card { background: rgba(246, 252, 245, 0.94) !important; }
-    [data-theme="sakura"] .header,
-    [data-theme="sakura"] .settings,
-    [data-theme="sakura"] .card { background: rgba(255, 249, 252, 0.94) !important; }
-    [data-theme="cosmic"] .header,
-    [data-theme="cosmic"] .settings,
-    [data-theme="cosmic"] .card { background: rgba(30, 22, 65, 0.94) !important; }
-    [data-theme="dark"] .header,
-    [data-theme="dark"] .settings,
-    [data-theme="dark"] .card { background: rgba(26, 31, 43, 0.97) !important; }
+    [data-theme="ocean"] .tabs {
+    }
+    /* Ускоряем волну через transform вместо background-position */
+    [data-theme="ocean"] body::before {
+        animation-duration:35s;
+        will-change:transform;
+    }
+    /* Отключаем тяжёлый пульс у закатного солнца */
+    [data-theme="sunset"] body::before { animation-duration:12s; }
 }
-
-/* Системное "уменьшить движение" */
 @media (prefers-reduced-motion: reduce) {
-    .particle,
+    .particle, [data-theme="ocean"] body::before, [data-theme="ocean"] .badge-class,
+    [data-theme="ocean"] .icon-btn, [data-theme="sunset"] body::before {
+        animation:none !important;
+    }
+}
+/* Плавный transition только там где нужно */
+.header, .settings, .card, .tabs, .live-banner { transform:translateZ(0); }
+
+.install-btn {
+    display:flex; align-items:center; gap:12px; position:relative;
+    width:100%; padding:15px 18px; border-radius:16px; border:none;
+    background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff;
+    font-weight:800; cursor:pointer; font-family:inherit;
+    box-shadow:0 8px 26px var(--accent-soft),inset 0 1px 0 rgba(255,255,255,0.25);
+    transition:transform 0.15s, box-shadow 0.2s;
+    text-align:left;
+}
+.install-btn:hover { box-shadow:0 12px 34px var(--accent-soft); }
+.install-btn:active { transform:scale(0.97); }
+.install-btn .ib-emoji { font-size:1.6rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+.install-btn .ib-text { font-size:1rem; font-weight:800; letter-spacing:-0.01em; }
+.install-btn .ib-sub { display:block; font-size:0.72rem; font-weight:600; opacity:0.75; margin-top:2px; }
+.install-tip {
+    max-height:0; overflow:hidden; opacity:0; margin-top:0;
+    background:var(--bg2); border:1px solid var(--border); border-radius:14px;
+    padding:0 14px; font-size:0.85rem; line-height:1.5; color:var(--muted); font-weight:600;
+    transition:max-height 0.35s ease, opacity 0.3s ease, padding 0.3s ease, margin-top 0.3s ease;
+}
+.install-tip.show { max-height:200px; opacity:1; padding:14px; margin-top:10px; }
+
+/* === HARD PERF MODE === */
+@media (max-width: 820px) {
+    /* 1. ГЛАВНОЕ — убираем backdrop-filter (самый тяжёлый эффект) */
+    .header, .settings, .card, .tabs, .live-banner,
+    [data-theme="ocean"] .header, [data-theme="ocean"] .settings,
+    [data-theme="ocean"] .card, [data-theme="ocean"] .tabs,
+    [data-theme="sunset"] .header, [data-theme="sunset"] .settings,
+    [data-theme="sunset"] .card,
+    [data-theme="forest"] .header, [data-theme="forest"] .settings,
+    [data-theme="forest"] .card,
+    [data-theme="sakura"] .header, [data-theme="sakura"] .settings,
+    [data-theme="sakura"] .card {
+    }
+    /* 2. Заменяем прозрачные стеклянные фоны на плотные */
+    [data-theme="ocean"] .header, [data-theme="ocean"] .settings,
+    [data-theme="ocean"] .card, [data-theme="ocean"] .tabs {
+        background: rgba(240, 251, 255, 0.97) !important;
+    }
+    [data-theme="sunset"] .header, [data-theme="sunset"] .settings,
+    [data-theme="sunset"] .card { background: rgba(255, 250, 242, 0.97) !important; }
+    [data-theme="forest"] .header, [data-theme="forest"] .settings,
+    [data-theme="forest"] .card { background: rgba(246, 252, 245, 0.97) !important; }
+    [data-theme="sakura"] .header, [data-theme="sakura"] .settings,
+    [data-theme="sakura"] .card { background: rgba(255, 249, 252, 0.97) !important; }
+    [data-theme="cosmic"] .header, [data-theme="cosmic"] .settings,
+    [data-theme="cosmic"] .card { background: rgba(30, 22, 65, 0.97) !important; }
+
+    /* 3. Убираем fixed background (тормозит скролл) */
+    body, html { background-attachment: scroll !important; }
+
+    /* 4. Убираем ВСЕ декоративные SVG-фоны (волны, солнце, крона) */
     [data-theme="ocean"] body::before,
     [data-theme="sunset"] body::before,
-    [data-theme="ocean"] .badge-class,
-    [data-theme="ocean"] .icon-btn { animation:none !important; }
-}
+    [data-theme="forest"] body::before,
+    [data-theme="sakura"] body::before { display: none !important; }
 
-/* === FINAL LIGHT LAYER === */
-html { overscroll-behavior:none; }
-body { 
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-}
-.header, .settings, .card, .tabs, .live-banner {
-    transform: translateZ(0);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-}
-[data-theme="cosmic"] .header, [data-theme="cosmic"] .settings, [data-theme="cosmic"] .card {
-    box-shadow: 0 2px 10px rgba(120,60,220,0.2);
-}
-[data-theme="ocean"] .card, [data-theme="sunset"] .card, [data-theme="forest"] .card, [data-theme="sakura"] .card {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
-@media (max-width: 820px) {
-    .header, .settings, .card, .tabs, .live-banner, .info-box {
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
-    }
-    .card.now { box-shadow: 0 0 0 1.5px var(--green) !important; }
-    .card.next-up { box-shadow: 0 0 0 1.5px var(--orange) !important; }
-    /* Убираем декоративные градиентные подложки у пузырей — они тоже дорогие */
+    /* 5. Убираем анимации пузырей/покачиваний */
+    [data-theme="ocean"] .header,
+    [data-theme="ocean"] .badge-class,
+    [data-theme="ocean"] .icon-btn { animation: none !important; }
+
+    /* 6. Убираем тяжёлые радиальные градиенты у океана */
     [data-theme="ocean"] .badge-class,
     [data-theme="ocean"] .icon-btn,
     [data-theme="ocean"] .num {
         background: linear-gradient(135deg, #22d3ee, #0891b2) !important;
         border: none !important;
+        box-shadow: 0 2px 6px rgba(8,145,178,0.25) !important;
+    }
+    /* Убираем декоративные блики у пузырей */
+    [data-theme="ocean"] .card::after,
+    [data-theme="ocean"] .header::before,
+    [data-theme="ocean"] .icon-btn::before,
+    [data-theme="ocean"] .badge-class::before { display: none !important; }
+
+    /* 7. Уменьшаем тени (тоже влияет на рендер) */
+    .card, .header, .settings, .tabs, .live-banner {
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+    }
+    /* 8. Убираем will-change у карточек — там оно не нужно */
+    .header, .settings, .card, .tabs, .live-banner {
+        transform: none !important;
     }
 }
 
-/* === SMOOTH TOGGLE === */
-.settings, .settings-inner { backface-visibility:hidden; }
-.settings.open .settings-inner { }
-.toggle::after { transform:translateZ(0); }
+/* Лёгкий режим (переключатель) */
+html.light-mode [data-theme] body::before,
+html.light-mode body::before { display: none !important; }
+html.light-mode .header,
+html.light-mode .settings,
+html.light-mode .card,
+html.light-mode .tabs,
+html.light-mode .live-banner {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+}
+html.light-mode #particles { display: none !important; }
+html.light-mode [data-theme="ocean"] .header,
+html.light-mode [data-theme="ocean"] .badge-class,
+html.light-mode [data-theme="ocean"] .icon-btn { animation: none !important; }
+
+/* === SMOOTH === */
+.toggle { transition:background 0.2s ease; }
+.toggle::after { transition:transform 0.2s ease, background 0.2s ease; transform:translateZ(0); }
 .toggle.on::after { transform:translateX(20px) translateZ(0); }
-.toggle { transition:background 0.2s; }
-.toggle::after { transition:transform 0.2s, background 0.2s; }
-.theme-btn.active { transition:background 0.15s, border-color 0.15s, box-shadow 0.15s; }
+.settings-inner > * { transform:translateZ(0); }
 </style>
 </head>
 <body>
@@ -880,6 +946,7 @@ function spawnParticles(theme) {
     if (!container) return;
     container.innerHTML = '';
     if (localStorage.getItem('rs_anim') === '0') return;
+    if (document.documentElement.classList.contains('light-mode')) return;
     if (window.innerWidth < 300) return;
     var configs = {
         cosmic: { chars: ['✦','✧','·','+'], colors: ['#ffffff','#b794f6','#7cf5c0','#e0d4ff'],
@@ -895,8 +962,8 @@ function spawnParticles(theme) {
     };
     var cfg = configs[theme];
     if (!cfg) return;
-    var isMobile = window.innerWidth < 820;
-    var count = isMobile ? Math.max(6, Math.round(cfg.count * 0.4)) : cfg.count;
+    var isMobile = window.innerWidth < 820 || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 6);
+    var count = isMobile ? Math.max(4, Math.round(cfg.count * 0.25)) : cfg.count;
     var frag = document.createDocumentFragment();
     for (var i = 0; i < count; i++) {
         var el = document.createElement('span');
@@ -984,12 +1051,6 @@ function doInstall() {
 function resetInstallFlag() { localStorage.removeItem('rs_installed'); renderInstallSection(); }
 renderInstallSection();
 setTimeout(function() { if (deferredPrompt) renderInstallSection(); }, 3000);
-document.addEventListener('visibilitychange', function() {
-    var c = document.getElementById('particles');
-    if (!c) return;
-    var ps = document.hidden ? 'paused' : 'running';
-    c.querySelectorAll('.particle').forEach(function(p) { p.style.animationPlayState = ps; });
-});
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
         navigator.serviceWorker.register('/sw.js').catch(function() {});
