@@ -19,7 +19,7 @@ CACHE_TTL = 300
 
 MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/","display":"standalone","background_color":"#0a0620","theme_color":"#6366f1","icons":[{"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}'
 
-ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="0.5" stop-color="#8b5cf6"/><stop offset="1" stop-color="#a855f7"/></linearGradient><linearGradient id="glow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.35"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient></defs><rect width="512" height="512" rx="118" fill="url(#bg)"/><rect width="512" height="512" rx="118" fill="url(#glow)"/><rect x="98" y="128" width="316" height="288" rx="36" fill="#ffffff"/><rect x="98" y="128" width="316" height="76" rx="36" fill="#1e1b4b"/><rect x="98" y="176" width="316" height="28" fill="#1e1b4b"/><circle cx="168" cy="166" r="12" fill="#ffffff"/><circle cx="344" cy="166" r="12" fill="#ffffff"/><rect x="152" y="86" width="22" height="72" rx="11" fill="#1e1b4b"/><rect x="338" y="86" width="22" height="72" rx="11" fill="#1e1b4b"/><text x="256" y="358" font-family="Arial,Helvetica,sans-serif" font-size="180" font-weight="900" fill="#1e1b4b" text-anchor="middle" letter-spacing="-8">8Г</text></svg>'''
+ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="0.45" stop-color="#818cf8"/><stop offset="1" stop-color="#38bdf8"/></linearGradient><linearGradient id="page" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e0e7ff"/></linearGradient><linearGradient id="topbar" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1e1b4b"/><stop offset="1" stop-color="#312e81"/></linearGradient><radialGradient id="glow" cx="0.3" cy="0.2" r="0.85"><stop offset="0" stop-color="#ffffff" stop-opacity="0.55"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient><filter id="s" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#1e1b4b" flood-opacity="0.28"/></filter></defs><rect width="512" height="512" rx="118" fill="url(#bg)"/><rect width="512" height="512" rx="118" fill="url(#glow)"/><g filter="url(#s)"><rect x="100" y="150" width="312" height="272" rx="44" fill="url(#page)"/></g><path d="M100 194 Q100 150 144 150 L368 150 Q412 150 412 194 L412 226 L100 226 Z" fill="url(#topbar)"/><rect x="160" y="100" width="26" height="90" rx="13" fill="#1e1b4b"/><rect x="326" y="100" width="26" height="90" rx="13" fill="#1e1b4b"/><circle cx="173" cy="108" r="6" fill="#a78bfa"/><circle cx="339" cy="108" r="6" fill="#38bdf8"/><circle cx="200" cy="188" r="11" fill="#ffffff" opacity="0.92"/><circle cx="312" cy="188" r="11" fill="#ffffff" opacity="0.92"/><text x="256" y="398" font-family="-apple-system,system-ui,'SF Pro Display',Arial,sans-serif" font-size="196" font-weight="900" fill="#1e1b4b" text-anchor="middle" letter-spacing="-8">8Г</text><path d="M400 96 L406 116 L426 122 L406 128 L400 148 L394 128 L374 122 L394 116 Z" fill="#fde047" opacity="0.95"/><path d="M118 88 L122 100 L134 104 L122 108 L118 120 L114 108 L102 104 L114 100 Z" fill="#ffffff" opacity="0.85"/></svg>'''
 
 SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>self.clients.claim());self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});"
 
@@ -206,14 +206,14 @@ body {
     animation-name:fall; animation-timing-function:linear; animation-iteration-count:infinite;
 }
 @keyframes fall {
-    0% { transform:translateY(0) translateX(0) rotate(0deg); }
-    50% { transform:translateY(50vh) translateX(20px) rotate(180deg); }
-    100% { transform:translateY(110vh) translateX(-10px) rotate(360deg); }
+    0% { transform:translate3d(0,0,0) rotate(0deg); }
+    50% { transform:translate3d(20px,50vh,0) rotate(180deg); }
+    100% { transform:translate3d(-10px,110vh,0) rotate(360deg); }
 }
 @keyframes rise {
-    0% { transform:translateY(0) translateX(0); opacity:0; }
+    0% { transform:translate3d(0,0,0); opacity:0; }
     10% { opacity:0.8; }
-    100% { transform:translateY(-110vh) translateX(30px); opacity:0; }
+    100% { transform:translate3d(30px,-110vh,0); opacity:0; }
 }
 @keyframes twinkle { 0%,100% { opacity:0.3; } 50% { opacity:1; } }
 .container { width:100%; max-width:520px; position:relative; z-index:1; }
@@ -677,6 +677,60 @@ body { position:relative; }
 /* Убеждаемся что контейнер выше декора */
 .container, #particles { position:relative; z-index:1; }
 #particles { z-index:0; }
+
+/* === PERFORMANCE OPTIMIZATIONS === */
+.particle { will-change:transform; transform:translateZ(0); backface-visibility:hidden; }
+@media (max-width: 768px) {
+    /* Убираем самые тяжёлые эффекты на мобильных */
+    [data-theme="ocean"] .header { animation:none; }
+    [data-theme="ocean"] .badge-class,
+    [data-theme="ocean"] .icon-btn { animation-duration:8s; }
+    /* Уменьшаем blur — самый тормозящий эффект */
+    [data-theme="ocean"] .header,
+    [data-theme="ocean"] .settings,
+    [data-theme="ocean"] .card,
+    [data-theme="ocean"] .tabs {
+        backdrop-filter:blur(8px) !important;
+        -webkit-backdrop-filter:blur(8px) !important;
+    }
+    /* Ускоряем волну через transform вместо background-position */
+    [data-theme="ocean"] body::before {
+        animation-duration:35s;
+        will-change:transform;
+    }
+    /* Отключаем тяжёлый пульс у закатного солнца */
+    [data-theme="sunset"] body::before { animation-duration:12s; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .particle, [data-theme="ocean"] body::before, [data-theme="ocean"] .badge-class,
+    [data-theme="ocean"] .icon-btn, [data-theme="sunset"] body::before {
+        animation:none !important;
+    }
+}
+/* Плавный transition только там где нужно */
+.header, .settings, .card, .tabs, .live-banner { transform:translateZ(0); }
+
+.install-btn {
+    display:flex; align-items:center; gap:12px; position:relative;
+    width:100%; padding:15px 18px; border-radius:16px; border:none;
+    background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff;
+    font-weight:800; cursor:pointer; font-family:inherit;
+    box-shadow:0 8px 26px var(--accent-soft),inset 0 1px 0 rgba(255,255,255,0.25);
+    transition:transform 0.15s, box-shadow 0.2s;
+    text-align:left;
+}
+.install-btn:hover { box-shadow:0 12px 34px var(--accent-soft); }
+.install-btn:active { transform:scale(0.97); }
+.install-btn .ib-emoji { font-size:1.6rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+.install-btn .ib-text { font-size:1rem; font-weight:800; letter-spacing:-0.01em; }
+.install-btn .ib-sub { display:block; font-size:0.72rem; font-weight:600; opacity:0.75; margin-top:2px; }
+.install-tip {
+    max-height:0; overflow:hidden; opacity:0; margin-top:0;
+    background:var(--bg2); border:1px solid var(--border); border-radius:14px;
+    padding:0 14px; font-size:0.85rem; line-height:1.5; color:var(--muted); font-weight:600;
+    transition:max-height 0.35s ease, opacity 0.3s ease, padding 0.3s ease, margin-top 0.3s ease;
+}
+.install-tip.show { max-height:200px; opacity:1; padding:14px; margin-top:10px; }
 </style>
 </head>
 <body>
@@ -827,8 +881,10 @@ function spawnParticles(theme) {
     };
     var cfg = configs[theme];
     if (!cfg) return;
+    var isMobile = window.innerWidth < 500 || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+    var count = isMobile ? Math.max(6, Math.round(cfg.count * 0.45)) : cfg.count;
     var frag = document.createDocumentFragment();
-    for (var i = 0; i < cfg.count; i++) {
+    for (var i = 0; i < count; i++) {
         var el = document.createElement('span');
         el.className = 'particle';
         var c = cfg.chars[Math.floor(Math.random() * cfg.chars.length)];
@@ -878,39 +934,39 @@ function renderInstallSection() {
     if (!el) return;
     var installed = isStandalone || localStorage.getItem('rs_installed') === '1';
     if (installed) {
-        el.innerHTML = '<div class="installed-badge">✅ Приложение установлено</div>' +
-                       '<button class="link-btn" onclick="resetInstallFlag()">Сбросить флаг</button>';
+        el.innerHTML = '<div class="installed-badge">✅ Приложение установлено</div>';
         return;
     }
-    var hidden = localStorage.getItem('rs_install_hidden') === '1';
-    if (hidden) {
-        el.innerHTML = '<button class="link-btn" onclick="showInstall()">Показать инструкцию</button>';
-        return;
-    }
-    if (deferredPrompt) {
-        el.innerHTML = '<button class="install-btn" onclick="doInstall()">📲 Добавить на рабочий стол</button>' +
-                       '<button class="link-btn" onclick="hideInstall()">Скрыть</button>';
-        return;
-    }
-    var plat = detectPlatform();
-    var hint = '';
-    if (plat === 'ios') hint = '📱 <b>iPhone:</b> открой в <b>Safari</b> → «Поделиться» → «На экран Домой».';
-    else if (plat === 'android') hint = '📱 <b>Android:</b> открой в <b>Chrome</b> → меню <b>⋮</b> → «Установить приложение».';
-    else hint = '💻 <b>ПК:</b> открой в Chrome — иконка установки появится в адресной строке.';
-    el.innerHTML = '<div class="hint-text">' + hint + '</div>' +
-                   '<button class="link-btn" onclick="hideInstall()">Скрыть</button>';
+    var hasPrompt = !!deferredPrompt;
+    el.innerHTML =
+        '<button class="install-btn" id="mainInstallBtn" onclick="doInstall()">' +
+            '<span class="ib-emoji">📲</span>' +
+            '<span class="ib-text">Установить приложение</span>' +
+            '<span class="ib-sub">Открыть как нативное</span>' +
+        '</button>' +
+        '<div class="install-tip" id="installTip"></div>';
 }
 function doInstall() {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(function(choice) {
-        if (choice.outcome === 'accepted') localStorage.setItem('rs_installed', '1');
-        deferredPrompt = null;
-        renderInstallSection();
-    });
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(choice) {
+            if (choice.outcome === 'accepted') localStorage.setItem('rs_installed', '1');
+            deferredPrompt = null;
+            renderInstallSection();
+        });
+        return;
+    }
+    var tip = document.getElementById('installTip');
+    if (!tip) return;
+    if (tip.classList.contains('show')) { tip.classList.remove('show'); return; }
+    var plat = detectPlatform();
+    var text = '';
+    if (plat === 'ios') text = '📱 Открой меню «Поделиться» (квадрат со стрелкой внизу) → «На экран Домой»';
+    else if (plat === 'android') text = '📱 Меню <b>⋮</b> в правом верхнем углу → «Установить приложение» или «Добавить на главный экран»';
+    else text = '💻 В Chrome — иконка ⊕ справа в адресной строке';
+    tip.innerHTML = text;
+    tip.classList.add('show');
 }
-function hideInstall() { localStorage.setItem('rs_install_hidden', '1'); renderInstallSection(); }
-function showInstall() { localStorage.removeItem('rs_install_hidden'); renderInstallSection(); }
 function resetInstallFlag() { localStorage.removeItem('rs_installed'); renderInstallSection(); }
 renderInstallSection();
 setTimeout(function() { if (deferredPrompt) renderInstallSection(); }, 3000);
