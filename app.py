@@ -621,6 +621,163 @@ html.hide-time .time { display:none; }
 [data-theme="dark"] .theme-btn {
     border-radius:12px;
 }
+
+/* ========== ТЕМАТИЧЕСКАЯ ШАПКА ========== */
+
+/* === КОСМОС — космическая станция === */
+[data-theme="cosmic"] .header-card {
+    background:rgba(30,20,65,0.85);
+    border-color:rgba(183,148,246,0.28);
+}
+[data-theme="cosmic"] .badge-class {
+    background:linear-gradient(135deg,rgba(183,148,246,0.35),rgba(124,245,192,0.2));
+    color:#ece6ff;
+    border:1px solid rgba(183,148,246,0.4);
+    border-radius:50%;
+    width:42px; height:42px;
+    padding:0; display:flex; align-items:center; justify-content:center;
+    font-size:0.9rem;
+}
+[data-theme="cosmic"] .icon-btn {
+    background:linear-gradient(135deg,rgba(183,148,246,0.3),rgba(124,245,192,0.2));
+    color:#ece6ff;
+    border:1px solid rgba(183,148,246,0.4);
+    border-radius:50%;
+}
+[data-theme="cosmic"] .icon-btn:active { background:linear-gradient(135deg,#b794f6,#7cf5c0); color:#1a1030; }
+
+/* === ОКЕАН — пузыри с бликом, лёгкое парение === */
+[data-theme="ocean"] .header-card {
+    background:rgba(255,255,255,0.55);
+    border:2px solid rgba(255,255,255,0.8);
+    box-shadow:0 8px 24px rgba(8,145,178,0.18), inset 0 2px 12px rgba(255,255,255,0.85);
+}
+[data-theme="ocean"] .badge-class {
+    background:radial-gradient(circle at 30% 25%, rgba(255,255,255,0.95), rgba(34,211,238,0.5) 55%, rgba(8,145,178,0.8));
+    color:#fff;
+    border:2px solid rgba(255,255,255,0.9);
+    border-radius:50%;
+    width:44px; height:44px;
+    padding:0; display:flex; align-items:center; justify-content:center;
+    font-size:0.95rem;
+    box-shadow:0 3px 12px rgba(8,145,178,0.35), inset -3px -4px 8px rgba(8,145,178,0.25), inset 3px 3px 10px rgba(255,255,255,0.75);
+    position:relative;
+    animation:floaty 4s ease-in-out infinite;
+}
+[data-theme="ocean"] .badge-class::before {
+    content:""; position:absolute; top:6px; left:8px;
+    width:14px; height:7px; border-radius:50%;
+    background:rgba(255,255,255,0.9);
+    pointer-events:none;
+}
+[data-theme="ocean"] .icon-btn {
+    background:radial-gradient(circle at 30% 25%, rgba(255,255,255,0.95), rgba(34,211,238,0.5) 55%, rgba(8,145,178,0.8));
+    color:#fff;
+    border:2px solid rgba(255,255,255,0.9);
+    border-radius:50%;
+    box-shadow:0 3px 12px rgba(8,145,178,0.35), inset -3px -4px 8px rgba(8,145,178,0.25), inset 3px 3px 10px rgba(255,255,255,0.75);
+    position:relative;
+    animation:floaty 5s ease-in-out infinite;
+}
+[data-theme="ocean"] .icon-btn::before {
+    content:""; position:absolute; top:6px; left:8px;
+    width:12px; height:6px; border-radius:50%;
+    background:rgba(255,255,255,0.9);
+    pointer-events:none;
+}
+[data-theme="ocean"] .icon-btn:active {
+    animation:none;
+    box-shadow:0 0 0 3px rgba(255,255,255,0.5), 0 2px 8px rgba(8,145,178,0.4);
+}
+@keyframes floaty {
+    0%,100% { transform:translate3d(0,0,0); }
+    50% { transform:translate3d(0,-3px,0); }
+}
+
+/* === ЗАКАТ — тёплые асимметричные формы === */
+[data-theme="sunset"] .header-card {
+    background:rgba(255,251,245,0.92);
+    border:1px solid rgba(249,115,22,0.2);
+    border-radius:24px 24px 24px 8px;
+}
+[data-theme="sunset"] .badge-class {
+    background:linear-gradient(135deg,#f97316,#ec4899);
+    color:white;
+    border:none;
+    border-radius:14px 14px 14px 4px;
+}
+[data-theme="sunset"] .icon-btn {
+    background:linear-gradient(135deg,#f97316,#ec4899);
+    color:white;
+    border:none;
+    border-radius:14px 14px 4px 14px;
+}
+[data-theme="sunset"] .icon-btn:active { opacity:0.85; }
+
+/* === ЛЕС — листики === */
+[data-theme="forest"] .header-card {
+    background:rgba(255,255,255,0.9);
+    border:1px solid rgba(5,150,105,0.2);
+    border-radius:28px 12px 28px 12px;
+}
+[data-theme="forest"] .badge-class {
+    background:linear-gradient(135deg,#059669,#84cc16);
+    color:white;
+    border:none;
+    border-radius:24px 8px 24px 8px;
+}
+[data-theme="forest"] .icon-btn {
+    background:linear-gradient(135deg,#059669,#84cc16);
+    color:white;
+    border:none;
+    border-radius:24px 8px 24px 8px;
+}
+[data-theme="forest"] .icon-btn:active { opacity:0.85; }
+
+/* === САКУРА — лепестки === */
+[data-theme="sakura"] .header-card {
+    background:rgba(255,255,255,0.9);
+    border:2px solid rgba(236,72,153,0.15);
+    border-radius:26px;
+}
+[data-theme="sakura"] .badge-class {
+    background:radial-gradient(circle at 30% 25%, #fff, #ec4899 60%, #a855f7);
+    color:white;
+    border:none;
+    border-radius:50% 50% 50% 12px;
+    width:44px; height:44px;
+    padding:0; display:flex; align-items:center; justify-content:center;
+    font-size:0.95rem;
+    box-shadow:0 3px 12px rgba(236,72,153,0.3);
+    position:relative;
+}
+[data-theme="sakura"] .badge-class::before {
+    content:""; position:absolute; top:6px; left:50%;
+    transform:translateX(-50%);
+    width:14px; height:4px;
+    background:rgba(255,255,255,0.9);
+    border-radius:50%;
+    filter:blur(2px);
+    pointer-events:none;
+}
+[data-theme="sakura"] .icon-btn {
+    background:radial-gradient(circle at 30% 25%, #fff, #ec4899 60%, #a855f7);
+    color:white;
+    border:none;
+    border-radius:50% 50% 50% 12px;
+    box-shadow:0 3px 12px rgba(236,72,153,0.3);
+    position:relative;
+}
+[data-theme="sakura"] .icon-btn::before {
+    content:""; position:absolute; top:6px; left:50%;
+    transform:translateX(-50%);
+    width:12px; height:4px;
+    background:rgba(255,255,255,0.9);
+    border-radius:50%;
+    filter:blur(2px);
+    pointer-events:none;
+}
+[data-theme="sakura"] .icon-btn:active { opacity:0.85; }
 </style>
 </head>
 <body>
