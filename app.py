@@ -145,6 +145,51 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     --num-shadow:0 0 14px rgba(183,148,246,0.4);
     color-scheme:dark;
 }
+[data-theme="ocean"] {
+    --bg:#b8e0f0; --card-bg:rgba(255,255,255,0.95); --text-main:#062b3d; --text-muted:#4a7a8f;
+    --accent:#0891b2; --accent-light:rgba(8,145,178,0.12); --today-badge:#10b981;
+    --error:#ef4444; --shadow:0 4px 16px rgba(8,145,178,0.12); --border:rgba(6,43,61,0.08);
+    --green:#10b981; --green-soft:rgba(16,185,129,0.14);
+    --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.14);
+    --num-bg:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.9),rgba(34,211,238,0.5) 60%,rgba(8,145,178,0.75));
+    --num-color:#fff; --num-shadow:0 3px 10px rgba(8,145,178,0.3);
+    color-scheme:light;
+}
+[data-theme="sunset"] {
+    --bg:#ffd9b0; --card-bg:rgba(255,251,245,0.95); --text-main:#3d1a0a; --text-muted:#8a6550;
+    --accent:#f97316; --accent-light:rgba(249,115,22,0.12); --today-badge:#059669;
+    --error:#dc2626; --shadow:0 4px 16px rgba(249,115,22,0.15); --border:rgba(61,26,10,0.08);
+    --green:#059669; --green-soft:rgba(5,150,105,0.14);
+    --orange:#d97706; --orange-soft:rgba(217,119,6,0.14);
+    --num-bg:linear-gradient(135deg,#f97316,#ec4899); --num-color:#fff;
+    --num-shadow:0 3px 10px rgba(249,115,22,0.35);
+    color-scheme:light;
+}
+[data-theme="forest"] {
+    --bg:#c9e6bf; --card-bg:rgba(255,255,255,0.95); --text-main:#0f2e1b; --text-muted:#5f7c68;
+    --accent:#059669; --accent-light:rgba(5,150,105,0.12); --today-badge:#16a34a;
+    --error:#dc2626; --shadow:0 4px 16px rgba(5,150,105,0.12); --border:rgba(15,46,27,0.08);
+    --green:#16a34a; --green-soft:rgba(22,163,74,0.14);
+    --orange:#ca8a04; --orange-soft:rgba(202,138,4,0.14);
+    --num-bg:linear-gradient(135deg,#059669,#84cc16); --num-color:#fff;
+    --num-shadow:0 3px 10px rgba(5,150,105,0.3);
+    color-scheme:light;
+}
+[data-theme="sakura"] {
+    --bg:#ffd6e4; --card-bg:rgba(255,255,255,0.95); --text-main:#3d1029; --text-muted:#9a6782;
+    --accent:#ec4899; --accent-light:rgba(236,72,153,0.12); --today-badge:#059669;
+    --error:#dc2626; --shadow:0 4px 16px rgba(236,72,153,0.12); --border:rgba(61,16,41,0.08);
+    --green:#059669; --green-soft:rgba(5,150,105,0.14);
+    --orange:#ea580c; --orange-soft:rgba(234,88,12,0.14);
+    --num-bg:linear-gradient(135deg,#ec4899,#a855f7); --num-color:#fff;
+    --num-shadow:0 3px 10px rgba(236,72,153,0.3);
+    color-scheme:light;
+}
+[data-theme="ocean"] body { background-image:linear-gradient(180deg,#c7e8f5 0%,#94d0e6 45%,#5aafd0 100%); }
+[data-theme="sunset"] body { background-image:linear-gradient(180deg,#ffe0a8 0%,#ffb572 40%,#e88898 100%); }
+[data-theme="forest"] body { background-image:linear-gradient(180deg,#dff0d0 0%,#b8dfa8 40%,#7abb6c 100%); }
+[data-theme="sakura"] body { background-image:linear-gradient(180deg,#ffeaf0 0%,#ffd0dd 50%,#ffb0c8 100%); }
+
 html { min-height:100%; background:var(--bg); }
 * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 body {
@@ -234,7 +279,7 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
 }
 .settings-title { font-weight:800; font-size:0.85rem; margin-bottom:10px; color:var(--text-main); }
 .settings-title:not(:first-child) { margin-top:14px; }
-.theme-options { display:flex; gap:8px; }
+.theme-options { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
 .theme-btn {
     flex:1; padding:10px 6px; border-radius:10px; border:2px solid var(--border);
     background:transparent; color:var(--text-main); font-weight:700; font-size:0.72rem;
@@ -429,6 +474,10 @@ html.hide-time .time { display:none; }
             <button class="theme-btn" data-theme-btn="light" onclick="setTheme('light')"><span class="emoji">☀️</span>Светлая</button>
             <button class="theme-btn" data-theme-btn="dark" onclick="setTheme('dark')"><span class="emoji">🌙</span>Тёмная</button>
             <button class="theme-btn" data-theme-btn="cosmic" onclick="setTheme('cosmic')"><span class="emoji">🌌</span>Космос</button>
+            <button class="theme-btn" data-theme-btn="ocean" onclick="setTheme('ocean')"><span class="emoji">🌊</span>Океан</button>
+            <button class="theme-btn" data-theme-btn="sunset" onclick="setTheme('sunset')"><span class="emoji">🌅</span>Закат</button>
+            <button class="theme-btn" data-theme-btn="forest" onclick="setTheme('forest')"><span class="emoji">🌿</span>Лес</button>
+            <button class="theme-btn" data-theme-btn="sakura" onclick="setTheme('sakura')"><span class="emoji">🌸</span>Сакура</button>
         </div>
         <div class="settings-title">🔤 Размер текста</div>
         <div class="size-options">
@@ -462,7 +511,7 @@ html.hide-time .time { display:none; }
     var saved = localStorage.getItem('rs_theme') || 'light';
     document.documentElement.setAttribute('data-theme', saved);
     var meta = document.getElementById('themeColorMeta');
-    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a'};
+    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4'};
     if (meta) meta.setAttribute('content', colors[saved] || '#f0f4f8');
     document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
         if (b.getAttribute('data-theme-btn') === saved) b.classList.add('active');
@@ -485,7 +534,7 @@ function setTheme(t) {
         b.classList.toggle('active', b.getAttribute('data-theme-btn') === t);
     });
     var meta = document.getElementById('themeColorMeta');
-    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a'};
+    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4'};
     if (meta) meta.setAttribute('content', colors[t] || '#f0f4f8');
 }
 function setSize(s) {
