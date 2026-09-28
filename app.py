@@ -222,7 +222,6 @@ body {
     background:var(--card); border:1px solid var(--border); border-radius:24px;
     padding:16px 20px; box-shadow:var(--shadow); margin-bottom:14px;
     display:flex; align-items:center; justify-content:space-between; gap:12px;
-    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
 }
 .brand { display:flex; align-items:center; gap:12px; min-width:0; }
 .brand-logo {
@@ -261,7 +260,6 @@ body {
     padding:0 18px; margin-bottom:14px; box-shadow:var(--shadow);
     max-height:0; overflow:hidden; opacity:0;
     transition:max-height 0.5s ease, opacity 0.3s ease, padding 0.3s ease;
-    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
 }
 .settings.open { max-height:1400px; opacity:1; padding:18px; }
 .settings-title { font-weight:800; font-size:0.8rem; color:var(--muted);
@@ -322,7 +320,6 @@ body {
 .live-banner {
     border-radius:20px; padding:16px 18px; margin-bottom:14px;
     display:flex; align-items:center; gap:14px; box-shadow:var(--shadow);
-    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
     border:1px solid var(--border); animation:slideDown 0.4s ease;
 }
 @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:none; } }
@@ -351,7 +348,7 @@ body {
     display:flex; gap:6px; margin-bottom:16px; overflow-x:auto;
     padding:4px; scrollbar-width:none; -ms-overflow-style:none;
     background:var(--card); border-radius:18px; border:1px solid var(--border);
-    box-shadow:var(--shadow); backdrop-filter:blur(14px);
+    box-shadow:var(--shadow);
 }
 .tabs::-webkit-scrollbar { display:none; }
 .tab {
@@ -387,7 +384,6 @@ body {
     background:var(--card); padding:14px 16px; margin-bottom:9px; border-radius:18px;
     box-shadow:var(--shadow); display:flex; align-items:center; gap:14px;
     border:1px solid var(--border); transition:all 0.25s;
-    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
     position:relative; overflow:hidden;
 }
 .card.now {
@@ -427,7 +423,6 @@ html.font-large .day-title { font-size:1.3rem; }
     background:var(--card); padding:32px 20px; border-radius:20px;
     box-shadow:var(--shadow); text-align:center; font-size:1rem; font-weight:700;
     color:var(--muted); border:1px solid var(--border);
-    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
     line-height:1.5;
 }
 .info-box .big { font-size:2.2rem; display:block; margin-bottom:8px; }
@@ -463,8 +458,6 @@ body { position:relative; }
 [data-theme="ocean"] .header,
 [data-theme="ocean"] .settings {
     background:rgba(255,255,255,0.45);
-    backdrop-filter:blur(24px) saturate(1.6);
-    -webkit-backdrop-filter:blur(24px) saturate(1.6);
     border:2px solid rgba(255,255,255,0.65);
     box-shadow:0 10px 40px rgba(8,145,178,0.25),inset 0 2px 12px rgba(255,255,255,0.9);
     border-radius:28px;
@@ -503,8 +496,6 @@ body { position:relative; }
 }
 [data-theme="ocean"] .card {
     background:rgba(255,255,255,0.6);
-    backdrop-filter:blur(14px) saturate(1.5);
-    -webkit-backdrop-filter:blur(14px) saturate(1.5);
     border:1.5px solid rgba(255,255,255,0.8);
     border-radius:24px;
     box-shadow:0 8px 24px rgba(8,145,178,0.18),inset 0 1px 6px rgba(255,255,255,0.9);
@@ -523,7 +514,6 @@ body { position:relative; }
 }
 [data-theme="ocean"] .tabs {
     background:rgba(255,255,255,0.55);
-    backdrop-filter:blur(14px) saturate(1.4);
     border:1.5px solid rgba(255,255,255,0.75);
     box-shadow:0 6px 20px rgba(8,145,178,0.15);
 }
@@ -568,7 +558,6 @@ body { position:relative; }
 [data-theme="sunset"] .header,
 [data-theme="sunset"] .settings {
     background:rgba(255,250,240,0.85);
-    backdrop-filter:blur(16px);
     border:1px solid rgba(249,115,22,0.2);
     box-shadow:0 8px 32px rgba(249,115,22,0.25),inset 0 1px 0 rgba(255,255,255,0.9);
 }
@@ -602,7 +591,6 @@ body { position:relative; }
 [data-theme="forest"] .header,
 [data-theme="forest"] .settings {
     background:rgba(255,255,255,0.8);
-    backdrop-filter:blur(14px);
     border:1px solid rgba(5,150,105,0.2);
     box-shadow:0 6px 24px rgba(5,150,105,0.2),inset 0 1px 0 rgba(255,255,255,0.9);
 }
@@ -637,7 +625,6 @@ body { position:relative; }
 [data-theme="sakura"] .header,
 [data-theme="sakura"] .settings {
     background:rgba(255,255,255,0.88);
-    backdrop-filter:blur(14px);
     border:2px solid rgba(236,72,153,0.18);
     box-shadow:0 8px 28px rgba(236,72,153,0.2),inset 0 1px 0 rgba(255,255,255,0.9);
     border-radius:26px;
@@ -678,143 +665,43 @@ body { position:relative; }
 .container, #particles { position:relative; z-index:1; }
 #particles { z-index:0; }
 
-/* === PERFORMANCE OPTIMIZATIONS === */
+/* Компенсация отсутствия blur: делаем фоны плотнее, но сохраняем "стекло" */
+.header, .settings, .card, .tabs, .live-banner { transform:translateZ(0); }
+
+/* Частицы на GPU */
 .particle { will-change:transform; transform:translateZ(0); backface-visibility:hidden; }
-@media (max-width: 768px) {
-    /* Убираем самые тяжёлые эффекты на мобильных */
-    [data-theme="ocean"] .header { animation:none; }
-    [data-theme="ocean"] .badge-class,
-    [data-theme="ocean"] .icon-btn { animation-duration:8s; }
-    /* Уменьшаем blur — самый тормозящий эффект */
+
+@media (max-width: 820px) {
+    /* На телефоне делаем фоны тем более плотными вместо blur */
     [data-theme="ocean"] .header,
     [data-theme="ocean"] .settings,
     [data-theme="ocean"] .card,
-    [data-theme="ocean"] .tabs {
-        backdrop-filter:blur(8px) !important;
-        -webkit-backdrop-filter:blur(8px) !important;
-    }
-    /* Ускоряем волну через transform вместо background-position */
-    [data-theme="ocean"] body::before {
-        animation-duration:35s;
-        will-change:transform;
-    }
-    /* Отключаем тяжёлый пульс у закатного солнца */
-    [data-theme="sunset"] body::before { animation-duration:12s; }
+    [data-theme="ocean"] .tabs { background: rgba(240, 251, 255, 0.94) !important; }
+    [data-theme="sunset"] .header,
+    [data-theme="sunset"] .settings,
+    [data-theme="sunset"] .card { background: rgba(255, 250, 242, 0.94) !important; }
+    [data-theme="forest"] .header,
+    [data-theme="forest"] .settings,
+    [data-theme="forest"] .card { background: rgba(246, 252, 245, 0.94) !important; }
+    [data-theme="sakura"] .header,
+    [data-theme="sakura"] .settings,
+    [data-theme="sakura"] .card { background: rgba(255, 249, 252, 0.94) !important; }
+    [data-theme="cosmic"] .header,
+    [data-theme="cosmic"] .settings,
+    [data-theme="cosmic"] .card { background: rgba(30, 22, 65, 0.94) !important; }
+    [data-theme="dark"] .header,
+    [data-theme="dark"] .settings,
+    [data-theme="dark"] .card { background: rgba(26, 31, 43, 0.97) !important; }
 }
+
+/* Системное "уменьшить движение" */
 @media (prefers-reduced-motion: reduce) {
-    .particle, [data-theme="ocean"] body::before, [data-theme="ocean"] .badge-class,
-    [data-theme="ocean"] .icon-btn, [data-theme="sunset"] body::before {
-        animation:none !important;
-    }
-}
-/* Плавный transition только там где нужно */
-.header, .settings, .card, .tabs, .live-banner { transform:translateZ(0); }
-
-.install-btn {
-    display:flex; align-items:center; gap:12px; position:relative;
-    width:100%; padding:15px 18px; border-radius:16px; border:none;
-    background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff;
-    font-weight:800; cursor:pointer; font-family:inherit;
-    box-shadow:0 8px 26px var(--accent-soft),inset 0 1px 0 rgba(255,255,255,0.25);
-    transition:transform 0.15s, box-shadow 0.2s;
-    text-align:left;
-}
-.install-btn:hover { box-shadow:0 12px 34px var(--accent-soft); }
-.install-btn:active { transform:scale(0.97); }
-.install-btn .ib-emoji { font-size:1.6rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-.install-btn .ib-text { font-size:1rem; font-weight:800; letter-spacing:-0.01em; }
-.install-btn .ib-sub { display:block; font-size:0.72rem; font-weight:600; opacity:0.75; margin-top:2px; }
-.install-tip {
-    max-height:0; overflow:hidden; opacity:0; margin-top:0;
-    background:var(--bg2); border:1px solid var(--border); border-radius:14px;
-    padding:0 14px; font-size:0.85rem; line-height:1.5; color:var(--muted); font-weight:600;
-    transition:max-height 0.35s ease, opacity 0.3s ease, padding 0.3s ease, margin-top 0.3s ease;
-}
-.install-tip.show { max-height:200px; opacity:1; padding:14px; margin-top:10px; }
-
-/* === HARD PERF MODE === */
-@media (max-width: 820px) {
-    /* 1. ГЛАВНОЕ — убираем backdrop-filter (самый тяжёлый эффект) */
-    .header, .settings, .card, .tabs, .live-banner,
-    [data-theme="ocean"] .header, [data-theme="ocean"] .settings,
-    [data-theme="ocean"] .card, [data-theme="ocean"] .tabs,
-    [data-theme="sunset"] .header, [data-theme="sunset"] .settings,
-    [data-theme="sunset"] .card,
-    [data-theme="forest"] .header, [data-theme="forest"] .settings,
-    [data-theme="forest"] .card,
-    [data-theme="sakura"] .header, [data-theme="sakura"] .settings,
-    [data-theme="sakura"] .card {
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-    }
-    /* 2. Заменяем прозрачные стеклянные фоны на плотные */
-    [data-theme="ocean"] .header, [data-theme="ocean"] .settings,
-    [data-theme="ocean"] .card, [data-theme="ocean"] .tabs {
-        background: rgba(240, 251, 255, 0.97) !important;
-    }
-    [data-theme="sunset"] .header, [data-theme="sunset"] .settings,
-    [data-theme="sunset"] .card { background: rgba(255, 250, 242, 0.97) !important; }
-    [data-theme="forest"] .header, [data-theme="forest"] .settings,
-    [data-theme="forest"] .card { background: rgba(246, 252, 245, 0.97) !important; }
-    [data-theme="sakura"] .header, [data-theme="sakura"] .settings,
-    [data-theme="sakura"] .card { background: rgba(255, 249, 252, 0.97) !important; }
-    [data-theme="cosmic"] .header, [data-theme="cosmic"] .settings,
-    [data-theme="cosmic"] .card { background: rgba(30, 22, 65, 0.97) !important; }
-
-    /* 3. Убираем fixed background (тормозит скролл) */
-    body, html { background-attachment: scroll !important; }
-
-    /* 4. Убираем ВСЕ декоративные SVG-фоны (волны, солнце, крона) */
+    .particle,
     [data-theme="ocean"] body::before,
     [data-theme="sunset"] body::before,
-    [data-theme="forest"] body::before,
-    [data-theme="sakura"] body::before { display: none !important; }
-
-    /* 5. Убираем анимации пузырей/покачиваний */
-    [data-theme="ocean"] .header,
     [data-theme="ocean"] .badge-class,
-    [data-theme="ocean"] .icon-btn { animation: none !important; }
-
-    /* 6. Убираем тяжёлые радиальные градиенты у океана */
-    [data-theme="ocean"] .badge-class,
-    [data-theme="ocean"] .icon-btn,
-    [data-theme="ocean"] .num {
-        background: linear-gradient(135deg, #22d3ee, #0891b2) !important;
-        border: none !important;
-        box-shadow: 0 2px 6px rgba(8,145,178,0.25) !important;
-    }
-    /* Убираем декоративные блики у пузырей */
-    [data-theme="ocean"] .card::after,
-    [data-theme="ocean"] .header::before,
-    [data-theme="ocean"] .icon-btn::before,
-    [data-theme="ocean"] .badge-class::before { display: none !important; }
-
-    /* 7. Уменьшаем тени (тоже влияет на рендер) */
-    .card, .header, .settings, .tabs, .live-banner {
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
-    }
-    /* 8. Убираем will-change у карточек — там оно не нужно */
-    .header, .settings, .card, .tabs, .live-banner {
-        transform: none !important;
-    }
+    [data-theme="ocean"] .icon-btn { animation:none !important; }
 }
-
-/* Лёгкий режим (переключатель) */
-html.light-mode [data-theme] body::before,
-html.light-mode body::before { display: none !important; }
-html.light-mode .header,
-html.light-mode .settings,
-html.light-mode .card,
-html.light-mode .tabs,
-html.light-mode .live-banner {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
-}
-html.light-mode #particles { display: none !important; }
-html.light-mode [data-theme="ocean"] .header,
-html.light-mode [data-theme="ocean"] .badge-class,
-html.light-mode [data-theme="ocean"] .icon-btn { animation: none !important; }
 </style>
 </head>
 <body>
@@ -867,10 +754,6 @@ html.light-mode [data-theme="ocean"] .icon-btn { animation: none !important; }
         <div class="toggle-label">Анимация фона</div>
         <div class="toggle" id="toggleAnim" onclick="toggleAnim()"></div>
     </div>
-    <div class="toggle-row">
-        <div class="toggle-label">⚡ Лёгкий режим<br><span style="font-size:0.7rem;color:var(--muted);font-weight:500;">убирает все тяжёлые эффекты</span></div>
-        <div class="toggle" id="toggleLight" onclick="toggleLightMode()"></div>
-    </div>
 
     <div class="settings-title">📱 Приложение</div>
     <div id="installSection"></div>
@@ -896,7 +779,6 @@ var THEME_COLORS = {light:'#eef2f7',dark:'#0b0d12',cosmic:'#05021a',ocean:'#e6f4
     document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
         if (b.getAttribute('data-theme-btn') === saved) b.classList.add('active');
     });
-    if (localStorage.getItem('rs_light_mode') === '1') document.documentElement.classList.add('light-mode');
     if (localStorage.getItem('rs_compact') === '1') document.documentElement.classList.add('compact');
     if (localStorage.getItem('rs_hide_time') === '1') document.documentElement.classList.add('hide-time');
     var size = localStorage.getItem('rs_size') || 'normal';
@@ -909,7 +791,6 @@ var THEME_COLORS = {light:'#eef2f7',dark:'#0b0d12',cosmic:'#05021a',ocean:'#e6f4
     document.getElementById('toggleHideTime').classList.toggle('on', localStorage.getItem('rs_hide_time') === '1');
     var animOn = localStorage.getItem('rs_anim') !== '0';
     document.getElementById('toggleAnim').classList.toggle('on', animOn);
-    document.getElementById('toggleLight').classList.toggle('on', localStorage.getItem('rs_light_mode') === '1');
     if (animOn) spawnParticles(saved);
 })();
 
@@ -956,7 +837,6 @@ function spawnParticles(theme) {
     if (!container) return;
     container.innerHTML = '';
     if (localStorage.getItem('rs_anim') === '0') return;
-    if (document.documentElement.classList.contains('light-mode')) return;
     if (window.innerWidth < 300) return;
     var configs = {
         cosmic: { chars: ['✦','✧','·','+'], colors: ['#ffffff','#b794f6','#7cf5c0','#e0d4ff'],
@@ -972,8 +852,8 @@ function spawnParticles(theme) {
     };
     var cfg = configs[theme];
     if (!cfg) return;
-    var isMobile = window.innerWidth < 820 || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 6);
-    var count = isMobile ? Math.max(4, Math.round(cfg.count * 0.25)) : cfg.count;
+    var isMobile = window.innerWidth < 820;
+    var count = isMobile ? Math.max(10, Math.round(cfg.count * 0.7)) : cfg.count;
     var frag = document.createDocumentFragment();
     for (var i = 0; i < count; i++) {
         var el = document.createElement('span');
@@ -996,16 +876,6 @@ function spawnParticles(theme) {
         frag.appendChild(el);
     }
     container.appendChild(frag);
-}
-function toggleLightMode() {
-    var on = document.documentElement.classList.toggle('light-mode');
-    localStorage.setItem('rs_light_mode', on ? '1' : '0');
-    document.getElementById('toggleLight').classList.toggle('on', on);
-    if (on) { document.getElementById('particles').innerHTML = ''; }
-    else {
-        var t = document.documentElement.getAttribute('data-theme');
-        if (localStorage.getItem('rs_anim') !== '0') spawnParticles(t);
-    }
 }
 function toggleSettings() {
     document.getElementById('settingsPanel').classList.toggle('open');
@@ -1071,6 +941,12 @@ function doInstall() {
 function resetInstallFlag() { localStorage.removeItem('rs_installed'); renderInstallSection(); }
 renderInstallSection();
 setTimeout(function() { if (deferredPrompt) renderInstallSection(); }, 3000);
+document.addEventListener('visibilitychange', function() {
+    var c = document.getElementById('particles');
+    if (!c) return;
+    var ps = document.hidden ? 'paused' : 'running';
+    c.querySelectorAll('.particle').forEach(function(p) { p.style.animationPlayState = ps; });
+});
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
         navigator.serviceWorker.register('/sw.js').catch(function() {});
