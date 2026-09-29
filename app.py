@@ -307,10 +307,11 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
     padding:16px 18px;
     z-index:50;
     transform-origin:top right;
-    transform:scale(0.92) translateY(-6px);
+    transform:scale(0.94) translateY(-4px);
     opacity:0;
     pointer-events:none;
-    transition:transform 0.18s cubic-bezier(0.4,0,0.2,1), opacity 0.15s ease;
+    transition:transform 0.12s cubic-bezier(0.4,0,0.2,1), opacity 0.1s ease;
+    will-change:transform, opacity;
 }
 [data-theme="cosmic"] .settings-panel {
     box-shadow:0 12px 40px rgba(120,60,220,0.35), 0 0 0 1px rgba(183,148,246,0.2);
@@ -1549,11 +1550,11 @@ h2 span {
 .settings-panel {
     border-radius: 22px !important;
     padding: 18px 20px !important;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.7) !important;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.15) !important;
 }
 [data-theme="dark"] .settings-panel,
 [data-theme="cosmic"] .settings-panel {
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.5) !important;
 }
 .settings-preview {
     height: 6px; border-radius: 3px;
@@ -1629,7 +1630,7 @@ html.round-nums .card.now .num { border-radius: 50% !important; }
 }
 
 /* 🌊 ОКЕАН — водоросли снизу */
-[data-theme="ocean"] .side-decor { display: none !important; }
+[data-theme="ocean"] .side-decor { display: block; }
 [data-theme="ocean"] .side-decor {
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 260'><path d='M30,260 Q20,220 35,180 Q50,140 30,100 Q15,70 30,30' stroke='%2310b981' stroke-width='10' fill='none' stroke-linecap='round' opacity='0.7'/><path d='M55,260 Q70,220 55,180 Q40,140 60,100 Q75,70 60,40' stroke='%23059669' stroke-width='9' fill='none' stroke-linecap='round' opacity='0.65'/><path d='M85,260 Q70,210 85,170 Q100,130 85,90' stroke='%230ea5e9' stroke-width='8' fill='none' stroke-linecap='round' opacity='0.6'/><path d='M110,260 Q120,220 110,180 Q95,150 115,110' stroke='%2314b8a6' stroke-width='8' fill='none' stroke-linecap='round' opacity='0.55'/><g fill='%23fb7185'><circle cx='30' cy='30' r='6'/><circle cx='60' cy='40' r='5'/><circle cx='85' cy='90' r='5'/><circle cx='115' cy='110' r='6'/></g><g fill='%23fbbf24'><circle cx='45' cy='55' r='3'/><circle cx='70' cy='30' r='3'/><circle cx='100' cy='75' r='3'/></g></svg>");
 }
@@ -1680,23 +1681,23 @@ html.compact .side-decor { opacity: 0.5; }
 /* Стилизация панели под каждую тему */
 [data-theme="ocean"] .settings-panel {
     border: 2px solid rgba(34,211,238,0.35);
-    box-shadow: 0 20px 60px rgba(8,145,178,0.3), inset 0 2px 12px rgba(255,255,255,0.8) !important;
+    box-shadow: 0 8px 28px rgba(8,145,178,0.25) !important;
 }
 [data-theme="sunset"] .settings-panel {
     border: 2px solid rgba(249,115,22,0.25);
-    box-shadow: 0 20px 60px rgba(249,115,22,0.25), inset 0 2px 12px rgba(255,255,255,0.9) !important;
+    box-shadow: 0 8px 28px rgba(249,115,22,0.22) !important;
 }
 [data-theme="forest"] .settings-panel {
     border: 2px solid rgba(5,150,105,0.25);
-    box-shadow: 0 20px 60px rgba(5,150,105,0.25), inset 0 2px 12px rgba(255,255,255,0.8) !important;
+    box-shadow: 0 8px 28px rgba(5,150,105,0.22) !important;
 }
 [data-theme="sakura"] .settings-panel {
     border: 2px solid rgba(236,72,153,0.25);
-    box-shadow: 0 20px 60px rgba(236,72,153,0.25), inset 0 2px 12px rgba(255,255,255,0.85) !important;
+    box-shadow: 0 8px 28px rgba(236,72,153,0.22) !important;
 }
 [data-theme="cosmic"] .settings-panel {
     border: 1px solid rgba(183,148,246,0.4);
-    box-shadow: 0 20px 60px rgba(120,60,220,0.5), 0 0 40px rgba(183,148,246,0.2), inset 0 2px 12px rgba(183,148,246,0.1) !important;
+    box-shadow: 0 8px 32px rgba(120,60,220,0.4) !important;
 }
 [data-theme="dark"] .settings-panel {
     border: 1px solid rgba(255,255,255,0.1);
