@@ -97,9 +97,13 @@ def get_live_status(today_lessons):
         s = sh*60+sm; e = eh*60+em
         if s <= cur < e:
             prog = int((cur - s) / max(e - s, 1) * 100)
-            return {"type":"now","num":num,"lesson":lesson,"progress":prog,"left":e-cur,"until":end}
+            end_dt = now.replace(hour=eh, minute=em, second=0, microsecond=0)
+            return {"type":"now","num":num,"lesson":lesson,"progress":prog,
+                    "left":e-cur,"until":end,"end_unix":int(end_dt.timestamp())}
         if cur < s:
-            return {"type":"before","num":num,"lesson":lesson,"wait":s-cur,"start":start}
+            start_dt = now.replace(hour=sh, minute=sm, second=0, microsecond=0)
+            return {"type":"before","num":num,"lesson":lesson,"wait":s-cur,"start":start,
+                    "start_unix":int(start_dt.timestamp())}
     return None
 
 
@@ -423,12 +427,12 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
     font-weight:800; font-size:1.05rem; flex-shrink:0;
     box-shadow:var(--num-shadow);
 }
-.card.now .num { background:linear-gradient(135deg,var(--green),#7cf5c0); color:#0a1f1a; }
+.card.now .num { background:linear-gradient(135deg,var(--green),var(--accent)); color:#fff; }
 .left-side { display:flex; flex-direction:column; gap:3px; flex-grow:1; min-width:0; }
 .time { font-size:0.8rem; color:var(--text-muted); font-weight:700; }
 .lesson { font-size:1.05rem; font-weight:800; color:var(--text-main); word-wrap:break-word; }
 .now-pill {
-    font-size:0.6rem; background:var(--green); color:#0a1f1a;
+    font-size:0.6rem; background:var(--green); color:#fff;
     padding:3px 8px; border-radius:20px; font-weight:800;
     text-transform:uppercase; letter-spacing:0.06em;
     margin-left:auto; flex-shrink:0;
@@ -926,6 +930,34 @@ function doInstall() {
         deferredPrompt = null; renderInstallSection();
     });
 }
+
+function updateLiveTimer() {
+    var nowEl = document.querySelector('.live-banner.now');
+    if (nowEl) {
+        var endUnix = parseInt(nowEl.getAttribute('data-end-unix'));
+        var until = nowEl.getAttribute('data-until');
+        if (endUnix && until) {
+            var nowSec = Math.floor(Date.now() / 1000);
+            var left = Math.max(0, Math.ceil((endUnix - nowSec) / 60));
+            var timeEl = nowEl.querySelector('.live-timer');
+            if (timeEl) timeEl.textContent = 'до ' + until + ' · осталось ' + left + ' мин';
+        }
+    }
+    var beforeEl = document.querySelector('.live-banner.before');
+    if (beforeEl) {
+        var startUnix = parseInt(beforeEl.getAttribute('data-start-unix'));
+        var startStr = beforeEl.getAttribute('data-start');
+        if (startUnix && startStr) {
+            var nowSec2 = Math.floor(Date.now() / 1000);
+            var wait = Math.max(0, Math.ceil((startUnix - nowSec2) / 60));
+            var timeEl2 = beforeEl.querySelector('.live-timer');
+            if (timeEl2) timeEl2.textContent = 'в ' + startStr + ' · через ' + wait + ' мин';
+        }
+    }
+}
+updateLiveTimer();
+setInterval(updateLiveTimer, 30000);
+
 renderInstallSection();
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
@@ -955,17 +987,17 @@ def build_tabs(active_day, days_schedule):
 def build_live_banner(status):
     if not status: return ""
     if status["type"] == "now":
-        return ('<div class="live-banner now"><div class="live-dot"></div>'
+        return ('<div class="live-banner now" data-end-unix="' + str(status["end_unix"]) + '" data-until="' + status["until"] + '"><div class="live-dot"></div>'
             '<div class="live-info"><div class="live-label">Сейчас идёт</div>'
             f'<div class="live-lesson">{status["lesson"]}</div>'
-            f'<div class="live-time">До конца {status["left"]} мин · до {status["until"]}</div>'
+            f'<div class="live-time"><span class="live-timer">до {status["until"]}</span></div>'
             f'<div class="progress-bar"><div class="progress-fill" style="width:{status["progress"]}%"></div></div>'
             '</div></div>')
     if status["type"] == "before":
-        return ('<div class="live-banner before"><div class="live-dot"></div>'
+        return ('<div class="live-banner before" data-start-unix="' + str(status["start_unix"]) + '" data-start="' + status["start"] + '"><div class="live-dot"></div>'
             '<div class="live-info"><div class="live-label">Скоро урок</div>'
             f'<div class="live-lesson">{status["lesson"]}</div>'
-            f'<div class="live-time">Через {status["wait"]} мин · в {status["start"]}</div>'
+            f'<div class="live-time"><span class="live-timer">в {status["start"]}</span></div>'
             '</div></div>')
     return ""
 
