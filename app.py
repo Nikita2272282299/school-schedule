@@ -2246,6 +2246,36 @@ body {
 .toggle-row:last-child {
     margin-bottom: 0 !important;
 }
+
+/* ===== ДУБЛИРУЕМ ФОН НА HTML (полоса исчезнет) ===== */
+html {
+    background: transparent !important;
+}
+html[data-theme="light"] {
+    background-image: linear-gradient(180deg,#f1f5fa 0%,#e4ebf3 100%) !important;
+}
+html[data-theme="dark"] {
+    background-image: linear-gradient(180deg,#10131a 0%,#0b0d12 100%) !important;
+}
+html[data-theme="cosmic"] {
+    background-image: linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%) !important;
+}
+html[data-theme="ocean"] {
+    background-image: linear-gradient(180deg,#c7e8f5 0%,#94d0e6 45%,#5aafd0 100%) !important;
+}
+html[data-theme="sunset"] {
+    background-image: linear-gradient(180deg,#ffe0a8 0%,#ffb572 40%,#e88898 100%) !important;
+}
+html[data-theme="forest"] {
+    background-image: linear-gradient(180deg,#dff0d0 0%,#b8dfa8 40%,#7abb6c 100%) !important;
+}
+html[data-theme="sakura"] {
+    background-image: linear-gradient(180deg,#ffeaf0 0%,#ffd0dd 50%,#ffb0c8 100%) !important;
+}
+body {
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+}
 </style>
 </head>
 <body>
