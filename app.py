@@ -1556,8 +1556,12 @@ h2 span {
 [data-theme="cosmic"] .settings-panel {
     box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06) !important;
 }
-
-/* Заголовок секции с полоской */
+.settings-preview {
+    height: 6px; border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent)));
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px var(--accent-light);
+}
 .settings-title {
     display:flex; align-items:center; gap:8px;
     font-size:0.72rem; letter-spacing:0.08em;
@@ -1570,8 +1574,6 @@ h2 span {
     background:linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)));
     box-shadow:0 0 8px var(--accent);
 }
-
-/* Сетка тумблеров с иконками */
 .toggle-row {
     padding:11px 12px;
     border-radius:12px;
@@ -1580,74 +1582,18 @@ h2 span {
     background: linear-gradient(180deg, rgba(255,255,255,0.3), transparent);
     transition: background 0.15s;
 }
-.toggle-row:hover { background: var(--accent-light, rgba(99,102,241,0.08)); }
-.toggle-label {
-    display:flex; align-items:center; gap:8px;
-    font-size:0.85rem;
-}
-.toggle-label::before {
-    content: attr(data-ico);
-    font-size:1.05rem;
-    width:20px; text-align:center;
-}
-
-/* Тумблер — градиентный */
+.toggle-label { display:flex; align-items:center; gap:8px; font-size:0.85rem; }
+.toggle-label::before { content: attr(data-ico); font-size:1.05rem; width:20px; text-align:center; }
 .toggle {
     width:46px; height:26px; border-radius:13px;
     background: linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.15));
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
 }
-[data-theme="dark"] .toggle,
-[data-theme="cosmic"] .toggle {
-    background: linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.5));
-}
 .toggle.on {
     background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)));
     box-shadow: inset 0 -2px 4px rgba(0,0,0,0.2), 0 2px 8px var(--accent-light);
 }
-.toggle::after {
-    width:22px; height:22px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.9);
-}
-
-/* Тема-кнопки — крупнее и красивее */
-.theme-options { gap:8px !important; }
-.theme-btn {
-    padding:14px 8px !important;
-    border-radius:14px !important;
-    font-size:0.68rem !important;
-    font-weight:700;
-    background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2)) !important;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 2px 6px rgba(0,0,0,0.06);
-}
-[data-theme="dark"] .theme-btn,
-[data-theme="cosmic"] .theme-btn {
-    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)) !important;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 6px rgba(0,0,0,0.3);
-}
 .theme-btn .emoji { font-size:1.5rem !important; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); }
-.theme-btn.active {
-    box-shadow: 0 0 0 3px var(--accent), 0 6px 18px var(--accent-light), inset 0 1px 0 rgba(255,255,255,0.4) !important;
-}
-
-/* Превью-полоска вверху панели */
-.settings-preview {
-    height: 6px;
-    border-radius: 3px;
-    background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent)), var(--green, var(--accent)));
-    margin-bottom: 16px;
-    box-shadow: 0 2px 8px var(--accent-light);
-}
-
-/* Счётчик уроков */
-.lesson-count {
-    display:inline-flex; align-items:center; gap:4px;
-    padding:3px 10px; border-radius:20px;
-    background: var(--accent-light);
-    color: var(--accent);
-    font-weight:800; font-size:0.68rem;
-    margin-left:auto;
-}
 
 html.hide-past .card.past { display:none; }
 html.round-nums .num { border-radius: 50% !important; }
@@ -1667,7 +1613,7 @@ html.round-nums .card.now .num { border-radius: 50% !important; }
 
     <div class="settings-panel" id="settingsPanel">
         <div class="settings-preview"></div>
-        <div class="settings-title">🎨 Тема оформления</div>
+        <div class="settings-title">🎨 Тема</div>
         <div class="theme-options">
             <button class="theme-btn" data-theme-btn="light" onclick="setTheme('light')"><span class="emoji">☀️</span>Светлая</button>
             <button class="theme-btn" data-theme-btn="dark" onclick="setTheme('dark')"><span class="emoji">🌙</span>Тёмная</button>
@@ -1735,21 +1681,25 @@ var icons = {light:'☀️', dark:'🌙', cosmic:'🌌', ocean:'🌊', sunset:'�
     });
     if (localStorage.getItem('rs_compact') === '1') document.documentElement.classList.add('compact');
     if (localStorage.getItem('rs_hide_time') === '1') document.documentElement.classList.add('hide-time');
+    if (localStorage.getItem('rs_hide_past') === '1') document.documentElement.classList.add('hide-past');
+    if (localStorage.getItem('rs_round_nums') === '1') document.documentElement.classList.add('round-nums');
     document.getElementById('tCompact').classList.toggle('on', localStorage.getItem('rs_compact') === '1');
     document.getElementById('tHideTime').classList.toggle('on', localStorage.getItem('rs_hide_time') === '1');
+    var _t3=document.getElementById('tHidePast'); if(_t3) _t3.classList.toggle('on', localStorage.getItem('rs_hide_past')==='1');
+    var _t4=document.getElementById('tRoundNums'); if(_t4) _t4.classList.toggle('on', localStorage.getItem('rs_round_nums')==='1');
+    var _t5=document.getElementById('tParticles'); if(_t5) _t5.classList.toggle('on', localStorage.getItem('rs_particles')!=='0');
 })();
-function setTheme(t){
+
+function toggleHidePast(){var on=document.documentElement.classList.toggle('hide-past');localStorage.setItem('rs_hide_past',on?'1':'0');var e=document.getElementById('tHidePast');if(e)e.classList.toggle('on',on);}
+function toggleRoundNums(){var on=document.documentElement.classList.toggle('round-nums');localStorage.setItem('rs_round_nums',on?'1':'0');var e=document.getElementById('tRoundNums');if(e)e.classList.toggle('on',on);}
+function toggleParticles(){var on=localStorage.getItem('rs_particles')!=='0';on=!on;localStorage.setItem('rs_particles',on?'1':'0');var e=document.getElementById('tParticles');if(e)e.classList.toggle('on',on);if(on){spawnParticles(document.documentElement.getAttribute('data-theme'));}else{var c=document.getElementById('particles');if(c)c.innerHTML='';}}
+
+function setTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
     localStorage.setItem('rs_theme', t);
-    document.querySelectorAll('[data-theme-btn]').forEach(function(b){b.classList.toggle('active', b.getAttribute('data-theme-btn')===t);});
-    var meta = document.getElementById('themeColorMeta');
-    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4'};
-    if (meta) meta.setAttribute('content', colors[t] || '#f0f4f8');
-    var icons = {light:'☀️', dark:'🌙', cosmic:'🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸'};
-    var logo = document.getElementById('brandLogo');
-    if (logo) logo.textContent = icons[t] || '📅';
-    spawnParticles(t);
-});
+    document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('data-theme-btn') === t);
+    });
     var meta = document.getElementById('themeColorMeta');
     var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4'};
 var icons = {light:'☀️', dark:'🌙', cosmic:'🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸'};
@@ -1774,73 +1724,6 @@ function toggleHideTime() {
     localStorage.setItem('rs_hide_time', on ? '1' : '0');
     document.getElementById('tHideTime').classList.toggle('on', on);
 }
-
-/* === НАСТРОЙКИ === */
-function toggleCompact(){var on=document.documentElement.classList.toggle('compact');localStorage.setItem('rs_compact',on?'1':'0');document.getElementById('tCompact').classList.toggle('on',on);}
-
-
-
-else{var c=document.getElementById('particles');if(c)c.innerHTML='';}}
-
-/* === ЧАСТИЦЫ (переписано чисто) === */
-function spawnParticles(theme){
-    var c = document.getElementById('particles');
-    if (!c) return;
-    c.innerHTML = '';
-    if (localStorage.getItem('rs_particles') === '0') return;
-    if (window.innerWidth < 320) return;
-    var configs = {
-        cosmic: { chars: ['✦','✧','·','+'], colors: ['#ffffff','#b794f6','#7cf5c0','#e0d4ff'], count: 18, sizes: [10,18], dur: [15,28] },
-        sakura: { chars: ['🌸','🌸','❀','✿'], colors: ['#ec4899','#f9a8d4','#fbcfe8'], count: 14, sizes: [14,22], dur: [11,20] },
-        forest: { chars: ['🍃','🌿','🍂'], colors: ['#059669','#16a34a','#84cc16'], count: 12, sizes: [14,22], dur: [13,24] },
-        ocean:  { chars: ['●','○','·','◦'], colors: ['rgba(34,211,238,0.85)','rgba(8,145,178,0.75)','rgba(255,255,255,0.7)'], count: 12, sizes: [8,16], dur: [11,20] },
-        sunset: { chars: ['✨','·','✦','∘'], colors: ['#f97316','#ec4899','#fbbf24'], count: 10, sizes: [10,18], dur: [13,22] }
-    };
-    var cfg = configs[theme];
-    if (!cfg) return;
-    var isMobile = window.innerWidth < 820;
-    var n = isMobile ? Math.max(6, Math.round(cfg.count * 0.65)) : cfg.count;
-    var frag = document.createDocumentFragment();
-    for (var i = 0; i < n; i++) {
-        var el = document.createElement('span');
-        el.className = 'particle';
-        el.textContent = cfg.chars[Math.floor(Math.random() * cfg.chars.length)];
-        el.style.left = (Math.random() * 100) + '%';
-        var size = cfg.sizes[0] + Math.random() * (cfg.sizes[1] - cfg.sizes[0]);
-        el.style.fontSize = size + 'px';
-        el.style.color = cfg.colors[Math.floor(Math.random() * cfg.colors.length)];
-        var dur = cfg.dur[0] + Math.random() * (cfg.dur[1] - cfg.dur[0]);
-        el.style.animationDuration = dur + 's';
-        el.style.animationDelay = (-Math.random() * dur) + 's';
-        frag.appendChild(el);
-    }
-    c.appendChild(frag);
-}
-document.addEventListener('visibilitychange', function() {
-    var ps = document.hidden ? 'paused' : 'running';
-    document.querySelectorAll('.particle').forEach(function(p){ p.style.animationPlayState = ps; });
-});
-
-/* Init всех настроек */
-(function(){
-    ['compact','hide_time','hide_past','round_nums'].forEach(function(k){
-        if (localStorage.getItem('rs_'+k) === '1') document.documentElement.classList.add(k.replace('_','-'));
-    });
-    var t1=document.getElementById('tCompact'); if(t1) t1.classList.toggle('on', localStorage.getItem('rs_compact')==='1');
-    var t2=document.getElementById('tHideTime'); if(t2) t2.classList.toggle('on', localStorage.getItem('rs_hide_time')==='1');
-    var t3=document.getElementById('tHidePast'); if(t3) t3.classList.toggle('on', localStorage.getItem('rs_hide_past')==='1');
-    var t4=document.getElementById('tRoundNums'); if(t4) t4.classList.toggle('on', localStorage.getItem('rs_round_nums')==='1');
-    var t5=document.getElementById('tParticles'); if(t5) t5.classList.toggle('on', localStorage.getItem('rs_particles')!=='0');
-    
-})();
-
-
-function toggleHidePast(){var on=document.documentElement.classList.toggle('hide-past');localStorage.setItem('rs_hide_past',on?'1':'0');var e=document.getElementById('tHidePast');if(e)e.classList.toggle('on',on);}
-function toggleRoundNums(){var on=document.documentElement.classList.toggle('round-nums');localStorage.setItem('rs_round_nums',on?'1':'0');var e=document.getElementById('tRoundNums');if(e)e.classList.toggle('on',on);}
-function toggleParticles(){var on=localStorage.getItem('rs_particles')!=='0';on=!on;localStorage.setItem('rs_particles',on?'1':'0');var e=document.getElementById('tParticles');if(e)e.classList.toggle('on',on);if(on){spawnParticles(document.documentElement.getAttribute('data-theme'));}else{var c=document.getElementById('particles');if(c)c.innerHTML='';}}
-function toggleCompact(){var on=document.documentElement.classList.toggle('compact');localStorage.setItem('rs_compact',on?'1':'0');var e=document.getElementById('tCompact');if(e)e.classList.toggle('on',on);}
-function toggleHideTime(){var on=document.documentElement.classList.toggle('hide-time');localStorage.setItem('rs_hide_time',on?'1':'0');var e=document.getElementById('tHideTime');if(e)e.classList.toggle('on',on);}
-
 function toggleSettings(e) {
     if (e) e.stopPropagation();
     document.getElementById('settingsPanel').classList.toggle('open');
@@ -1889,6 +1772,45 @@ function doInstall() {
         deferredPrompt = null; renderInstallSection();
     });
 }
+
+
+
+
+/* === ЧАСТИЦЫ ПО ТЕМАМ === */
+function spawnParticles(theme) {
+    var container = document.getElementById('particles');
+    if (!container) return;
+    container.innerHTML = '';
+    if (localStorage.getItem('rs_particles') === '0') return;
+    if (window.innerWidth < 300) return;
+    var configs = {
+        cosmic: { chars: ['✦','✧','·','+'], colors: ['#ffffff','#b794f6','#7cf5c0','#e0d4ff'], count: 18, sizes: [10,18], dur: [15,28] },
+        sakura: { chars: ['🌸','🌸','❀'], colors: ['#ec4899','#f9a8d4','#fbcfe8'], count: 14, sizes: [14,22], dur: [11,20] },
+        forest: { chars: ['🍃','🌿'], colors: ['#059669','#16a34a','#84cc16'], count: 12, sizes: [14,22], dur: [13,24] },
+        ocean:  { chars: ['●','○','·'], colors: ['rgba(34,211,238,0.75)','rgba(8,145,178,0.65)','rgba(255,255,255,0.55)'], count: 12, sizes: [8,16], dur: [11,20] },
+        sunset: { chars: ['✨','·','✦'], colors: ['#f97316','#ec4899','#fbbf24'], count: 10, sizes: [10,18], dur: [13,22] }
+    };
+    var cfg = configs[theme];
+    if (!cfg) return;
+    var isMobile = window.innerWidth < 820;
+    var n = isMobile ? Math.max(6, Math.round(cfg.count * 0.6)) : cfg.count;
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < n; i++) {
+        var el = document.createElement('span');
+        el.className = 'particle';
+        el.textContent = cfg.chars[Math.floor(Math.random() * cfg.chars.length)];
+        el.style.left = (Math.random() * 100) + '%';
+        var size = cfg.sizes[0] + Math.random() * (cfg.sizes[1] - cfg.sizes[0]);
+        el.style.fontSize = size + 'px';
+        el.style.color = cfg.colors[Math.floor(Math.random() * cfg.colors.length)];
+        var dur = cfg.dur[0] + Math.random() * (cfg.dur[1] - cfg.dur[0]);
+        el.style.animationDuration = dur + 's';
+        el.style.animationDelay = (-Math.random() * dur) + 's';
+        frag.appendChild(el);
+    }
+    container.appendChild(frag);
+}
+spawnParticles(localStorage.getItem('rs_theme') || 'light');
 document.addEventListener('visibilitychange', function() {
     var ps = document.hidden ? 'paused' : 'running';
     document.querySelectorAll('.particle').forEach(function(p) { p.style.animationPlayState = ps; });
@@ -1992,10 +1914,10 @@ def build_content(days_schedule, active_day, error_msg, live_status):
             for tv, num, lesson in lessons:
                 cls = "card"; pill = ""
                 try:
-                    end_time = tv.split('-')[1]
-                    eh2, em2 = map(int, end_time.split(':'))
-                    now2 = datetime.now(PERM_TZ)
-                    if full == today_full and (now2.hour * 60 + now2.minute) >= eh2 * 60 + em2:
+                    _end = tv.split('-')[1]
+                    _eh, _em = map(int, _end.split(':'))
+                    _now = datetime.now(PERM_TZ)
+                    if full == today_full and (_now.hour * 60 + _now.minute) >= _eh * 60 + _em:
                         cls += " past"
                 except Exception: pass
                 if full == today_full and live_status and live_status["type"] == "now" and num == live_status["num"]:
