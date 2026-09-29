@@ -265,9 +265,9 @@ body {
         radial-gradient(1px 1px at 340px 100px, rgba(255,255,255,0.65), transparent 60%),
         radial-gradient(1.8px 1.8px at 90px 130px, rgba(183,148,246,0.9), transparent 60%);
     background-size:460px 380px; background-repeat:repeat;
-    animation:twinkle 6s ease-in-out infinite alternate;
+    
 }
-@keyframes twinkle { 0% { opacity:0.7; } 100% { opacity:1; } }
+ 100% { opacity:1; } }
 .container { width:100%; max-width:500px; position:relative; z-index:1; }
 
 .header-card {
@@ -1001,9 +1001,9 @@ html.hide-time .time { display:none; }
         radial-gradient(1px 1px at 400px 300px, rgba(255,255,255,0.75), transparent 60%),
         radial-gradient(1.3px 1.3px at 30px 340px, rgba(124,245,192,0.85), transparent 60%);
     background-size:460px 380px; background-repeat:repeat;
-    animation:twinkle 5s ease-in-out infinite alternate;
+    
 }
-@keyframes twinkle { 0% { opacity:0.6; } 100% { opacity:1; } }
+ 100% { opacity:1; } }
 
 /* Океан — волны снизу */
 [data-theme="ocean"] body::before {
@@ -1016,19 +1016,18 @@ html.hide-time .time { display:none; }
     content:""; position:fixed; top:40px; right:30px;
     width:120px; height:120px; border-radius:50%; z-index:0; pointer-events:none;
     background:radial-gradient(circle, rgba(255,255,255,0.5), transparent 70%);
-    animation:floatUp 6s ease-in-out infinite alternate;
+    
 }
-@keyframes floatUp { from { transform:translateY(0); } to { transform:translateY(-10px); } }
+ to { transform:translateY(-10px); } }
 
 /* Закат — пульсирующее солнце */
 [data-theme="sunset"] body::before {
     content:""; position:fixed; top:60px; right:50px;
     width:160px; height:160px; border-radius:50%; z-index:0; pointer-events:none;
     background:radial-gradient(circle, rgba(255,250,200,0.9) 0%, rgba(255,200,120,0.5) 40%, transparent 70%);
-    animation:sunPulse 6s ease-in-out infinite;
+    
 }
-@keyframes sunPulse {
-    0%,100% { transform:scale(1); opacity:0.9; }
+
     50% { transform:scale(1.08); opacity:1; }
 }
 
@@ -1048,9 +1047,9 @@ html.hide-time .time { display:none; }
         radial-gradient(circle at 85% 15%, rgba(255,150,200,0.2), transparent 30%),
         radial-gradient(circle at 75% 75%, rgba(236,72,153,0.12), transparent 30%),
         radial-gradient(circle at 25% 85%, rgba(255,192,220,0.18), transparent 25%);
-    animation:softFloat 8s ease-in-out infinite alternate;
+    
 }
-@keyframes softFloat { from { transform:translateY(0); } to { transform:translateY(-8px); } }
+ to { transform:translateY(-8px); } }
 
 /* Частицы (JS создаёт) */
 #particles { position:fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden; }
@@ -1630,7 +1629,7 @@ html.round-nums .card.now .num { border-radius: 50% !important; }
 }
 
 /* 🌊 ОКЕАН — водоросли снизу */
-[data-theme="ocean"] .side-decor { display: block; }
+[data-theme="ocean"] .side-decor { display: none !important; }
 [data-theme="ocean"] .side-decor {
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 260'><path d='M30,260 Q20,220 35,180 Q50,140 30,100 Q15,70 30,30' stroke='%2310b981' stroke-width='10' fill='none' stroke-linecap='round' opacity='0.7'/><path d='M55,260 Q70,220 55,180 Q40,140 60,100 Q75,70 60,40' stroke='%23059669' stroke-width='9' fill='none' stroke-linecap='round' opacity='0.65'/><path d='M85,260 Q70,210 85,170 Q100,130 85,90' stroke='%230ea5e9' stroke-width='8' fill='none' stroke-linecap='round' opacity='0.6'/><path d='M110,260 Q120,220 110,180 Q95,150 115,110' stroke='%2314b8a6' stroke-width='8' fill='none' stroke-linecap='round' opacity='0.55'/><g fill='%23fb7185'><circle cx='30' cy='30' r='6'/><circle cx='60' cy='40' r='5'/><circle cx='85' cy='90' r='5'/><circle cx='115' cy='110' r='6'/></g><g fill='%23fbbf24'><circle cx='45' cy='55' r='3'/><circle cx='70' cy='30' r='3'/><circle cx='100' cy='75' r='3'/></g></svg>");
 }
@@ -1674,12 +1673,9 @@ html.compact .side-decor { opacity: 0.5; }
     height: 8px !important;
     border-radius: 4px !important;
     background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent)), var(--accent)) !important;
-    background-size: 200% 100% !important;
     margin-bottom: 16px !important;
     box-shadow: 0 3px 12px var(--accent-light, rgba(99,102,241,0.3)) !important;
-    animation: shine 4s linear infinite;
 }
-@keyframes shine { from { background-position: 0% 0; } to { background-position: 200% 0; } }
 
 /* Стилизация панели под каждую тему */
 [data-theme="ocean"] .settings-panel {
