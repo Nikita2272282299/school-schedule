@@ -1749,6 +1749,36 @@ html.compact .side-decor { opacity: 0.5; }
 [data-theme="forest"] .settings-panel { border-radius: 26px 10px 26px 10px !important; }
 [data-theme="sakura"] .settings-panel { border-radius: 24px !important; }
 [data-theme="cosmic"] .settings-panel { border-radius: 22px !important; }
+
+/* ===== ШАПКА ПОД ТЕМУ ===== */
+[data-theme="light"] .header-card {
+    background: linear-gradient(135deg, #ffffff 0%, #eef3fb 100%);
+    border-color: rgba(99,102,241,0.12);
+}
+[data-theme="dark"] .header-card {
+    background: linear-gradient(135deg, #1e222e 0%, #15171f 100%);
+    border-color: rgba(255,255,255,0.08);
+}
+[data-theme="cosmic"] .header-card {
+    background: linear-gradient(135deg, rgba(60,40,120,0.9) 0%, rgba(30,18,70,0.95) 100%);
+    border-color: rgba(183,148,246,0.35);
+}
+[data-theme="ocean"] .header-card {
+    background: linear-gradient(135deg, rgba(220,245,252,0.95) 0%, rgba(180,230,245,0.9) 100%);
+    border-color: rgba(34,211,238,0.4);
+}
+[data-theme="sunset"] .header-card {
+    background: linear-gradient(135deg, rgba(255,240,220,0.95) 0%, rgba(255,210,170,0.9) 100%);
+    border-color: rgba(249,115,22,0.3);
+}
+[data-theme="forest"] .header-card {
+    background: linear-gradient(135deg, rgba(230,245,220,0.95) 0%, rgba(190,225,170,0.9) 100%);
+    border-color: rgba(5,150,105,0.3);
+}
+[data-theme="sakura"] .header-card {
+    background: linear-gradient(135deg, rgba(255,240,246,0.95) 0%, rgba(255,210,225,0.9) 100%);
+    border-color: rgba(236,72,153,0.3);
+}
 </style>
 </head>
 <body>
