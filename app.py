@@ -484,11 +484,36 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
     border:1px solid var(--border);
 }
 .sheet-link {
-    display:flex; align-items:center; justify-content:center; gap:6px;
-    text-align:center; margin-top:22px; color:var(--text-muted);
-    text-decoration:none; font-size:0.85rem; font-weight:700;
-    padding:12px; border-radius:12px; border:1px dashed var(--border);
-    background:var(--card-bg); opacity:0.85;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    text-align:center; margin-top:22px;
+    color: var(--accent);
+    text-decoration:none; font-size:0.85rem; font-weight:800;
+    padding:13px 16px; border-radius:14px;
+    border: 1.5px solid var(--accent);
+    background: linear-gradient(135deg, var(--accent-light), var(--card-bg));
+    box-shadow: 0 4px 14px var(--accent-light), inset 0 1px 0 rgba(255,255,255,0.5);
+    transition: transform 0.12s, box-shadow 0.15s;
+}
+.sheet-link:active {
+    transform: scale(0.97);
+    box-shadow: 0 2px 8px var(--accent-light);
+}
+.sheet-link .sheet-icon {
+    font-size:1.05rem;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15));
+}
+
+/* Тёмные темы — особый стиль */
+[data-theme="dark"] .sheet-link,
+[data-theme="cosmic"] .sheet-link {
+    background: linear-gradient(135deg, var(--accent-light), var(--card-bg));
+    border-color: var(--accent);
+    box-shadow: 0 4px 16px var(--accent-light), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* Космос — со свечением */
+[data-theme="cosmic"] .sheet-link {
+    box-shadow: 0 4px 20px rgba(183,148,246,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
 html.font-small .lesson { font-size:0.9rem; }
