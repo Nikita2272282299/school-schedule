@@ -899,9 +899,165 @@ html.hide-time .time { display:none; }
     border:2px solid rgba(236,72,153,0.18);
     box-shadow:0 6px 24px rgba(236,72,153,0.18);
 }
+
+/* === КРАСОТА — без тормозов === */
+
+/* Атмосферные фоны для каждой темы */
+[data-theme="light"] body {
+    background-image:
+        radial-gradient(ellipse at 20% 10%, rgba(99,102,241,0.15), transparent 45%),
+        radial-gradient(ellipse at 80% 90%, rgba(168,85,247,0.10), transparent 45%),
+        linear-gradient(180deg,#f1f5fa 0%,#e4ebf3 100%);
+}
+[data-theme="dark"] body {
+    background-image:
+        radial-gradient(ellipse at 20% 10%, rgba(99,102,241,0.18), transparent 45%),
+        radial-gradient(ellipse at 80% 90%, rgba(192,132,252,0.12), transparent 45%),
+        linear-gradient(180deg,#10131a 0%,#0b0d12 100%);
+}
+[data-theme="cosmic"] body {
+    background-image:
+        radial-gradient(ellipse at 20% 15%, rgba(139,92,246,0.32), transparent 45%),
+        radial-gradient(ellipse at 85% 75%, rgba(56,189,248,0.22), transparent 50%),
+        radial-gradient(ellipse at 60% 40%, rgba(124,245,192,0.10), transparent 55%),
+        linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%);
+}
+[data-theme="ocean"] body {
+    background-image:
+        radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.55), transparent 50%),
+        radial-gradient(ellipse at 20% 80%, rgba(34,211,238,0.25), transparent 50%),
+        linear-gradient(180deg,#c7e8f5 0%,#94d0e6 45%,#5aafd0 100%);
+}
+[data-theme="sunset"] body {
+    background-image:
+        radial-gradient(circle at 75% 25%, rgba(255,240,180,0.55), transparent 30%),
+        radial-gradient(circle at 75% 25%, rgba(255,180,90,0.4), transparent 45%),
+        linear-gradient(180deg,#ffe0a8 0%,#ffb572 40%,#e88898 100%);
+}
+[data-theme="forest"] body {
+    background-image:
+        radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.5), transparent 45%),
+        radial-gradient(ellipse at 15% 85%, rgba(132,204,22,0.22), transparent 50%),
+        linear-gradient(180deg,#dff0d0 0%,#b8dfa8 40%,#7abb6c 100%);
+}
+[data-theme="sakura"] body {
+    background-image:
+        radial-gradient(ellipse at 85% 15%, rgba(255,180,215,0.7), transparent 45%),
+        radial-gradient(ellipse at 15% 80%, rgba(220,180,255,0.5), transparent 45%),
+        linear-gradient(180deg,#ffeaf0 0%,#ffd0dd 50%,#ffb0c8 100%);
+}
+
+/* Космос — звёзды поверх фона */
+[data-theme="cosmic"] body::before {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+        radial-gradient(1.5px 1.5px at 24px 32px, rgba(255,255,255,0.95), transparent 60%),
+        radial-gradient(1px 1px at 118px 88px, rgba(255,255,255,0.8), transparent 60%),
+        radial-gradient(2px 2px at 210px 156px, rgba(183,148,246,1), transparent 60%),
+        radial-gradient(1px 1px at 60px 200px, rgba(255,255,255,0.7), transparent 60%),
+        radial-gradient(1.5px 1.5px at 260px 40px, rgba(124,245,192,1), transparent 60%),
+        radial-gradient(1.2px 1.2px at 180px 240px, rgba(255,255,255,0.85), transparent 60%),
+        radial-gradient(1px 1px at 340px 100px, rgba(255,255,255,0.65), transparent 60%),
+        radial-gradient(1.8px 1.8px at 90px 130px, rgba(183,148,246,0.9), transparent 60%),
+        radial-gradient(1px 1px at 400px 300px, rgba(255,255,255,0.75), transparent 60%),
+        radial-gradient(1.3px 1.3px at 30px 340px, rgba(124,245,192,0.85), transparent 60%);
+    background-size:460px 380px; background-repeat:repeat;
+    animation:twinkle 5s ease-in-out infinite alternate;
+}
+@keyframes twinkle { 0% { opacity:0.6; } 100% { opacity:1; } }
+
+/* Океан — волны снизу */
+[data-theme="ocean"] body::before {
+    content:""; position:fixed; left:0; right:0; bottom:0;
+    height:160px; z-index:0; pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 160' preserveAspectRatio='none'><path d='M0,80 Q75,40 150,80 T300,80 T450,80 T600,80 L600,160 L0,160 Z' fill='%230891b2' opacity='0.3'/><path d='M0,110 Q75,70 150,110 T300,110 T450,110 T600,110 L600,160 L0,160 Z' fill='%2306b6d4' opacity='0.45'/><path d='M0,135 Q75,105 150,135 T300,135 T450,135 T600,135 L600,160 L0,160 Z' fill='%23064a5c' opacity='0.5'/></svg>");
+    background-size:100% 100%; background-repeat:repeat-x;
+}
+[data-theme="ocean"] body::after {
+    content:""; position:fixed; top:40px; right:30px;
+    width:120px; height:120px; border-radius:50%; z-index:0; pointer-events:none;
+    background:radial-gradient(circle, rgba(255,255,255,0.5), transparent 70%);
+    animation:floatUp 6s ease-in-out infinite alternate;
+}
+@keyframes floatUp { from { transform:translateY(0); } to { transform:translateY(-10px); } }
+
+/* Закат — пульсирующее солнце */
+[data-theme="sunset"] body::before {
+    content:""; position:fixed; top:60px; right:50px;
+    width:160px; height:160px; border-radius:50%; z-index:0; pointer-events:none;
+    background:radial-gradient(circle, rgba(255,250,200,0.9) 0%, rgba(255,200,120,0.5) 40%, transparent 70%);
+    animation:sunPulse 6s ease-in-out infinite;
+}
+@keyframes sunPulse {
+    0%,100% { transform:scale(1); opacity:0.9; }
+    50% { transform:scale(1.08); opacity:1; }
+}
+
+/* Лес — силуэты ёлок снизу */
+[data-theme="forest"] body::before {
+    content:""; position:fixed; left:0; right:0; bottom:0;
+    height:150px; z-index:0; pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 150' preserveAspectRatio='none'><g fill='%232d5a1f' opacity='0.55'><path d='M30,150 L30,100 L15,100 L40,65 L65,100 L50,100 L50,150 Z'/><path d='M110,150 L110,90 L90,90 L120,50 L150,90 L130,90 L130,150 Z'/><path d='M200,150 L200,110 L185,110 L210,75 L235,110 L220,110 L220,150 Z'/><path d='M290,150 L290,95 L270,95 L300,55 L330,95 L310,95 L310,150 Z'/><path d='M370,150 L370,105 L355,105 L380,70 L405,105 L390,105 L390,150 Z'/></g></svg>");
+    background-size:100% 100%; background-repeat:repeat-x;
+}
+
+/* Сакура — розовые пятна */
+[data-theme="sakura"] body::before {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+        radial-gradient(circle at 15% 20%, rgba(236,72,153,0.18), transparent 25%),
+        radial-gradient(circle at 85% 15%, rgba(255,150,200,0.2), transparent 30%),
+        radial-gradient(circle at 75% 75%, rgba(236,72,153,0.12), transparent 30%),
+        radial-gradient(circle at 25% 85%, rgba(255,192,220,0.18), transparent 25%);
+    animation:softFloat 8s ease-in-out infinite alternate;
+}
+@keyframes softFloat { from { transform:translateY(0); } to { transform:translateY(-8px); } }
+
+/* Частицы (JS создаёт) */
+#particles { position:fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden; }
+.particle {
+    position:absolute; top:-40px; user-select:none;
+    animation-name:fall; animation-timing-function:linear; animation-iteration-count:infinite;
+    will-change:transform;
+}
+@keyframes fall {
+    0% { transform:translate3d(0,-40px,0) rotate(0deg); opacity:0; }
+    10% { opacity:0.85; }
+    90% { opacity:0.85; }
+    100% { transform:translate3d(30px,110vh,0) rotate(360deg); opacity:0; }
+}
+
+/* Улучшенные тени карточек */
+.card {
+    box-shadow: 0 3px 14px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.03);
+}
+[data-theme="cosmic"] .card {
+    box-shadow: 0 4px 20px rgba(120,60,220,0.25), 0 0 0 1px rgba(183,148,246,0.15);
+}
+[data-theme="ocean"] .card {
+    box-shadow: 0 3px 14px rgba(8,145,178,0.14);
+}
+[data-theme="sunset"] .card {
+    box-shadow: 0 3px 14px rgba(249,115,22,0.14);
+}
+[data-theme="forest"] .card {
+    box-shadow: 0 3px 14px rgba(5,150,105,0.12);
+}
+[data-theme="sakura"] .card {
+    box-shadow: 0 3px 14px rgba(236,72,153,0.12);
+}
+
+/* Логотип: лёгкая тень */
+.brand-logo { box-shadow:0 4px 14px var(--accent-light, rgba(0,0,0,0.08)); }
+[data-theme="cosmic"] .brand-logo { box-shadow:0 4px 18px rgba(183,148,246,0.4); }
+
+/* Кнопки-темы: мягкий подъём */
+.theme-btn, .size-btn { transition: background 0.15s, box-shadow 0.15s, transform 0.1s; }
+.theme-btn:active, .size-btn:active { transform: scale(0.94); }
 </style>
 </head>
 <body>
+<div id="particles"></div>
 <div class="container">
 
 <div class="header-card">
@@ -1051,6 +1207,46 @@ function doInstall() {
 }
 
 
+
+
+/* === ЧАСТИЦЫ ПО ТЕМАМ === */
+function spawnParticles(theme) {
+    var container = document.getElementById('particles');
+    if (!container) return;
+    container.innerHTML = '';
+    if (window.innerWidth < 300) return;
+    var configs = {
+        cosmic: { chars: ['✦','✧','·','+'], colors: ['#ffffff','#b794f6','#7cf5c0','#e0d4ff'], count: 18, sizes: [10,18], dur: [15,28] },
+        sakura: { chars: ['🌸','🌸','❀'], colors: ['#ec4899','#f9a8d4','#fbcfe8'], count: 14, sizes: [14,22], dur: [11,20] },
+        forest: { chars: ['🍃','🌿'], colors: ['#059669','#16a34a','#84cc16'], count: 12, sizes: [14,22], dur: [13,24] },
+        ocean:  { chars: ['●','○','·'], colors: ['rgba(34,211,238,0.75)','rgba(8,145,178,0.65)','rgba(255,255,255,0.55)'], count: 12, sizes: [8,16], dur: [11,20] },
+        sunset: { chars: ['✨','·','✦'], colors: ['#f97316','#ec4899','#fbbf24'], count: 10, sizes: [10,18], dur: [13,22] }
+    };
+    var cfg = configs[theme];
+    if (!cfg) return;
+    var isMobile = window.innerWidth < 820;
+    var n = isMobile ? Math.max(6, Math.round(cfg.count * 0.6)) : cfg.count;
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < n; i++) {
+        var el = document.createElement('span');
+        el.className = 'particle';
+        el.textContent = cfg.chars[Math.floor(Math.random() * cfg.chars.length)];
+        el.style.left = (Math.random() * 100) + '%';
+        var size = cfg.sizes[0] + Math.random() * (cfg.sizes[1] - cfg.sizes[0]);
+        el.style.fontSize = size + 'px';
+        el.style.color = cfg.colors[Math.floor(Math.random() * cfg.colors.length)];
+        var dur = cfg.dur[0] + Math.random() * (cfg.dur[1] - cfg.dur[0]);
+        el.style.animationDuration = dur + 's';
+        el.style.animationDelay = (-Math.random() * dur) + 's';
+        frag.appendChild(el);
+    }
+    container.appendChild(frag);
+}
+spawnParticles(localStorage.getItem('rs_theme') || 'light');
+document.addEventListener('visibilitychange', function() {
+    var ps = document.hidden ? 'paused' : 'running';
+    document.querySelectorAll('.particle').forEach(function(p) { p.style.animationPlayState = ps; });
+});
 
 renderInstallSection();
 if ('serviceWorker' in navigator) {
