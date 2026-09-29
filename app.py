@@ -233,7 +233,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 [data-theme="forest"] body { background-image:linear-gradient(180deg,#dff0d0 0%,#b8dfa8 40%,#7abb6c 100%); }
 [data-theme="sakura"] body { background-image:linear-gradient(180deg,#ffeaf0 0%,#ffd0dd 50%,#ffb0c8 100%); }
 
-html { min-height:100%; background:var(--bg); }
+html { min-height: 100%; }
 * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 body {
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -1038,13 +1038,7 @@ html.hide-time .time { display:none; }
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 160' preserveAspectRatio='none'><path d='M0,80 Q75,40 150,80 T300,80 T450,80 T600,80 L600,160 L0,160 Z' fill='%230891b2' opacity='0.3'/><path d='M0,110 Q75,70 150,110 T300,110 T450,110 T600,110 L600,160 L0,160 Z' fill='%2306b6d4' opacity='0.45'/><path d='M0,135 Q75,105 150,135 T300,135 T450,135 T600,135 L600,160 L0,160 Z' fill='%23064a5c' opacity='0.5'/></svg>");
     background-size:100% 100%; background-repeat:repeat-x;
 }
-[data-theme="ocean"] body::after {
-    content:""; position:fixed; top:40px; right:30px;
-    width:120px; height:120px; border-radius:50%; z-index:0; pointer-events:none;
-    background:radial-gradient(circle, rgba(255,255,255,0.5), transparent 70%);
-    
-}
- to { transform:translateY(-10px); } }
+[data-theme="ocean"] to { transform:translateY(-10px); } }
 
 /* Закат — пульсирующее солнце */
 [data-theme="sunset"] body::before {
@@ -2268,6 +2262,172 @@ html.compact .side-decor { opacity: 0.5; }
 .tab.active {
     box-shadow: 0 4px 14px var(--accent-light), inset 0 1px 0 rgba(255,255,255,0.3) !important;
 }
+
+/* ===== НОВЫЕ КРАСИВЫЕ ТЕМЫ ===== */
+
+/* 🌺 РОЗА — тёмно-бордовая с золотом */
+/* 🌃 СУМЕРКИ — сине-фиолетовый с оранжевыми бликами */
+[data-theme="twilight"] {
+    --bg:#0f0825; --card-bg:rgba(35,20,70,0.88); --text-main:#ece6ff; --text-muted:#9d8ec0;
+    --accent:#8b5cf6; --accent2:#f97316; --accent-light:rgba(139,92,246,0.22); --today-badge:#7cf5c0;
+    --error:#f87171; --shadow:0 6px 24px rgba(139,92,246,0.35); --border:rgba(139,92,246,0.28);
+    --green:#7cf5c0; --green-soft:rgba(124,245,192,0.15);
+    --orange:#f97316; --orange-soft:rgba(249,115,22,0.15);
+    --num-bg:linear-gradient(135deg,#8b5cf6,#f97316); --num-color:#0f0825;
+    --num-shadow:0 0 16px rgba(139,92,246,0.55);
+    color-scheme:dark;
+}
+[data-theme="twilight"] body {
+    background-image:
+        radial-gradient(ellipse 55% 40% at 25% 20%, rgba(139,92,246,0.45), transparent 60%),
+        radial-gradient(ellipse 55% 35% at 80% 80%, rgba(249,115,22,0.35), transparent 60%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(56,189,248,0.15), transparent 65%),
+        radial-gradient(circle at 90% 30%, rgba(251,146,60,0.25), transparent 55%),
+        linear-gradient(180deg,#1a0f3a 0%,#0f0825 55%,#04010a 100%);
+}
+[data-theme="twilight"] .card {
+    background: linear-gradient(135deg, rgba(45,25,95,0.9) 0%, rgba(25,15,60,0.95) 100%);
+    border: 1px solid rgba(139,92,246,0.32);
+    box-shadow: 0 4px 22px rgba(139,92,246,0.28), inset 0 1px 0 rgba(249,115,22,0.15);
+}
+[data-theme="twilight"] .theme-btn.active {
+    background: linear-gradient(135deg,#8b5cf6,#f97316) !important;
+    color:#0f0825 !important;
+}
+
+/* ========== КАЖДАЯ ТЕМА СО СВОИМИ КАРТОЧКАМИ ========== */
+
+/* ☀️ СВЕТЛАЯ — тетрадный лист в клетку */
+[data-theme="light"] .card {
+    background:
+        radial-gradient(circle, rgba(99,102,241,0.08) 1px, transparent 1.5px),
+        linear-gradient(180deg, #ffffff 0%, #f7fafd 100%);
+    background-size: 16px 16px, 100% 100%;
+    border: 1px solid rgba(99,102,241,0.12);
+    box-shadow:
+        0 1px 2px rgba(99,102,241,0.05),
+        0 4px 12px rgba(99,102,241,0.08),
+        inset 0 1px 0 rgba(255,255,255,1);
+}
+[data-theme="light"] .num {
+    background: linear-gradient(135deg, #dbeafe 0%, #c7d2fe 100%);
+    color: #4338ca;
+    box-shadow: 0 2px 5px rgba(99,102,241,0.18), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+/* 🌙 ТЁМНАЯ — обсидиановая плита с блёстками */
+[data-theme="dark"] .card {
+    background:
+        radial-gradient(1px 1px at 15% 25%, rgba(255,255,255,0.5), transparent 70%),
+        radial-gradient(1px 1px at 55% 65%, rgba(199,210,254,0.6), transparent 70%),
+        radial-gradient(1px 1px at 85% 35%, rgba(255,255,255,0.4), transparent 70%),
+        linear-gradient(135deg, #232733 0%, #1a1d24 55%, #12141b 100%);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow:
+        0 2px 6px rgba(0,0,0,0.5),
+        0 8px 22px rgba(0,0,0,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+}
+[data-theme="dark"] .num {
+    background: linear-gradient(135deg, #2d3142 0%, #232741 100%);
+    color: #c7d2fe;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 1px 4px rgba(0,0,0,0.4);
+}
+
+/* 🌌 КОСМОС — звёздная плита (усилю) */
+[data-theme="cosmic"] .card {
+    background:
+        radial-gradient(1px 1px at 12% 20%, rgba(255,255,255,0.95), transparent 65%),
+        radial-gradient(1.5px 1.5px at 78% 25%, rgba(124,245,192,0.9), transparent 65%),
+        radial-gradient(1px 1px at 35% 75%, rgba(183,148,246,0.9), transparent 65%),
+        radial-gradient(1.5px 1.5px at 88% 80%, rgba(255,255,255,0.9), transparent 65%),
+        radial-gradient(1px 1px at 60% 50%, rgba(224,212,255,0.8), transparent 65%),
+        linear-gradient(135deg, rgba(50,30,100,0.92) 0%, rgba(25,15,60,0.96) 100%);
+    border: 1px solid rgba(183,148,246,0.32);
+    box-shadow:
+        0 3px 10px rgba(120,60,220,0.3),
+        0 10px 28px rgba(120,60,220,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* 🍇 АМЕТИСТ — кристалл-пластина с гранями */
+[data-theme="amethyst"] .card {
+    background:
+        linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.12) 45%, rgba(255,255,255,0.12) 55%, transparent 55%),
+        linear-gradient(-45deg, transparent 45%, rgba(236,72,153,0.15) 45%, rgba(236,72,153,0.15) 55%, transparent 55%),
+        linear-gradient(135deg, rgba(60,30,110,0.92) 0%, rgba(30,15,70,0.96) 100%);
+    background-size: 40px 40px, 40px 40px, 100% 100%;
+    border: 1px solid rgba(168,85,247,0.38);
+    box-shadow:
+        0 3px 10px rgba(168,85,247,0.3),
+        0 8px 24px rgba(168,85,247,0.25),
+        inset 0 1px 0 rgba(236,72,153,0.2);
+}
+
+/* 🌌 ТУМАННОСТЬ — облака с розовыми звёздами */
+[data-theme="nebula"] .card {
+    background:
+        radial-gradient(ellipse 40% 30% at 20% 25%, rgba(236,72,153,0.35), transparent 70%),
+        radial-gradient(ellipse 40% 35% at 85% 75%, rgba(139,92,246,0.4), transparent 70%),
+        radial-gradient(1px 1px at 15% 15%, rgba(255,255,255,0.95), transparent 65%),
+        radial-gradient(1px 1px at 80% 30%, rgba(249,168,212,1), transparent 65%),
+        radial-gradient(1.5px 1.5px at 40% 80%, rgba(196,181,253,0.95), transparent 65%),
+        radial-gradient(1px 1px at 90% 60%, rgba(255,255,255,0.9), transparent 65%),
+        linear-gradient(135deg, rgba(70,30,110,0.92) 0%, rgba(35,15,65,0.96) 100%);
+    border: 1px solid rgba(236,72,153,0.35);
+    box-shadow:
+        0 3px 10px rgba(236,72,153,0.28),
+        0 8px 24px rgba(236,72,153,0.2),
+        inset 0 1px 0 rgba(139,92,246,0.2);
+}
+
+/* 🌊 ГЛУБИНА — подводный камень с пузырьками */
+[data-theme="deep"] .card {
+    background:
+        radial-gradient(circle at 15% 20%, rgba(255,255,255,0.15) 3px, transparent 4px),
+        radial-gradient(circle at 75% 35%, rgba(124,245,192,0.2) 2px, transparent 3px),
+        radial-gradient(circle at 40% 75%, rgba(34,211,238,0.2) 2.5px, transparent 3.5px),
+        radial-gradient(circle at 85% 85%, rgba(255,255,255,0.15) 2px, transparent 3px),
+        linear-gradient(180deg, rgba(15,45,70,0.92) 0%, rgba(8,25,45,0.96) 100%);
+    border: 1px solid rgba(34,211,238,0.32);
+    box-shadow:
+        0 3px 10px rgba(34,211,238,0.25),
+        0 8px 24px rgba(34,211,238,0.2),
+        inset 0 1px 0 rgba(124,245,192,0.15);
+}
+
+/* 🌠 ГАЛАКТИКА — спиральный узор со звёздами */
+[data-theme="galaxy"] .card {
+    background:
+        radial-gradient(ellipse 60% 25% at 30% 50%, rgba(139,92,246,0.35), transparent 70%),
+        radial-gradient(ellipse 50% 20% at 70% 60%, rgba(6,182,212,0.3), transparent 70%),
+        radial-gradient(1px 1px at 25% 30%, rgba(255,255,255,0.95), transparent 65%),
+        radial-gradient(1.5px 1.5px at 65% 45%, rgba(236,72,153,1), transparent 65%),
+        radial-gradient(1px 1px at 85% 70%, rgba(255,255,255,0.9), transparent 65%),
+        radial-gradient(1px 1px at 40% 85%, rgba(6,182,212,0.95), transparent 65%),
+        linear-gradient(135deg, rgba(40,20,90,0.92) 0%, rgba(20,10,55,0.96) 100%);
+    border: 1px solid rgba(139,92,246,0.35);
+    box-shadow:
+        0 3px 10px rgba(139,92,246,0.3),
+        0 8px 24px rgba(6,182,212,0.2),
+        inset 0 1px 0 rgba(6,182,212,0.18);
+}
+
+/* 🌃 СУМЕРКИ — фиолетово-оранжевое небо */
+[data-theme="twilight"] .card {
+    background:
+        radial-gradient(ellipse 50% 30% at 25% 25%, rgba(139,92,246,0.35), transparent 70%),
+        radial-gradient(ellipse 45% 30% at 80% 80%, rgba(249,115,22,0.32), transparent 70%),
+        radial-gradient(1px 1px at 20% 15%, rgba(255,255,255,0.85), transparent 65%),
+        radial-gradient(1px 1px at 75% 30%, rgba(251,146,60,0.95), transparent 65%),
+        radial-gradient(1.5px 1.5px at 45% 75%, rgba(196,181,253,0.9), transparent 65%),
+        linear-gradient(135deg, rgba(45,25,95,0.92) 0%, rgba(25,15,60,0.96) 100%);
+    border: 1px solid rgba(139,92,246,0.32);
+    box-shadow:
+        0 3px 10px rgba(139,92,246,0.28),
+        0 8px 24px rgba(249,115,22,0.18),
+        inset 0 1px 0 rgba(249,115,22,0.15);
+}
 </style>
 </head>
 <body>
@@ -2294,6 +2454,8 @@ html.compact .side-decor { opacity: 0.5; }
             <button class="theme-btn" data-theme-btn="sunset" onclick="setTheme('sunset')"><span class="emoji">🌅</span>Закат</button>
             <button class="theme-btn" data-theme-btn="forest" onclick="setTheme('forest')"><span class="emoji">🌿</span>Лес</button>
             <button class="theme-btn" data-theme-btn="sakura" onclick="setTheme('sakura')"><span class="emoji">🌸</span>Сакура</button>
+            <button class="theme-btn" data-theme-btn="rose" onclick="setTheme('rose')"><span class="emoji">🌺</span>Роза</button>
+            <button class="theme-btn" data-theme-btn="twilight" onclick="setTheme('twilight')"><span class="emoji">🌃</span>Сумерки</button>
         </div>
         <div class="settings-title">🔤 Размер текста</div>
         <div class="size-options">
@@ -2339,8 +2501,8 @@ html.compact .side-decor { opacity: 0.5; }
     var saved = localStorage.getItem('rs_theme') || 'light';
     document.documentElement.setAttribute('data-theme', saved);
     var meta = document.getElementById('themeColorMeta');
-    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4'};
-var icons = {light:'☀️', dark:'🌙', cosmic:'🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸'};
+    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4', rose:'#2a0410', twilight:'#0f0825'};
+var icons = {light:'☀️', dark:'🌙', cosmic:'🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸', rose:'🌺', twilight:'🌃'};
     if (meta) meta.setAttribute('content', colors[saved] || '#f0f4f8');
     document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
         if (b.getAttribute('data-theme-btn') === saved) b.classList.add('active');
@@ -2373,8 +2535,8 @@ function setTheme(t) {
         b.classList.toggle('active', b.getAttribute('data-theme-btn') === t);
     });
     var meta = document.getElementById('themeColorMeta');
-    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4'};
-var icons = {light:'☀️', dark:'🌙', cosmic:'🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸'};
+    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4', rose:'#2a0410', twilight:'#0f0825'};
+var icons = {light:'☀️', dark:'🌙', cosmic:'🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸', rose:'🌺', twilight:'🌃'};
     if (meta) meta.setAttribute('content', colors[t] || '#f0f4f8');
     spawnParticles(t);
 }
