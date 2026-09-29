@@ -367,9 +367,9 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
     animation:fadeIn 0.3s ease;
 }
 @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
-.live-banner.now { background:linear-gradient(135deg,var(--green-soft),var(--accent-light)); }
-.live-banner.before { background:linear-gradient(135deg,var(--orange-soft),var(--accent-light)); }
-.live-dot { width:10px; height:10px; border-radius:50%; background:var(--green); flex-shrink:0;
+.live-banner.now { background:linear-gradient(135deg,var(--accent-light),var(--card-bg)); box-shadow:0 6px 20px var(--accent-light); }
+.live-banner.before { background:linear-gradient(135deg,var(--orange-soft),var(--card-bg)); }
+.live-dot { width:10px; height:10px; border-radius:50%; background:var(--accent); flex-shrink:0;
     animation:pulse 1.6s infinite; }
 .live-banner.before .live-dot { background:var(--orange); }
 @keyframes pulse {
@@ -378,13 +378,13 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
 }
 .live-info { flex:1; min-width:0; }
 .live-label { font-size:0.7rem; font-weight:800; text-transform:uppercase;
-    letter-spacing:0.08em; color:var(--green); margin-bottom:3px; }
+    letter-spacing:0.08em; color:var(--accent); margin-bottom:3px; }
 .live-banner.before .live-label { color:var(--orange); }
 .live-lesson { font-size:1.02rem; font-weight:800;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .live-time { font-size:0.76rem; color:var(--text-muted); font-weight:700; margin-top:2px; }
 .progress-bar { height:4px; border-radius:2px; background:var(--border); overflow:hidden; margin-top:7px; }
-.progress-fill { height:100%; background:linear-gradient(90deg,var(--green),var(--accent)); border-radius:2px; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent)); border-radius:2px; }
 
 /* === DAY / CARDS === */
 .day-block { display:none; }
@@ -416,8 +416,8 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
 .card:nth-child(7) { animation-delay:0.18s; }
 .card:nth-child(8) { animation-delay:0.21s; }
 .card.now {
-    box-shadow:0 6px 24px var(--green-soft), 0 0 0 1px var(--green);
-    background:linear-gradient(135deg,var(--green-soft),var(--card-bg));
+    box-shadow:0 6px 24px var(--accent-light), 0 0 0 1.5px var(--accent);
+    background:linear-gradient(135deg,var(--accent-light),var(--card-bg));
 }
 .card.next-up { box-shadow:0 6px 20px var(--orange-soft), 0 0 0 1px var(--orange); }
 .num {
@@ -427,12 +427,12 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
     font-weight:800; font-size:1.05rem; flex-shrink:0;
     box-shadow:var(--num-shadow);
 }
-.card.now .num { background:linear-gradient(135deg,var(--green),var(--accent)); color:#fff; }
+.card.now .num { background:linear-gradient(135deg,var(--accent),var(--accent)); color:#fff; box-shadow:0 4px 14px var(--accent-light); }
 .left-side { display:flex; flex-direction:column; gap:3px; flex-grow:1; min-width:0; }
 .time { font-size:0.8rem; color:var(--text-muted); font-weight:700; }
 .lesson { font-size:1.05rem; font-weight:800; color:var(--text-main); word-wrap:break-word; }
 .now-pill {
-    font-size:0.6rem; background:var(--green); color:#fff;
+    font-size:0.6rem; background:var(--accent); color:#fff;
     padding:3px 8px; border-radius:20px; font-weight:800;
     text-transform:uppercase; letter-spacing:0.06em;
     margin-left:auto; flex-shrink:0;
