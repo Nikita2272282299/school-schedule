@@ -174,18 +174,7 @@ body {
         radial-gradient(ellipse at 85% 75%, rgba(56,189,248,0.18), transparent 50%),
         linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%);
 }
-[data-theme="cosmic"] body::before {
-    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
-    background-image:
-        radial-gradient(1.5px 1.5px at 24px 32px, rgba(255,255,255,0.95), transparent 60%),
-        radial-gradient(1px 1px at 118px 88px, rgba(255,255,255,0.8), transparent 60%),
-        radial-gradient(2px 2px at 210px 156px, rgba(183,148,246,1), transparent 60%),
-        radial-gradient(1px 1px at 60px 200px, rgba(255,255,255,0.7), transparent 60%),
-        radial-gradient(1.5px 1.5px at 260px 40px, rgba(124,245,192,1), transparent 60%),
-        radial-gradient(1.2px 1.2px at 180px 240px, rgba(255,255,255,0.85), transparent 60%);
-    background-size:400px 320px; background-repeat:repeat;
-}
-[data-theme="ocean"] body { background-image:linear-gradient(180deg,#c7e8f5 0%,#94d0e6 45%,#5aafd0 100%); }
+[data-theme="cosmic"] [data-theme="ocean"] body { background-image:linear-gradient(180deg,#c7e8f5 0%,#94d0e6 45%,#5aafd0 100%); }
 [data-theme="sunset"] body { background-image:linear-gradient(180deg,#ffe0a8 0%,#ffb572 40%,#e88898 100%); }
 [data-theme="forest"] body { background-image:linear-gradient(180deg,#dff0d0 0%,#b8dfa8 40%,#7abb6c 100%); }
 [data-theme="sakura"] body { background-image:linear-gradient(180deg,#ffeaf0 0%,#ffd0dd 50%,#ffb0c8 100%); }
@@ -345,7 +334,7 @@ html.hide-time .time { display:none; }
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
-    <h2 id="brandLogo">☀️ <span>Расписание</span></h2>
+    <h2><span id="brandEmoji">📅</span> <span>Расписание</span></h2>
     <div class="header-right">
         <div class="badge-class">8Г</div>
         <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
@@ -410,8 +399,8 @@ var THEME_ICONS = {light:'☀️',dark:'🌙',cosmic:'🌌',ocean:'🌊',sunset:
     document.querySelectorAll('[data-theme-btn]').forEach(function(b){
         b.classList.toggle('active', b.getAttribute('data-theme-btn')===s);
     });
-    var logo = document.getElementById('brandLogo');
-    if (logo) logo.textContent = (THEME_ICONS[s]||'📅') + ' ';
+    var emoji = document.getElementById('brandEmoji');
+    if (emoji) emoji.textContent = THEME_ICONS[s] || '📅';
     var size = localStorage.getItem('rs_size') || 'normal';
     if (size==='small') document.documentElement.classList.add('font-small');
     if (size==='large') document.documentElement.classList.add('font-large');
@@ -434,8 +423,8 @@ function setTheme(t){
     });
     var meta = document.getElementById('tcMeta');
     if (meta) meta.setAttribute('content', THEME_COLORS[t] || '#f0f4f8');
-    var logo = document.getElementById('brandLogo');
-    if (logo) logo.textContent = (THEME_ICONS[t]||'📅') + ' ';
+    var emoji = document.getElementById('brandEmoji');
+    if (emoji) emoji.textContent = THEME_ICONS[t] || '📅';
     spawnParticles(t);
 }
 function setSize(s){
