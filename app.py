@@ -2543,9 +2543,9 @@ document.addEventListener('click', function(e) {
     p.classList.remove('open');
 });
 function showDay(day){
-    document.querySelectorAll('.day-block').forEach(function(el){el.classList.remove('active');});
-    var t = document.getElementById('day-'+day);
-    if (t) t.classList.add('active');
+    document.querySelectorAll('.day-block').forEach(function(el){el.classList.remove('active-day');});
+    var t = document.getElementById('block-'+day);
+    if (t) t.classList.add('active-day');
     document.querySelectorAll('.tab').forEach(function(x){
         x.classList.toggle('active', x.getAttribute('data-day')===day);
     });
