@@ -2276,6 +2276,67 @@ body {
     min-height: 100vh !important;
     min-height: 100dvh !important;
 }
+
+/* ===== БЫСТРАЯ ПАНЕЛЬ ===== */
+.settings-panel {
+    transition: transform 0.08s cubic-bezier(0.4,0,0.2,1), opacity 0.06s ease !important;
+    will-change: transform, opacity;
+}
+
+/* ===== СТОП-СКРОЛЛ ПОСЛЕ КНОПКИ ===== */
+html, body {
+    overflow-x: hidden !important;
+    overscroll-behavior-y: none !important;
+}
+body {
+    min-height: auto !important;
+    height: auto !important;
+}
+.container {
+    padding-bottom: 40px !important;
+}
+.sheet-link {
+    margin-bottom: 0 !important;
+}
+
+/* ===== КРАСИВЫЙ НИЗ ===== */
+.sheet-link {
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.12s, box-shadow 0.15s;
+}
+.sheet-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.25) 50%, transparent 70%);
+    background-size: 200% 100%;
+    pointer-events: none;
+    opacity: 0;
+}
+.sheet-link:active::after {
+    opacity: 1;
+    animation: shine 0.4s ease;
+}
+@keyframes shine {
+    from { background-position: 200% 0; }
+    to { background-position: -100% 0; }
+}
+.sheet-link:active {
+    transform: scale(0.97);
+}
+
+/* Конец страницы — декоративная точка */
+.container::after {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 3px;
+    margin: 26px auto 0;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.5;
+}
 </style>
 </head>
 <body>
