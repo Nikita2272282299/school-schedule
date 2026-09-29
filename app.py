@@ -2402,6 +2402,11 @@ body {
 .tabs { top: 108px !important; }
 .header-card { top: 8px !important; }
 @media (max-width: 400px) { .tabs { top: 100px !important; } }
+
+/* ===== ШАПКА — якорь для панели ===== */
+.header-card {
+    position: relative !important;
+}
 </style>
 </head>
 <body>
