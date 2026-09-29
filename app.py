@@ -2382,6 +2382,26 @@ body {
     from { opacity:0; transform:translateY(-8px); }
     to { opacity:1; transform:none; }
 }
+
+/* ===== ТАБЫ: 6 колонок, все влезают ===== */
+.tabs {
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 4px !important;
+    overflow: visible !important;
+    padding: 4px !important;
+}
+.tab {
+    min-width: 0 !important;
+    padding: 10px 4px !important;
+    font-size: 0.82rem !important;
+}
+.tab .tab-day { font-size: 0.6rem !important; }
+
+/* Шапка отлипла от дней */
+.tabs { top: 108px !important; }
+.header-card { top: 8px !important; }
+@media (max-width: 400px) { .tabs { top: 100px !important; } }
 </style>
 </head>
 <body>
@@ -2441,7 +2461,6 @@ body {
     </div>
 </div>
 
-<div id="changeBanner"><span class="banner-icon">🔔</span><span>Расписание обновлено</span></div>
 {live_banner}
 {tabs}
 {content}
@@ -2653,116 +2672,6 @@ if ('serviceWorker' in navigator) {
 
 
 
-/* ===== УМНОЕ ОТСЛЕЖИВАНИЕ ИЗМЕНЕНИЙ ===== */
-(function(){
-    function weekKey(){
-        var d = new Date();
-        var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-        var dn = t.getUTCDay() || 7;
-        t.setUTCDate(t.getUTCDate() + 4 - dn);
-        var ys = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
-        var wn = Math.ceil((((t - ys) / 86400000) + 1) / 7);
-        return t.getUTCFullYear() + '-W' + wn;
-    }
-
-    // 1. Сброс в новую неделю (понедельник)
-    var wk = weekKey();
-    if (localStorage.getItem('rs_week') !== wk) {
-        localStorage.removeItem('rs_seen');
-        localStorage.removeItem('rs_day');
-        localStorage.setItem('rs_week', wk);
-    }
-
-    // 2. Считаем подписи для каждого дня
-    function computeSigs(){
-        var sigs = {};
-        document.querySelectorAll('.day-block').forEach(function(b){
-            var day = b.id.replace('day-','');
-            var arr = [];
-            b.querySelectorAll('.card').forEach(function(c){
-                var tm = c.querySelector('.time');
-                var ls = c.querySelector('.lesson');
-                arr.push((tm?tm.textContent:'') + '|' + (ls?ls.textContent:''));
-            });
-            sigs[day] = arr.join('||');
-        });
-        return sigs;
-    }
-
-    var seen = {};
-    try { seen = JSON.parse(localStorage.getItem('rs_seen') || '{}'); } catch(e){}
-    var cur = computeSigs();
-    var newDays = [];
-    var changedDays = [];
-
-    for (var d in cur) {
-        var s = cur[d];
-        if (!s) continue;  // пустой день — пропускаем
-        if (seen[d] === undefined) newDays.push(d);
-        else if (seen[d] !== s) changedDays.push(d);
-    }
-
-    var toPulse = newDays.concat(changedDays);
-    var isFirstVisit = !localStorage.getItem('rs_visited_once');
-
-    // 3. Пульсация
-    toPulse.forEach(function(day){
-        var tab = document.querySelector('.tab[data-day="'+day+'"]');
-        if (tab) tab.classList.add('new-day');
-    });
-
-    // 4. Открыть на новом дне (только при ПЕРВОМ заходе или если сохранённого дня нет)
-    var savedDay = localStorage.getItem('rs_day');
-    var openDay = null;
-    if (toPulse.length && !savedDay) openDay = toPulse[0];
-    else if (toPulse.length && isFirstVisit) openDay = toPulse[0];
-    else if (savedDay) openDay = savedDay;
-
-    if (openDay) {
-        document.querySelectorAll('.day-block').forEach(function(el){ el.classList.remove('active'); });
-        var tb = document.getElementById('day-' + openDay);
-        if (tb) tb.classList.add('active');
-        document.querySelectorAll('.tab').forEach(function(x){
-            x.classList.toggle('active', x.getAttribute('data-day') === openDay);
-        });
-    }
-
-    // 5. Баннер — только если есть изменения и не первый раз на этом устройстве
-    var banner = document.getElementById('changeBanner');
-    if (banner && toPulse.length) {
-        banner.classList.add('show');
-        // Скрываем через 8 сек и помечаем как "увидел"
-        setTimeout(function(){ markAllSeen(cur); }, 8000);
-        // Или при клике на любую вкладку
-        document.querySelectorAll('.tab').forEach(function(t){
-            t.addEventListener('click', function(){ markAllSeen(cur); });
-        });
-    } else if (toPulse.length === 0) {
-        // Изменений нет — ничего не помечаем заново
-    }
-
-    function markAllSeen(sigs){
-        try {
-            var s = JSON.parse(localStorage.getItem('rs_seen') || '{}');
-            for (var d in sigs) {
-                if (sigs[d]) s[d] = sigs[d];
-            }
-            localStorage.setItem('rs_seen', JSON.stringify(s));
-        } catch(e){}
-        // Убираем пульсацию
-        document.querySelectorAll('.tab.new-day').forEach(function(t){
-            t.classList.remove('new-day');
-        });
-        var b = document.getElementById('changeBanner');
-        if (b) b.classList.remove('show');
-        localStorage.setItem('rs_visited_once', '1');
-    }
-
-    // Если были изменения — сразу помечаем через 8 сек
-    if (toPulse.length) {
-        localStorage.setItem('rs_visited_once', '1');
-    }
-})();
 </script>
 </body>
 </html>"""
