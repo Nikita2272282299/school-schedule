@@ -1054,6 +1054,234 @@ html.hide-time .time { display:none; }
 /* Кнопки-темы: мягкий подъём */
 .theme-btn, .size-btn { transition: background 0.15s, box-shadow 0.15s, transform 0.1s; }
 .theme-btn:active, .size-btn:active { transform: scale(0.94); }
+
+/* === ТЕМАТИЧЕСКИЕ КАРТОЧКИ УРОКОВ === */
+
+/* 🌿 ЛЕС — деревянные доски / кора */
+[data-theme="forest"] .card {
+    background:
+        linear-gradient(180deg, rgba(140,100,60,0.15) 0%, rgba(90,60,30,0.05) 100%),
+        linear-gradient(90deg,
+            rgba(180,140,90,0.12) 0%, transparent 3%,
+            transparent 10%, rgba(140,100,60,0.08) 12%, transparent 15%,
+            transparent 45%, rgba(140,100,60,0.06) 47%, transparent 50%,
+            transparent 82%, rgba(140,100,60,0.08) 84%, transparent 88%,
+            rgba(180,140,90,0.1) 100%),
+        linear-gradient(180deg, #f5ecd8 0%, #e8d9b8 40%, #d8c498 100%);
+    border: 1px solid rgba(90,60,30,0.25);
+    border-radius: 10px 6px 10px 6px;
+    box-shadow: 0 3px 10px rgba(60,40,20,0.2), inset 0 1px 0 rgba(255,240,210,0.6), inset 0 -2px 4px rgba(90,60,30,0.12);
+    position: relative;
+    overflow: hidden;
+}
+[data-theme="forest"] .card::before {
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:
+        repeating-linear-gradient(90deg, transparent 0px, transparent 28px, rgba(90,60,30,0.06) 28px, rgba(90,60,30,0.06) 29px);
+    opacity:0.7;
+}
+[data-theme="forest"] .card::after {
+    content:""; position:absolute; top:8px; bottom:8px; left:6px; width:2px;
+    background:linear-gradient(180deg, transparent, rgba(90,60,30,0.2), transparent);
+    border-radius:1px;
+}
+[data-theme="forest"] .card.now {
+    background:
+        linear-gradient(180deg, rgba(140,200,80,0.35) 0%, rgba(80,150,40,0.15) 100%),
+        linear-gradient(180deg, #f0f8dd 0%, #d4e8a8 40%, #a8d478 100%);
+    border-color: rgba(80,140,40,0.5);
+    box-shadow: 0 3px 14px rgba(80,140,40,0.3), inset 0 1px 0 rgba(255,255,255,0.7);
+}
+[data-theme="forest"] .num {
+    background: linear-gradient(180deg, #c9a86a 0%, #a8874a 50%, #8a6a2f 100%);
+    color: #fffbf0;
+    border-radius: 8px 4px 8px 4px;
+    border: 1px solid rgba(90,60,20,0.4);
+    box-shadow: 0 2px 6px rgba(60,40,10,0.3), inset 0 1px 0 rgba(255,240,200,0.5);
+    font-family: Georgia, serif;
+    font-weight: 900;
+}
+
+/* 🌊 ОКЕАН — капли воды / стекло */
+[data-theme="ocean"] .card {
+    background:
+        radial-gradient(ellipse at 15% 20%, rgba(255,255,255,0.6), transparent 45%),
+        linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(220,245,252,0.85) 50%, rgba(180,230,245,0.8) 100%);
+    border: 1px solid rgba(34,211,238,0.35);
+    border-radius: 18px 18px 18px 6px;
+    box-shadow: 0 6px 16px rgba(8,145,178,0.2), inset 0 2px 6px rgba(255,255,255,0.95), inset 0 -3px 6px rgba(8,145,178,0.1);
+    position: relative;
+    overflow: hidden;
+}
+[data-theme="ocean"] .card::before {
+    content:""; position:absolute; top:8px; left:12px; width:44px; height:14px;
+    border-radius:50%;
+    background:radial-gradient(ellipse, rgba(255,255,255,0.9), transparent 70%);
+    pointer-events:none;
+}
+[data-theme="ocean"] .card.now {
+    background:
+        radial-gradient(ellipse at 15% 20%, rgba(255,255,255,0.7), transparent 50%),
+        linear-gradient(180deg, #b8f5e8 0%, #6ee7d0 50%, #14b8a6 100%);
+    border-color: rgba(20,184,166,0.6);
+    box-shadow: 0 6px 20px rgba(20,184,166,0.4), inset 0 2px 8px rgba(255,255,255,0.8);
+}
+[data-theme="ocean"] .num {
+    background: radial-gradient(circle at 30% 25%, #ffffff, #22d3ee 55%, #0891b2 100%);
+    color: #fff;
+    border-radius: 50%;
+    box-shadow: 0 3px 10px rgba(8,145,178,0.4), inset -3px -4px 8px rgba(8,145,178,0.3), inset 3px 3px 10px rgba(255,255,255,0.7);
+    border: 2px solid rgba(255,255,255,0.9);
+}
+
+/* 🌅 ЗАКАТ — тёплый пергамент */
+[data-theme="sunset"] .card {
+    background:
+        linear-gradient(135deg, rgba(255,220,160,0.4) 0%, rgba(255,180,120,0.2) 50%, rgba(255,150,120,0.3) 100%),
+        linear-gradient(180deg, #fff8ec 0%, #ffe9cc 60%, #ffd9b0 100%);
+    border: 1px solid rgba(249,115,22,0.28);
+    border-radius: 16px 6px 16px 6px;
+    box-shadow: 0 4px 14px rgba(249,115,22,0.22), inset 0 1px 0 rgba(255,255,255,0.85);
+    position: relative;
+    overflow: hidden;
+}
+[data-theme="sunset"] .card::before {
+    content:""; position:absolute; top:-30px; right:-30px; width:100px; height:100px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,200,100,0.4), transparent 70%);
+    pointer-events:none;
+}
+[data-theme="sunset"] .card.now {
+    background:
+        linear-gradient(135deg, rgba(255,180,80,0.5) 0%, rgba(249,115,22,0.3) 50%, rgba(236,72,153,0.3) 100%),
+        linear-gradient(180deg, #ffe9cc 0%, #ffb572 50%, #f97316 100%);
+    border-color: rgba(249,115,22,0.6);
+    box-shadow: 0 6px 20px rgba(249,115,22,0.45), inset 0 2px 6px rgba(255,255,255,0.5);
+}
+[data-theme="sunset"] .num {
+    background: linear-gradient(135deg, #f97316 0%, #ec4899 100%);
+    color: #fff;
+    border-radius: 14px 4px 14px 4px;
+    box-shadow: 0 3px 10px rgba(249,115,22,0.4), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+/* 🌸 САКУРА — лепестки / мягкие */
+[data-theme="sakura"] .card {
+    background:
+        radial-gradient(ellipse at 80% 15%, rgba(255,220,235,0.7), transparent 40%),
+        radial-gradient(ellipse at 15% 85%, rgba(255,200,225,0.6), transparent 40%),
+        linear-gradient(180deg, #fffafc 0%, #ffe8f0 50%, #ffd0dd 100%);
+    border: 1px solid rgba(236,72,153,0.2);
+    border-radius: 20px 20px 20px 8px;
+    box-shadow: 0 4px 14px rgba(236,72,153,0.18), inset 0 1px 0 rgba(255,255,255,0.9);
+    position: relative;
+    overflow: hidden;
+}
+[data-theme="sakura"] .card::before {
+    content:""; position:absolute; top:6px; right:10px; width:16px; height:8px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.75);
+    pointer-events:none;
+    filter:blur(1px);
+}
+[data-theme="sakura"] .card.now {
+    background:
+        radial-gradient(ellipse at 80% 15%, rgba(255,200,225,0.7), transparent 50%),
+        linear-gradient(180deg, #ffd0dd 0%, #f9a8d4 50%, #ec4899 100%);
+    border-color: rgba(236,72,153,0.5);
+    box-shadow: 0 6px 20px rgba(236,72,153,0.4), inset 0 2px 6px rgba(255,255,255,0.5);
+}
+[data-theme="sakura"] .num {
+    background: radial-gradient(circle at 30% 25%, #ffffff 0%, #f9a8d4 50%, #ec4899 100%);
+    color: #fff;
+    border-radius: 50% 50% 50% 14px;
+    box-shadow: 0 3px 10px rgba(236,72,153,0.35), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+/* 🌌 КОСМОС — звёздные плиты */
+[data-theme="cosmic"] .card {
+    background:
+        radial-gradient(1px 1px at 15% 20%, rgba(255,255,255,0.6), transparent 60%),
+        radial-gradient(1px 1px at 80% 70%, rgba(183,148,246,0.7), transparent 60%),
+        radial-gradient(1.5px 1.5px at 45% 85%, rgba(124,245,192,0.6), transparent 60%),
+        linear-gradient(135deg, rgba(50,30,100,0.85) 0%, rgba(25,15,60,0.95) 60%, rgba(15,8,40,0.98) 100%);
+    border: 1px solid rgba(183,148,246,0.3);
+    border-radius: 16px;
+    box-shadow: 0 6px 22px rgba(120,60,220,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+    position: relative;
+    overflow: hidden;
+}
+[data-theme="cosmic"] .card.now {
+    background:
+        radial-gradient(1.5px 1.5px at 20% 25%, rgba(255,255,255,0.9), transparent 60%),
+        radial-gradient(1px 1px at 80% 70%, rgba(124,245,192,0.9), transparent 60%),
+        linear-gradient(135deg, rgba(80,50,150,0.95) 0%, rgba(50,30,110,0.95) 60%, rgba(30,15,70,0.98) 100%);
+    border-color: rgba(183,148,246,0.7);
+    box-shadow: 0 6px 26px rgba(183,148,246,0.5), inset 0 0 20px rgba(124,245,192,0.15);
+}
+[data-theme="cosmic"] .num {
+    background: linear-gradient(135deg, #b794f6 0%, #7cf5c0 100%);
+    color: #1a1030;
+    border-radius: 12px;
+    box-shadow: 0 0 16px rgba(183,148,246,0.55), inset 0 1px 0 rgba(255,255,255,0.4);
+    font-weight: 900;
+}
+
+/* ☀️ СВЕТЛАЯ — мягкий глянец */
+[data-theme="light"] .card {
+    background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+    box-shadow: 0 3px 12px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,1);
+}
+[data-theme="light"] .num {
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    color: #4c6ef5;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 3px rgba(99,102,241,0.15);
+}
+
+/* 🌙 ТЁМНАЯ — глянец */
+[data-theme="dark"] .card {
+    background: linear-gradient(135deg, #232733 0%, #1a1d24 60%, #15171e 100%);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+[data-theme="dark"] .num {
+    background: linear-gradient(135deg, #2d3142 0%, #232741 100%);
+    color: #c7d2fe;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 1px 4px rgba(0,0,0,0.4);
+}
+
+/* БОЛЬШЕ ГРАДИЕНТОВ: заголовки дней */
+.day-title {
+    background: linear-gradient(90deg, var(--text-main) 0%, var(--text-main) 40%, transparent 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+[data-theme="cosmic"] .day-title {
+    background: linear-gradient(90deg, #ece6ff 0%, #b794f6 50%, #7cf5c0 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+[data-theme="ocean"] .day-title {
+    background: linear-gradient(90deg, #062b3d 0%, #0891b2 50%, #22d3ee 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+[data-theme="sunset"] .day-title {
+    background: linear-gradient(90deg, #3d1a0a 0%, #f97316 50%, #ec4899 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+[data-theme="forest"] .day-title {
+    background: linear-gradient(90deg, #0f2e1b 0%, #059669 50%, #84cc16 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+[data-theme="sakura"] .day-title {
+    background: linear-gradient(90deg, #3d1029 0%, #ec4899 50%, #a855f7 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
 </style>
 </head>
 <body>
