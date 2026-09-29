@@ -1666,6 +1666,125 @@ html.round-nums .card.now .num { border-radius: 50% !important; }
 
 /* Когда включен режим "компактный" — не мешать */
 html.compact .side-decor { opacity: 0.5; }
+
+/* ===== КРАСИВЫЕ НАСТРОЙКИ ПОД ТЕМУ ===== */
+
+/* Превью-полоска сверху */
+.settings-preview {
+    height: 8px !important;
+    border-radius: 4px !important;
+    background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent)), var(--accent)) !important;
+    background-size: 200% 100% !important;
+    margin-bottom: 16px !important;
+    box-shadow: 0 3px 12px var(--accent-light, rgba(99,102,241,0.3)) !important;
+    animation: shine 4s linear infinite;
+}
+@keyframes shine { from { background-position: 0% 0; } to { background-position: 200% 0; } }
+
+/* Стилизация панели под каждую тему */
+[data-theme="ocean"] .settings-panel {
+    border: 2px solid rgba(34,211,238,0.35);
+    box-shadow: 0 20px 60px rgba(8,145,178,0.3), inset 0 2px 12px rgba(255,255,255,0.8) !important;
+}
+[data-theme="sunset"] .settings-panel {
+    border: 2px solid rgba(249,115,22,0.25);
+    box-shadow: 0 20px 60px rgba(249,115,22,0.25), inset 0 2px 12px rgba(255,255,255,0.9) !important;
+}
+[data-theme="forest"] .settings-panel {
+    border: 2px solid rgba(5,150,105,0.25);
+    box-shadow: 0 20px 60px rgba(5,150,105,0.25), inset 0 2px 12px rgba(255,255,255,0.8) !important;
+}
+[data-theme="sakura"] .settings-panel {
+    border: 2px solid rgba(236,72,153,0.25);
+    box-shadow: 0 20px 60px rgba(236,72,153,0.25), inset 0 2px 12px rgba(255,255,255,0.85) !important;
+}
+[data-theme="cosmic"] .settings-panel {
+    border: 1px solid rgba(183,148,246,0.4);
+    box-shadow: 0 20px 60px rgba(120,60,220,0.5), 0 0 40px rgba(183,148,246,0.2), inset 0 2px 12px rgba(183,148,246,0.1) !important;
+}
+[data-theme="dark"] .settings-panel {
+    border: 1px solid rgba(255,255,255,0.1);
+}
+[data-theme="light"] .settings-panel {
+    border: 1px solid rgba(99,102,241,0.15);
+}
+
+/* Заголовок с градиентной точкой */
+.settings-title {
+    background: linear-gradient(90deg, var(--text-main), var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+}
+
+/* Кнопка-раздел «Дополнительно» */
+.settings-section-toggle {
+    width: 100%;
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--accent-light, rgba(99,102,241,0.1)), transparent);
+    color: var(--text-main);
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.15s, transform 0.1s;
+}
+.settings-section-toggle:active { transform: scale(0.98); }
+.settings-section-toggle .sst-arrow {
+    font-size: 1rem;
+    transition: transform 0.2s ease;
+    color: var(--accent);
+}
+.settings-section-toggle.open .sst-arrow { transform: rotate(180deg); }
+
+/* Сворачиваемый блок настроек */
+.advanced-section {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.25s ease;
+    margin-top: 0;
+}
+.advanced-section.open {
+    max-height: 500px;
+    margin-top: 10px;
+}
+
+/* Тумблеры внутри */
+.advanced-section .toggle-row {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border-bottom: none !important;
+    margin-bottom: 4px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.4), transparent);
+    transition: background 0.15s;
+}
+.advanced-section .toggle-row:hover { background: var(--accent-light, rgba(99,102,241,0.08)); }
+.advanced-section .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.83rem;
+}
+.advanced-section .toggle-label::before {
+    content: attr(data-ico);
+    font-size: 1rem;
+    width: 18px;
+    text-align: center;
+}
+
+/* Панель настроек — углы под тему */
+[data-theme="ocean"] .settings-panel { border-radius: 22px 22px 22px 8px !important; }
+[data-theme="sunset"] .settings-panel { border-radius: 22px 8px 22px 8px !important; }
+[data-theme="forest"] .settings-panel { border-radius: 26px 10px 26px 10px !important; }
+[data-theme="sakura"] .settings-panel { border-radius: 24px !important; }
+[data-theme="cosmic"] .settings-panel { border-radius: 22px !important; }
 </style>
 </head>
 <body>
@@ -1699,7 +1818,11 @@ html.compact .side-decor { opacity: 0.5; }
             <button class="size-btn" data-size="normal" onclick="setSize('normal')">A</button>
             <button class="size-btn" data-size="large" onclick="setSize('large')">A</button>
         </div>
-        <div class="settings-title">🔧 Дополнительно</div>
+        <button class="settings-section-toggle" onclick="toggleAdvanced()">
+            <span class="sst-title">🔧 Дополнительно</span>
+            <span class="sst-arrow" id="advArrow">▾</span>
+        </button>
+        <div class="advanced-section" id="advancedSection">
         <div class="toggle-row">
             <div class="toggle-label" data-ico="📏">Компактный режим</div>
             <div class="toggle" id="tCompact" onclick="toggleCompact()"></div>
@@ -1719,6 +1842,7 @@ html.compact .side-decor { opacity: 0.5; }
         <div class="toggle-row">
             <div class="toggle-label" data-ico="✨">Частицы фона</div>
             <div class="toggle" id="tParticles" onclick="toggleParticles()"></div>
+        </div>
         </div>
         <div class="settings-title">📱 Приложение</div>
         <div id="installSection"></div>
@@ -1927,6 +2051,24 @@ if ('serviceWorker' in navigator) {
     });
 })();
 
+
+function toggleAdvanced() {
+    var sec = document.getElementById('advancedSection');
+    var btn = document.querySelector('.settings-section-toggle');
+    if (!sec) return;
+    sec.classList.toggle('open');
+    if (btn) btn.classList.toggle('open');
+    localStorage.setItem('rs_adv_open', sec.classList.contains('open') ? '1' : '0');
+}
+(function restoreAdvanced(){
+    var sec = document.getElementById('advancedSection');
+    var btn = document.querySelector('.settings-section-toggle');
+    if (!sec) return;
+    if (localStorage.getItem('rs_adv_open') === '1') {
+        sec.classList.add('open');
+        if (btn) btn.classList.add('open');
+    }
+})();
 </script>
 </body>
 </html>"""
