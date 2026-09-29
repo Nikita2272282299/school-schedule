@@ -1779,6 +1779,406 @@ html.compact .side-decor { opacity: 0.5; }
     background: linear-gradient(135deg, rgba(255,240,246,0.95) 0%, rgba(255,210,225,0.9) 100%);
     border-color: rgba(236,72,153,0.3);
 }
+
+/* ========== ВСЁ ПОД ТЕМУ ========== */
+
+/* Панель настроек — фон под тему */
+[data-theme="light"] .settings-panel { background: linear-gradient(180deg, #ffffff 0%, #eef3fb 100%); }
+[data-theme="dark"] .settings-panel { background: linear-gradient(180deg, #1e222e 0%, #15171f 100%); }
+[data-theme="cosmic"] .settings-panel { background: linear-gradient(180deg, rgba(40,25,90,0.98) 0%, rgba(20,12,55,0.98) 100%); }
+[data-theme="ocean"] .settings-panel { background: linear-gradient(180deg, rgba(230,250,255,0.98) 0%, rgba(200,235,250,0.98) 100%); }
+[data-theme="sunset"] .settings-panel { background: linear-gradient(180deg, rgba(255,245,230,0.98) 0%, rgba(255,220,190,0.98) 100%); }
+[data-theme="forest"] .settings-panel { background: linear-gradient(180deg, rgba(240,250,230,0.98) 0%, rgba(210,235,190,0.98) 100%); }
+[data-theme="sakura"] .settings-panel { background: linear-gradient(180deg, rgba(255,245,250,0.98) 0%, rgba(255,220,235,0.98) 100%); }
+
+/* Кнопки тем — фон под тему */
+.theme-btn {
+    background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.2)) !important;
+}
+[data-theme="dark"] .theme-btn,
+[data-theme="cosmic"] .theme-btn {
+    background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02)) !important;
+}
+[data-theme="ocean"] .theme-btn { background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(200,235,250,0.5)) !important; }
+[data-theme="sunset"] .theme-btn { background: linear-gradient(180deg, rgba(255,250,240,0.9), rgba(255,220,190,0.7)) !important; }
+[data-theme="forest"] .theme-btn { background: linear-gradient(180deg, rgba(250,255,245,0.9), rgba(210,235,190,0.6)) !important; }
+[data-theme="sakura"] .theme-btn { background: linear-gradient(180deg, rgba(255,250,253,0.9), rgba(255,220,235,0.7)) !important; }
+
+/* Активная кнопка — всегда яркая темы (уже есть, но усилим) */
+.theme-btn.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+    color: #fff !important;
+    box-shadow: 0 0 0 3px var(--accent), 0 6px 16px var(--accent-light) !important;
+}
+[data-theme="lemon"] .theme-btn.active,
+[data-theme="sakura"] .theme-btn.active { color: #fff !important; }
+
+/* Размер текста A-A-A под тему */
+.size-btn {
+    background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.2)) !important;
+}
+[data-theme="dark"] .size-btn,
+[data-theme="cosmic"] .size-btn {
+    background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02)) !important;
+}
+[data-theme="ocean"] .size-btn { background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(200,235,250,0.5)) !important; }
+[data-theme="sunset"] .size-btn { background: linear-gradient(180deg, rgba(255,250,240,0.9), rgba(255,220,190,0.7)) !important; }
+[data-theme="forest"] .size-btn { background: linear-gradient(180deg, rgba(250,255,245,0.9), rgba(210,235,190,0.6)) !important; }
+[data-theme="sakura"] .size-btn { background: linear-gradient(180deg, rgba(255,250,253,0.9), rgba(255,220,235,0.7)) !important; }
+.size-btn.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+    color: #fff !important;
+    box-shadow: 0 0 0 3px var(--accent), 0 6px 16px var(--accent-light) !important;
+}
+[data-theme="light"] .size-btn.active,
+[data-theme="dark"] .size-btn.active,
+[data-theme="cosmic"] .size-btn.active { color: #fff !important; }
+
+/* Тумблеры — неактивные тоже под тему */
+.toggle {
+    background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(0,0,0,0.05)) !important;
+}
+[data-theme="dark"] .toggle,
+[data-theme="cosmic"] .toggle {
+    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.3)) !important;
+}
+[data-theme="ocean"] .toggle { background: linear-gradient(180deg, rgba(200,235,250,0.8), rgba(8,145,178,0.2)) !important; }
+[data-theme="sunset"] .toggle { background: linear-gradient(180deg, rgba(255,220,190,0.8), rgba(249,115,22,0.2)) !important; }
+[data-theme="forest"] .toggle { background: linear-gradient(180deg, rgba(210,235,190,0.8), rgba(5,150,105,0.2)) !important; }
+[data-theme="sakura"] .toggle { background: linear-gradient(180deg, rgba(255,220,235,0.8), rgba(236,72,153,0.2)) !important; }
+.toggle.on {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+}
+
+/* Заголовки секций — под цвет темы */
+.settings-title {
+    background: linear-gradient(90deg, var(--text-main), var(--accent)) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+.settings-title::before {
+    background: var(--accent) !important;
+}
+
+/* Превью-полоска */
+.settings-preview {
+    background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent))) !important;
+}
+
+/* Кнопка установки приложения — под тему */
+.install-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+    box-shadow: 0 6px 18px var(--accent-light) !important;
+}
+
+/* Плашка "8Г" — под тему */
+.badge-class {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 3px 10px var(--accent-light) !important;
+}
+
+/* Кнопка настроек — под тему */
+.icon-btn {
+    background: linear-gradient(135deg, var(--accent-light), var(--card-bg)) !important;
+    color: var(--accent) !important;
+    border: 1.5px solid var(--accent) !important;
+    box-shadow: 0 3px 10px var(--accent-light) !important;
+}
+
+/* Ссылка на таблицу — уже тематическая */
+.sheet-link {
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+
+/* Активная вкладка — под тему */
+.tab.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+    color: #fff !important;
+}
+
+/* День "Сегодня" пилюля — под тему */
+.today-pill {
+    background: linear-gradient(135deg, var(--accent-light), var(--accent-light)) !important;
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+
+/* Баннер "Сейчас идёт" — под тему */
+.live-banner.now {
+    background: linear-gradient(135deg, var(--accent-light), var(--card-bg)) !important;
+    border-left-color: var(--accent) !important;
+}
+.live-banner.now .live-dot { background: var(--accent) !important; }
+.live-banner.now .live-label { color: var(--accent) !important; }
+.live-banner.now .progress-fill { background: var(--accent) !important; }
+
+/* Кнопка "Открыть таблицу" — иконка под тему */
+.sheet-link .sheet-icon { color: var(--accent) !important; }
+
+/* ========== ПРОРАБОТАННЫЕ НАСТРОЙКИ И КНОПКИ ========== */
+
+/* Панель настроек — элегантнее */
+.settings-panel {
+    padding: 20px 18px 18px !important;
+    border-radius: 24px !important;
+}
+
+/* Заголовки секций — крупнее, с воздухом */
+.settings-title {
+    font-size: 0.75rem !important;
+    letter-spacing: 0.1em !important;
+    padding: 4px 0 10px 0 !important;
+    margin-bottom: 14px !important;
+}
+.settings-title::before {
+    width: 6px !important; height: 6px !important;
+    box-shadow: 0 0 10px var(--accent) !important;
+}
+
+/* Превью-полоска — толще */
+.settings-preview {
+    height: 10px !important;
+    border-radius: 6px !important;
+    margin-bottom: 20px !important;
+    box-shadow: 0 4px 14px var(--accent-light), inset 0 1px 0 rgba(255,255,255,0.4) !important;
+}
+
+/* ===== КНОПКИ ТЕМ — объёмные с бликом ===== */
+.theme-btn {
+    padding: 16px 6px 14px !important;
+    border-radius: 16px !important;
+    border: none !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow:
+        0 4px 10px rgba(0,0,0,0.08),
+        0 1px 2px rgba(0,0,0,0.06),
+        inset 0 1px 0 rgba(255,255,255,0.9),
+        inset 0 -2px 4px rgba(0,0,0,0.06) !important;
+    transition: transform 0.12s ease, box-shadow 0.15s ease !important;
+}
+.theme-btn::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 0 !important; left: 10% !important; right: 10% !important;
+    height: 40% !important;
+    border-radius: 16px 16px 50% 50% !important;
+    background: linear-gradient(180deg, rgba(255,255,255,0.55), transparent) !important;
+    pointer-events: none !important;
+}
+.theme-btn::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    border-radius: 16px !important;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05) !important;
+    pointer-events: none !important;
+}
+.theme-btn:active {
+    transform: scale(0.95) !important;
+    box-shadow:
+        0 2px 4px rgba(0,0,0,0.1),
+        inset 0 2px 4px rgba(0,0,0,0.12) !important;
+}
+.theme-btn .emoji {
+    font-size: 1.6rem !important;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.18)) !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+.theme-btn.active {
+    box-shadow:
+        0 0 0 3px var(--accent),
+        0 6px 18px var(--accent-light),
+        inset 0 1px 0 rgba(255,255,255,0.4),
+        inset 0 -2px 6px rgba(0,0,0,0.15) !important;
+    transform: translateY(-2px) !important;
+}
+[data-theme="dark"] .theme-btn {
+    box-shadow:
+        0 4px 10px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.1),
+        inset 0 -2px 4px rgba(0,0,0,0.3) !important;
+}
+[data-theme="cosmic"] .theme-btn {
+    box-shadow:
+        0 4px 10px rgba(0,0,0,0.5),
+        0 0 12px rgba(183,148,246,0.15),
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        inset 0 -2px 4px rgba(0,0,0,0.3) !important;
+}
+
+/* ===== РАЗМЕР ТЕКСТА A-A-A ===== */
+.size-btn {
+    padding: 14px !important;
+    border-radius: 14px !important;
+    border: none !important;
+    position: relative !important;
+    box-shadow:
+        0 4px 10px rgba(0,0,0,0.08),
+        inset 0 1px 0 rgba(255,255,255,0.85),
+        inset 0 -2px 4px rgba(0,0,0,0.06) !important;
+    transition: transform 0.12s ease, box-shadow 0.15s ease !important;
+}
+.size-btn:active {
+    transform: scale(0.95) !important;
+    box-shadow:
+        0 2px 4px rgba(0,0,0,0.1),
+        inset 0 2px 4px rgba(0,0,0,0.12) !important;
+}
+.size-btn.active {
+    box-shadow:
+        0 0 0 3px var(--accent),
+        0 6px 18px var(--accent-light),
+        inset 0 1px 0 rgba(255,255,255,0.4),
+        inset 0 -2px 6px rgba(0,0,0,0.15) !important;
+    transform: translateY(-2px) !important;
+}
+[data-theme="dark"] .size-btn,
+[data-theme="cosmic"] .size-btn {
+    box-shadow:
+        0 4px 10px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.1),
+        inset 0 -2px 4px rgba(0,0,0,0.3) !important;
+}
+
+/* ===== ТУМБЛЕРЫ — объёмные ===== */
+.toggle {
+    width: 50px !important;
+    height: 28px !important;
+    border-radius: 15px !important;
+    box-shadow:
+        inset 0 3px 6px rgba(0,0,0,0.15),
+        inset 0 -1px 2px rgba(255,255,255,0.5),
+        0 1px 0 rgba(255,255,255,0.6) !important;
+    position: relative !important;
+}
+[data-theme="dark"] .toggle,
+[data-theme="cosmic"] .toggle {
+    box-shadow:
+        inset 0 3px 6px rgba(0,0,0,0.5),
+        inset 0 -1px 2px rgba(255,255,255,0.05),
+        0 1px 0 rgba(255,255,255,0.05) !important;
+}
+.toggle::after {
+    width: 24px !important;
+    height: 24px !important;
+    top: 2px !important;
+    left: 2px !important;
+    background: linear-gradient(180deg, #ffffff 0%, #e8ecf3 100%) !important;
+    box-shadow:
+        0 3px 6px rgba(0,0,0,0.22),
+        0 1px 2px rgba(0,0,0,0.15),
+        inset 0 -1px 2px rgba(0,0,0,0.08),
+        inset 0 1px 0 #fff !important;
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.toggle.on {
+    background: linear-gradient(180deg, var(--accent), var(--accent2, var(--accent))) !important;
+    box-shadow:
+        inset 0 2px 5px rgba(0,0,0,0.25),
+        inset 0 -1px 2px rgba(255,255,255,0.25),
+        0 3px 10px var(--accent-light) !important;
+}
+.toggle.on::after {
+    transform: translateX(22px) !important;
+}
+
+/* ===== ПЛАШКИ ТУМБЛЕРОВ ===== */
+.toggle-row {
+    padding: 13px 14px !important;
+    border-radius: 14px !important;
+    margin-bottom: 8px !important;
+    background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.1)) !important;
+    border: 1px solid rgba(255,255,255,0.6) !important;
+    box-shadow:
+        0 2px 6px rgba(0,0,0,0.04),
+        inset 0 1px 0 rgba(255,255,255,0.9) !important;
+    transition: transform 0.12s, box-shadow 0.15s, background 0.15s !important;
+}
+.toggle-row:active {
+    transform: scale(0.98) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), inset 0 2px 4px rgba(0,0,0,0.06) !important;
+}
+[data-theme="dark"] .toggle-row,
+[data-theme="cosmic"] .toggle-row {
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01)) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    box-shadow:
+        0 2px 6px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.05) !important;
+}
+.toggle-label {
+    font-weight: 800 !important;
+    font-size: 0.86rem !important;
+}
+.toggle-label::before {
+    font-size: 1.15rem !important;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15)) !important;
+}
+
+/* ===== КНОПКА УСТАНОВКИ ПРИЛОЖЕНИЯ ===== */
+.install-btn {
+    padding: 15px !important;
+    border-radius: 16px !important;
+    font-size: 0.95rem !important;
+    box-shadow:
+        0 6px 18px var(--accent-light),
+        0 2px 4px rgba(0,0,0,0.1),
+        inset 0 1px 0 rgba(255,255,255,0.3),
+        inset 0 -2px 6px rgba(0,0,0,0.15) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: transform 0.12s, box-shadow 0.15s !important;
+}
+.install-btn::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 0 !important; left: 10% !important; right: 10% !important;
+    height: 50% !important;
+    border-radius: 16px 16px 50% 50% !important;
+    background: linear-gradient(180deg, rgba(255,255,255,0.3), transparent) !important;
+    pointer-events: none !important;
+}
+.install-btn:active {
+    transform: scale(0.97) !important;
+    box-shadow:
+        0 2px 6px var(--accent-light),
+        inset 0 3px 6px rgba(0,0,0,0.2) !important;
+}
+
+/* ===== КНОПКА УСТАНОВЛЕНА — тоже красивее ===== */
+.installed-badge {
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+    background: linear-gradient(135deg, var(--accent-light), transparent) !important;
+    border: 1px solid var(--accent-light) !important;
+}
+
+/* ===== ИКОНКА СЕТТИНГСА ===== */
+.icon-btn {
+    box-shadow:
+        0 4px 12px var(--accent-light),
+        0 1px 3px rgba(0,0,0,0.08),
+        inset 0 1px 0 rgba(255,255,255,0.6) !important;
+    transition: transform 0.12s !important;
+}
+.icon-btn:active {
+    transform: scale(0.9) rotate(15deg) !important;
+}
+
+/* ===== БЕЙДЖ 8Г ===== */
+.badge-class {
+    box-shadow:
+        0 4px 12px var(--accent-light),
+        0 1px 3px rgba(0,0,0,0.1),
+        inset 0 1px 0 rgba(255,255,255,0.35),
+        inset 0 -2px 4px rgba(0,0,0,0.12) !important;
+}
 </style>
 </head>
 <body>
