@@ -236,6 +236,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 html { min-height: 100%; }
 * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 body {
+    min-height: 100vh;
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--bg); color:var(--text-main); margin:0;
     padding:20px 16px 30px; display:flex; justify-content:center;
@@ -287,7 +288,7 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
     background:var(--accent-light); color:var(--accent); border:none;
     width:40px; height:40px; border-radius:12px; font-size:1.15rem;
     cursor:pointer; display:flex; align-items:center; justify-content:center;
-    transition:transform 0.15s ease;
+    transition:transform 0.09s ease;
 }
 .icon-btn:active { transform:scale(0.92); }
 [data-theme="cosmic"] .icon-btn { box-shadow:0 0 14px rgba(183,148,246,0.35); }
@@ -310,7 +311,7 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
     transform:scale(0.94) translateY(-4px);
     opacity:0;
     pointer-events:none;
-    transition:transform 0.09s cubic-bezier(0.4,0,0.2,1), opacity 0.07s ease;
+    transition:transform 0.12s cubic-bezier(0.4,0,0.2,1), opacity 0.1s ease;
     will-change:transform, opacity;
 }
 [data-theme="cosmic"] .settings-panel {
@@ -356,7 +357,7 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
 .toggle::after {
     content:""; position:absolute; top:2px; left:2px;
     width:20px; height:20px; background:#fff; border-radius:50%;
-    transition:transform 0.18s cubic-bezier(0.4,0,0.2,1);
+    transition:transform 0.09s cubic-bezier(0.4,0,0.2,1), opacity 0.07s ease;
     box-shadow:0 1px 3px rgba(0,0,0,0.15);
 }
 .toggle.on { background:var(--accent); }
@@ -2172,28 +2173,6 @@ html.compact .side-decor { opacity: 0.5; }
         0 1px 3px rgba(0,0,0,0.1),
         inset 0 1px 0 rgba(255,255,255,0.35),
         inset 0 -2px 4px rgba(0,0,0,0.12) !important;
-}
-
-/* Отступы между тумблерами */
-.toggle-row {
-    margin-bottom: 10px !important;
-    padding: 12px 14px !important;
-}
-.toggle-row:last-child {
-    margin-bottom: 0 !important;
-}
-.settings-title {
-    margin-top: 22px !important;
-    margin-bottom: 12px !important;
-}
-.settings-title:first-of-type {
-    margin-top: 0 !important;
-}
-.theme-options, .theme-grid {
-    margin-bottom: 8px !important;
-}
-.size-options, .size-grid {
-    margin-bottom: 8px !important;
 }
 </style>
 </head>
