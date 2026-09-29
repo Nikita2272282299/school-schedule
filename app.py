@@ -245,8 +245,29 @@ body {
 }
 [data-theme="light"] body { background-image:linear-gradient(180deg,#f1f5fa 0%,#e4ebf3 100%); }
 [data-theme="dark"] body { background-image:linear-gradient(180deg,#10131a 0%,#0b0d12 100%); }
-[data-theme="cosmic"] body { background-image:linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%); }
-[data-theme="cosmic"] 100% { opacity:1; } }
+[data-theme="cosmic"] body {
+    background-image:
+        radial-gradient(ellipse at 20% 15%, rgba(139,92,246,0.28), transparent 45%),
+        radial-gradient(ellipse at 85% 75%, rgba(56,189,248,0.18), transparent 50%),
+        radial-gradient(ellipse at 60% 40%, rgba(124,245,192,0.08), transparent 55%),
+        linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%);
+    background-attachment:scroll;
+}
+[data-theme="cosmic"] body::before {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+        radial-gradient(1.5px 1.5px at 24px 32px, rgba(255,255,255,0.95), transparent 60%),
+        radial-gradient(1px 1px at 118px 88px, rgba(255,255,255,0.8), transparent 60%),
+        radial-gradient(2px 2px at 210px 156px, rgba(183,148,246,1), transparent 60%),
+        radial-gradient(1px 1px at 60px 200px, rgba(255,255,255,0.7), transparent 60%),
+        radial-gradient(1.5px 1.5px at 260px 40px, rgba(124,245,192,1), transparent 60%),
+        radial-gradient(1.2px 1.2px at 180px 240px, rgba(255,255,255,0.85), transparent 60%),
+        radial-gradient(1px 1px at 340px 100px, rgba(255,255,255,0.65), transparent 60%),
+        radial-gradient(1.8px 1.8px at 90px 130px, rgba(183,148,246,0.9), transparent 60%);
+    background-size:460px 380px; background-repeat:repeat;
+    
+}
+ 100% { opacity:1; } }
 .container { width:100%; max-width:500px; position:relative; z-index:1; }
 
 .header-card {
@@ -947,27 +968,114 @@ html.hide-time .time { display:none; }
 /* === КРАСОТА — без тормозов === */
 
 /* Атмосферные фоны для каждой темы */
-[data-theme="light"] body { background-image:linear-gradient(180deg,#f1f5fa 0%,#e4ebf3 100%); }
-[data-theme="dark"] body { background-image:linear-gradient(180deg,#10131a 0%,#0b0d12 100%); }
-[data-theme="cosmic"] body { background-image:linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%); }
-[data-theme="ocean"] body { background-image:linear-gradient(180deg,#c7e8f5 0%,#94d0e6 45%,#5aafd0 100%); }
-[data-theme="sunset"] body { background-image:linear-gradient(180deg,#ffe0a8 0%,#ffb572 40%,#e88898 100%); }
-[data-theme="forest"] body { background-image:linear-gradient(180deg,#dff0d0 0%,#b8dfa8 40%,#7abb6c 100%); }
-[data-theme="sakura"] body { background-image:linear-gradient(180deg,#ffeaf0 0%,#ffd0dd 50%,#ffb0c8 100%); }
+[data-theme="light"] body {
+    background-image:
+        radial-gradient(ellipse at 20% 10%, rgba(99,102,241,0.15), transparent 45%),
+        radial-gradient(ellipse at 80% 90%, rgba(168,85,247,0.10), transparent 45%),
+        linear-gradient(180deg,#f1f5fa 0%,#e4ebf3 100%);
+}
+[data-theme="dark"] body {
+    background-image:
+        radial-gradient(ellipse at 20% 10%, rgba(99,102,241,0.18), transparent 45%),
+        radial-gradient(ellipse at 80% 90%, rgba(192,132,252,0.12), transparent 45%),
+        linear-gradient(180deg,#10131a 0%,#0b0d12 100%);
+}
+[data-theme="cosmic"] body {
+    background-image:
+        radial-gradient(ellipse at 20% 15%, rgba(139,92,246,0.32), transparent 45%),
+        radial-gradient(ellipse at 85% 75%, rgba(56,189,248,0.22), transparent 50%),
+        radial-gradient(ellipse at 60% 40%, rgba(124,245,192,0.10), transparent 55%),
+        linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%);
+}
+[data-theme="ocean"] body {
+    background-image:
+        radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.55), transparent 50%),
+        radial-gradient(ellipse at 20% 80%, rgba(34,211,238,0.25), transparent 50%),
+        linear-gradient(180deg,#c7e8f5 0%,#94d0e6 45%,#5aafd0 100%);
+}
+[data-theme="sunset"] body {
+    background-image:
+        radial-gradient(circle at 75% 25%, rgba(255,240,180,0.55), transparent 30%),
+        radial-gradient(circle at 75% 25%, rgba(255,180,90,0.4), transparent 45%),
+        linear-gradient(180deg,#ffe0a8 0%,#ffb572 40%,#e88898 100%);
+}
+[data-theme="forest"] body {
+    background-image:
+        radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.5), transparent 45%),
+        radial-gradient(ellipse at 15% 85%, rgba(132,204,22,0.22), transparent 50%),
+        linear-gradient(180deg,#dff0d0 0%,#b8dfa8 40%,#7abb6c 100%);
+}
+[data-theme="sakura"] body {
+    background-image:
+        radial-gradient(ellipse at 85% 15%, rgba(255,180,215,0.7), transparent 45%),
+        radial-gradient(ellipse at 15% 80%, rgba(220,180,255,0.5), transparent 45%),
+        linear-gradient(180deg,#ffeaf0 0%,#ffd0dd 50%,#ffb0c8 100%);
+}
 
 /* Космос — звёзды поверх фона */
-[data-theme="cosmic"] 100% { opacity:1; } }
+[data-theme="cosmic"] body::before {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+        radial-gradient(1.5px 1.5px at 24px 32px, rgba(255,255,255,0.95), transparent 60%),
+        radial-gradient(1px 1px at 118px 88px, rgba(255,255,255,0.8), transparent 60%),
+        radial-gradient(2px 2px at 210px 156px, rgba(183,148,246,1), transparent 60%),
+        radial-gradient(1px 1px at 60px 200px, rgba(255,255,255,0.7), transparent 60%),
+        radial-gradient(1.5px 1.5px at 260px 40px, rgba(124,245,192,1), transparent 60%),
+        radial-gradient(1.2px 1.2px at 180px 240px, rgba(255,255,255,0.85), transparent 60%),
+        radial-gradient(1px 1px at 340px 100px, rgba(255,255,255,0.65), transparent 60%),
+        radial-gradient(1.8px 1.8px at 90px 130px, rgba(183,148,246,0.9), transparent 60%),
+        radial-gradient(1px 1px at 400px 300px, rgba(255,255,255,0.75), transparent 60%),
+        radial-gradient(1.3px 1.3px at 30px 340px, rgba(124,245,192,0.85), transparent 60%);
+    background-size:460px 380px; background-repeat:repeat;
+    
+}
+ 100% { opacity:1; } }
 
 /* Океан — волны снизу */
-[data-theme="ocean"] [data-theme="ocean"] to { transform:translateY(-10px); } }
+[data-theme="ocean"] body::before {
+    content:""; position:fixed; left:0; right:0; bottom:0;
+    height:160px; z-index:0; pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 160' preserveAspectRatio='none'><path d='M0,80 Q75,40 150,80 T300,80 T450,80 T600,80 L600,160 L0,160 Z' fill='%230891b2' opacity='0.3'/><path d='M0,110 Q75,70 150,110 T300,110 T450,110 T600,110 L600,160 L0,160 Z' fill='%2306b6d4' opacity='0.45'/><path d='M0,135 Q75,105 150,135 T300,135 T450,135 T600,135 L600,160 L0,160 Z' fill='%23064a5c' opacity='0.5'/></svg>");
+    background-size:100% 100%; background-repeat:repeat-x;
+}
+[data-theme="ocean"] body::after {
+    content:""; position:fixed; top:40px; right:30px;
+    width:120px; height:120px; border-radius:50%; z-index:0; pointer-events:none;
+    background:radial-gradient(circle, rgba(255,255,255,0.5), transparent 70%);
+    
+}
+ to { transform:translateY(-10px); } }
 
 /* Закат — пульсирующее солнце */
-[data-theme="sunset"] 50% { transform:scale(1.08); opacity:1; }
+[data-theme="sunset"] body::before {
+    content:""; position:fixed; top:60px; right:50px;
+    width:160px; height:160px; border-radius:50%; z-index:0; pointer-events:none;
+    background:radial-gradient(circle, rgba(255,250,200,0.9) 0%, rgba(255,200,120,0.5) 40%, transparent 70%);
+    
+}
+
+    50% { transform:scale(1.08); opacity:1; }
 }
 
 /* Лес — силуэты ёлок снизу */
-[data-theme="forest"] /* Сакура — розовые пятна */
-[data-theme="sakura"] to { transform:translateY(-8px); } }
+[data-theme="forest"] body::before {
+    content:""; position:fixed; left:0; right:0; bottom:0;
+    height:150px; z-index:0; pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 150' preserveAspectRatio='none'><g fill='%232d5a1f' opacity='0.55'><path d='M30,150 L30,100 L15,100 L40,65 L65,100 L50,100 L50,150 Z'/><path d='M110,150 L110,90 L90,90 L120,50 L150,90 L130,90 L130,150 Z'/><path d='M200,150 L200,110 L185,110 L210,75 L235,110 L220,110 L220,150 Z'/><path d='M290,150 L290,95 L270,95 L300,55 L330,95 L310,95 L310,150 Z'/><path d='M370,150 L370,105 L355,105 L380,70 L405,105 L390,105 L390,150 Z'/></g></svg>");
+    background-size:100% 100%; background-repeat:repeat-x;
+}
+
+/* Сакура — розовые пятна */
+[data-theme="sakura"] body::before {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+        radial-gradient(circle at 15% 20%, rgba(236,72,153,0.18), transparent 25%),
+        radial-gradient(circle at 85% 15%, rgba(255,150,200,0.2), transparent 30%),
+        radial-gradient(circle at 75% 75%, rgba(236,72,153,0.12), transparent 30%),
+        radial-gradient(circle at 25% 85%, rgba(255,192,220,0.18), transparent 25%);
+    
+}
+ to { transform:translateY(-8px); } }
 
 /* Частицы (JS создаёт) */
 #particles { position:fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden; }
@@ -1245,13 +1353,56 @@ html.hide-time .time { display:none; }
 body {
     background-attachment: scroll;
 }
-[data-theme="light"] body { background-image:linear-gradient(180deg,#f1f5fa 0%,#e4ebf3 100%); }
-[data-theme="dark"] body { background-image:linear-gradient(180deg,#10131a 0%,#0b0d12 100%); }
-[data-theme="cosmic"] body { background-image:linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%); }
-[data-theme="ocean"] body { background-image:linear-gradient(180deg,#c7e8f5 0%,#94d0e6 45%,#5aafd0 100%); }
-[data-theme="sunset"] body { background-image:linear-gradient(180deg,#ffe0a8 0%,#ffb572 40%,#e88898 100%); }
-[data-theme="forest"] body { background-image:linear-gradient(180deg,#dff0d0 0%,#b8dfa8 40%,#7abb6c 100%); }
-[data-theme="sakura"] body { background-image:linear-gradient(180deg,#ffeaf0 0%,#ffd0dd 50%,#ffb0c8 100%); }
+[data-theme="light"] body {
+    background-image:
+        radial-gradient(ellipse 60% 40% at 15% 10%, rgba(99,102,241,0.18), transparent 60%),
+        radial-gradient(ellipse 50% 40% at 85% 85%, rgba(168,85,247,0.14), transparent 60%),
+        radial-gradient(ellipse 40% 30% at 50% 50%, rgba(56,189,248,0.06), transparent 60%),
+        linear-gradient(180deg,#f5f8fc 0%,#e4ebf3 100%);
+}
+[data-theme="dark"] body {
+    background-image:
+        radial-gradient(ellipse 60% 40% at 15% 10%, rgba(99,102,241,0.22), transparent 60%),
+        radial-gradient(ellipse 50% 40% at 85% 85%, rgba(192,132,252,0.16), transparent 60%),
+        radial-gradient(ellipse 40% 30% at 50% 50%, rgba(56,189,248,0.06), transparent 60%),
+        linear-gradient(180deg,#10131a 0%,#05060a 100%);
+}
+[data-theme="cosmic"] body {
+    background-image:
+        radial-gradient(ellipse 55% 35% at 15% 10%, rgba(139,92,246,0.45), transparent 60%),
+        radial-gradient(ellipse 50% 40% at 85% 80%, rgba(56,189,248,0.3), transparent 60%),
+        radial-gradient(ellipse 45% 35% at 50% 55%, rgba(124,245,192,0.15), transparent 65%),
+        radial-gradient(circle at 50% 100%, rgba(120,60,220,0.35), transparent 60%),
+        linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%);
+}
+[data-theme="ocean"] body {
+    background-image:
+        radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,255,255,0.7), transparent 60%),
+        radial-gradient(ellipse 50% 35% at 15% 80%, rgba(34,211,238,0.35), transparent 55%),
+        radial-gradient(ellipse 45% 35% at 85% 90%, rgba(6,182,212,0.25), transparent 55%),
+        linear-gradient(180deg,#d6f0fa 0%,#8dcce4 45%,#4898b8 100%);
+}
+[data-theme="sunset"] body {
+    background-image:
+        radial-gradient(circle at 78% 22%, rgba(255,250,200,0.85), transparent 22%),
+        radial-gradient(circle at 78% 22%, rgba(255,180,90,0.5), transparent 40%),
+        radial-gradient(ellipse 60% 35% at 20% 90%, rgba(236,72,153,0.3), transparent 60%),
+        linear-gradient(180deg,#ffe0a8 0%,#ffb572 40%,#e88898 100%);
+}
+[data-theme="forest"] body {
+    background-image:
+        radial-gradient(ellipse 60% 35% at 50% 0%, rgba(255,255,255,0.55), transparent 55%),
+        radial-gradient(ellipse 50% 35% at 15% 85%, rgba(132,204,22,0.3), transparent 55%),
+        radial-gradient(ellipse 45% 35% at 90% 80%, rgba(5,150,105,0.22), transparent 55%),
+        linear-gradient(180deg,#e8f5dc 0%,#b8dfa8 40%,#7abb6c 100%);
+}
+[data-theme="sakura"] body {
+    background-image:
+        radial-gradient(ellipse 60% 40% at 85% 12%, rgba(255,180,215,0.75), transparent 55%),
+        radial-gradient(ellipse 50% 40% at 10% 80%, rgba(220,180,255,0.6), transparent 55%),
+        radial-gradient(circle at 50% 50%, rgba(255,220,235,0.35), transparent 45%),
+        linear-gradient(180deg,#fff0f5 0%,#ffd0dd 50%,#ff9dc0 100%);
+}
 
 /* Логотип — крутая градиентная рамка */
 .brand-logo {
@@ -1474,20 +1625,74 @@ html.round-nums .num { border-radius: 50% !important; }
 html.round-nums .card.now .num { border-radius: 50% !important; }
 
 /* ===== БОКОВЫЕ ДЕКОРАЦИИ ПО ТЕМАМ ===== */
+.side-decor {
+    position: fixed;
+    bottom: 0;
+    width: 140px;
+    height: 260px;
+    z-index: 0;
+    pointer-events: none;
+    background-repeat: no-repeat;
+    background-size: contain;
+    opacity: 0.85;
+}
+.side-left { left: 0; background-position: left bottom; }
+.side-right { right: 0; background-position: right bottom; transform: scaleX(-1); }
+
 /* По умолчанию скрыты */
+.side-decor { display: none; }
+
 /* 🌿 ЛЕС — ёлки с обоих сторон */
-[data-theme="forest"] [data-theme="forest"] /* 🌸 САКУРА — ствол сакуры с ветками */
-[data-theme="sakura"] [data-theme="sakura"] /* 🌊 ОКЕАН — водоросли снизу */
-[data-theme="ocean"] [data-theme="ocean"] /* 🌅 ЗАКАТ — пальма */
-[data-theme="sunset"] [data-theme="sunset"] /* 🌌 КОСМОС — планета */
-[data-theme="cosmic"] [data-theme="cosmic"] /* ☀️ СВЕТЛАЯ — облака */
-[data-theme="light"] [data-theme="light"] /* 🌙 ТЁМНАЯ — луна и облака */
-[data-theme="dark"] [data-theme="dark"] /* На мобильных — поменьше */
+[data-theme="forest"] .side-decor { display: block; }
+[data-theme="forest"] .side-decor {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 260'><g fill='%232d5a1f' opacity='0.85'><path d='M70,260 L70,150 L40,150 L75,80 L110,150 L80,150 L80,260 Z'/><path d='M70,150 L20,150 L70,50 L120,150 L70,150 Z'/><path d='M70,90 L35,90 L70,20 L105,90 Z'/></g><g fill='%233d6b30' opacity='0.7'><path d='M40,260 L40,200 L20,200 L45,150 L70,200 L55,200 L55,260 Z'/><path d='M100,260 L100,210 L85,210 L105,170 L125,210 L112,210 L112,260 Z'/></g></svg>");
+}
+
+/* 🌸 САКУРА — ствол сакуры с ветками */
+[data-theme="sakura"] .side-decor { display: block; }
+[data-theme="sakura"] .side-decor {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 260'><path d='M60,260 Q55,200 60,150 Q65,100 75,70' stroke='%238b5a2b' stroke-width='14' fill='none' stroke-linecap='round'/><path d='M60,180 Q40,160 25,140' stroke='%238b5a2b' stroke-width='10' fill='none' stroke-linecap='round'/><path d='M62,140 Q85,120 105,105' stroke='%238b5a2b' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M70,100 Q90,80 100,60' stroke='%238b5a2b' stroke-width='7' fill='none' stroke-linecap='round'/><g fill='%23ffb8d0'><circle cx='25' cy='140' r='7'/><circle cx='35' cy='130' r='5'/><circle cx='15' cy='130' r='5'/><circle cx='105' cy='105' r='7'/><circle cx='115' cy='95' r='5'/><circle cx='95' cy='98' r='5'/><circle cx='100' cy='60' r='6'/><circle cx='110' cy='50' r='5'/><circle cx='88' cy='52' r='5'/><circle cx='75' cy='70' r='8'/><circle cx='60' cy='150' r='6'/><circle cx='48' cy='142' r='5'/></g><g fill='%23ec4899'><circle cx='28' cy='145' r='3'/><circle cx='110' cy='100' r='3'/><circle cx='104' cy='65' r='3'/><circle cx='80' cy='75' r='3'/></g></svg>");
+}
+
+/* 🌊 ОКЕАН — водоросли снизу */
+[data-theme="ocean"] .side-decor { display: block; }
+[data-theme="ocean"] .side-decor {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 260'><path d='M30,260 Q20,220 35,180 Q50,140 30,100 Q15,70 30,30' stroke='%2310b981' stroke-width='10' fill='none' stroke-linecap='round' opacity='0.7'/><path d='M55,260 Q70,220 55,180 Q40,140 60,100 Q75,70 60,40' stroke='%23059669' stroke-width='9' fill='none' stroke-linecap='round' opacity='0.65'/><path d='M85,260 Q70,210 85,170 Q100,130 85,90' stroke='%230ea5e9' stroke-width='8' fill='none' stroke-linecap='round' opacity='0.6'/><path d='M110,260 Q120,220 110,180 Q95,150 115,110' stroke='%2314b8a6' stroke-width='8' fill='none' stroke-linecap='round' opacity='0.55'/><g fill='%23fb7185'><circle cx='30' cy='30' r='6'/><circle cx='60' cy='40' r='5'/><circle cx='85' cy='90' r='5'/><circle cx='115' cy='110' r='6'/></g><g fill='%23fbbf24'><circle cx='45' cy='55' r='3'/><circle cx='70' cy='30' r='3'/><circle cx='100' cy='75' r='3'/></g></svg>");
+}
+
+/* 🌅 ЗАКАТ — пальма */
+[data-theme="sunset"] .side-decor { display: block; }
+[data-theme="sunset"] .side-decor {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 260'><path d='M50,260 Q55,200 60,140 Q62,100 65,60' stroke='%23431407' stroke-width='10' fill='none' stroke-linecap='round'/><path d='M65,60 Q45,40 25,55 Q40,42 65,60 Q55,30 40,15 Q58,32 65,60 Q75,25 95,15 Q80,35 65,60 Q90,45 110,50 Q90,50 65,60' fill='%2316634a' opacity='0.9'/><path d='M65,60 Q85,40 105,50 Q88,50 65,60' fill='%2315803d'/><path d='M65,60 Q50,45 35,42 Q52,48 65,60' fill='%2315803d'/></svg>");
+}
+
+/* 🌌 КОСМОС — планета */
+[data-theme="cosmic"] .side-decor { display: block; }
+[data-theme="cosmic"] .side-decor {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 260'><defs><radialGradient id='p' cx='35%25' cy='30%25'><stop offset='0%25' stop-color='%23e0d4ff'/><stop offset='40%25' stop-color='%23b794f6'/><stop offset='100%25' stop-color='%234c1d95'/></radialGradient></defs><circle cx='70' cy='110' r='55' fill='url(%23p)'/><ellipse cx='70' cy='110' rx='95' ry='14' fill='none' stroke='%23fbbf24' stroke-width='3' opacity='0.7' transform='rotate(-20 70 110)'/><ellipse cx='70' cy='110' rx='95' ry='14' fill='none' stroke='%23fbbf24' stroke-width='2' opacity='0.4' transform='rotate(-20 70 110)' stroke-dasharray='3 4'/><circle cx='50' cy='95' r='8' fill='%23e0d4ff' opacity='0.5'/><circle cx='90' cy='130' r='6' fill='%23e0d4ff' opacity='0.4'/><circle cx='80' cy='85' r='5' fill='%23e0d4ff' opacity='0.5'/><circle cx='30' cy='40' r='2' fill='%23fff'/><circle cx='110' cy='30' r='1.5' fill='%23fff'/><circle cx='100' cy='220' r='2' fill='%237cf5c0'/><circle cx='20' cy='180' r='1.5' fill='%23fff'/></svg>");
+}
+
+/* ☀️ СВЕТЛАЯ — облака */
+[data-theme="light"] .side-decor { display: block; }
+[data-theme="light"] .side-decor {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 260'><g fill='%23ffffff' opacity='0.9'><ellipse cx='70' cy='60' rx='55' ry='28'/><ellipse cx='45' cy='50' rx='30' ry='20'/><ellipse cx='95' cy='52' rx='35' ry='22'/></g><g fill='%23e0e7ff' opacity='0.5'><ellipse cx='70' cy='150' rx='40' ry='18'/><ellipse cx='50' cy='145' rx='22' ry='12'/><ellipse cx='92' cy='148' rx='25' ry='14'/></g></svg>");
+}
+
+/* 🌙 ТЁМНАЯ — луна и облака */
+[data-theme="dark"] .side-decor { display: block; }
+[data-theme="dark"] .side-decor {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 260'><defs><radialGradient id='m' cx='35%25' cy='35%25'><stop offset='0%25' stop-color='%23fff'/><stop offset='70%25' stop-color='%23e2e8f0'/><stop offset='100%25' stop-color='%2394a3b8'/></radialGradient></defs><circle cx='75' cy='70' r='45' fill='url(%23m)'/><circle cx='60' cy='55' r='6' fill='%23cbd5e1' opacity='0.6'/><circle cx='88' cy='80' r='5' fill='%23cbd5e1' opacity='0.5'/><circle cx='70' cy='95' r='4' fill='%23cbd5e1' opacity='0.5'/><g fill='%231f2937' opacity='0.85'><ellipse cx='70' cy='180' rx='55' ry='22'/><ellipse cx='40' cy='172' rx='28' ry='16'/><ellipse cx='100' cy='176' rx='32' ry='18'/></g><g fill='%23374151' opacity='0.7'><ellipse cx='70' cy='230' rx='50' ry='18'/><ellipse cx='45' cy='225' rx='25' ry='13'/><ellipse cx='95' cy='228' rx='28' ry='14'/></g></svg>");
+}
+
+/* На мобильных — поменьше */
 @media (max-width: 500px) {
-    }
+    .side-decor { width: 100px; height: 200px; opacity: 0.75; }
+}
 
 /* Когда включен режим "компактный" — не мешать */
-html.compact /* ===== КРАСИВЫЕ НАСТРОЙКИ ПОД ТЕМУ ===== */
+html.compact .side-decor { opacity: 0.5; }
+
+/* ===== КРАСИВЫЕ НАСТРОЙКИ ПОД ТЕМУ ===== */
 
 /* Превью-полоска сверху */
 .settings-preview {
@@ -1975,22 +2180,18 @@ html.compact /* ===== КРАСИВЫЕ НАСТРОЙКИ ПОД ТЕМУ ===== 
         inset 0 -2px 4px rgba(0,0,0,0.12) !important;
 }
 
-/* ===== ФИНАЛЬНЫЙ OVERRIDE ===== */
-/* 1. Полоска снизу — нет */
+/* ===== ФИНАЛЬНЫЙ OVERRIDE (только то что надо) ===== */
+
+/* 1. Полоска снизу — убираем только фон html, не трогаем body */
 html {
     background: transparent !important;
     background-image: none !important;
     background-color: transparent !important;
 }
-body {
-    min-height: 100vh !important;
-    min-height: 100dvh !important;
-}
+
 /* 2. Отступы между тумблерами */
 .toggle-row {
     margin-bottom: 10px !important;
-    padding: 12px 14px !important;
-    border-radius: 10px !important;
 }
 .toggle-row:last-child {
     margin-bottom: 0 !important;
@@ -2002,14 +2203,17 @@ body {
 .settings-title:first-of-type {
     margin-top: 0 !important;
 }
-/* 3. Никаких декоров */
-.side-decor, .side-left, .side-right {
+
+/* 3. Убираем боковые декорации */
+.side-decor {
     display: none !important;
 }
 </style>
 </head>
 <body>
 <div id="particles"></div>
+<div class="side-decor side-left"></div>
+<div class="side-decor side-right"></div>
 <div class="container">
 
 <div class="header-card">
