@@ -2403,20 +2403,11 @@ body {
 .header-card { top: 8px !important; }
 @media (max-width: 400px) { .tabs { top: 100px !important; } }
 
-/* ===== ШАПКА — якорь для панели ===== */
-
-
-/* ===== ШАПКА STICKY + ПАНЕЛЬ FIXED ===== */
+/* ===== ШАПКА STICKY + ЯКОРЬ ДЛЯ ПАНЕЛИ ===== */
 .header-card {
     position: sticky !important;
     top: 8px !important;
     z-index: 100 !important;
-    position: relative; /* fallback */
-}
-@supports (position: sticky) {
-    .header-card {
-        position: sticky !important;
-    }
 }
 .tabs {
     position: sticky !important;
@@ -2424,37 +2415,6 @@ body {
     z-index: 99 !important;
 }
 @media (max-width: 400px) { .tabs { top: 100px !important; } }
-
-.settings-panel {
-    position: fixed !important;
-    top: 100px;
-    right: 14px;
-    margin-top: 0 !important;
-    width: 340px !important;
-    max-width: calc(100vw - 28px) !important;
-    max-height: 80vh !important;
-    overflow-y: auto !important;
-    z-index: 9999 !important;
-    background: var(--card-bg, var(--card)) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 18px !important;
-    padding: 18px !important;
-    box-shadow: 0 16px 48px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.12) !important;
-    transform-origin: top right;
-    transform: scale(0.95) translateY(-6px);
-    opacity: 0;
-    pointer-events: none;
-    transition: transform 0.12s cubic-bezier(0.4,0,0.2,1), opacity 0.1s ease;
-    will-change: transform, opacity;
-}
-.settings-panel.open {
-    transform: scale(1) translateY(0) !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
-}
-[data-theme="cosmic"] .settings-panel {
-    box-shadow: 0 16px 48px rgba(120,60,220,0.45), inset 0 1px 0 rgba(255,255,255,0.06) !important;
-}
 </style>
 </head>
 <body>
@@ -2718,22 +2678,6 @@ if ('serviceWorker' in navigator) {
 })();
 
 
-
-
-var _origToggleSettings = toggleSettings;
-toggleSettings = function(e) {
-    if (e) e.stopPropagation();
-    var panel = document.getElementById('settingsPanel');
-    if (!panel) return;
-    // Позиционируем панель под кнопкой настроек
-    var btn = document.querySelector('.icon-btn');
-    if (btn) {
-        var rect = btn.getBoundingClientRect();
-        panel.style.top = (rect.bottom + 10) + 'px';
-        panel.style.right = Math.max(14, window.innerWidth - rect.right) + 'px';
-    }
-    panel.classList.toggle('open');
-};
 
 </script>
 </body>
