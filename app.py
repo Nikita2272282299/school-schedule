@@ -951,7 +951,7 @@ if ('serviceWorker' in navigator) {
             var until = nowEl.getAttribute('data-until') || '';
             var tEl = nowEl.querySelector('.live-timer');
             if (endUnix && tEl) {
-                var left = Math.max(0, Math.floor((endUnix - nowSec) / 60));
+                var left = Math.max(0, Math.ceil((endUnix - nowSec) / 60));
                 tEl.textContent = 'до ' + until + ' · осталось ' + left + ' мин';
             }
         }
@@ -961,7 +961,7 @@ if ('serviceWorker' in navigator) {
             var startStr = beforeEl.getAttribute('data-start') || '';
             var tEl2 = beforeEl.querySelector('.live-timer');
             if (startUnix && tEl2) {
-                var wait = Math.max(0, Math.floor((startUnix - nowSec) / 60));
+                var wait = Math.max(0, Math.ceil((startUnix - nowSec) / 60));
                 tEl2.textContent = 'в ' + startStr + ' · через ' + wait + ' мин';
             }
         }
@@ -1066,7 +1066,7 @@ class SimpleHandler(BaseHTTPRequestHandler):
             weekday_idx = now_perm.weekday()
             current_day_name = DAY_FULL[weekday_idx] if weekday_idx < 6 else "Суббота"
             is_weekend = (weekday_idx >= 5)
-            refresh_tag = "<meta http-equiv='refresh' content='900'>" if not (1 <= hour < 5) else ""
+            refresh_tag = "<meta http-equiv='refresh' content='90'>" if not (1 <= hour < 5) else ""
 
             days_schedule, error_msg = get_schedule()
 
