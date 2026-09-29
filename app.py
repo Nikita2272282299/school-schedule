@@ -2276,145 +2276,6 @@ body {
     min-height: 100vh !important;
     min-height: 100dvh !important;
 }
-
-/* ===== ЛИПКАЯ ШАПКА И ТАБЫ ===== */
-
-/* body НЕ flex — иначе sticky плохо работает */
-body {
-    display: block !important;
-}
-.container {
-    margin: 0 auto !important;
-    max-width: 500px !important;
-    padding: 0 14px !important;
-}
-
-/* Шапка прилипает к верху */
-.header-card {
-    position: sticky !important;
-    top: 8px !important;
-    z-index: 100 !important;
-    margin-bottom: 12px !important;
-}
-
-/* Табы прилипают чуть ниже шапки */
-.tabs {
-    position: sticky !important;
-    top: 108px !important;
-    z-index: 99 !important;
-    margin-bottom: 16px !important;
-}
-
-/* Космос — добавим свечение прилипшей шапке */
-[data-theme="cosmic"] .header-card {
-    box-shadow: 0 6px 24px rgba(120,60,220,0.5), inset 0 1px 0 rgba(255,255,255,0.08) !important;
-}
-[data-theme="cosmic"] .tabs {
-    box-shadow: 0 6px 24px rgba(120,60,220,0.4) !important;
-}
-
-/* На маленьких экранах чуть компактнее */
-@media (max-width: 400px) {
-    .tabs { top: 100px !important; }
-}
-
-/* ===== СКРОЛЛ ОСТАНАВЛИВАЕТСЯ ПОД КНОПКОЙ ТАБЛИЦЫ ===== */
-html, body {
-    overflow-x: hidden !important;
-    overscroll-behavior-y: contain !important;
-}
-body {
-    min-height: auto !important;
-}
-.container {
-    padding-bottom: 20px !important;
-    min-height: auto !important;
-}
-.sheet-link {
-    margin-bottom: 0 !important;
-}
-
-/* Sticky шапка и табы */
-.header-card {
-    position: sticky !important;
-    top: 8px !important;
-    z-index: 100 !important;
-}
-.tabs {
-    position: sticky !important;
-    top: 108px !important;
-    z-index: 99 !important;
-}
-@media (max-width: 400px) {
-    .tabs { top: 100px !important; }
-}
-
-/* ===== ПУЛЬСАЦИЯ НОВОГО ДНЯ ===== */
-@keyframes tabPulse {
-    0%,100% { box-shadow:0 0 0 0 var(--accent); transform:scale(1); }
-    50% { box-shadow:0 0 0 6px transparent; transform:scale(1.06); }
-}
-.tab.new-day {
-    animation:tabPulse 1.6s ease-in-out infinite !important;
-    color:var(--accent) !important;
-}
-.tab.new-day .tab-day { opacity:1; color:var(--accent); }
-
-/* ===== БАННЕР "РАСПИСАНИЕ ИЗМЕНЕНО" ===== */
-#changeBanner {
-    display:none;
-    margin-bottom:14px;
-    padding:14px 18px;
-    border-radius:16px;
-    background:linear-gradient(135deg, var(--accent-light), var(--card));
-    border:1.5px solid var(--accent);
-    color:var(--accent);
-    font-weight:800;
-    font-size:0.9rem;
-    box-shadow:0 6px 20px var(--accent-light);
-    align-items:center;
-    gap:10px;
-    animation:bannerIn 0.4s cubic-bezier(0.4,0,0.2,1);
-}
-#changeBanner.show { display:flex; }
-#changeBanner .banner-icon { font-size:1.3rem; }
-@keyframes bannerIn {
-    from { opacity:0; transform:translateY(-8px); }
-    to { opacity:1; transform:none; }
-}
-
-/* ===== ТАБЫ: 6 колонок, все влезают ===== */
-.tabs {
-    display: grid !important;
-    grid-template-columns: repeat(6, 1fr) !important;
-    gap: 4px !important;
-    overflow: visible !important;
-    padding: 4px !important;
-}
-.tab {
-    min-width: 0 !important;
-    padding: 10px 4px !important;
-    font-size: 0.82rem !important;
-}
-.tab .tab-day { font-size: 0.6rem !important; }
-
-/* Шапка отлипла от дней */
-.tabs { top: 108px !important; }
-.header-card { top: 8px !important; }
-@media (max-width: 400px) { .tabs { top: 100px !important; } }
-
-/* ===== ШАПКА STICKY + ЯКОРЬ ДЛЯ ПАНЕЛИ ===== */
-.header-card {
-    position: sticky !important;
-    top: 8px !important;
-    z-index: 100 !important;
-}
-.tabs {
-    position: sticky !important;
-    top: 108px !important;
-    z-index: 99 !important;
-}
-@media (max-width: 400px) { .tabs { top: 100px !important; } }
 </style>
 </head>
 <body>
@@ -2555,14 +2416,13 @@ document.addEventListener('click', function(e) {
     if (e.target.closest('.icon-btn')) return;
     p.classList.remove('open');
 });
-function showDay(day){
-    document.querySelectorAll('.day-block').forEach(function(el){el.classList.remove('active-day');});
-    var t = document.getElementById('block-'+day);
+function showDay(day) {
+    document.querySelectorAll('.day-block').forEach(function(el) { el.classList.remove('active-day'); });
+    var t = document.getElementById('block-' + day);
     if (t) t.classList.add('active-day');
-    document.querySelectorAll('.tab').forEach(function(x){
-        x.classList.toggle('active', x.getAttribute('data-day')===day);
+    document.querySelectorAll('.tab').forEach(function(x) {
+        x.classList.toggle('active', x.getAttribute('data-day') === day);
     });
-    localStorage.setItem('rs_day', day);
 }
 var deferredPrompt = null;
 var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -2676,7 +2536,6 @@ if ('serviceWorker' in navigator) {
         if (!document.hidden) update();
     });
 })();
-
 
 
 </script>
