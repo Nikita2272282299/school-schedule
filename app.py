@@ -2179,6 +2179,95 @@ html.compact .side-decor { opacity: 0.5; }
         inset 0 1px 0 rgba(255,255,255,0.35),
         inset 0 -2px 4px rgba(0,0,0,0.12) !important;
 }
+
+/* ========== ОТСТУПЫ + ФОН ПОД ТЕМУ ========== */
+
+/* 1. Отступы между секциями настроек */
+.settings-title {
+    margin-top: 24px !important;
+}
+.settings-title:first-of-type {
+    margin-top: 0 !important;
+}
+.size-options {
+    margin-bottom: 22px !important;
+}
+.theme-options {
+    margin-bottom: 6px !important;
+}
+.toggle-row:first-of-type {
+    margin-top: 4px !important;
+}
+
+/* 2. ФОН ПАНЕЛИ НАСТРОЕК — под каждую тему (усиленно) */
+[data-theme="light"] .settings-panel {
+    background: linear-gradient(180deg, #ffffff 0%, #e8eef8 100%) !important;
+    border: 1px solid rgba(99,102,241,0.18) !important;
+}
+[data-theme="dark"] .settings-panel {
+    background: linear-gradient(180deg, #222736 0%, #131620 100%) !important;
+    border: 1px solid rgba(124,147,255,0.18) !important;
+}
+[data-theme="cosmic"] .settings-panel {
+    background: linear-gradient(180deg, rgba(55,35,110,0.98) 0%, rgba(20,12,55,0.99) 100%) !important;
+    border: 1px solid rgba(183,148,246,0.4) !important;
+    box-shadow: 0 8px 32px rgba(120,60,220,0.5), 0 0 30px rgba(183,148,246,0.15) !important;
+}
+[data-theme="ocean"] .settings-panel {
+    background: linear-gradient(180deg, #e0f5fc 0%, #a8d8ec 100%) !important;
+    border: 2px solid rgba(34,211,238,0.4) !important;
+}
+[data-theme="sunset"] .settings-panel {
+    background: linear-gradient(180deg, #fff0d8 0%, #ffd0a0 100%) !important;
+    border: 2px solid rgba(249,115,22,0.35) !important;
+}
+[data-theme="forest"] .settings-panel {
+    background: linear-gradient(180deg, #ecf7dc 0%, #c0e0a8 100%) !important;
+    border: 2px solid rgba(5,150,105,0.3) !important;
+}
+[data-theme="sakura"] .settings-panel {
+    background: linear-gradient(180deg, #fff0f5 0%, #ffc8dd 100%) !important;
+    border: 2px solid rgba(236,72,153,0.3) !important;
+}
+
+/* 3. ТАБЫ ПН-СБ под каждую тему */
+.tabs {
+    border-width: 1.5px !important;
+}
+[data-theme="light"] .tabs {
+    background: linear-gradient(135deg, #ffffff 0%, #e8eef8 100%) !important;
+    border-color: rgba(99,102,241,0.18) !important;
+}
+[data-theme="dark"] .tabs {
+    background: linear-gradient(135deg, #1e222e 0%, #131620 100%) !important;
+    border-color: rgba(124,147,255,0.18) !important;
+}
+[data-theme="cosmic"] .tabs {
+    background: linear-gradient(135deg, rgba(50,32,105,0.95) 0%, rgba(25,15,60,0.98) 100%) !important;
+    border-color: rgba(183,148,246,0.35) !important;
+    box-shadow: 0 4px 18px rgba(120,60,220,0.4) !important;
+}
+[data-theme="ocean"] .tabs {
+    background: linear-gradient(135deg, #daf2fb 0%, #9ed4e8 100%) !important;
+    border-color: rgba(34,211,238,0.35) !important;
+}
+[data-theme="sunset"] .tabs {
+    background: linear-gradient(135deg, #fff0d8 0%, #ffc896 100%) !important;
+    border-color: rgba(249,115,22,0.3) !important;
+}
+[data-theme="forest"] .tabs {
+    background: linear-gradient(135deg, #eef8de 0%, #b8dda0 100%) !important;
+    border-color: rgba(5,150,105,0.28) !important;
+}
+[data-theme="sakura"] .tabs {
+    background: linear-gradient(135deg, #fff0f5 0%, #ffc0d8 100%) !important;
+    border-color: rgba(236,72,153,0.28) !important;
+}
+
+/* Активная вкладка — уже тематическая */
+.tab.active {
+    box-shadow: 0 4px 14px var(--accent-light), inset 0 1px 0 rgba(255,255,255,0.3) !important;
+}
 </style>
 </head>
 <body>
