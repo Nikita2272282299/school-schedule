@@ -2317,6 +2317,37 @@ body {
 @media (max-width: 400px) {
     .tabs { top: 90px !important; }
 }
+
+/* ===== СКРОЛЛ ОСТАНАВЛИВАЕТСЯ ПОД КНОПКОЙ ТАБЛИЦЫ ===== */
+html, body {
+    overflow-x: hidden !important;
+    overscroll-behavior-y: contain !important;
+}
+body {
+    min-height: auto !important;
+}
+.container {
+    padding-bottom: 20px !important;
+    min-height: auto !important;
+}
+.sheet-link {
+    margin-bottom: 0 !important;
+}
+
+/* Sticky шапка и табы */
+.header-card {
+    position: sticky !important;
+    top: 8px !important;
+    z-index: 100 !important;
+}
+.tabs {
+    position: sticky !important;
+    top: 96px !important;
+    z-index: 99 !important;
+}
+@media (max-width: 400px) {
+    .tabs { top: 90px !important; }
+}
 </style>
 </head>
 <body>
