@@ -310,7 +310,7 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
     transform:scale(0.94) translateY(-4px);
     opacity:0;
     pointer-events:none;
-    transition:transform 0.12s cubic-bezier(0.4,0,0.2,1), opacity 0.1s ease;
+    transition:transform 0.09s cubic-bezier(0.4,0,0.2,1), opacity 0.07s ease;
     will-change:transform, opacity;
 }
 [data-theme="cosmic"] .settings-panel {
@@ -2172,6 +2172,28 @@ html.compact .side-decor { opacity: 0.5; }
         0 1px 3px rgba(0,0,0,0.1),
         inset 0 1px 0 rgba(255,255,255,0.35),
         inset 0 -2px 4px rgba(0,0,0,0.12) !important;
+}
+
+/* Отступы между тумблерами */
+.toggle-row {
+    margin-bottom: 10px !important;
+    padding: 12px 14px !important;
+}
+.toggle-row:last-child {
+    margin-bottom: 0 !important;
+}
+.settings-title {
+    margin-top: 22px !important;
+    margin-bottom: 12px !important;
+}
+.settings-title:first-of-type {
+    margin-top: 0 !important;
+}
+.theme-options, .theme-grid {
+    margin-bottom: 8px !important;
+}
+.size-options, .size-grid {
+    margin-bottom: 8px !important;
 }
 </style>
 </head>
