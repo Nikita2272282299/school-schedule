@@ -206,18 +206,34 @@ h2 span { background:linear-gradient(135deg,var(--accent),var(--accent2));
     cursor:pointer; display:flex; align-items:center; justify-content:center; }
 .icon-btn:active { transform:scale(0.92); }
 
+.header-card { position:relative; }
 .settings-panel {
-    background:var(--card); border:1px solid var(--border); border-radius:16px;
-    padding:0 18px; margin-bottom:0; box-shadow:none;
-    max-height:0; overflow:hidden; opacity:0;
-    transition:max-height 0.22s cubic-bezier(0.4,0,0.2,1),
-               opacity 0.14s ease,
-               padding 0.22s cubic-bezier(0.4,0,0.2,1),
-               margin-bottom 0.22s ease;
+    position:absolute;
+    top:100%;
+    right:0;
+    margin-top:8px;
+    width:320px;
+    max-width:calc(100vw - 44px);
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    box-shadow:0 14px 44px rgba(0,0,0,0.16), 0 4px 12px rgba(0,0,0,0.08);
+    padding:16px 18px;
+    z-index:50;
+    transform-origin:top right;
+    transform:scale(0.94) translateY(-6px);
+    opacity:0;
+    pointer-events:none;
+    transition:transform 0.11s cubic-bezier(0.4,0,0.2,1), opacity 0.09s ease;
+    will-change:transform, opacity;
 }
 .settings-panel.open {
-    max-height:1200px; opacity:1; padding:16px 18px; margin-bottom:14px;
-    box-shadow:var(--shadow);
+    transform:scale(1) translateY(0);
+    opacity:1;
+    pointer-events:auto;
+}
+[data-theme="cosmic"] .settings-panel {
+    box-shadow:0 14px 44px rgba(120,60,220,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 .settings-title { font-weight:800; font-size:0.9rem; margin-bottom:10px; }
 .settings-title:not(:first-child) { margin-top:16px; }
@@ -328,13 +344,145 @@ html.font-large .day-title { font-size:1.3rem; }
 html.compact .card { padding:11px 14px; margin-bottom:7px; }
 html.compact .num { min-width:34px; height:34px; font-size:0.9rem; }
 html.hide-time .time { display:none; }
+
+/* ===== КРАСИВЫЕ КАРТОЧКИ ===== */
+[data-theme="light"] .card {
+    background:
+        radial-gradient(circle, rgba(99,102,241,0.08) 1px, transparent 1.5px),
+        linear-gradient(180deg, #ffffff 0%, #f7fafd 100%);
+    background-size: 16px 16px, 100% 100%;
+    border:1px solid rgba(99,102,241,0.12);
+    box-shadow:0 2px 6px rgba(99,102,241,0.06), 0 6px 18px rgba(99,102,241,0.06), inset 0 1px 0 #fff;
+}
+[data-theme="light"] .num { background:linear-gradient(135deg,#e0e7ff,#c7d2fe); color:#4338ca;
+    box-shadow:0 2px 6px rgba(99,102,241,0.15), inset 0 1px 0 rgba(255,255,255,0.9); }
+
+[data-theme="dark"] .card {
+    background:
+        radial-gradient(1px 1px at 15% 25%, rgba(255,255,255,0.5), transparent 70%),
+        radial-gradient(1px 1px at 55% 65%, rgba(199,210,254,0.6), transparent 70%),
+        radial-gradient(1px 1px at 85% 35%, rgba(255,255,255,0.4), transparent 70%),
+        linear-gradient(135deg,#232733 0%,#1a1d24 55%,#12141b 100%);
+    border:1px solid rgba(255,255,255,0.1);
+    box-shadow:0 2px 6px rgba(0,0,0,0.5), 0 8px 22px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+[data-theme="dark"] .num { background:linear-gradient(135deg,#2d3142,#232741); color:#c7d2fe;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), 0 1px 4px rgba(0,0,0,0.4); }
+
+[data-theme="cosmic"] .card {
+    background:
+        radial-gradient(1px 1px at 12% 20%, rgba(255,255,255,0.95), transparent 65%),
+        radial-gradient(1.5px 1.5px at 78% 25%, rgba(124,245,192,0.9), transparent 65%),
+        radial-gradient(1px 1px at 35% 75%, rgba(183,148,246,0.9), transparent 65%),
+        radial-gradient(1.5px 1.5px at 88% 80%, rgba(255,255,255,0.9), transparent 65%),
+        linear-gradient(135deg,rgba(50,30,100,0.92) 0%,rgba(25,15,60,0.96) 100%);
+    border:1px solid rgba(183,148,246,0.32);
+    box-shadow:0 3px 10px rgba(120,60,220,0.3), 0 10px 28px rgba(120,60,220,0.2), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+[data-theme="ocean"] .card {
+    background:
+        radial-gradient(ellipse at 15% 20%, rgba(255,255,255,0.75), transparent 45%),
+        radial-gradient(ellipse at 90% 85%, rgba(34,211,238,0.2), transparent 40%),
+        linear-gradient(180deg,rgba(255,255,255,0.96) 0%,rgba(220,245,252,0.92) 50%,rgba(180,230,245,0.88) 100%);
+    border:1px solid rgba(34,211,238,0.4);
+    box-shadow:0 3px 10px rgba(8,145,178,0.15), 0 6px 22px rgba(8,145,178,0.22),
+        inset 0 2px 8px rgba(255,255,255,0.9), inset 0 -4px 8px rgba(8,145,178,0.12);
+}
+[data-theme="ocean"] .num { background:radial-gradient(circle at 30% 25%,#fff,#22d3ee 55%,#0891b2);
+    color:#fff; border-radius:50%; border:2px solid rgba(255,255,255,0.9);
+    box-shadow:0 3px 10px rgba(8,145,178,0.4), inset -3px -4px 8px rgba(8,145,178,0.3), inset 3px 3px 10px rgba(255,255,255,0.7); }
+
+[data-theme="sunset"] .card {
+    background:
+        radial-gradient(ellipse at 90% 15%, rgba(255,220,150,0.5), transparent 40%),
+        linear-gradient(180deg,#fff8ec 0%,#ffe9cc 60%,#ffd9b0 100%);
+    border:1px solid rgba(249,115,22,0.3);
+    box-shadow:0 3px 10px rgba(249,115,22,0.15), 0 6px 22px rgba(249,115,22,0.22), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+[data-theme="sunset"] .num { background:linear-gradient(135deg,#f97316,#ec4899); color:#fff;
+    border-radius:14px 4px 14px 4px; box-shadow:0 3px 10px rgba(249,115,22,0.4), inset 0 1px 0 rgba(255,255,255,0.4); }
+
+[data-theme="forest"] .card {
+    background:
+        linear-gradient(180deg,rgba(140,100,60,0.15) 0%,rgba(90,60,30,0.05) 100%),
+        linear-gradient(90deg, rgba(180,140,90,0.12) 0%,transparent 3%,transparent 10%,rgba(140,100,60,0.08) 12%,transparent 15%,transparent 45%,rgba(140,100,60,0.06) 47%,transparent 50%,transparent 82%,rgba(140,100,60,0.08) 84%,transparent 88%,rgba(180,140,90,0.1) 100%),
+        linear-gradient(180deg,#f5ecd8 0%,#e8d9b8 40%,#d8c498 100%);
+    border:1px solid rgba(90,60,30,0.3);
+    border-radius:10px 6px 10px 6px;
+    box-shadow:0 3px 10px rgba(60,40,20,0.2), inset 0 1px 0 rgba(255,240,210,0.6), inset 0 -2px 4px rgba(90,60,30,0.12);
+    position:relative; overflow:hidden;
+}
+[data-theme="forest"] .card::before {
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(90deg,transparent 0,transparent 28px,rgba(90,60,30,0.06) 28px,rgba(90,60,30,0.06) 29px);
+    opacity:0.7;
+}
+[data-theme="forest"] .num { background:linear-gradient(180deg,#c9a86a,#a8874a 50%,#8a6a2f);
+    color:#fffbf0; border-radius:8px 4px 8px 4px; border:1px solid rgba(90,60,20,0.4);
+    box-shadow:0 2px 6px rgba(60,40,10,0.3), inset 0 1px 0 rgba(255,240,200,0.5); font-family:Georgia,serif; }
+
+[data-theme="sakura"] .card {
+    background:
+        radial-gradient(ellipse at 80% 15%, rgba(255,220,235,0.7), transparent 45%),
+        radial-gradient(ellipse at 15% 85%, rgba(255,200,225,0.6), transparent 40%),
+        linear-gradient(180deg,#fffafc 0%,#ffe8f0 50%,#ffd0dd 100%);
+    border:1px solid rgba(236,72,153,0.22);
+    border-radius:20px 20px 20px 8px;
+    box-shadow:0 3px 10px rgba(236,72,153,0.15), 0 5px 18px rgba(236,72,153,0.2), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+[data-theme="sakura"] .num { background:radial-gradient(circle at 30% 25%,#fff 0%,#f9a8d4 50%,#ec4899 100%);
+    color:#fff; border-radius:50% 50% 50% 14px;
+    box-shadow:0 3px 10px rgba(236,72,153,0.35), inset 0 1px 0 rgba(255,255,255,0.6); }
+
+/* ===== КРАСИВЫЕ КНОПКИ ===== */
+.theme-btn {
+    padding:16px 6px 14px !important;
+    border-radius:14px !important;
+    position:relative; overflow:hidden;
+    box-shadow:0 3px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06),
+        inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -2px 4px rgba(0,0,0,0.06);
+    transition:transform 0.1s, box-shadow 0.12s;
+}
+.theme-btn::before {
+    content:""; position:absolute; top:0; left:10%; right:10%; height:40%;
+    border-radius:14px 14px 50% 50%;
+    background:linear-gradient(180deg, rgba(255,255,255,0.5), transparent);
+    pointer-events:none;
+}
+.theme-btn:active { transform:scale(0.94); }
+.theme-btn .emoji { font-size:1.5rem; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.15)); position:relative; z-index:1; }
+.theme-btn.active {
+    box-shadow:0 0 0 3px var(--accent), 0 6px 18px var(--accent-light),
+        inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -2px 6px rgba(0,0,0,0.12) !important;
+    transform:translateY(-2px);
+}
+.size-btn {
+    padding:13px !important;
+    border-radius:12px !important;
+    box-shadow:0 3px 8px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8), inset 0 -2px 4px rgba(0,0,0,0.06);
+    transition:transform 0.1s;
+}
+.size-btn:active { transform:scale(0.95); }
+.size-btn.active {
+    box-shadow:0 0 0 3px var(--accent), 0 6px 18px var(--accent-light),
+        inset 0 1px 0 rgba(255,255,255,0.4) !important;
+    transform:translateY(-2px);
+}
+.toggle {
+    box-shadow:inset 0 3px 6px rgba(0,0,0,0.15), inset 0 -1px 2px rgba(255,255,255,0.5), 0 1px 0 rgba(255,255,255,0.6);
+}
+.toggle::after {
+    box-shadow:0 3px 6px rgba(0,0,0,0.22), 0 1px 2px rgba(0,0,0,0.15),
+        inset 0 -1px 2px rgba(0,0,0,0.08), inset 0 1px 0 #fff;
+}
 </style>
 </head>
 <body>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
-    <h2><span id="brandEmoji">📅</span> <span>Расписание</span></h2>
+    <h2><span id="brandEmoji">📅</span> Расписание</h2>
     <div class="header-right">
         <div class="badge-class">8Г</div>
         <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
@@ -400,7 +548,7 @@ var THEME_ICONS = {light:'☀️',dark:'🌙',cosmic:'🌌',ocean:'🌊',sunset:
         b.classList.toggle('active', b.getAttribute('data-theme-btn')===s);
     });
     var emoji = document.getElementById('brandEmoji');
-    if (emoji) emoji.textContent = THEME_ICONS[s] || '📅';
+    if (emoji) emoji.textContent = '📅';
     var size = localStorage.getItem('rs_size') || 'normal';
     if (size==='small') document.documentElement.classList.add('font-small');
     if (size==='large') document.documentElement.classList.add('font-large');
@@ -424,7 +572,7 @@ function setTheme(t){
     var meta = document.getElementById('tcMeta');
     if (meta) meta.setAttribute('content', THEME_COLORS[t] || '#f0f4f8');
     var emoji = document.getElementById('brandEmoji');
-    if (emoji) emoji.textContent = THEME_ICONS[t] || '📅';
+    if (emoji) emoji.textContent = '📅';
     spawnParticles(t);
 }
 function setSize(s){
