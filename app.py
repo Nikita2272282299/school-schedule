@@ -1704,6 +1704,7 @@ function setTheme(t) {
     var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4'};
 var icons = {light:'☀️', dark:'🌙', cosmic:'🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸'};
     if (meta) meta.setAttribute('content', colors[t] || '#f0f4f8');
+    spawnParticles(t);
 }
 function setSize(s) {
     document.documentElement.classList.remove('font-small','font-large');
