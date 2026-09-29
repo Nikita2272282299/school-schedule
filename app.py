@@ -931,32 +931,7 @@ function doInstall() {
     });
 }
 
-function updateLiveTimer() {
-    var nowEl = document.querySelector('.live-banner.now');
-    if (nowEl) {
-        var endUnix = parseInt(nowEl.getAttribute('data-end-unix'));
-        var until = nowEl.getAttribute('data-until');
-        if (endUnix && until) {
-            var nowSec = Math.floor(Date.now() / 1000);
-            var left = Math.max(0, Math.ceil((endUnix - nowSec) / 60));
-            var timeEl = nowEl.querySelector('.live-timer');
-            if (timeEl) timeEl.textContent = 'до ' + until + ' · осталось ' + left + ' мин';
-        }
-    }
-    var beforeEl = document.querySelector('.live-banner.before');
-    if (beforeEl) {
-        var startUnix = parseInt(beforeEl.getAttribute('data-start-unix'));
-        var startStr = beforeEl.getAttribute('data-start');
-        if (startUnix && startStr) {
-            var nowSec2 = Math.floor(Date.now() / 1000);
-            var wait = Math.max(0, Math.ceil((startUnix - nowSec2) / 60));
-            var timeEl2 = beforeEl.querySelector('.live-timer');
-            if (timeEl2) timeEl2.textContent = 'в ' + startStr + ' · через ' + wait + ' мин';
-        }
-    }
-}
-updateLiveTimer();
-setInterval(updateLiveTimer, 30000);
+
 
 renderInstallSection();
 if ('serviceWorker' in navigator) {
@@ -964,6 +939,40 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js').catch(function() {});
     });
 }
+
+/* === ЖИВОЙ ТАЙМЕР === */
+(function(){
+    function pad(n){ return (n<10?'0':'')+n; }
+    function update(){
+        var nowSec = Math.floor(Date.now()/1000);
+        var nowEl = document.querySelector('.live-banner.now');
+        if (nowEl) {
+            var endUnix = parseInt(nowEl.getAttribute('data-end-unix'), 10);
+            var until = nowEl.getAttribute('data-until') || '';
+            var tEl = nowEl.querySelector('.live-timer');
+            if (endUnix && tEl) {
+                var left = Math.max(0, Math.floor((endUnix - nowSec) / 60));
+                tEl.textContent = 'до ' + until + ' · осталось ' + left + ' мин';
+            }
+        }
+        var beforeEl = document.querySelector('.live-banner.before');
+        if (beforeEl) {
+            var startUnix = parseInt(beforeEl.getAttribute('data-start-unix'), 10);
+            var startStr = beforeEl.getAttribute('data-start') || '';
+            var tEl2 = beforeEl.querySelector('.live-timer');
+            if (startUnix && tEl2) {
+                var wait = Math.max(0, Math.floor((startUnix - nowSec) / 60));
+                tEl2.textContent = 'в ' + startStr + ' · через ' + wait + ' мин';
+            }
+        }
+    }
+    update();
+    setInterval(update, 10000);
+    document.addEventListener('visibilitychange', function(){
+        if (!document.hidden) update();
+    });
+})();
+
 </script>
 </body>
 </html>"""
