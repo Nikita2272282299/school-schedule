@@ -784,81 +784,117 @@ html.hide-time .time { display:none; }
 [data-theme="sakura"] .icon-btn:active { opacity:0.85; }
 
 /* === НОВЫЕ ТЕМЫ === */
-[data-theme="raspberry"] {
-    --bg:#ffd6df; --card-bg:rgba(255,255,255,0.95); --text-main:#4a0a1f; --text-muted:#a05470;
-    --accent:#e11d48; --accent-light:rgba(225,29,72,0.14); --today-badge:#be123c;
-    --error:#dc2626; --shadow:0 4px 16px rgba(225,29,72,0.12); --border:rgba(74,10,31,0.08);
-    --green:#10b981; --green-soft:rgba(16,185,129,0.14);
-    --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.14);
-    --num-bg:linear-gradient(135deg,#e11d48,#f472b6); --num-color:#fff;
-    --num-shadow:0 3px 10px rgba(225,29,72,0.3);
-    color-scheme:light;
-}
-[data-theme="lavender"] {
-    --bg:#e9defb; --card-bg:rgba(255,255,255,0.95); --text-main:#2e1065; --text-muted:#7e6ba8;
-    --accent:#8b5cf6; --accent-light:rgba(139,92,246,0.16); --today-badge:#7c3aed;
-    --error:#dc2626; --shadow:0 4px 16px rgba(139,92,246,0.14); --border:rgba(46,16,101,0.08);
-    --green:#10b981; --green-soft:rgba(16,185,129,0.14);
-    --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.14);
-    --num-bg:linear-gradient(135deg,#8b5cf6,#c084fc); --num-color:#fff;
-    --num-shadow:0 3px 10px rgba(139,92,246,0.3);
-    color-scheme:light;
-}
-[data-theme="ice"] {
-    --bg:#dbeafe; --card-bg:rgba(255,255,255,0.96); --text-main:#0c2540; --text-muted:#5b7a9c;
-    --accent:#0ea5e9; --accent-light:rgba(14,165,233,0.14); --today-badge:#0284c7;
-    --error:#dc2626; --shadow:0 4px 16px rgba(14,165,233,0.12); --border:rgba(12,37,64,0.08);
-    --green:#10b981; --green-soft:rgba(16,185,129,0.14);
-    --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.14);
-    --num-bg:linear-gradient(135deg,#0ea5e9,#67e8f9); --num-color:#fff;
-    --num-shadow:0 3px 10px rgba(14,165,233,0.3);
-    color-scheme:light;
-}
-[data-theme="lemon"] {
-    --bg:#fef9c3; --card-bg:rgba(255,255,255,0.96); --text-main:#422006; --text-muted:#8a6a26;
-    --accent:#eab308; --accent-light:rgba(234,179,8,0.18); --today-badge:#ca8a04;
-    --error:#dc2626; --shadow:0 4px 16px rgba(234,179,8,0.16); --border:rgba(66,32,6,0.08);
-    --green:#16a34a; --green-soft:rgba(22,163,74,0.14);
-    --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.14);
-    --num-bg:linear-gradient(135deg,#eab308,#a3e635); --num-color:#422006;
-    --num-shadow:0 3px 10px rgba(234,179,8,0.3);
-    color-scheme:light;
-}
-[data-theme="midnight"] {
-    --bg:#020617; --card-bg:rgba(15,23,42,0.85); --text-main:#e2e8f0; --text-muted:#94a3b8;
-    --accent:#38bdf8; --accent-light:rgba(56,189,248,0.16); --today-badge:#7dd3fc;
-    --error:#f87171; --shadow:0 6px 24px rgba(56,189,248,0.15); --border:rgba(56,189,248,0.14);
-    --green:#34d399; --green-soft:rgba(52,211,153,0.14);
-    --orange:#fbbf24; --orange-soft:rgba(251,191,36,0.14);
-    --num-bg:linear-gradient(135deg,#38bdf8,#818cf8); --num-color:#020617;
-    --num-shadow:0 0 12px rgba(56,189,248,0.4);
-    color-scheme:dark;
-}
-[data-theme="raspberry"] body { background-image:linear-gradient(180deg,#ffe0e6 0%,#ffc4d0 50%,#ff9cb0 100%); }
-[data-theme="lavender"] body { background-image:linear-gradient(180deg,#f3e8ff 0%,#e0caff 50%,#c9a5ff 100%); }
-[data-theme="ice"] body { background-image:linear-gradient(180deg,#eff6ff 0%,#dbeafe 50%,#bfdbfe 100%); }
-[data-theme="lemon"] body { background-image:linear-gradient(180deg,#fefce8 0%,#fef08a 50%,#fde047 100%); }
-[data-theme="midnight"] body {
-    background-image:
-        radial-gradient(1.5px 1.5px at 30px 40px, rgba(255,255,255,0.8), transparent 60%),
-        radial-gradient(1px 1px at 200px 150px, rgba(56,189,248,0.8), transparent 60%),
-        radial-gradient(1.5px 1.5px at 320px 80px, rgba(255,255,255,0.7), transparent 60%),
-        radial-gradient(1px 1px at 100px 260px, rgba(129,140,248,0.8), transparent 60%),
-        linear-gradient(180deg,#0f172a 0%,#020617 100%);
-    background-size:400px 350px, 400px 350px, 400px 350px, 400px 350px, 100% 100%;
-    background-repeat:repeat, repeat, repeat, repeat, no-repeat;
-}
-
 /* === ЧЁТКОЕ КОЛЬЦО У АКТИВНОЙ (видно во всех темах) === */
-.theme-btn.active { outline: 3px solid var(--accent); outline-offset: 2px; border-color: transparent !important; }
-.size-btn.active { outline: 3px solid var(--accent); outline-offset: 2px; border-color: transparent !important; }
+
 
 /* Новые темы: базовый стиль кнопок */
-[data-theme="raspberry"] .theme-btn.active { background:linear-gradient(135deg,#e11d48,#f472b6); color:#fff; }
-[data-theme="lavender"] .theme-btn.active { background:linear-gradient(135deg,#8b5cf6,#c084fc); color:#fff; }
-[data-theme="ice"] .theme-btn.active { background:linear-gradient(135deg,#0ea5e9,#67e8f9); color:#fff; }
-[data-theme="lemon"] .theme-btn.active { background:linear-gradient(135deg,#eab308,#a3e635); color:#422006; }
-[data-theme="midnight"] .theme-btn.active { background:linear-gradient(135deg,#38bdf8,#818cf8); color:#020617; }
+
+/* === АКТИВНАЯ КНОПКА — чёткий бордер без прослойки === */
+.theme-btn.active,
+.size-btn.active {
+    border: 3px solid var(--accent) !important;
+    outline: none !important;
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+    color: #fff !important;
+    font-weight: 800 !important;
+}
+[data-theme="lemon"] .theme-btn.active,
+[data-theme="lemon"] .size-btn.active { color: #422006 !important; }
+[data-theme="sakura"] .theme-btn.active,
+[data-theme="sakura"] .size-btn.active,
+[data-theme="peach"] .theme-btn.active,
+[data-theme="peach"] .size-btn.active { color: #fff !important; }
+
+/* Убираем aspect-ratio — border больше не обрезается */
+[data-theme="ocean"] .theme-btn,
+[data-theme="sakura"] .theme-btn,
+[data-theme="cosmic"] .theme-btn,
+[data-theme="ocean"] .size-btn,
+[data-theme="sakura"] .size-btn,
+[data-theme="cosmic"] .size-btn { aspect-ratio: auto !important; }
+
+/* === НОВЫЕ 5 ТЕМ === */
+
+/* 💎 Бирюза */
+[data-theme="turquoise"] {
+    --bg:#ccfbf1; --card-bg:rgba(255,255,255,0.95); --text-main:#042f2e; --text-muted:#5c8a87;
+    --accent:#14b8a6; --accent2:#22d3ee; --accent-light:rgba(20,184,166,0.14); --today-badge:#0d9488;
+    --error:#dc2626; --shadow:0 4px 16px rgba(20,184,166,0.14); --border:rgba(4,47,46,0.08);
+    --green:#10b981; --green-soft:rgba(16,185,129,0.14);
+    --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.14);
+    --num-bg:linear-gradient(135deg,#14b8a6,#22d3ee); --num-color:#fff;
+    --num-shadow:0 3px 10px rgba(20,184,166,0.3);
+    color-scheme:light;
+}
+[data-theme="turquoise"] body { background-image:linear-gradient(180deg,#e0fdf9 0%,#a7f3d0 55%,#5eead4 100%); }
+
+/* 🍑 Персик */
+[data-theme="peach"] {
+    --bg:#fed7aa; --card-bg:rgba(255,255,255,0.95); --text-main:#431407; --text-muted:#a15c2c;
+    --accent:#fb923c; --accent2:#f472b6; --accent-light:rgba(251,146,60,0.14); --today-badge:#ea580c;
+    --error:#dc2626; --shadow:0 4px 16px rgba(251,146,60,0.16); --border:rgba(67,20,7,0.08);
+    --green:#16a34a; --green-soft:rgba(22,163,74,0.14);
+    --orange:#ea580c; --orange-soft:rgba(234,88,12,0.14);
+    --num-bg:linear-gradient(135deg,#fb923c,#f472b6); --num-color:#fff;
+    --num-shadow:0 3px 10px rgba(251,146,60,0.3);
+    color-scheme:light;
+}
+[data-theme="peach"] body { background-image:linear-gradient(180deg,#fff1e0 0%,#fed7aa 55%,#f9a8d4 100%); }
+
+/* 🌺 Магнолия */
+[data-theme="magnolia"] {
+    --bg:#fce7f3; --card-bg:rgba(255,255,255,0.96); --text-main:#500724; --text-muted:#9d5477;
+    --accent:#db2777; --accent2:#f59e0b; --accent-light:rgba(219,39,119,0.14); --today-badge:#be185d;
+    --error:#dc2626; --shadow:0 4px 16px rgba(219,39,119,0.16); --border:rgba(80,7,36,0.08);
+    --green:#16a34a; --green-soft:rgba(22,163,74,0.14);
+    --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.14);
+    --num-bg:linear-gradient(135deg,#db2777,#f59e0b); --num-color:#fff;
+    --num-shadow:0 3px 10px rgba(219,39,119,0.3);
+    color-scheme:light;
+}
+[data-theme="magnolia"] body {
+    background-image:
+        radial-gradient(circle at 85% 12%, rgba(253, 224, 71, 0.35), transparent 40%),
+        radial-gradient(circle at 15% 80%, rgba(219, 39, 119, 0.15), transparent 45%),
+        linear-gradient(180deg,#fdf2f8 0%,#fce7f3 45%,#fbcfe8 100%);
+}
+
+/* 🔥 Огонь */
+[data-theme="fire"] {
+    --bg:#fecaca; --card-bg:rgba(255,255,255,0.95); --text-main:#450a0a; --text-muted:#a14747;
+    --accent:#ef4444; --accent2:#f97316; --accent-light:rgba(239,68,68,0.14); --today-badge:#b91c1c;
+    --error:#991b1b; --shadow:0 4px 16px rgba(239,68,68,0.18); --border:rgba(69,10,10,0.08);
+    --green:#16a34a; --green-soft:rgba(22,163,74,0.14);
+    --orange:#f97316; --orange-soft:rgba(249,115,22,0.14);
+    --num-bg:linear-gradient(135deg,#ef4444,#f97316); --num-color:#fff;
+    --num-shadow:0 3px 10px rgba(239,68,68,0.35);
+    color-scheme:light;
+}
+[data-theme="fire"] body {
+    background-image:
+        radial-gradient(ellipse at 50% 100%, rgba(251, 146, 60, 0.5), transparent 60%),
+        linear-gradient(180deg,#fef2f2 0%,#fecaca 55%,#fca5a5 100%);
+}
+
+/* 🌈 Радуга */
+[data-theme="rainbow"] {
+    --bg:#fce7f3; --card-bg:rgba(255,255,255,0.95); --text-main:#1e1b4b; --text-muted:#6366f1;
+    --accent:#8b5cf6; --accent2:#ec4899; --accent-light:rgba(139,92,246,0.14); --today-badge:#8b5cf6;
+    --error:#dc2626; --shadow:0 6px 20px rgba(139,92,246,0.16); --border:rgba(30,27,75,0.08);
+    --green:#10b981; --green-soft:rgba(16,185,129,0.14);
+    --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.14);
+    --num-bg:linear-gradient(135deg,#8b5cf6,#ec4899); --num-color:#fff;
+    --num-shadow:0 3px 12px rgba(139,92,246,0.35);
+    color-scheme:light;
+}
+[data-theme="rainbow"] body {
+    background-image:
+        radial-gradient(ellipse at 10% 10%, rgba(56, 189, 248, 0.4), transparent 45%),
+        radial-gradient(ellipse at 90% 15%, rgba(236, 72, 153, 0.4), transparent 45%),
+        radial-gradient(ellipse at 50% 90%, rgba(250, 204, 21, 0.35), transparent 45%),
+        radial-gradient(ellipse at 20% 70%, rgba(139, 92, 246, 0.35), transparent 45%),
+        linear-gradient(180deg,#fef3c7 0%,#fbcfe8 50%,#dbeafe 100%);
+}
 </style>
 </head>
 <body>
@@ -881,10 +917,11 @@ html.hide-time .time { display:none; }
             <button class="theme-btn" data-theme-btn="sunset" onclick="setTheme('sunset')"><span class="emoji">🌅</span>Закат</button>
             <button class="theme-btn" data-theme-btn="forest" onclick="setTheme('forest')"><span class="emoji">🌿</span>Лес</button>
             <button class="theme-btn" data-theme-btn="sakura" onclick="setTheme('sakura')"><span class="emoji">🌸</span>Сакура</button>
-            <button class="theme-btn" data-theme-btn="raspberry" onclick="setTheme('raspberry')"><span class="emoji">🌺</span>Малина</button>
-            <button class="theme-btn" data-theme-btn="lavender" onclick="setTheme('lavender')"><span class="emoji">💜</span>Лаванда</button>
-            <button class="theme-btn" data-theme-btn="ice" onclick="setTheme('ice')"><span class="emoji">❄️</span>Лёд</button>
-            <button class="theme-btn" data-theme-btn="lemon" onclick="setTheme('lemon')"><span class="emoji">🍋</span>Лимон</button>
+            <button class="theme-btn" data-theme-btn="turquoise" onclick="setTheme('turquoise')"><span class="emoji">💎</span>Бирюза</button>
+            <button class="theme-btn" data-theme-btn="peach" onclick="setTheme('peach')"><span class="emoji">🍑</span>Персик</button>
+            <button class="theme-btn" data-theme-btn="magnolia" onclick="setTheme('magnolia')"><span class="emoji">🌺</span>Магнолия</button>
+            <button class="theme-btn" data-theme-btn="fire" onclick="setTheme('fire')"><span class="emoji">🔥</span>Огонь</button>
+            <button class="theme-btn" data-theme-btn="rainbow" onclick="setTheme('rainbow')"><span class="emoji">🌈</span>Радуга</button>
             <button class="theme-btn" data-theme-btn="midnight" onclick="setTheme('midnight')"><span class="emoji">🌙</span>Ночь</button>
         </div>
         <div class="settings-title">🔤 Размер текста</div>
@@ -919,8 +956,8 @@ html.hide-time .time { display:none; }
     var saved = localStorage.getItem('rs_theme') || 'light';
     document.documentElement.setAttribute('data-theme', saved);
     var meta = document.getElementById('themeColorMeta');
-    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4', raspberry:'#ffd6df', lavender:'#e9defb', ice:'#dbeafe', lemon:'#fef9c3', midnight:'#020617'};
-var icons = {light:'☀️', dark:'🌙', cosmic:'🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸', raspberry:'🌺', lavender:'💜', ice:'❄️', lemon:'🍋', midnight:'🌙'};
+    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4', turquoise:'#ccfbf1', peach:'#fed7aa', magnolia:'#fce7f3', fire:'#fecaca', rainbow:'#fce7f3'};
+var icons = {light:'☀️', dark:'🌙', cosmic:'#🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸', turquoise:'💎', peach:'🍑', magnolia:'🌺', fire:'🔥', rainbow:'🌈'};
     if (meta) meta.setAttribute('content', colors[saved] || '#f0f4f8');
     document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
         if (b.getAttribute('data-theme-btn') === saved) b.classList.add('active');
@@ -943,8 +980,8 @@ function setTheme(t) {
         b.classList.toggle('active', b.getAttribute('data-theme-btn') === t);
     });
     var meta = document.getElementById('themeColorMeta');
-    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4', raspberry:'#ffd6df', lavender:'#e9defb', ice:'#dbeafe', lemon:'#fef9c3', midnight:'#020617'};
-var icons = {light:'☀️', dark:'🌙', cosmic:'🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸', raspberry:'🌺', lavender:'💜', ice:'❄️', lemon:'🍋', midnight:'🌙'};
+    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4', turquoise:'#ccfbf1', peach:'#fed7aa', magnolia:'#fce7f3', fire:'#fecaca', rainbow:'#fce7f3'};
+var icons = {light:'☀️', dark:'🌙', cosmic:'#🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸', turquoise:'💎', peach:'🍑', magnolia:'🌺', fire:'🔥', rainbow:'🌈'};
     if (meta) meta.setAttribute('content', colors[t] || '#f0f4f8');
 }
 function setSize(s) {
