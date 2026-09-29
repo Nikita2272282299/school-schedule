@@ -798,13 +798,8 @@ html.hide-time .time { display:none; }
     color: #fff !important;
     font-weight: 800 !important;
 }
-[data-theme="lemon"] .theme-btn.active,
-[data-theme="lemon"] .size-btn.active { color: #422006 !important; }
 [data-theme="sakura"] .theme-btn.active,
 [data-theme="sakura"] .size-btn.active,
-[data-theme="peach"] .theme-btn.active,
-[data-theme="peach"] .size-btn.active { color: #fff !important; }
-
 /* Убираем aspect-ratio — border больше не обрезается */
 [data-theme="ocean"] .theme-btn,
 [data-theme="sakura"] .theme-btn,
@@ -816,84 +811,93 @@ html.hide-time .time { display:none; }
 /* === НОВЫЕ 5 ТЕМ === */
 
 /* 💎 Бирюза */
-[data-theme="turquoise"] {
-    --bg:#ccfbf1; --card-bg:rgba(255,255,255,0.95); --text-main:#042f2e; --text-muted:#5c8a87;
-    --accent:#14b8a6; --accent2:#22d3ee; --accent-light:rgba(20,184,166,0.14); --today-badge:#0d9488;
-    --error:#dc2626; --shadow:0 4px 16px rgba(20,184,166,0.14); --border:rgba(4,47,46,0.08);
-    --green:#10b981; --green-soft:rgba(16,185,129,0.14);
-    --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.14);
-    --num-bg:linear-gradient(135deg,#14b8a6,#22d3ee); --num-color:#fff;
-    --num-shadow:0 3px 10px rgba(20,184,166,0.3);
-    color-scheme:light;
-}
-[data-theme="turquoise"] body { background-image:linear-gradient(180deg,#e0fdf9 0%,#a7f3d0 55%,#5eead4 100%); }
-
 /* 🍑 Персик */
-[data-theme="peach"] {
-    --bg:#fed7aa; --card-bg:rgba(255,255,255,0.95); --text-main:#431407; --text-muted:#a15c2c;
-    --accent:#fb923c; --accent2:#f472b6; --accent-light:rgba(251,146,60,0.14); --today-badge:#ea580c;
-    --error:#dc2626; --shadow:0 4px 16px rgba(251,146,60,0.16); --border:rgba(67,20,7,0.08);
-    --green:#16a34a; --green-soft:rgba(22,163,74,0.14);
-    --orange:#ea580c; --orange-soft:rgba(234,88,12,0.14);
-    --num-bg:linear-gradient(135deg,#fb923c,#f472b6); --num-color:#fff;
-    --num-shadow:0 3px 10px rgba(251,146,60,0.3);
-    color-scheme:light;
-}
-[data-theme="peach"] body { background-image:linear-gradient(180deg,#fff1e0 0%,#fed7aa 55%,#f9a8d4 100%); }
-
 /* 🌺 Магнолия */
-[data-theme="magnolia"] {
-    --bg:#fce7f3; --card-bg:rgba(255,255,255,0.96); --text-main:#500724; --text-muted:#9d5477;
-    --accent:#db2777; --accent2:#f59e0b; --accent-light:rgba(219,39,119,0.14); --today-badge:#be185d;
-    --error:#dc2626; --shadow:0 4px 16px rgba(219,39,119,0.16); --border:rgba(80,7,36,0.08);
-    --green:#16a34a; --green-soft:rgba(22,163,74,0.14);
-    --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.14);
-    --num-bg:linear-gradient(135deg,#db2777,#f59e0b); --num-color:#fff;
-    --num-shadow:0 3px 10px rgba(219,39,119,0.3);
-    color-scheme:light;
-}
-[data-theme="magnolia"] body {
-    background-image:
-        radial-gradient(circle at 85% 12%, rgba(253, 224, 71, 0.35), transparent 40%),
-        radial-gradient(circle at 15% 80%, rgba(219, 39, 119, 0.15), transparent 45%),
-        linear-gradient(180deg,#fdf2f8 0%,#fce7f3 45%,#fbcfe8 100%);
-}
-
 /* 🔥 Огонь */
-[data-theme="fire"] {
-    --bg:#fecaca; --card-bg:rgba(255,255,255,0.95); --text-main:#450a0a; --text-muted:#a14747;
-    --accent:#ef4444; --accent2:#f97316; --accent-light:rgba(239,68,68,0.14); --today-badge:#b91c1c;
-    --error:#991b1b; --shadow:0 4px 16px rgba(239,68,68,0.18); --border:rgba(69,10,10,0.08);
-    --green:#16a34a; --green-soft:rgba(22,163,74,0.14);
-    --orange:#f97316; --orange-soft:rgba(249,115,22,0.14);
-    --num-bg:linear-gradient(135deg,#ef4444,#f97316); --num-color:#fff;
-    --num-shadow:0 3px 10px rgba(239,68,68,0.35);
-    color-scheme:light;
+/* 🌈 Радуга */
+
+/* === АКТИВНАЯ КНОПКА ТЕМЫ: чистое кольцо без прослоек === */
+.theme-btn.active,
+.size-btn.active {
+    box-shadow: 0 0 0 3px var(--accent), 0 4px 14px var(--accent-light) !important;
+    border-color: transparent !important;
 }
-[data-theme="fire"] body {
-    background-image:
-        radial-gradient(ellipse at 50% 100%, rgba(251, 146, 60, 0.5), transparent 60%),
-        linear-gradient(180deg,#fef2f2 0%,#fecaca 55%,#fca5a5 100%);
+/* В светлых темах (Океан/Сакура/Закат/Лес) — только ring + заливка через тему */
+[data-theme="ocean"] .theme-btn.active,
+[data-theme="sunset"] .theme-btn.active,
+[data-theme="forest"] .theme-btn.active,
+[data-theme="sakura"] .theme-btn.active { box-shadow: 0 0 0 3px var(--accent), 0 4px 16px var(--accent-light) !important; }
+
+/* Убираем aspect-ratio (обрезало кольцо) */
+[data-theme="ocean"] .theme-btn,
+[data-theme="sakura"] .theme-btn,
+[data-theme="cosmic"] .theme-btn,
+[data-theme="ocean"] .size-btn,
+[data-theme="sakura"] .size-btn,
+[data-theme="cosmic"] .size-btn { aspect-ratio: auto !important; }
+
+/* === УЛУЧШЕНИЯ 7 ТЕМ === */
+
+/* СВЕТЛАЯ — мягкие тени */
+[data-theme="light"] .header-card { box-shadow: 0 6px 20px rgba(99,102,241,0.08); }
+[data-theme="light"] .card { border-color: rgba(99,102,241,0.06); }
+
+/* ТЁМНАЯ — глянцевые карточки */
+[data-theme="dark"] .card { border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04); }
+[data-theme="dark"] .header-card { border: 1px solid rgba(255,255,255,0.09); box-shadow: 0 6px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05); }
+
+/* КОСМОС — насыщенней туманности и свечение */
+[data-theme="cosmic"] .header-card {
+    border:1px solid rgba(183,148,246,0.35);
+    box-shadow:0 8px 32px rgba(120,60,220,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+[data-theme="cosmic"] .card {
+    border:1px solid rgba(183,148,246,0.28);
+    box-shadow:0 6px 22px rgba(120,60,220,0.28), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
-/* 🌈 Радуга */
-[data-theme="rainbow"] {
-    --bg:#fce7f3; --card-bg:rgba(255,255,255,0.95); --text-main:#1e1b4b; --text-muted:#6366f1;
-    --accent:#8b5cf6; --accent2:#ec4899; --accent-light:rgba(139,92,246,0.14); --today-badge:#8b5cf6;
-    --error:#dc2626; --shadow:0 6px 20px rgba(139,92,246,0.16); --border:rgba(30,27,75,0.08);
-    --green:#10b981; --green-soft:rgba(16,185,129,0.14);
-    --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.14);
-    --num-bg:linear-gradient(135deg,#8b5cf6,#ec4899); --num-color:#fff;
-    --num-shadow:0 3px 12px rgba(139,92,246,0.35);
-    color-scheme:light;
+/* ОКЕАН — волны снизу + блики */
+[data-theme="ocean"] .card {
+    background:rgba(255,255,255,0.96);
+    border:1px solid rgba(34,211,238,0.25);
+    box-shadow:0 4px 16px rgba(8,145,178,0.14), inset 0 1px 0 rgba(255,255,255,0.9);
 }
-[data-theme="rainbow"] body {
-    background-image:
-        radial-gradient(ellipse at 10% 10%, rgba(56, 189, 248, 0.4), transparent 45%),
-        radial-gradient(ellipse at 90% 15%, rgba(236, 72, 153, 0.4), transparent 45%),
-        radial-gradient(ellipse at 50% 90%, rgba(250, 204, 21, 0.35), transparent 45%),
-        radial-gradient(ellipse at 20% 70%, rgba(139, 92, 246, 0.35), transparent 45%),
-        linear-gradient(180deg,#fef3c7 0%,#fbcfe8 50%,#dbeafe 100%);
+[data-theme="ocean"] .header-card {
+    border:2px solid rgba(255,255,255,0.85);
+    box-shadow:0 8px 28px rgba(8,145,178,0.22), inset 0 2px 14px rgba(255,255,255,0.85);
+}
+
+/* ЗАКАТ — тёплое свечение снизу */
+[data-theme="sunset"] .card {
+    background:rgba(255,252,245,0.96);
+    border:1px solid rgba(249,115,22,0.18);
+    box-shadow:0 4px 16px rgba(249,115,22,0.16), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+[data-theme="sunset"] .header-card {
+    border:1px solid rgba(249,115,22,0.22);
+    box-shadow:0 6px 24px rgba(249,115,22,0.2);
+}
+
+/* ЛЕС — органичные тени */
+[data-theme="forest"] .card {
+    background:rgba(255,255,255,0.96);
+    border:1px solid rgba(5,150,105,0.2);
+    box-shadow:0 4px 16px rgba(5,150,105,0.14), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+[data-theme="forest"] .header-card {
+    border:1px solid rgba(5,150,105,0.2);
+    box-shadow:0 6px 24px rgba(5,150,105,0.18);
+}
+
+/* САКУРА — лепестковое свечение */
+[data-theme="sakura"] .card {
+    background:rgba(255,255,255,0.96);
+    border:1px solid rgba(236,72,153,0.16);
+    box-shadow:0 4px 16px rgba(236,72,153,0.14), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+[data-theme="sakura"] .header-card {
+    border:2px solid rgba(236,72,153,0.18);
+    box-shadow:0 6px 24px rgba(236,72,153,0.18);
 }
 </style>
 </head>
@@ -956,8 +960,8 @@ html.hide-time .time { display:none; }
     var saved = localStorage.getItem('rs_theme') || 'light';
     document.documentElement.setAttribute('data-theme', saved);
     var meta = document.getElementById('themeColorMeta');
-    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4', turquoise:'#ccfbf1', peach:'#fed7aa', magnolia:'#fce7f3', fire:'#fecaca', rainbow:'#fce7f3'};
-var icons = {light:'☀️', dark:'🌙', cosmic:'#🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸', turquoise:'💎', peach:'🍑', magnolia:'🌺', fire:'🔥', rainbow:'🌈'};
+    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4'};
+var icons = {light:'☀️', dark:'🌙', cosmic:'🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸'};
     if (meta) meta.setAttribute('content', colors[saved] || '#f0f4f8');
     document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
         if (b.getAttribute('data-theme-btn') === saved) b.classList.add('active');
@@ -980,8 +984,8 @@ function setTheme(t) {
         b.classList.toggle('active', b.getAttribute('data-theme-btn') === t);
     });
     var meta = document.getElementById('themeColorMeta');
-    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4', turquoise:'#ccfbf1', peach:'#fed7aa', magnolia:'#fce7f3', fire:'#fecaca', rainbow:'#fce7f3'};
-var icons = {light:'☀️', dark:'🌙', cosmic:'#🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸', turquoise:'💎', peach:'🍑', magnolia:'🌺', fire:'🔥', rainbow:'🌈'};
+    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4'};
+var icons = {light:'☀️', dark:'🌙', cosmic:'🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸'};
     if (meta) meta.setAttribute('content', colors[t] || '#f0f4f8');
 }
 function setSize(s) {
