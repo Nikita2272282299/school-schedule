@@ -1,4 +1,4 @@
-import threading, urllib.request, csv, io, time, os
+import threading, urllib.request, csv, io, time, os, json
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, timezone, timedelta
 
@@ -15,6 +15,38 @@ DAY_FULL = ["Понедельник","Вторник","Среда","Четвер
 
 cache = {"days_schedule": {}, "error_msg": "", "last_update": 0}
 CACHE_TTL = 300
+
+
+CACHE_FILE = "schedule_cache.json"
+
+def _week_key():
+    now = datetime.now(PERM_TZ)
+    iso = now.isocalendar()
+    return f"{iso[0]}-W{iso[1]}"
+
+def load_disk_cache():
+    try:
+        with open(CACHE_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        if data.get('week') != _week_key():
+            return None
+        days = {}
+        for k, v in data.get('days', {}).items():
+            days[k] = [tuple(x) for x in v]
+        return days
+    except Exception:
+        return None
+
+def save_disk_cache(days):
+    try:
+        with open(CACHE_FILE, 'w', encoding='utf-8') as f:
+            json.dump({
+                'week': _week_key(),
+                'days': {k: [list(x) for x in v] for k, v in days.items()}
+            }, f, ensure_ascii=False)
+    except Exception:
+        pass
+
 
 MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/","display":"standalone","background_color":"#0a0620","theme_color":"#4c6ef5","icons":[{"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}'
 
@@ -80,7 +112,14 @@ def get_schedule():
     except Exception:
         if cache["days_schedule"]:
             return cache["days_schedule"], ""
+        disk = load_disk_cache()
+        if disk:
+            cache["days_schedule"] = disk
+            cache["last_update"] = now
+            return disk, ""
         cache["error_msg"] = "Офлайн-режим (нет сети)"
+    if days_schedule:
+        save_disk_cache(days_schedule)
     return cache["days_schedule"], cache["error_msg"]
 
 
@@ -1282,6 +1321,230 @@ html.hide-time .time { display:none; }
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent;
 }
+
+/* ========== GRAPHICS 2X ========== */
+
+/* Красивый фон — многослойные градиенты */
+body {
+    background-attachment: scroll;
+}
+[data-theme="light"] body {
+    background-image:
+        radial-gradient(ellipse 60% 40% at 15% 10%, rgba(99,102,241,0.18), transparent 60%),
+        radial-gradient(ellipse 50% 40% at 85% 85%, rgba(168,85,247,0.14), transparent 60%),
+        radial-gradient(ellipse 40% 30% at 50% 50%, rgba(56,189,248,0.06), transparent 60%),
+        linear-gradient(180deg,#f5f8fc 0%,#e4ebf3 100%);
+}
+[data-theme="dark"] body {
+    background-image:
+        radial-gradient(ellipse 60% 40% at 15% 10%, rgba(99,102,241,0.22), transparent 60%),
+        radial-gradient(ellipse 50% 40% at 85% 85%, rgba(192,132,252,0.16), transparent 60%),
+        radial-gradient(ellipse 40% 30% at 50% 50%, rgba(56,189,248,0.06), transparent 60%),
+        linear-gradient(180deg,#10131a 0%,#05060a 100%);
+}
+[data-theme="cosmic"] body {
+    background-image:
+        radial-gradient(ellipse 55% 35% at 15% 10%, rgba(139,92,246,0.45), transparent 60%),
+        radial-gradient(ellipse 50% 40% at 85% 80%, rgba(56,189,248,0.3), transparent 60%),
+        radial-gradient(ellipse 45% 35% at 50% 55%, rgba(124,245,192,0.15), transparent 65%),
+        radial-gradient(circle at 50% 100%, rgba(120,60,220,0.35), transparent 60%),
+        linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%);
+}
+[data-theme="ocean"] body {
+    background-image:
+        radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,255,255,0.7), transparent 60%),
+        radial-gradient(ellipse 50% 35% at 15% 80%, rgba(34,211,238,0.35), transparent 55%),
+        radial-gradient(ellipse 45% 35% at 85% 90%, rgba(6,182,212,0.25), transparent 55%),
+        linear-gradient(180deg,#d6f0fa 0%,#8dcce4 45%,#4898b8 100%);
+}
+[data-theme="sunset"] body {
+    background-image:
+        radial-gradient(circle at 78% 22%, rgba(255,250,200,0.85), transparent 22%),
+        radial-gradient(circle at 78% 22%, rgba(255,180,90,0.5), transparent 40%),
+        radial-gradient(ellipse 60% 35% at 20% 90%, rgba(236,72,153,0.3), transparent 60%),
+        linear-gradient(180deg,#ffe0a8 0%,#ffb572 40%,#e88898 100%);
+}
+[data-theme="forest"] body {
+    background-image:
+        radial-gradient(ellipse 60% 35% at 50% 0%, rgba(255,255,255,0.55), transparent 55%),
+        radial-gradient(ellipse 50% 35% at 15% 85%, rgba(132,204,22,0.3), transparent 55%),
+        radial-gradient(ellipse 45% 35% at 90% 80%, rgba(5,150,105,0.22), transparent 55%),
+        linear-gradient(180deg,#e8f5dc 0%,#b8dfa8 40%,#7abb6c 100%);
+}
+[data-theme="sakura"] body {
+    background-image:
+        radial-gradient(ellipse 60% 40% at 85% 12%, rgba(255,180,215,0.75), transparent 55%),
+        radial-gradient(ellipse 50% 40% at 10% 80%, rgba(220,180,255,0.6), transparent 55%),
+        radial-gradient(circle at 50% 50%, rgba(255,220,235,0.35), transparent 45%),
+        linear-gradient(180deg,#fff0f5 0%,#ffd0dd 50%,#ff9dc0 100%);
+}
+
+/* Логотип — крутая градиентная рамка */
+.brand-logo {
+    position: relative;
+    background: linear-gradient(135deg, #fff, #f0f4ff);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    box-shadow: 0 6px 20px rgba(99,102,241,0.25), inset 0 1px 0 rgba(255,255,255,1);
+    font-size: 1.5rem;
+}
+.brand-logo::before {
+    content: ""; position: absolute; inset: -3px; border-radius: inherit;
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)));
+    z-index: -1;
+    filter: blur(2px);
+    opacity: 0.7;
+}
+[data-theme="dark"] .brand-logo {
+    background: linear-gradient(135deg, #232733, #1a1d24);
+    box-shadow: 0 6px 20px rgba(124,147,255,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+[data-theme="cosmic"] .brand-logo {
+    background: linear-gradient(135deg, #2a1a55, #1a1040);
+    box-shadow: 0 8px 26px rgba(183,148,246,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+[data-theme="cosmic"] .brand-logo::before {
+    filter: blur(4px);
+    opacity: 0.9;
+}
+
+/* Заголовок — с градиентом */
+h2 span {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2, var(--accent)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Шапка — многослойная тень */
+.header-card {
+    box-shadow:
+        0 1px 2px rgba(0,0,0,0.04),
+        0 4px 12px rgba(0,0,0,0.06),
+        0 12px 32px var(--accent-light, rgba(99,102,241,0.1)),
+        inset 0 1px 0 rgba(255,255,255,0.9);
+}
+[data-theme="dark"] .header-card,
+[data-theme="cosmic"] .header-card {
+    box-shadow:
+        0 1px 2px rgba(0,0,0,0.4),
+        0 4px 12px rgba(0,0,0,0.5),
+        0 12px 32px var(--accent-light, rgba(124,147,255,0.15)),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* Карточки — двойная тень */
+.card {
+    box-shadow:
+        0 1px 2px rgba(0,0,0,0.03),
+        0 4px 12px rgba(0,0,0,0.05),
+        0 10px 28px rgba(0,0,0,0.03),
+        inset 0 1px 0 rgba(255,255,255,0.6);
+}
+[data-theme="dark"] .card,
+[data-theme="cosmic"] .card {
+    box-shadow:
+        0 1px 2px rgba(0,0,0,0.4),
+        0 4px 14px rgba(0,0,0,0.5),
+        0 10px 28px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+}
+[data-theme="cosmic"] .card {
+    box-shadow:
+        0 1px 2px rgba(0,0,0,0.4),
+        0 4px 14px rgba(120,60,220,0.3),
+        0 12px 32px rgba(120,60,220,0.25),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* Табы — красивее */
+.tabs {
+    box-shadow:
+        0 1px 2px rgba(0,0,0,0.04),
+        0 4px 14px rgba(0,0,0,0.06);
+}
+.tab.active {
+    box-shadow:
+        0 2px 6px var(--accent-light, rgba(99,102,241,0.3)),
+        0 6px 16px var(--accent-light, rgba(99,102,241,0.4)),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+    font-weight: 900;
+}
+.tab:not(.active) {
+    transition: background 0.15s, color 0.15s, transform 0.15s;
+}
+.tab:not(.active):hover {
+    background: var(--accent-light, rgba(99,102,241,0.1));
+}
+
+/* Кнопка настроек — свечение */
+.icon-btn {
+    box-shadow:
+        0 2px 6px rgba(0,0,0,0.06),
+        0 6px 16px var(--accent-light, rgba(99,102,241,0.15)),
+        inset 0 1px 0 rgba(255,255,255,0.5);
+    transition: transform 0.15s, box-shadow 0.2s;
+}
+.icon-btn:active {
+    transform: scale(0.9);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15), inset 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* Бейдж 8Г — градиент */
+.badge-class {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2, var(--accent)) 100%);
+    color: #fff;
+    box-shadow:
+        0 2px 6px rgba(0,0,0,0.1),
+        0 4px 14px var(--accent-light, rgba(99,102,241,0.3)),
+        inset 0 1px 0 rgba(255,255,255,0.35);
+    border: none !important;
+    font-weight: 900;
+}
+
+/* Номера уроков — градиент */
+.num {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2, var(--accent)) 100%);
+    color: #fff;
+    box-shadow:
+        0 2px 6px rgba(0,0,0,0.1),
+        0 4px 12px var(--accent-light, rgba(99,102,241,0.25)),
+        inset 0 1px 0 rgba(255,255,255,0.4);
+    font-weight: 900;
+}
+
+/* Кнопки тем — глубже */
+.theme-btn {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.5);
+}
+.theme-btn.active {
+    box-shadow:
+        0 2px 6px var(--accent-light),
+        0 6px 16px var(--accent-light),
+        0 0 0 3px var(--accent),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+/* Тумблер — со свечением */
+.toggle.on {
+    box-shadow: 0 2px 8px var(--accent-light, rgba(99,102,241,0.3));
+}
+
+/* Плавные появления */
+.day-block.active .card {
+    animation: cardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+@keyframes cardIn {
+    from { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.97); }
+    to { opacity: 1; transform: none; }
+}
+.day-block.active .card:nth-child(2) { animation-delay: 0.04s; }
+.day-block.active .card:nth-child(3) { animation-delay: 0.08s; }
+.day-block.active .card:nth-child(4) { animation-delay: 0.12s; }
+.day-block.active .card:nth-child(5) { animation-delay: 0.16s; }
+.day-block.active .card:nth-child(6) { animation-delay: 0.2s; }
+.day-block.active .card:nth-child(7) { animation-delay: 0.24s; }
+.day-block.active .card:nth-child(8) { animation-delay: 0.28s; }
 </style>
 </head>
 <body>
