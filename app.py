@@ -2276,6 +2276,47 @@ body {
     min-height: 100vh !important;
     min-height: 100dvh !important;
 }
+
+/* ===== ЛИПКАЯ ШАПКА И ТАБЫ ===== */
+
+/* body НЕ flex — иначе sticky плохо работает */
+body {
+    display: block !important;
+}
+.container {
+    margin: 0 auto !important;
+    max-width: 500px !important;
+    padding: 0 14px !important;
+}
+
+/* Шапка прилипает к верху */
+.header-card {
+    position: sticky !important;
+    top: 8px !important;
+    z-index: 100 !important;
+    margin-bottom: 12px !important;
+}
+
+/* Табы прилипают чуть ниже шапки */
+.tabs {
+    position: sticky !important;
+    top: 96px !important;
+    z-index: 99 !important;
+    margin-bottom: 16px !important;
+}
+
+/* Космос — добавим свечение прилипшей шапке */
+[data-theme="cosmic"] .header-card {
+    box-shadow: 0 6px 24px rgba(120,60,220,0.5), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+}
+[data-theme="cosmic"] .tabs {
+    box-shadow: 0 6px 24px rgba(120,60,220,0.4) !important;
+}
+
+/* На маленьких экранах чуть компактнее */
+@media (max-width: 400px) {
+    .tabs { top: 90px !important; }
+}
 </style>
 </head>
 <body>
