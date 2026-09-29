@@ -1986,8 +1986,6 @@ if ('serviceWorker' in navigator) {
 })();
 
 
-    var sec = document.getElementById('advancedSection');
-    var btn = document.querySelector('
 </script>
 </body>
 </html>"""
