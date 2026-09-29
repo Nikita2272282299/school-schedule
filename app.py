@@ -2337,6 +2337,40 @@ body {
     background: linear-gradient(90deg, transparent, var(--accent), transparent);
     opacity: 0.5;
 }
+
+/* ===== СКРОЛЛ ДО КНОПКИ + ПАНЕЛЬ СО СВОИМ СКРОЛЛОМ ===== */
+
+/* 1. Возвращаем нормальный скролл (можно до конца страницы) */
+html, body {
+    overscroll-behavior-y: auto !important;
+}
+body {
+    min-height: 100vh !important;
+}
+.container {
+    padding-bottom: 24px !important;
+}
+
+/* 2. Панель настроек — со своим скроллом внутри */
+.settings-panel {
+    max-height: 75vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    scrollbar-width: thin !important;
+}
+.settings-panel::-webkit-scrollbar {
+    width: 5px;
+}
+.settings-panel::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 3px;
+    opacity: 0.5;
+}
+.settings-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
 </style>
 </head>
 <body>
