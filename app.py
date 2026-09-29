@@ -2550,12 +2550,6 @@ function showDay(day){
         x.classList.toggle('active', x.getAttribute('data-day')===day);
     });
     localStorage.setItem('rs_day', day);
-});
-    var t = document.getElementById('block-' + day);
-    if (t) t.classList.add('active-day');
-    document.querySelectorAll('.tab').forEach(function(x) {
-        x.classList.toggle('active', x.getAttribute('data-day') === day);
-    });
 }
 var deferredPrompt = null;
 var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
