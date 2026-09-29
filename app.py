@@ -2208,6 +2208,44 @@ html {
 .side-decor {
     display: none !important;
 }
+
+/* Полоса снизу — убрать */
+html, body {
+    background-attachment: scroll !important;
+}
+body {
+    min-height: 100vh !important;
+}
+
+/* ===== ОТСТУПЫ МЕЖДУ СЕКЦИЯМИ ===== */
+
+/* После A-A-A — отступ перед первым тумблером */
+.size-options, .size-grid {
+    margin-bottom: 24px !important;
+}
+/* После кнопок тем — тоже */
+.theme-options, .theme-grid {
+    margin-bottom: 20px !important;
+}
+/* Между заголовком секции и её содержимым */
+.settings-title {
+    margin-top: 22px !important;
+    margin-bottom: 12px !important;
+}
+.settings-title:first-of-type {
+    margin-top: 0 !important;
+}
+/* Первый тумблер — отступ сверху */
+.toggle-row:first-of-type {
+    margin-top: 4px !important;
+}
+/* Между тумблерами */
+.toggle-row {
+    margin-bottom: 10px !important;
+}
+.toggle-row:last-child {
+    margin-bottom: 0 !important;
+}
 </style>
 </head>
 <body>
