@@ -921,12 +921,6 @@ html.hide-time .time { display:none; }
             <button class="theme-btn" data-theme-btn="sunset" onclick="setTheme('sunset')"><span class="emoji">🌅</span>Закат</button>
             <button class="theme-btn" data-theme-btn="forest" onclick="setTheme('forest')"><span class="emoji">🌿</span>Лес</button>
             <button class="theme-btn" data-theme-btn="sakura" onclick="setTheme('sakura')"><span class="emoji">🌸</span>Сакура</button>
-            <button class="theme-btn" data-theme-btn="turquoise" onclick="setTheme('turquoise')"><span class="emoji">💎</span>Бирюза</button>
-            <button class="theme-btn" data-theme-btn="peach" onclick="setTheme('peach')"><span class="emoji">🍑</span>Персик</button>
-            <button class="theme-btn" data-theme-btn="magnolia" onclick="setTheme('magnolia')"><span class="emoji">🌺</span>Магнолия</button>
-            <button class="theme-btn" data-theme-btn="fire" onclick="setTheme('fire')"><span class="emoji">🔥</span>Огонь</button>
-            <button class="theme-btn" data-theme-btn="rainbow" onclick="setTheme('rainbow')"><span class="emoji">🌈</span>Радуга</button>
-            <button class="theme-btn" data-theme-btn="midnight" onclick="setTheme('midnight')"><span class="emoji">🌙</span>Ночь</button>
         </div>
         <div class="settings-title">🔤 Размер текста</div>
         <div class="size-options">
