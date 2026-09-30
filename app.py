@@ -52,7 +52,23 @@ MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/
 
 ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4c6ef5"/><stop offset="1" stop-color="#7950f2"/></linearGradient></defs><rect width="512" height="512" rx="110" fill="url(#g)"/><rect x="130" y="110" width="252" height="46" rx="23" fill="#ffffff" opacity="0.25"/><text x="256" y="360" font-family="Arial,Helvetica,sans-serif" font-size="230" font-weight="900" fill="#ffffff" text-anchor="middle">8Г</text></svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>self.clients.claim());self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});"
+SW_JS = """self.addEventListener('install',e=>self.skipWaiting());
+self.addEventListener('activate',e=>self.clients.claim());
+self.addEventListener('fetch',function(e){
+    if(e.request.method!=='GET')return;
+    e.respondWith(
+        caches.open('school-v1').then(function(cache){
+            return fetch(e.request).then(function(resp){
+                if(resp&&resp.status===200)cache.put(e.request,resp.clone());
+                return resp;
+            }).catch(function(){
+                return cache.match(e.request).then(function(r){
+                    return r||cache.match('/');
+                });
+            });
+        })
+    );
+});"""
 
 
 def get_schedule():
