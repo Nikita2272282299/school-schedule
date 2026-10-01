@@ -2409,6 +2409,62 @@ body::-webkit-scrollbar {
     height: 0 !important;
     display: none !important;              /* Chrome/Safari */
 }
+
+/* ===== ДВА ЦВЕТА ПЛАШЕК: "СКОРО" И "СЛЕДУЮЩИЙ" ===== */
+
+/* "Скоро урок" — акцент темы, яркий, с лёгким свечением */
+.live-banner.before.soon {
+    background: linear-gradient(135deg, var(--accent-light), var(--card)) !important;
+    border: 1.5px solid var(--accent) !important;
+    box-shadow: 0 6px 20px var(--accent-light) !important;
+}
+.live-banner.before.soon .live-label {
+    color: var(--accent) !important;
+}
+.live-banner.before.soon .live-dot {
+    background: var(--accent) !important;
+    animation: pulseSoon 1.4s ease-in-out infinite !important;
+}
+.live-banner.before.soon .live-timer {
+    color: var(--accent) !important;
+    font-weight: 800;
+}
+@keyframes pulseSoon {
+    0%,100% { box-shadow: 0 0 0 0 var(--accent); }
+    50% { box-shadow: 0 0 0 8px transparent; }
+}
+
+/* "Следующий урок" — приглушённый, спокойный, полупрозрачный */
+.live-banner.before.next {
+    background: linear-gradient(135deg, var(--accent-light), var(--card)) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06) !important;
+    opacity: 0.85;
+}
+.live-banner.before.next .live-label {
+    color: var(--muted) !important;
+    letter-spacing: 0.1em;
+}
+.live-banner.before.next .live-dot {
+    background: var(--muted) !important;
+    animation: none !important;
+    opacity: 0.7;
+}
+.live-banner.before.next .live-timer {
+    color: var(--text-main) !important;
+    font-weight: 700;
+    opacity: 0.75;
+}
+
+/* Тёмные темы — чуть другой оттенок */
+[data-theme="dark"] .live-banner.before.next,
+[data-theme="cosmic"] .live-banner.before.next {
+    background: linear-gradient(135deg, var(--accent-light), var(--card)) !important;
+    border-color: rgba(255,255,255,0.08) !important;
+}
+[data-theme="cosmic"] .live-banner.before.soon {
+    box-shadow: 0 8px 26px rgba(183,148,246,0.4) !important;
+}
 </style>
 </head>
 <body>
