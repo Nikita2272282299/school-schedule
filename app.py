@@ -3275,26 +3275,24 @@ if ('serviceWorker' in navigator) {
         var p = document.getElementById('adminPanel');
         if (p) p.classList.remove('show');
     };
-    secret.addEventListener('click', function(ev){
-        ev.preventDefault();
+    function doTap(){
         if (isAdmin) { openAdminPanel(); return; }
         taps++;
         localStorage.setItem('rs_taps', String(taps));
-        // Пульс каждые 10 тапов (усиленный)
-        if (taps % 10 === 0 && taps < 50) {
-            var fl = document.createElement('div');
-            var opacity = 0.15 + (taps / 100);
-            fl.style.cssText = 'position:fixed;inset:0;background:radial-gradient(circle, rgba(124,147,255,' + opacity + ') 0%, rgba(124,147,255,0) 70%);pointer-events:none;z-index:99998;opacity:1;transition:opacity 0.5s ease;';
-            document.body.appendChild(fl);
-            setTimeout(function(){ fl.style.opacity = '0'; }, 50);
-            setTimeout(function(){ fl.remove(); }, 700);
-        }
-        // Мини-отклик на каждом тапе — маленькая вспышка внизу
+        // Мини-вспышка внизу экрана на КАЖДЫЙ тап
         var tiny = document.createElement('div');
-        tiny.style.cssText = 'position:fixed;bottom:0;left:0;right:0;height:80px;background:radial-gradient(ellipse at 50% 100%, rgba(124,147,255,0.4) 0%, transparent 70%);pointer-events:none;z-index:99997;opacity:1;transition:opacity 0.4s ease;';
+        tiny.style.cssText = 'position:fixed;bottom:0;left:0;right:0;height:100px;background:radial-gradient(ellipse at 50% 100%, rgba(124,147,255,0.55) 0%, transparent 70%);pointer-events:none;z-index:99997;opacity:1;transition:opacity 0.4s ease;';
         document.body.appendChild(tiny);
         setTimeout(function(){ tiny.style.opacity = '0'; }, 40);
         setTimeout(function(){ tiny.remove(); }, 500);
+        // Большой пульс каждые 10
+        if (taps % 10 === 0 && taps < 50) {
+            var fl = document.createElement('div');
+            fl.style.cssText = 'position:fixed;inset:0;background:radial-gradient(circle, rgba(124,147,255,0.4) 0%, rgba(124,147,255,0) 70%);pointer-events:none;z-index:99998;opacity:1;transition:opacity 0.6s ease;';
+            document.body.appendChild(fl);
+            setTimeout(function(){ fl.style.opacity = '0'; }, 100);
+            setTimeout(function(){ fl.remove(); }, 800);
+        }
         if (taps >= 50) {
             var pwd = prompt('Пароль:');
             if (pwd === ADMIN_PWD) {
@@ -3308,6 +3306,30 @@ if ('serviceWorker' in navigator) {
                 taps = 0;
             }
         }
+    }
+
+    // Ловим тап по ВСЕЙ нижней части экрана
+    document.addEventListener('click', function(e){
+        // Если тап по кнопкам/ссылкам — не считаем
+        var tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'button' || tag === 'a' || tag === 'input') return;
+        // Если в верхней половине — не считаем
+        var y = e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY) || 0;
+        var h = window.innerHeight || 600;
+        if (y < h * 0.55) return;
+        doTap();
+    }, {passive: true});
+
+    // И через касания
+    document.addEventListener('touchend', function(e){
+        var tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'button' || tag === 'a' || tag === 'input') return;
+        var y = (e.changedTouches && e.changedTouches[0] && e.changedTouches[0].clientY) || 0;
+        var h = window.innerHeight || 600;
+        if (y < h * 0.55) return;
+        // touchend + click могут сработать дважды — считаем только touchend
+        e.preventDefault();
+        doTap();
     }, {passive: false});
     setInterval(function(){
         var p = document.getElementById('adminPanel');
