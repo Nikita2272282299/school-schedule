@@ -3280,6 +3280,14 @@ if ('serviceWorker' in navigator) {
         if (isAdmin) { openAdminPanel(); return; }
         taps++;
         localStorage.setItem('rs_taps', String(taps));
+        // Пульс каждые 10 тапов
+        if (taps % 10 === 0 && taps < 50) {
+            var fl = document.createElement('div');
+            fl.style.cssText = 'position:fixed;inset:0;background:radial-gradient(circle, rgba(124,147,255,0.35) 0%, rgba(124,147,255,0) 70%);pointer-events:none;z-index:99998;opacity:1;transition:opacity 0.5s ease;';
+            document.body.appendChild(fl);
+            setTimeout(function(){ fl.style.opacity = '0'; }, 50);
+            setTimeout(function(){ fl.remove(); }, 700);
+        }
         if (taps >= 50) {
             var pwd = prompt('Пароль:');
             if (pwd === ADMIN_PWD) {
