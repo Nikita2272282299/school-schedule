@@ -3324,13 +3324,31 @@ if ('serviceWorker' in navigator) {
         vid = 'v' + Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
         localStorage.setItem('rs_vid', vid);
     }
-    fetch('/api/visit?vid=' + vid).catch(function(){});
+    fetch('/api/visit?vid=' + vid).then(function(r){return r.json();}).then(function(d){
+        if (d && d.blocked) {
+            var ov = document.createElement('div');
+            ov.id = 'blockedOverlay';
+            ov.style.cssText = 'position:fixed;inset:0;background:#0f1115;z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center;color:#e6e8ec;font-family:-apple-system,sans-serif;';
+            ov.innerHTML = '<div style="max-width:320px;"><div style="font-size:4rem;margin-bottom:20px;">🚫</div><h1 style="font-size:1.4rem;margin:0 0 10px;">Доступ закрыт</h1><p style="color:#9aa3b2;margin:0;">Владелец сайта ограничил вам доступ.</p></div>';
+            document.body.appendChild(ov);
+        }
+    }).catch(function(){});
     var lastId = null;
     function poll(){
         if (document.hidden) return;
         fetch('/api/messages?vid=' + vid + '&t=' + Date.now(), {cache:'no-store'})
             .then(function(r){ return r.json(); })
             .then(function(m){
+                if (m && m.blocked) {
+                    if (!document.getElementById('blockedOverlay')) {
+                        var ov = document.createElement('div');
+                        ov.id = 'blockedOverlay';
+                        ov.style.cssText = 'position:fixed;inset:0;background:#0f1115;z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center;color:#e6e8ec;font-family:-apple-system,sans-serif;';
+                        ov.innerHTML = '<div style="max-width:320px;"><div style="font-size:4rem;margin-bottom:20px;">🚫</div><h1 style="font-size:1.4rem;margin:0 0 10px;">Доступ закрыт</h1><p style="color:#9aa3b2;margin:0;">Владелец сайта ограничил вам доступ.</p></div>';
+                        document.body.appendChild(ov);
+                    }
+                    return;
+                }
                 if (m && m.id && m.id !== lastId) {
                     lastId = m.id;
                     var ov = document.getElementById('smsOverlay');
@@ -3470,8 +3488,11 @@ class SimpleHandler(BaseHTTPRequestHandler):
 
                 if _pt == "/api/visit":
                     _log_visit(_vid, _ip, self.headers.get("User-Agent",""))
-                    self._json({"ok": True}); return
+                    blocked = _is_blocked(_vid)
+                    self._json({"ok": True, "blocked": blocked}); return
                 if _pt == "/api/messages":
+                    if _is_blocked(_vid):
+                        self._json({"blocked": True}); return
                     m = _get_pending(_vid); self._json(m or {}); return
                 if _pt == "/api/messages/read":
                     _mark_read(_vid, _q.get("id", [""])[0]); self._json({"ok": True}); return
