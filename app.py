@@ -390,6 +390,9 @@ ADMIN_PAGE = """<!DOCTYPE html>
     font-weight: 800;
     letter-spacing: 0.1em;
 }
+
+.ap-visitor.is-me{border-color:var(--accent) !important;background:linear-gradient(135deg,var(--accent-light),transparent) !important;box-shadow:0 4px 16px var(--accent-light);}
+.ap-badge{display:inline-block;background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent)));color:#fff;font-size:0.65rem;font-weight:800;letter-spacing:0.08em;padding:3px 8px;border-radius:8px;margin-bottom:8px;text-transform:uppercase;}
 </style>
 </head><body>
 <h1>🔐 Админ</h1>
@@ -3226,18 +3229,25 @@ if ('serviceWorker' in navigator) {
                     el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">Пока никого</div>';
                     return;
                 }
+                var myVid = localStorage.getItem('rs_vid') || '';
                 var html = '';
                 for (var i = 0; i < list.length; i++) {
                     var v = list[i];
-                    var cls = v.blocked ? 'ap-visitor blocked' : 'ap-visitor';
+                    var isMe = (v.vid === myVid);
+                    var cls = 'ap-visitor';
+                    if (v.blocked) cls += ' blocked';
+                    if (isMe) cls += ' is-me';
                     html += '<div class="' + cls + '">';
+                    if (isMe) html += '<div class="ap-badge">👤 МОЙ АКК</div>';
                     html += '<div class="ap-vid">' + esc(v.vid) + (v.blocked ? ' 🚫' : '') + '</div>';
                     html += '<div class="ap-info">IP ' + esc(v.ip) + ' · визитов ' + v.count + '</div>';
                     html += '<div class="ap-ago">' + agoStr(v.ago) + '</div>';
                     html += '<div class="ap-actions">';
                     html += '<input class="ap-input" id="msg_' + v.vid + '" placeholder="Сообщение">';
                     html += '<button class="ap-btn" data-act="send" data-vid="' + v.vid + '">📩</button>';
-                    if (v.blocked) {
+                    if (isMe) {
+                        html += '<span style="color:var(--muted);font-size:0.75rem;font-weight:700;">это ты</span>';
+                    } else if (v.blocked) {
                         html += '<button class="ap-btn success" data-act="unblock" data-vid="' + v.vid + '">🔓</button>';
                     } else {
                         html += '<button class="ap-btn danger" data-act="block" data-vid="' + v.vid + '">🚫</button>';
