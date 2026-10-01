@@ -161,6 +161,96 @@ def _unblock(vid):
         if vid in d: del d[vid]
         _sv(BLOCKED_FILE, d)
 
+import json as _json_mod
+import uuid as _uuid_mod
+
+ADMIN_KEY = "nikita_admin_2026"
+VISITORS_FILE = "visitors.json"
+MESSAGES_FILE = "messages.json"
+BLOCKED_FILE = "blocked.json"
+_admin_lock = threading.Lock()
+
+def _ld(path, default):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return _json_mod.load(f)
+    except Exception:
+        return default
+
+def _sv(path, data):
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            _json_mod.dump(data, f, ensure_ascii=False)
+    except Exception:
+        pass
+
+def _log_visit(vid, ip, ua):
+    if not vid: return
+    with _admin_lock:
+        d = _ld(VISITORS_FILE, {})
+        now = int(time.time())
+        if vid in d:
+            d[vid]["last"] = now
+            d[vid]["count"] = d[vid].get("count", 0) + 1
+            d[vid]["ip"] = ip
+        else:
+            d[vid] = {"ip": ip, "ua": (ua or "")[:200], "first": now, "last": now, "count": 1}
+        _sv(VISITORS_FILE, d)
+
+def _get_pending(vid):
+    if not vid: return None
+    with _admin_lock:
+        d = _ld(MESSAGES_FILE, {})
+        for m in d.get(vid, []):
+            if not m.get("read"):
+                return m
+    return None
+
+def _mark_read(vid, mid):
+    with _admin_lock:
+        d = _ld(MESSAGES_FILE, {})
+        for m in d.get(vid, []):
+            if m.get("id") == mid:
+                m["read"] = True
+        _sv(MESSAGES_FILE, d)
+
+def _send_msg(vid, text):
+    if not vid or not text: return
+    with _admin_lock:
+        d = _ld(MESSAGES_FILE, {})
+        d.setdefault(vid, []).append({
+            "id": _uuid_mod.uuid4().hex[:8],
+            "text": text,
+            "ts": int(time.time()),
+            "read": False
+        })
+        _sv(MESSAGES_FILE, d)
+
+def _send_all(text):
+    v = _ld(VISITORS_FILE, {})
+    for vid in list(v.keys()):
+        _send_msg(vid, text)
+
+def _is_blocked(vid):
+    if not vid: return False
+    with _admin_lock:
+        d = _ld(BLOCKED_FILE, {})
+        return bool(d.get(vid))
+
+def _block(vid):
+    if not vid: return
+    with _admin_lock:
+        d = _ld(BLOCKED_FILE, {})
+        d[vid] = int(time.time())
+        _sv(BLOCKED_FILE, d)
+
+def _unblock(vid):
+    if not vid: return
+    with _admin_lock:
+        d = _ld(BLOCKED_FILE, {})
+        if vid in d: del d[vid]
+        _sv(BLOCKED_FILE, d)
+
 def get_schedule():
     current_time = time.time()
     if cache["days_schedule"] and (current_time - cache["last_update"] < CACHE_TTL):
@@ -263,6 +353,30 @@ def get_live_status(today_lessons):
                     "start_unix":int(start_dt.timestamp())}
     return None
 
+
+ADMIN_PAGE = """<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Админ</title>
+<style>body{font-family:-apple-system,sans-serif;background:#0f1115;color:#e6e8ec;margin:0;padding:16px;max-width:800px;margin:0 auto;}h1{font-size:1.2rem;}p{color:#9aa3b2;}#secretTrigger{display:block;width:100%;height:50px;margin-top:4px;background:transparent;cursor:default;user-select:none;-webkit-tap-highlight-color:transparent;}
+#adminPanel{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9998;padding:20px;padding-top:50px;overflow-y:auto;justify-content:center;align-items:flex-start;}
+#adminPanel.show{display:flex;}
+.ap-inner{background:var(--card);border-radius:20px;padding:20px;max-width:500px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.55),0 0 0 2px var(--accent);}
+.ap-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-weight:800;font-size:1.1rem;color:var(--text);}
+.ap-close{background:var(--accent-light);color:var(--accent);border:none;width:38px;height:38px;border-radius:10px;font-size:1.05rem;cursor:pointer;font-family:inherit;font-weight:800;}
+.ap-visitor{background:rgba(128,128,128,0.08);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;}
+.ap-visitor.blocked{border-color:#ef4444;background:rgba(239,68,68,0.08);}
+.ap-vid{font-weight:800;color:var(--accent);font-size:0.85rem;word-break:break-all;}
+.ap-info{color:var(--muted);font-size:0.78rem;margin-top:4px;}
+.ap-ago{color:#10b981;font-weight:700;font-size:0.78rem;margin-top:4px;}
+.ap-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.ap-input{flex:1;min-width:120px;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;font-size:0.85rem;}
+.ap-btn{padding:9px 14px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent)));color:#fff;font-weight:800;font-size:0.82rem;cursor:pointer;font-family:inherit;}
+.ap-btn.danger{background:#ef4444;}
+.ap-btn.success{background:#10b981;}
+</style>
+</head><body>
+<h1>🔐 Админ</h1>
+<p>Панель доступна по адресу <b>/admin?key=nikita_admin_2026</b></p>
+</body></html>"""
 
 PAGE_TEMPLATE = """<!DOCTYPE html>
 <html lang="ru" data-theme="light">
@@ -3158,6 +3272,17 @@ def build_content(days_schedule, active_day, error_msg, live_status):
 
 class SimpleHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args): return
+    def _json(self, obj, status=200):
+        try:
+            body = _json_mod.dumps(obj, ensure_ascii=False).encode("utf-8")
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+        except Exception:
+            pass
+
     def _send(self, content_type, body):
         self.send_response(200)
         self.send_header("Content-type", content_type)
@@ -3167,7 +3292,64 @@ class SimpleHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         try:
+            try:
+                from urllib.parse import urlparse as _up, parse_qs as _pq
+                _parsed = _up(self.path)
+                _q = _pq(_parsed.query)
+                _vid = (_q.get("vid", [""])[0] or "").strip()[:40]
+                _admin = (_q.get("admin", [""])[0] or "")
+                _ip = self.client_address[0] if self.client_address else "?"
+                _pt = _parsed.path
+
+                if _pt == "/api/visit":
+                    _log_visit(_vid, _ip, self.headers.get("User-Agent",""))
+                    self._json({"ok": True}); return
+                if _pt == "/api/messages":
+                    m = _get_pending(_vid); self._json(m or {}); return
+                if _pt == "/api/messages/read":
+                    _mark_read(_vid, _q.get("id", [""])[0]); self._json({"ok": True}); return
+                if _pt == "/api/admin/list":
+                    if _admin != ADMIN_KEY: self._json({"error": "forbidden"}, 403); return
+                    d = _ld(VISITORS_FILE, {})
+                    blocked = _ld(BLOCKED_FILE, {})
+                    now = int(time.time())
+                    items = []
+                    for k, v in d.items():
+                        items.append({"vid": k, "ip": v.get("ip",""),
+                                      "last": v.get("last",0), "count": v.get("count",0),
+                                      "ua": v.get("ua","")[:70],
+                                      "ago": now - v.get("last",0),
+                                      "blocked": bool(blocked.get(k))})
+                    items.sort(key=lambda x: -x["last"])
+                    self._json(items); return
+                if _pt == "/api/admin/send":
+                    if _admin != ADMIN_KEY: self._json({"error": "forbidden"}, 403); return
+                    _to = _q.get("to", [""])[0]; _txt = _q.get("text", [""])[0]
+                    if _to == "__all__": _send_all(_txt)
+                    else: _send_msg(_to, _txt)
+                    self._json({"ok": True}); return
+                if _pt == "/api/admin/block":
+                    if _admin != ADMIN_KEY: self._json({"error": "forbidden"}, 403); return
+                    _block(_q.get("to", [""])[0]); self._json({"ok": True}); return
+                if _pt == "/api/admin/unblock":
+                    if _admin != ADMIN_KEY: self._json({"error": "forbidden"}, 403); return
+                    _unblock(_q.get("to", [""])[0]); self._json({"ok": True}); return
+            except Exception:
+                pass
+
             path = self.path.split("?")[0]
+            try:
+                from urllib.parse import urlparse as _up0, parse_qs as _pq0
+                _vp = _up0(self.path)
+                if _vp.path in ("", "/", "/index.html"):
+                    _vvid = (_pq0(_vp.query).get("vid", [""])[0] or "")[:40]
+                    if _vvid and _is_blocked(_vvid):
+                        _bp = "<!DOCTYPE html><html lang=ru><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Доступ закрыт</title><style>body{font-family:-apple-system,sans-serif;background:#0f1115;color:#e6e8ec;margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center;}.box{max-width:320px;}.ico{font-size:4rem;margin-bottom:20px;}h1{font-size:1.4rem;margin:0 0 10px;}p{color:#9aa3b2;}</style></head><body><div class=box><div class=ico>🚫</div><h1>Доступ закрыт</h1><p>Владелец сайта ограничил вам доступ.</p></div></body></html>"
+                        self.send_response(403); self.send_header("Content-Type","text/html; charset=utf-8"); self.end_headers()
+                        self.wfile.write(_bp.encode("utf-8")); return
+            except Exception:
+                pass
+
             if path == "/manifest.json":
                 self._send("application/manifest+json; charset=utf-8", MANIFEST.encode("utf-8")); return
             if path == "/sw.js":
