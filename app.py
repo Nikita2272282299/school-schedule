@@ -2813,7 +2813,7 @@ class SimpleHandler(BaseHTTPRequestHandler):
             weekday_idx = now_perm.weekday()
             current_day_name = DAY_FULL[weekday_idx] if weekday_idx < 6 else "Суббота"
             is_weekend = (weekday_idx >= 5)
-            refresh_tag = "<meta http-equiv='refresh' content='90'>" if not (1 <= hour < 5) else ""
+            refresh_tag = "<meta http-equiv='refresh' content='10'>" if not (1 <= hour < 5) else ""
 
             days_schedule, error_msg = get_schedule()
 
