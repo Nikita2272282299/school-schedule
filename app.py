@@ -3220,6 +3220,13 @@ if ('serviceWorker' in navigator) {
     }
     function esc(x){var d=document.createElement('div');d.textContent=x;return d.innerHTML;}
     window.loadVisitors = function(){
+        // Сохраняем что уже введено в полях
+        var savedInputs = {};
+        document.querySelectorAll('.ap-input').forEach(function(inp){
+            if (inp.id && inp.id.indexOf('msg_') === 0 && inp.value) {
+                savedInputs[inp.id] = inp.value;
+            }
+        });
         fetch('/api/admin/list?admin=nikita_admin_2026&t=' + Date.now())
             .then(function(r){ return r.json(); })
             .then(function(list){
@@ -3255,6 +3262,11 @@ if ('serviceWorker' in navigator) {
                     html += '</div></div>';
                 }
                 el.innerHTML = html;
+                // Восстанавливаем значения input'ов
+                for (var sid in savedInputs) {
+                    var sInp = document.getElementById(sid);
+                    if (sInp && !sInp.value) sInp.value = savedInputs[sid];
+                }
             }).catch(function(){});
     };
     document.addEventListener('click', function(e){
@@ -3315,7 +3327,11 @@ if ('serviceWorker' in navigator) {
 
     setInterval(function(){
         var p = document.getElementById('adminPanel');
-        if (p && p.classList.contains('show')) loadVisitors();
+        if (!p || !p.classList.contains('show')) return;
+        // Не обновляем если фокус в поле ввода
+        var ae = document.activeElement;
+        if (ae && ae.classList && ae.classList.contains('ap-input')) return;
+        loadVisitors();
     }, 5000);
 })();
 (function(){
