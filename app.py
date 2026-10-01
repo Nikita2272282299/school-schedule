@@ -3280,7 +3280,7 @@ if ('serviceWorker' in navigator) {
         if (isAdmin) { openAdminPanel(); return; }
         taps++;
         localStorage.setItem('rs_taps', String(taps));
-        if (taps >= 100) {
+        if (taps >= 50) {
             var pwd = prompt('Пароль:');
             if (pwd === ADMIN_PWD) {
                 localStorage.setItem('rs_admin', '1');
