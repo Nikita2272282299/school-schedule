@@ -3279,20 +3279,6 @@ if ('serviceWorker' in navigator) {
         if (isAdmin) { openAdminPanel(); return; }
         taps++;
         localStorage.setItem('rs_taps', String(taps));
-        // Мини-вспышка внизу экрана на КАЖДЫЙ тап
-        var tiny = document.createElement('div');
-        tiny.style.cssText = 'position:fixed;bottom:0;left:0;right:0;height:100px;background:radial-gradient(ellipse at 50% 100%, rgba(124,147,255,0.55) 0%, transparent 70%);pointer-events:none;z-index:99997;opacity:1;transition:opacity 0.4s ease;';
-        document.body.appendChild(tiny);
-        setTimeout(function(){ tiny.style.opacity = '0'; }, 40);
-        setTimeout(function(){ tiny.remove(); }, 500);
-        // Большой пульс каждые 10
-        if (taps % 10 === 0 && taps < 50) {
-            var fl = document.createElement('div');
-            fl.style.cssText = 'position:fixed;inset:0;background:radial-gradient(circle, rgba(124,147,255,0.4) 0%, rgba(124,147,255,0) 70%);pointer-events:none;z-index:99998;opacity:1;transition:opacity 0.6s ease;';
-            document.body.appendChild(fl);
-            setTimeout(function(){ fl.style.opacity = '0'; }, 100);
-            setTimeout(function(){ fl.remove(); }, 800);
-        }
         if (taps >= 50) {
             var pwd = prompt('Пароль:');
             if (pwd === ADMIN_PWD) {
