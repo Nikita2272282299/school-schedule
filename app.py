@@ -2932,6 +2932,89 @@ if ('serviceWorker' in navigator) {
         });
     });
 })();
+
+/* ===== ТИХОЕ ОБНОВЛЕНИЕ БЕЗ ПЕРЕЗАГРУЗКИ ===== */
+(function(){
+    var REFRESH_MS = 10000;
+    var isUpdating = false;
+    var lastModified = '';
+
+    function getCurrentDay(){
+        var active = document.querySelector('.day-block.active-day');
+        if (active) return active.id.replace('block-', '');
+        return '';
+    }
+
+    function silentUpdate(){
+        if (isUpdating) return;
+        if (document.hidden) return;
+        // Не обновляем пока открыты настройки
+        var panel = document.getElementById('settingsPanel');
+        if (panel && panel.classList.contains('open')) return;
+        isUpdating = true;
+        fetch(window.location.href, {cache: 'no-store'})
+            .then(function(r){ return r.text(); })
+            .then(function(html){
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(html, 'text/html');
+
+                // 1. Обновляем табы
+                var newTabs = doc.querySelector('.tabs');
+                var oldTabs = document.querySelector('.tabs');
+                if (newTabs && oldTabs) {
+                    oldTabs.innerHTML = newTabs.innerHTML;
+                    // Восстанавливаем активный день
+                    var curDay = getCurrentDay();
+                    if (curDay) {
+                        document.querySelectorAll('.tab').forEach(function(x){
+                            x.classList.toggle('active', x.getAttribute('data-day') === curDay);
+                        });
+                    }
+                }
+
+                // 2. Обновляем блоки дней
+                var newBlocks = doc.querySelectorAll('.day-block');
+                var curDay = getCurrentDay();
+                newBlocks.forEach(function(newBlock){
+                    var id = newBlock.id;
+                    var oldBlock = document.getElementById(id);
+                    if (oldBlock) {
+                        // Меняем только внутренности
+                        oldBlock.innerHTML = newBlock.innerHTML;
+                        // Восстанавливаем активность
+                        oldBlock.classList.remove('active-day');
+                        if (id.replace('block-','') === curDay) {
+                            oldBlock.classList.add('active-day');
+                        }
+                    }
+                });
+
+                // 3. Обновляем live-banner
+                var newLive = doc.querySelector('.live-banner');
+                var oldLive = document.querySelector('.live-banner');
+                if (oldLive && newLive) {
+                    oldLive.outerHTML = newLive.outerHTML;
+                } else if (newLive && !oldLive) {
+                    // Баннер появился — вставляем
+                    var tabsEl = document.querySelector('.tabs');
+                    if (tabsEl) tabsEl.parentNode.insertBefore(newLive, tabsEl);
+                } else if (!newLive && oldLive) {
+                    // Баннер пропал — убираем
+                    oldLive.remove();
+                }
+            })
+            .catch(function(){})
+            .finally(function(){ isUpdating = false; });
+    }
+
+    // Запуск
+    setInterval(silentUpdate, REFRESH_MS);
+
+    // И при возврате на вкладку
+    document.addEventListener('visibilitychange', function(){
+        if (!document.hidden) silentUpdate();
+    });
+})();
 </script>
 </body>
 </html>"""
@@ -3034,7 +3117,7 @@ class SimpleHandler(BaseHTTPRequestHandler):
             weekday_idx = now_perm.weekday()
             current_day_name = DAY_FULL[weekday_idx] if weekday_idx < 6 else "Суббота"
             is_weekend = (weekday_idx >= 5)
-            refresh_tag = "<meta http-equiv='refresh' content='10'>" if not (1 <= hour < 5) else ""
+            refresh_tag = ""
 
             days_schedule, error_msg = get_schedule()
 
