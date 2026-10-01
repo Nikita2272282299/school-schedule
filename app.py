@@ -2410,60 +2410,34 @@ body::-webkit-scrollbar {
     display: none !important;              /* Chrome/Safari */
 }
 
-/* ===== ДВА ЦВЕТА ПЛАШЕК: "СКОРО" И "СЛЕДУЮЩИЙ" ===== */
-
-/* "Скоро урок" — акцент темы, яркий, с лёгким свечением */
-.live-banner.before.soon {
+/* ===== ПЛАШКИ ПОД ТЕМУ (одинаковый цвет) ===== */
+.live-banner.before {
     background: linear-gradient(135deg, var(--accent-light), var(--card)) !important;
     border: 1.5px solid var(--accent) !important;
     box-shadow: 0 6px 20px var(--accent-light) !important;
+    opacity: 1 !important;
 }
-.live-banner.before.soon .live-label {
-    color: var(--accent) !important;
-}
-.live-banner.before.soon .live-dot {
-    background: var(--accent) !important;
-    animation: pulseSoon 1.4s ease-in-out infinite !important;
-}
-.live-banner.before.soon .live-timer {
+.live-banner.before .live-label {
     color: var(--accent) !important;
     font-weight: 800;
+}
+.live-banner.before .live-dot {
+    background: var(--accent) !important;
+    animation: pulseSoon 1.6s ease-in-out infinite !important;
+}
+.live-banner.before .live-timer {
+    color: var(--accent) !important;
+    font-weight: 700;
 }
 @keyframes pulseSoon {
     0%,100% { box-shadow: 0 0 0 0 var(--accent); }
     50% { box-shadow: 0 0 0 8px transparent; }
 }
 
-/* "Следующий урок" — приглушённый, спокойный, полупрозрачный */
-.live-banner.before.next {
-    background: linear-gradient(135deg, var(--accent-light), var(--card)) !important;
-    border: 1px solid var(--border) !important;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.06) !important;
-    opacity: 0.85;
-}
-.live-banner.before.next .live-label {
-    color: var(--muted) !important;
-    letter-spacing: 0.1em;
-}
-.live-banner.before.next .live-dot {
-    background: var(--muted) !important;
-    animation: none !important;
-    opacity: 0.7;
-}
-.live-banner.before.next .live-timer {
-    color: var(--text-main) !important;
-    font-weight: 700;
-    opacity: 0.75;
-}
-
-/* Тёмные темы — чуть другой оттенок */
-[data-theme="dark"] .live-banner.before.next,
-[data-theme="cosmic"] .live-banner.before.next {
-    background: linear-gradient(135deg, var(--accent-light), var(--card)) !important;
-    border-color: rgba(255,255,255,0.08) !important;
-}
-[data-theme="cosmic"] .live-banner.before.soon {
-    box-shadow: 0 8px 26px rgba(183,148,246,0.4) !important;
+/* Тёмные темы — усилить свечение */
+[data-theme="dark"] .live-banner.before,
+[data-theme="cosmic"] .live-banner.before {
+    box-shadow: 0 6px 22px var(--accent-light), inset 0 1px 0 rgba(255,255,255,0.06) !important;
 }
 </style>
 </head>
@@ -2723,12 +2697,7 @@ if ('serviceWorker' in navigator) {
                 } else {
                     waitStr = wait + ' мин';
                 }
-                tEl2.textContent = 'через ' + waitStr;
-                var lbl = beforeEl.querySelector('.live-label');
-                var isSoon = wait <= 30;
-                if (lbl) lbl.textContent = isSoon ? 'Скоро урок' : 'Следующий урок';
-                beforeEl.classList.toggle('soon', isSoon);
-                beforeEl.classList.toggle('next', !isSoon);
+                tEl2.textContent = 'в ' + startStr + ' · через ' + waitStr;
                 var lbl = beforeEl.querySelector('.live-label');
                 if (lbl) lbl.textContent = wait <= 30 ? 'Скоро урок' : 'Следующий урок';
             }
@@ -2773,21 +2742,12 @@ def build_live_banner(status):
             '</div></div>')
     if status["type"] == "before":
         wait = status.get("wait", 0)
-        if wait >= 60:
-            h = wait // 60
-            m = wait % 60
-            time_str = f"{h} ч {m} мин" if m else f"{h} ч"
-        else:
-            time_str = f"{wait} мин"
-        is_soon = wait <= 30
-        label = "Скоро урок" if is_soon else "Следующий урок"
-        mode = "soon" if is_soon else "next"
-        return ('<div class="live-banner before ' + mode + '" data-start-unix="' + str(status["start_unix"]) + '" data-start="' + status["start"] + '"><div class="live-dot"></div>'
+        label = "Скоро урок" if wait <= 30 else "Следующий урок"
+        return ('<div class="live-banner before" data-start-unix="' + str(status["start_unix"]) + '" data-start="' + status["start"] + '"><div class="live-dot"></div>'
             '<div class="live-info"><div class="live-label">' + label + '</div>'
-            '<div class="live-lesson">' + status["lesson"] + '</div>'
-            '<div class="live-time">в ' + status["start"] + ' · <span class="live-timer">через ' + time_str + '</span></div>'
+            f'<div class="live-lesson">{status["lesson"]}</div>'
+            f'<div class="live-time"><span class="live-timer">в {status["start"]}</span></div>'
             '</div></div>')
-
     return ""
 
 
