@@ -1,4 +1,4 @@
-import threading, urllib.request, csv, io, time, os, json
+import threading, urllib.request, csv, io, time, os, json, hashlib
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, timezone, timedelta
 
@@ -71,6 +71,71 @@ self.addEventListener('fetch',function(e){
 });"""
 
 
+
+
+CHANGE_FILE = "last_change.json"
+change_tracker = {"prev_hash": "", "ts": 0}
+
+def _sched_hash(s):
+    try:
+        return hashlib.md5(json.dumps(s, sort_keys=True, default=list).encode()).hexdigest()
+    except Exception:
+        return ""
+
+def load_change_tracker():
+    try:
+        with open(CHANGE_FILE) as f:
+            d = json.load(f)
+        change_tracker["prev_hash"] = d.get("prev_hash", "")
+        change_tracker["ts"] = int(d.get("ts", 0))
+    except Exception:
+        pass
+
+def save_change_tracker():
+    try:
+        with open(CHANGE_FILE, "w") as f:
+            json.dump(change_tracker, f)
+    except Exception:
+        pass
+
+load_change_tracker()
+
+
+
+FILLED_FILE = "filled_days.json"
+new_days_for_render = []
+
+def _week_key():
+    n = datetime.now(PERM_TZ)
+    iso = n.isocalendar()
+    return f"{iso[0]}-W{iso[1]}"
+
+def check_new_days(days):
+    """Возвращает список дней, которые впервые получили расписание на этой неделе"""
+    global new_days_for_render
+    try:
+        try:
+            with open(FILLED_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except Exception:
+            data = {}
+        wk = _week_key()
+        if data.get('week') != wk:
+            data = {'week': wk, 'filled': []}
+        prev = set(data.get('filled', []))
+        cur = set(d for d, v in days.items() if v)
+        new_days = sorted(cur - prev)
+        data['filled'] = sorted(cur)
+        try:
+            with open(FILLED_FILE, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False)
+        except Exception:
+            pass
+        new_days_for_render = new_days
+        return new_days
+    except Exception:
+        return []
+
 def get_schedule():
     current_time = time.time()
     if cache["days_schedule"] and (current_time - cache["last_update"] < CACHE_TTL):
@@ -136,6 +201,16 @@ def get_schedule():
         cache["error_msg"] = "Офлайн-режим (нет сети)"
     if days_schedule:
         save_disk_cache(days_schedule)
+        check_new_days(days_schedule)
+        try:
+            _h = _sched_hash(days_schedule)
+            if change_tracker["prev_hash"] and _h and _h != change_tracker["prev_hash"]:
+                change_tracker["ts"] = int(time.time())
+                print(f"[schedule] CHANGED at {datetime.now(PERM_TZ).strftime('%H:%M:%S')}")
+            change_tracker["prev_hash"] = _h
+            save_change_tracker()
+        except Exception as _e:
+            print(f"[tracker] {_e}")
     return cache["days_schedule"], cache["error_msg"]
 
 
@@ -2439,13 +2514,62 @@ body::-webkit-scrollbar {
 [data-theme="cosmic"] .live-banner.before {
     box-shadow: 0 6px 22px var(--accent-light), inset 0 1px 0 rgba(255,255,255,0.06) !important;
 }
+
+/* ===== БАННЕР "РАСПИСАНИЕ ИЗМЕНЕНО" ===== */
+#changeBanner {
+    display: none;
+    margin-bottom: 12px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--accent-light), var(--card));
+    border: 1.5px solid var(--accent);
+    color: var(--text);
+    font-weight: 700;
+    font-size: 0.88rem;
+    box-shadow: 0 6px 20px var(--accent-light);
+    align-items: center;
+    gap: 10px;
+    animation: bannerSlide 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+#changeBanner.show { display: flex; }
+#changeBanner .bn-icon { font-size: 1.2rem; }
+#changeBanner .bn-time { color: var(--accent); font-weight: 800; }
+@keyframes bannerSlide {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: none; }
+}
+
+/* ===== ПУЛЬСАЦИЯ НОВОГО ДНЯ ===== */
+@keyframes newDayPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 var(--accent), inset 0 0 0 0 var(--accent-light);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 0 6px transparent, inset 0 0 0 4px var(--accent-light);
+        transform: scale(1.06);
+    }
+}
+.tab.new-day {
+    animation: newDayPulse 1.5s ease-in-out infinite !important;
+    background: linear-gradient(135deg, var(--accent-light), transparent) !important;
+    color: var(--accent) !important;
+    font-weight: 900 !important;
+    border: 1px solid var(--accent) !important;
+}
+.tab.new-day .tab-day {
+    color: var(--accent) !important;
+    opacity: 1 !important;
+    font-weight: 900 !important;
+}
 </style>
 </head>
-<body>
+<body data-changed-at="{changed_at}">
 <div id="particles"></div>
 <div class="side-decor side-left"></div>
 <div class="side-decor side-right"></div>
 <div class="container">
+<div id="changeBanner"><span class="bn-icon">🔔</span><span>Расписание изменено в <span class="bn-time">--:--</span></span></div>
 
 <div class="header-card">
     <h2>📅 <span>Расписание</span></h2>
@@ -2711,6 +2835,95 @@ if ('serviceWorker' in navigator) {
 })();
 
 
+
+/* ===== УВЕДОМЛЕНИЕ ОБ ИЗМЕНЕНИИ ===== */
+(function(){
+    var changedAt = parseInt(document.body.getAttribute('data-changed-at') || '0', 10);
+    if (!changedAt) return;
+    var seen = parseInt(localStorage.getItem('rs_seen_change') || '0', 10);
+    var shownAt = parseInt(localStorage.getItem('rs_shown_at') || '0', 10);
+    var nowSec = Math.floor(Date.now()/1000);
+    var shouldShow = false;
+    if (changedAt > seen) {
+        localStorage.setItem('rs_seen_change', changedAt);
+        localStorage.setItem('rs_shown_at', nowSec);
+        shouldShow = true;
+    } else if (changedAt === seen && shownAt && (nowSec - shownAt) < 30) {
+        shouldShow = true;
+    }
+    if (!shouldShow) return;
+    var banner = document.getElementById('changeBanner');
+    if (!banner) return;
+    var d = new Date(changedAt * 1000);
+    var hh = ('0'+d.getHours()).slice(-2);
+    var mm = ('0'+d.getMinutes()).slice(-2);
+    var timeEl = banner.querySelector('.bn-time');
+    if (timeEl) timeEl.textContent = hh+':'+mm;
+    banner.classList.add('show');
+})();
+
+/* ===== ПУЛЬСАЦИЯ НОВОГО ДНЯ + ПАМЯТЬ ДНЯ ===== */
+(function(){
+    // ISO-неделя
+    function wk(){
+        var d = new Date();
+        var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        var dn = t.getUTCDay() || 7;
+        t.setUTCDate(t.getUTCDate() + 4 - dn);
+        var ys = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+        var wn = Math.ceil((((t - ys) / 86400000) + 1) / 7);
+        return t.getUTCFullYear() + '-W' + wn;
+    }
+    // Сброс в новую неделю
+    if (localStorage.getItem('rs_week_pulse') !== wk()) {
+        localStorage.removeItem('rs_seen_days');
+        localStorage.setItem('rs_week_pulse', wk());
+    }
+
+    // Список увиденных новых дней
+    var seen;
+    try { seen = JSON.parse(localStorage.getItem('rs_seen_days') || '[]'); }
+    catch(e){ seen = []; }
+
+    // 1. Восстановить последний открытый день
+    var savedDay = localStorage.getItem('rs_day');
+    if (savedDay) {
+        var tb = document.getElementById('block-' + savedDay);
+        if (tb) {
+            document.querySelectorAll('.day-block').forEach(function(el){ el.classList.remove('active-day'); });
+            tb.classList.add('active-day');
+            document.querySelectorAll('.tab').forEach(function(x){
+                x.classList.toggle('active', x.getAttribute('data-day') === savedDay);
+            });
+        }
+    }
+
+    // 2. Обработка пульсации
+    document.querySelectorAll('.tab.new-day').forEach(function(tab){
+        var day = tab.getAttribute('data-day');
+        if (seen.indexOf(day) !== -1) {
+            // Уже видел — снять пульсацию
+            tab.classList.remove('new-day');
+        }
+    });
+
+    // 3. Клик на любой таб — снять пульсацию + сохранить день
+    document.querySelectorAll('.tab').forEach(function(tab){
+        tab.addEventListener('click', function(){
+            var day = tab.getAttribute('data-day');
+            // Убираем пульсацию
+            if (tab.classList.contains('new-day')) {
+                tab.classList.remove('new-day');
+                if (seen.indexOf(day) === -1) {
+                    seen.push(day);
+                    try { localStorage.setItem('rs_seen_days', JSON.stringify(seen)); } catch(e){}
+                }
+            }
+            // Сохраняем день
+            try { localStorage.setItem('rs_day', day); } catch(e){}
+        });
+    });
+})();
 </script>
 </body>
 </html>"""
@@ -2842,6 +3055,7 @@ class SimpleHandler(BaseHTTPRequestHandler):
             html = html.replace("{live_banner}", live_banner)
             html = html.replace("{tabs}", tabs)
             html = html.replace("{content}", content)
+            html = html.replace("{changed_at}", str(change_tracker.get("ts", 0)))
             html = html.replace("{sheet_url}", SHEET_URL)
 
             self.send_response(200)
