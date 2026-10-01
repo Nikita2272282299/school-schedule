@@ -2725,6 +2725,11 @@ if ('serviceWorker' in navigator) {
                 }
                 tEl2.textContent = 'в ' + startStr + ' · через ' + waitStr;
                 var lbl = beforeEl.querySelector('.live-label');
+                var isSoon = wait <= 30;
+                if (lbl) lbl.textContent = isSoon ? 'Скоро урок' : 'Следующий урок';
+                beforeEl.classList.toggle('soon', isSoon);
+                beforeEl.classList.toggle('next', !isSoon);
+                var lbl = beforeEl.querySelector('.live-label');
                 if (lbl) lbl.textContent = wait <= 30 ? 'Скоро урок' : 'Следующий урок';
             }
         }
@@ -2768,12 +2773,21 @@ def build_live_banner(status):
             '</div></div>')
     if status["type"] == "before":
         wait = status.get("wait", 0)
-        label = "Скоро урок" if wait <= 30 else "Следующий урок"
-        return ('<div class="live-banner before" data-start-unix="' + str(status["start_unix"]) + '" data-start="' + status["start"] + '"><div class="live-dot"></div>'
+        if wait >= 60:
+            h = wait // 60
+            m = wait % 60
+            time_str = f"{h} ч {m} мин" if m else f"{h} ч"
+        else:
+            time_str = f"{wait} мин"
+        is_soon = wait <= 30
+        label = "Скоро урок" if is_soon else "Следующий урок"
+        mode = "soon" if is_soon else "next"
+        return ('<div class="live-banner before ' + mode + '" data-start-unix="' + str(status["start_unix"]) + '" data-start="' + status["start"] + '"><div class="live-dot"></div>'
             '<div class="live-info"><div class="live-label">' + label + '</div>'
-            f'<div class="live-lesson">{status["lesson"]}</div>'
-            f'<div class="live-time"><span class="live-timer">в {status["start"]}</span></div>'
+            '<div class="live-lesson">' + status["lesson"] + '</div>'
+            '<div class="live-time">в ' + status["start"] + ' · <span class="live-timer">через ' + time_str + '</span></div>'
             '</div></div>')
+
     return ""
 
 
