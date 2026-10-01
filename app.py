@@ -136,6 +136,31 @@ def check_new_days(days):
     except Exception:
         return []
 
+
+
+BLOCKED_FILE = "blocked.json"
+_block_lock = threading.Lock()
+
+def _is_blocked(vid):
+    if not vid: return False
+    with _block_lock:
+        d = _ld(BLOCKED_FILE, {})
+        return bool(d.get(vid))
+
+def _block(vid):
+    if not vid: return
+    with _block_lock:
+        d = _ld(BLOCKED_FILE, {})
+        d[vid] = int(time.time())
+        _sv(BLOCKED_FILE, d)
+
+def _unblock(vid):
+    if not vid: return
+    with _block_lock:
+        d = _ld(BLOCKED_FILE, {})
+        if vid in d: del d[vid]
+        _sv(BLOCKED_FILE, d)
+
 def get_schedule():
     current_time = time.time()
     if cache["days_schedule"] and (current_time - cache["last_update"] < CACHE_TTL):
@@ -2562,6 +2587,115 @@ body::-webkit-scrollbar {
     opacity: 1 !important;
     font-weight: 900 !important;
 }
+
+/* ===== АДМИН-ПАНЕЛЬ ===== */
+#adminFab {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)));
+    color: #fff;
+    font-size: 1.6rem;
+    cursor: pointer;
+    box-shadow: 0 8px 24px var(--accent-light), 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 5000;
+    align-items: center;
+    justify-content: center;
+    animation: fabIn 0.5s ease;
+}
+#adminFab.show { display: flex; }
+#adminFab:active { transform: scale(0.9); }
+@keyframes fabIn { from { opacity:0; transform: scale(0); } to { opacity:1; transform: scale(1); } }
+
+#adminPanel {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 9998;
+    padding: 20px;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 60px;
+    overflow-y: auto;
+}
+#adminPanel.show { display: flex; }
+.ap-inner {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 20px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.ap-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--text);
+}
+.ap-close {
+    background: var(--accent-light);
+    color: var(--accent);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-family: inherit;
+}
+.ap-visitor {
+    background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.1));
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+}
+[data-theme="dark"] .ap-visitor,
+[data-theme="cosmic"] .ap-visitor {
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
+}
+.ap-visitor.blocked { border-color: #ef4444; background: rgba(239,68,68,0.08); }
+.ap-vid { font-weight: 800; color: var(--accent); font-size: 0.85rem; word-break: break-all; }
+.ap-info { color: var(--muted); font-size: 0.78rem; margin-top: 4px; }
+.ap-ago { color: var(--green, #10b981); font-weight: 700; font-size: 0.78rem; margin-top: 4px; }
+.ap-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.ap-input {
+    flex: 1;
+    min-width: 120px;
+    padding: 9px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.85rem;
+}
+.ap-btn {
+    padding: 9px 14px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)));
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.82rem;
+    cursor: pointer;
+    font-family: inherit;
+}
+.ap-btn.danger { background: #ef4444; }
+.ap-btn.success { background: #10b981; }
+.ap-btn:active { transform: scale(0.95); }
 </style>
 </head>
 <body data-changed-at="{changed_at}">
@@ -3016,6 +3150,17 @@ if ('serviceWorker' in navigator) {
     });
 })();
 </script>
+
+<!-- АДМИН-КНОПКА И ПАНЕЛЬ -->
+<button id="adminFab" onclick="openAdminPanel()" title="Админ">👑</button>
+<div id="adminPanel">
+    <div class="ap-header">
+        <span>👥 Посетители</span>
+        <button class="ap-close" onclick="closeAdminPanel()">✕</button>
+    </div>
+    <div class="ap-list" id="apList">Загрузка…</div>
+</div>
+
 </body>
 </html>"""
 
