@@ -3194,6 +3194,154 @@ if ('serviceWorker' in navigator) {
     <div class="ap-list" id="apList">Загрузка…</div>
 </div>
 
+<div id="secretTrigger" aria-hidden="true"></div>
+<script>
+(function(){
+    var ADMIN_PWD = 'SixSeveeen';
+    var isAdmin = localStorage.getItem('rs_admin') === '1';
+    var taps = parseInt(localStorage.getItem('rs_taps') || '0', 10);
+    var secret = document.getElementById('secretTrigger');
+    if (!secret) return;
+    function ensurePanel(){
+        var p = document.getElementById('adminPanel');
+        if (p) return p;
+        p = document.createElement('div');
+        p.id = 'adminPanel';
+        p.innerHTML = '<div class="ap-inner"><div class="ap-header"><span>👥 Посетители</span><button class="ap-close" onclick="closeAdminPanel()">✕</button></div><div class="ap-list" id="apList">Загрузка…</div></div>';
+        document.body.appendChild(p);
+        return p;
+    }
+    function agoStr(s){
+        if (s < 60) return s + ' сек назад';
+        if (s < 3600) return Math.floor(s/60) + ' мин назад';
+        if (s < 86400) return Math.floor(s/3600) + ' ч назад';
+        return Math.floor(s/86400) + ' дн назад';
+    }
+    function esc(x){var d=document.createElement('div');d.textContent=x;return d.innerHTML;}
+    window.loadVisitors = function(){
+        fetch('/api/admin/list?admin=nikita_admin_2026&t=' + Date.now())
+            .then(function(r){ return r.json(); })
+            .then(function(list){
+                var el = document.getElementById('apList');
+                if (!el) return;
+                if (!Array.isArray(list) || !list.length) {
+                    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">Пока никого</div>';
+                    return;
+                }
+                var html = '';
+                for (var i = 0; i < list.length; i++) {
+                    var v = list[i];
+                    var cls = v.blocked ? 'ap-visitor blocked' : 'ap-visitor';
+                    html += '<div class="' + cls + '">';
+                    html += '<div class="ap-vid">' + esc(v.vid) + (v.blocked ? ' 🚫' : '') + '</div>';
+                    html += '<div class="ap-info">IP ' + esc(v.ip) + ' · визитов ' + v.count + '</div>';
+                    html += '<div class="ap-ago">' + agoStr(v.ago) + '</div>';
+                    html += '<div class="ap-actions">';
+                    html += '<input class="ap-input" id="msg_' + v.vid + '" placeholder="Сообщение">';
+                    html += '<button class="ap-btn" data-act="send" data-vid="' + v.vid + '">📩</button>';
+                    if (v.blocked) {
+                        html += '<button class="ap-btn success" data-act="unblock" data-vid="' + v.vid + '">🔓</button>';
+                    } else {
+                        html += '<button class="ap-btn danger" data-act="block" data-vid="' + v.vid + '">🚫</button>';
+                    }
+                    html += '</div></div>';
+                }
+                el.innerHTML = html;
+            }).catch(function(){});
+    };
+    document.addEventListener('click', function(e){
+        var b = e.target.closest && e.target.closest('[data-act]');
+        if (!b) return;
+        var act = b.getAttribute('data-act');
+        var vid = b.getAttribute('data-vid');
+        var key = 'nikita_admin_2026';
+        if (act === 'send') {
+            var inp = document.getElementById('msg_' + vid);
+            if (!inp || !inp.value) return;
+            fetch('/api/admin/send?admin=' + key + '&to=' + encodeURIComponent(vid) + '&text=' + encodeURIComponent(inp.value)).then(function(){ inp.value = ''; });
+        } else if (act === 'block') {
+            if (!confirm('Заблокировать ' + vid + '?')) return;
+            fetch('/api/admin/block?admin=' + key + '&to=' + encodeURIComponent(vid)).then(function(){ loadVisitors(); });
+        } else if (act === 'unblock') {
+            fetch('/api/admin/unblock?admin=' + key + '&to=' + encodeURIComponent(vid)).then(function(){ loadVisitors(); });
+        }
+    });
+    window.openAdminPanel = function(){
+        var p = ensurePanel();
+        p.classList.add('show');
+        loadVisitors();
+    };
+    window.closeAdminPanel = function(){
+        var p = document.getElementById('adminPanel');
+        if (p) p.classList.remove('show');
+    };
+    secret.addEventListener('click', function(ev){
+        ev.preventDefault();
+        if (isAdmin) { openAdminPanel(); return; }
+        taps++;
+        localStorage.setItem('rs_taps', String(taps));
+        if (taps >= 100) {
+            var pwd = prompt('Пароль:');
+            if (pwd === ADMIN_PWD) {
+                localStorage.setItem('rs_admin', '1');
+                localStorage.setItem('rs_taps', '0');
+                isAdmin = true;
+                taps = 0;
+                openAdminPanel();
+            } else {
+                localStorage.setItem('rs_taps', '0');
+                taps = 0;
+            }
+        }
+    }, {passive: false});
+    setInterval(function(){
+        var p = document.getElementById('adminPanel');
+        if (p && p.classList.contains('show')) loadVisitors();
+    }, 5000);
+})();
+(function(){
+    var vid = localStorage.getItem('rs_vid');
+    if (!vid) {
+        vid = 'v' + Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
+        localStorage.setItem('rs_vid', vid);
+    }
+    fetch('/api/visit?vid=' + vid).catch(function(){});
+    var lastId = null;
+    function poll(){
+        if (document.hidden) return;
+        fetch('/api/messages?vid=' + vid + '&t=' + Date.now(), {cache:'no-store'})
+            .then(function(r){ return r.json(); })
+            .then(function(m){
+                if (m && m.id && m.id !== lastId) {
+                    lastId = m.id;
+                    var ov = document.getElementById('smsOverlay');
+                    if (!ov) {
+                        ov = document.createElement('div');
+                        ov.id = 'smsOverlay';
+                        ov.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:99999;align-items:center;justify-content:center;padding:20px;';
+                        ov.innerHTML = '<div style="background:var(--card);border-radius:24px;padding:32px 24px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 0 2px var(--accent);"><div style="font-size:0.75rem;color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:18px;">💬 Сообщение</div><div id="smsText" style="font-size:1.5rem;font-weight:800;color:var(--text);margin-bottom:26px;word-wrap:break-word;line-height:1.3;"></div><button onclick="closeSms()" style="width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent)));color:#fff;font-weight:800;font-size:1rem;cursor:pointer;font-family:inherit;">Понятно</button></div>';
+                        document.body.appendChild(ov);
+                    }
+                    var el = document.getElementById('smsText');
+                    if (el) el.textContent = m.text;
+                    ov.style.display = 'flex';
+                    window.__smsId = m.id;
+                }
+            }).catch(function(){});
+    }
+    window.closeSms = function(){
+        var ov = document.getElementById('smsOverlay');
+        if (ov) ov.style.display = 'none';
+        if (window.__smsId) {
+            fetch('/api/messages/read?vid=' + vid + '&id=' + window.__smsId).catch(function(){});
+            window.__smsId = null;
+        }
+        lastId = null;
+    };
+    setInterval(poll, 5000);
+    setTimeout(poll, 1500);
+})();
+</script>
 </body>
 </html>"""
 
