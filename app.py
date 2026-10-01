@@ -356,7 +356,7 @@ def get_live_status(today_lessons):
 
 ADMIN_PAGE = """<!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Админ</title>
-<style>body{font-family:-apple-system,sans-serif;background:#0f1115;color:#e6e8ec;margin:0;padding:16px;max-width:800px;margin:0 auto;}h1{font-size:1.2rem;}p{color:#9aa3b2;}#secretTrigger{display:block;width:100%;min-height:200px;height:auto;margin-top:4px;padding:20px 0;background:transparent;cursor:default;user-select:none;-webkit-tap-highlight-color:transparent;}
+<style>body{font-family:-apple-system,sans-serif;background:#0f1115;color:#e6e8ec;margin:0;padding:16px;max-width:800px;margin:0 auto;}h1{font-size:1.2rem;}p{color:#9aa3b2;}#secretTrigger{display:block;width:70px;height:70px;margin:10px auto 0;background:transparent;cursor:default;user-select:none;-webkit-tap-highlight-color:transparent;border-radius:50%;}
 #adminPanel{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9998;padding:20px;padding-top:50px;overflow-y:auto;justify-content:center;align-items:flex-start;}
 #adminPanel.show{display:flex;}
 .ap-inner{background:var(--card);border-radius:20px;padding:20px;max-width:500px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.55),0 0 0 2px var(--accent);}
@@ -2828,6 +2828,9 @@ body::-webkit-scrollbar {
 .ap-btn.danger { background: #ef4444; }
 .ap-btn.success { background: #10b981; }
 .ap-btn:active { transform: scale(0.95); }
+#secretTrigger{display:block;width:70px;height:70px;margin:10px auto 0;background:transparent;cursor:default;user-select:none;-webkit-tap-highlight-color:transparent;border-radius:50%;}
+#secretTrigger.admin-active{background:linear-gradient(135deg,var(--accent-light),transparent) !important;opacity:0.5 !important;cursor:pointer !important;}
+#secretTrigger.admin-active::after{content:"👑";display:block;text-align:center;padding-top:22px;font-size:1.4rem;opacity:0.7;}
 </style>
 </head>
 <body data-changed-at="{changed_at}">
@@ -3321,23 +3324,6 @@ if ('serviceWorker' in navigator) {
                 }
             }
         }
-        document.addEventListener('click', function(e){
-            var tag = (e.target.tagName || '').toLowerCase();
-            if (tag === 'button' || tag === 'a' || tag === 'input') return;
-            var y = e.clientY || 0;
-            var h = window.innerHeight || 600;
-            if (y < h * 0.55) return;
-            tryOpenAdmin();
-        }, {passive: true});
-        document.addEventListener('touchend', function(e){
-            var tag = (e.target.tagName || '').toLowerCase();
-            if (tag === 'button' || tag === 'a' || tag === 'input') return;
-            var y = (e.changedTouches && e.changedTouches[0] && e.changedTouches[0].clientY) || 0;
-            var h = window.innerHeight || 600;
-            if (y < h * 0.55) return;
-            e.preventDefault();
-            tryOpenAdmin();
-        }, {passive: false});
     }
 
     setInterval(function(){
