@@ -2721,27 +2721,6 @@ body::-webkit-scrollbar {
 }
 
 /* ===== АДМИН-ПАНЕЛЬ ===== */
-#adminFab {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    border: none;
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)));
-    color: #fff;
-    font-size: 1.6rem;
-    cursor: pointer;
-    box-shadow: 0 8px 24px var(--accent-light), 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 5000;
-    align-items: center;
-    justify-content: center;
-    animation: fabIn 0.5s ease;
-}
-#adminFab.show { display: flex; }
-#adminFab:active { transform: scale(0.9); }
 @keyframes fabIn { from { opacity:0; transform: scale(0); } to { opacity:1; transform: scale(1); } }
 
 #adminPanel {
@@ -2896,6 +2875,7 @@ body::-webkit-scrollbar {
 {content}
 
 <a class="sheet-link" href="{sheet_url}" target="_blank" rel="noopener">📊 Открыть таблицу в Google Sheets</a>
+<div id="secretTrigger" aria-hidden="true"></div>
 </div>
 
 <script>
@@ -3205,8 +3185,6 @@ if ('serviceWorker' in navigator) {
 
 </script>
 
-<!-- АДМИН-КНОПКА И ПАНЕЛЬ -->
-<button id="adminFab" onclick="openAdminPanel()" title="Админ">👑</button>
 <div id="adminPanel">
     <div class="ap-header">
         <span>👥 Посетители</span>
@@ -3215,7 +3193,6 @@ if ('serviceWorker' in navigator) {
     <div class="ap-list" id="apList">Загрузка…</div>
 </div>
 
-<div id="secretTrigger" aria-hidden="true"></div>
 <script>
 (function(){
     var ADMIN_PWD = 'SixSeveeen';
