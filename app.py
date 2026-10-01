@@ -2391,7 +2391,24 @@ body {
 }
 
 /* Защита от дёргания скроллбара на ПК */
-html { scrollbar-gutter: stable; }
+
+
+/* ===== СКРЫТЬ ПРАВЫЙ СКРОЛЛБАР (не дёргает) ===== */
+html {
+    scrollbar-width: none !important;      /* Firefox */
+    -ms-overflow-style: none !important;   /* IE/Edge */
+    scrollbar-gutter: auto !important;     /* убираем зарезервированное место */
+}
+body {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;              /* Chrome/Safari */
+}
 </style>
 </head>
 <body>
