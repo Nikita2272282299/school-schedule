@@ -143,6 +143,8 @@ def get_live_status(today_lessons):
     if not today_lessons: return None
     now = datetime.now(PERM_TZ)
     cur = now.hour * 60 + now.minute
+    if cur < 6*60 + 30:
+        return None
     for tv, num, lesson in today_lessons:
         try:
             start, end = tv.split("-")
@@ -2387,6 +2389,9 @@ body {
 .settings-panel::-webkit-scrollbar-track {
     background: transparent;
 }
+
+/* Защита от дёргания скроллбара на ПК */
+html { scrollbar-gutter: stable; }
 </style>
 </head>
 <body>
@@ -2637,7 +2642,17 @@ if ('serviceWorker' in navigator) {
             var tEl2 = beforeEl.querySelector('.live-timer');
             if (startUnix && tEl2) {
                 var wait = Math.max(0, Math.ceil((startUnix - nowSec) / 60));
-                tEl2.textContent = 'в ' + startStr + ' · через ' + wait + ' мин';
+                var waitStr;
+                if (wait >= 60) {
+                    var h = Math.floor(wait / 60);
+                    var m = wait % 60;
+                    waitStr = m ? (h + ' ч ' + m + ' мин') : (h + ' ч');
+                } else {
+                    waitStr = wait + ' мин';
+                }
+                tEl2.textContent = 'в ' + startStr + ' · через ' + waitStr;
+                var lbl = beforeEl.querySelector('.live-label');
+                if (lbl) lbl.textContent = wait <= 30 ? 'Скоро урок' : 'Следующий урок';
             }
         }
     }
@@ -2679,8 +2694,10 @@ def build_live_banner(status):
             f'<div class="progress-bar"><div class="progress-fill" style="width:{status["progress"]}%"></div></div>'
             '</div></div>')
     if status["type"] == "before":
+        wait = status.get("wait", 0)
+        label = "Скоро урок" if wait <= 30 else "Следующий урок"
         return ('<div class="live-banner before" data-start-unix="' + str(status["start_unix"]) + '" data-start="' + status["start"] + '"><div class="live-dot"></div>'
-            '<div class="live-info"><div class="live-label">Скоро урок</div>'
+            '<div class="live-info"><div class="live-label">' + label + '</div>'
             f'<div class="live-lesson">{status["lesson"]}</div>'
             f'<div class="live-time"><span class="live-timer">в {status["start"]}</span></div>'
             '</div></div>')
