@@ -2885,17 +2885,26 @@ if ('serviceWorker' in navigator) {
     try { seen = JSON.parse(localStorage.getItem('rs_seen_days') || '[]'); }
     catch(e){ seen = []; }
 
-    // 1. Восстановить последний открытый день
-    var savedDay = localStorage.getItem('rs_day');
-    if (savedDay) {
-        var tb = document.getElementById('block-' + savedDay);
-        if (tb) {
-            document.querySelectorAll('.day-block').forEach(function(el){ el.classList.remove('active-day'); });
-            tb.classList.add('active-day');
-            document.querySelectorAll('.tab').forEach(function(x){
-                x.classList.toggle('active', x.getAttribute('data-day') === savedDay);
-            });
-        }
+    // 1. Открываем на СЕГОДНЯ, если пусто — на ЗАВТРА
+    var daysRu = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+    var todayIdx = new Date().getDay() - 1; // 0=Пн
+    if (todayIdx < 0) todayIdx = 5;
+    if (todayIdx > 5) todayIdx = 5;
+    var todayName = daysRu[todayIdx];
+    var tomorrowName = daysRu[(todayIdx + 1) % 6];
+    var todayBlock = document.getElementById('block-' + todayName);
+    var targetDay = todayName;
+    if (todayBlock) {
+        var hasToday = todayBlock.querySelectorAll('.card').length > 0;
+        if (!hasToday) targetDay = tomorrowName;
+    }
+    var tb = document.getElementById('block-' + targetDay);
+    if (tb) {
+        document.querySelectorAll('.day-block').forEach(function(el){ el.classList.remove('active-day'); });
+        tb.classList.add('active-day');
+        document.querySelectorAll('.tab').forEach(function(x){
+            x.classList.toggle('active', x.getAttribute('data-day') === targetDay);
+        });
     }
 
     // 2. Обработка пульсации
@@ -2919,8 +2928,7 @@ if ('serviceWorker' in navigator) {
                     try { localStorage.setItem('rs_seen_days', JSON.stringify(seen)); } catch(e){}
                 }
             }
-            // Сохраняем день
-            try { localStorage.setItem('rs_day', day); } catch(e){}
+
         });
     });
 })();
