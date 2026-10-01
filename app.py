@@ -372,6 +372,24 @@ ADMIN_PAGE = """<!DOCTYPE html>
 .ap-btn{padding:9px 14px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent)));color:#fff;font-weight:800;font-size:0.82rem;cursor:pointer;font-family:inherit;}
 .ap-btn.danger{background:#ef4444;}
 .ap-btn.success{background:#10b981;}
+
+#secretTrigger.admin-active {
+    background: linear-gradient(135deg, var(--accent-light), transparent) !important;
+    border-top: 1px dashed var(--accent) !important;
+    border-bottom: 1px dashed var(--accent) !important;
+    opacity: 0.5 !important;
+    cursor: pointer !important;
+}
+#secretTrigger.admin-active::after {
+    content: "👑 админ";
+    display: block;
+    text-align: center;
+    padding-top: 14px;
+    font-size: 0.7rem;
+    color: var(--accent);
+    font-weight: 800;
+    letter-spacing: 0.1em;
+}
 </style>
 </head><body>
 <h1>🔐 Админ</h1>
@@ -3275,48 +3293,53 @@ if ('serviceWorker' in navigator) {
         var p = document.getElementById('adminPanel');
         if (p) p.classList.remove('show');
     };
-    function doTap(){
-        if (isAdmin) { openAdminPanel(); return; }
-        taps++;
-        localStorage.setItem('rs_taps', String(taps));
-        if (taps >= 50) {
-            var pwd = prompt('Пароль:');
-            if (pwd === ADMIN_PWD) {
-                localStorage.setItem('rs_admin', '1');
-                localStorage.setItem('rs_taps', '0');
-                isAdmin = true;
-                taps = 0;
-                openAdminPanel();
-            } else {
-                localStorage.setItem('rs_taps', '0');
-                taps = 0;
+    // ==== АДМИН: только полоска ====
+    if (isAdmin) {
+        secret.classList.add('admin-active');
+        secret.addEventListener('click', function(ev){
+            ev.preventDefault();
+            ev.stopPropagation();
+            openAdminPanel();
+        }, {passive: false});
+    } else {
+        // Не админ — 50 тапов в нижней части
+        function tryOpenAdmin(){
+            taps++;
+            localStorage.setItem('rs_taps', String(taps));
+            if (taps >= 50) {
+                var pwd = prompt('Пароль:');
+                if (pwd === ADMIN_PWD) {
+                    localStorage.setItem('rs_admin', '1');
+                    localStorage.setItem('rs_taps', '0');
+                    isAdmin = true;
+                    taps = 0;
+                    secret.classList.add('admin-active');
+                    openAdminPanel();
+                } else {
+                    localStorage.setItem('rs_taps', '0');
+                    taps = 0;
+                }
             }
         }
+        document.addEventListener('click', function(e){
+            var tag = (e.target.tagName || '').toLowerCase();
+            if (tag === 'button' || tag === 'a' || tag === 'input') return;
+            var y = e.clientY || 0;
+            var h = window.innerHeight || 600;
+            if (y < h * 0.55) return;
+            tryOpenAdmin();
+        }, {passive: true});
+        document.addEventListener('touchend', function(e){
+            var tag = (e.target.tagName || '').toLowerCase();
+            if (tag === 'button' || tag === 'a' || tag === 'input') return;
+            var y = (e.changedTouches && e.changedTouches[0] && e.changedTouches[0].clientY) || 0;
+            var h = window.innerHeight || 600;
+            if (y < h * 0.55) return;
+            e.preventDefault();
+            tryOpenAdmin();
+        }, {passive: false});
     }
 
-    // Ловим тап по ВСЕЙ нижней части экрана
-    document.addEventListener('click', function(e){
-        // Если тап по кнопкам/ссылкам — не считаем
-        var tag = (e.target.tagName || '').toLowerCase();
-        if (tag === 'button' || tag === 'a' || tag === 'input') return;
-        // Если в верхней половине — не считаем
-        var y = e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY) || 0;
-        var h = window.innerHeight || 600;
-        if (y < h * 0.55) return;
-        doTap();
-    }, {passive: true});
-
-    // И через касания
-    document.addEventListener('touchend', function(e){
-        var tag = (e.target.tagName || '').toLowerCase();
-        if (tag === 'button' || tag === 'a' || tag === 'input') return;
-        var y = (e.changedTouches && e.changedTouches[0] && e.changedTouches[0].clientY) || 0;
-        var h = window.innerHeight || 600;
-        if (y < h * 0.55) return;
-        // touchend + click могут сработать дважды — считаем только touchend
-        e.preventDefault();
-        doTap();
-    }, {passive: false});
     setInterval(function(){
         var p = document.getElementById('adminPanel');
         if (p && p.classList.contains('show')) loadVisitors();
