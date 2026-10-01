@@ -356,7 +356,7 @@ def get_live_status(today_lessons):
 
 ADMIN_PAGE = """<!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Админ</title>
-<style>body{font-family:-apple-system,sans-serif;background:#0f1115;color:#e6e8ec;margin:0;padding:16px;max-width:800px;margin:0 auto;}h1{font-size:1.2rem;}p{color:#9aa3b2;}#secretTrigger{display:block;width:100%;height:50px;margin-top:4px;background:transparent;cursor:default;user-select:none;-webkit-tap-highlight-color:transparent;}
+<style>body{font-family:-apple-system,sans-serif;background:#0f1115;color:#e6e8ec;margin:0;padding:16px;max-width:800px;margin:0 auto;}h1{font-size:1.2rem;}p{color:#9aa3b2;}#secretTrigger{display:block;width:100%;min-height:200px;height:auto;margin-top:4px;padding:20px 0;background:transparent;cursor:default;user-select:none;-webkit-tap-highlight-color:transparent;}
 #adminPanel{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9998;padding:20px;padding-top:50px;overflow-y:auto;justify-content:center;align-items:flex-start;}
 #adminPanel.show{display:flex;}
 .ap-inner{background:var(--card);border-radius:20px;padding:20px;max-width:500px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.55),0 0 0 2px var(--accent);}
@@ -715,7 +715,7 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
     text-align:center; font-size:1.02rem; font-weight:700; color:var(--text-muted);
     border:1px solid var(--border);
 }
-.sheet-link {
+.sheet-link { margin-bottom: 0 !important;
     display:flex; align-items:center; justify-content:center; gap:8px;
     text-align:center; margin-top:22px;
     color: var(--accent);
@@ -737,14 +737,14 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
 
 /* Тёмные темы — особый стиль */
 [data-theme="dark"] .sheet-link,
-[data-theme="cosmic"] .sheet-link {
+[data-theme="cosmic"] .sheet-link { margin-bottom: 0 !important;
     background: linear-gradient(135deg, var(--accent-light), var(--card-bg));
     border-color: var(--accent);
     box-shadow: 0 4px 16px var(--accent-light), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
 /* Космос — со свечением */
-[data-theme="cosmic"] .sheet-link {
+[data-theme="cosmic"] .sheet-link { margin-bottom: 0 !important;
     box-shadow: 0 4px 20px rgba(183,148,246,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
@@ -2121,7 +2121,7 @@ html.compact .side-decor { opacity: 0.5; }
 }
 
 /* Ссылка на таблицу — уже тематическая */
-.sheet-link {
+.sheet-link { margin-bottom: 0 !important;
     color: var(--accent) !important;
     border-color: var(--accent) !important;
 }
@@ -2527,12 +2527,12 @@ body {
 .container {
     padding-bottom: 40px !important;
 }
-.sheet-link {
+.sheet-link { margin-bottom: 0 !important;
     margin-bottom: 0 !important;
 }
 
 /* ===== КРАСИВЫЙ НИЗ ===== */
-.sheet-link {
+.sheet-link { margin-bottom: 0 !important;
     position: relative;
     overflow: hidden;
     transition: transform 0.12s, box-shadow 0.15s;
@@ -3280,14 +3280,21 @@ if ('serviceWorker' in navigator) {
         if (isAdmin) { openAdminPanel(); return; }
         taps++;
         localStorage.setItem('rs_taps', String(taps));
-        // Пульс каждые 10 тапов
+        // Пульс каждые 10 тапов (усиленный)
         if (taps % 10 === 0 && taps < 50) {
             var fl = document.createElement('div');
-            fl.style.cssText = 'position:fixed;inset:0;background:radial-gradient(circle, rgba(124,147,255,0.35) 0%, rgba(124,147,255,0) 70%);pointer-events:none;z-index:99998;opacity:1;transition:opacity 0.5s ease;';
+            var opacity = 0.15 + (taps / 100);
+            fl.style.cssText = 'position:fixed;inset:0;background:radial-gradient(circle, rgba(124,147,255,' + opacity + ') 0%, rgba(124,147,255,0) 70%);pointer-events:none;z-index:99998;opacity:1;transition:opacity 0.5s ease;';
             document.body.appendChild(fl);
             setTimeout(function(){ fl.style.opacity = '0'; }, 50);
             setTimeout(function(){ fl.remove(); }, 700);
         }
+        // Мини-отклик на каждом тапе — маленькая вспышка внизу
+        var tiny = document.createElement('div');
+        tiny.style.cssText = 'position:fixed;bottom:0;left:0;right:0;height:80px;background:radial-gradient(ellipse at 50% 100%, rgba(124,147,255,0.4) 0%, transparent 70%);pointer-events:none;z-index:99997;opacity:1;transition:opacity 0.4s ease;';
+        document.body.appendChild(tiny);
+        setTimeout(function(){ tiny.style.opacity = '0'; }, 40);
+        setTimeout(function(){ tiny.remove(); }, 500);
         if (taps >= 50) {
             var pwd = prompt('Пароль:');
             if (pwd === ADMIN_PWD) {
