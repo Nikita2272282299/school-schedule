@@ -971,6 +971,35 @@ html, body {
 .container {
     transition: filter 0.3s ease;
 }
+
+/* ========== ЖЁСТКИЙ ФИКС СДВИГА ========== */
+body {
+    display: block !important;
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    padding: 20px 14px 30px !important;
+    margin: 0 !important;
+}
+.container {
+    margin: 0 auto !important;
+    max-width: 500px !important;
+    width: 100% !important;
+    padding: 0 !important;
+    filter: none !important;
+    overflow: visible !important;
+}
+.subscreen {
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+.subscreen.open {
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+}
 </style>
 </head><body>
 <h1>🔐 Админ</h1>
