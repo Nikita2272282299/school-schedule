@@ -797,7 +797,7 @@ html body .subscreen {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-40';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-41';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -1774,14 +1774,14 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         var isRain = (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || (code >= 95 && code <= 99);
         var isSnow = (code >= 71 && code <= 77) || (code >= 85 && code <= 86);
         var tips = [];
-        if (isSnow) tips.push('\u2744\ufe0f \u0448\u0430\u043f\u043a\u0430');
-        else if (isRain) tips.push('\u2614 \u0437\u043e\u043d\u0442');
-        if (t >= 25) tips.push('\ud83d\udc55 \u0444\u0443\u0442\u0431\u043e\u043b\u043a\u0430');
-        else if (t >= 18) tips.push('\ud83d\udc54 \u043b\u0435\u0433\u043a\u043e');
-        else if (t >= 12) tips.push('\ud83e\udde5 \u043a\u0443\u0440\u0442\u043a\u0430');
-        else if (t >= 5) tips.push('\ud83e\udde5 \u0442\u0435\u043f\u043b\u043e');
-        else if (t >= -5) tips.push('\ud83e\udde3 \u043f\u0443\u0445\u043e\u0432\u0438\u043a');
-        else tips.push('\ud83e\udde3 \u0437\u0438\u043c\u043d\u044f\u044f');
+        if (isSnow) tips.push('❄️ \u0448\u0430\u043f\u043a\u0430');
+        else if (isRain) tips.push('☔ \u0437\u043e\u043d\u0442');
+        if (t >= 25) tips.push('👕 \u0444\u0443\u0442\u0431\u043e\u043b\u043a\u0430');
+        else if (t >= 18) tips.push('👔 \u043b\u0435\u0433\u043a\u043e');
+        else if (t >= 12) tips.push('🧥 \u043a\u0443\u0440\u0442\u043a\u0430');
+        else if (t >= 5) tips.push('🧥 \u0442\u0435\u043f\u043b\u043e');
+        else if (t >= -5) tips.push('🧣 \u043f\u0443\u0445\u043e\u0432\u0438\u043a');
+        else tips.push('🧣 \u0437\u0438\u043c\u043d\u044f\u044f');
         return tips.join(' \u00b7 ');
     }
 
@@ -1892,17 +1892,17 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         var isFuture = isFutureDayName(name);
         // "До конца" — только для сегодняшнего дня
         if (_optIsOn('widget_endday') && isToday) {
-            html += '<div class="df-item" data-widget="endday"><span class="df-ico">\ud83c\udfc1</span><span class="df-text"><span class="df-name">\u0414\u043e \u043a\u043e\u043d\u0446\u0430</span><span class="df-val">'+calcEndOfDay()+'</span></span></div>';
+            html += '<div class="df-item" data-widget="endday"><span class="df-ico">🏁</span><span class="df-text"><span class="df-name">\u0414\u043e \u043a\u043e\u043d\u0446\u0430</span><span class="df-val">'+calcEndOfDay()+'</span></span></div>';
         }
         if (_optIsOn('widget_workload')) {
-            html += '<div class="df-item" data-widget="workload"><span class="df-ico">\ud83d\udcaa</span><span class="df-text"><span class="df-name">\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430</span><span class="df-val">'+calcWorkload()+'</span></span></div>';
+            html += '<div class="df-item" data-widget="workload"><span class="df-ico">💪</span><span class="df-text"><span class="df-name">\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430</span><span class="df-val">'+calcWorkload()+'</span></span></div>';
         }
         if (_optIsOn('widget_weather')) {
             var wn = isPast ? '\u0411\u044b\u043b\u043e' : (isFuture ? '\u0411\u0443\u0434\u0435\u0442' : '\u041f\u043e\u0433\u043e\u0434\u0430');
-            html += '<div class="df-item" data-widget="weather"><span class="df-ico">\ud83c\udf24</span><span class="df-text"><span class="df-name">'+wn+'</span><span class="df-val">\u2014</span></span></div>';
+            html += '<div class="df-item" data-widget="weather"><span class="df-ico">🌤</span><span class="df-text"><span class="df-name">'+wn+'</span><span class="df-val">\u2014</span></span></div>';
         }
         if (_optIsOn('widget_cloth')) {
-            html += '<div class="df-item" data-widget="cloth"><span class="df-ico">\ud83d\udc55</span><span class="df-text"><span class="df-name">\u041e\u0434\u0435\u0436\u0434\u0430</span><span class="df-val">\u2014</span></span></div>';
+            html += '<div class="df-item" data-widget="cloth"><span class="df-ico">👕</span><span class="df-text"><span class="df-name">\u041e\u0434\u0435\u0436\u0434\u0430</span><span class="df-val">\u2014</span></span></div>';
         }
         f.innerHTML = html;
         if (sheet && sheet.parentNode) sheet.parentNode.insertBefore(f, sheet);
