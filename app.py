@@ -13,8 +13,8 @@ ADMIN_KEY = "nikita_admin_2026"
 
 TIME_TO_NUM = {"8:00-8:40":1,"8:50-9:30":2,"9:45-10:25":3,"10:40-11:20":4,
     "11:35-12:15":5,"12:25-13:05":6,"13:15-13:55":7,"14:00-14:40":8}
-DAY_SHORT = {"Понедельник":"Пн","Вторник":"Вт","Среда":"Ср","Четверг":"Чт","Пятница":"Пт","Суббота":"Сб"}
-DAY_FULL = ["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"]
+DAY_SHORT = {"Понедельник":"Пн","Вторник":"Вт","Среда":"Ср","Четверг":"Чт","Пятница":"Пт",}
+DAY_FULL = ["Понедельник","Вторник","Среда","Четверг","Пятница"]
 
 VISITORS_FILE = "visitors.json"
 MESSAGES_FILE = "messages.json"
@@ -546,30 +546,27 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
 .card.now { box-shadow: 0 6px 24px var(--accent-light), 0 0 0 1.5px var(--accent) !important; }
 
 /* ===== ПАНЕЛЬ НАСТРОЕК — вытекает плавно ===== */
+
+
+
+
+/* ===== ПАНЕЛЬ НАСТРОЕК — мгновенно ===== */
 .settings-panel {
-    display: grid !important;
-    grid-template-rows: 0fr !important;
+    display: none !important;
     background: var(--card-bg) !important;
     border: 1px solid var(--border) !important;
     border-radius: 16px !important;
     margin-bottom: 0 !important;
-    overflow: hidden !important;
-    box-shadow: none !important;
-    will-change: grid-template-rows !important;
-    transition:
-        grid-template-rows 0.38s cubic-bezier(0.22, 1, 0.36, 1),
-        margin-bottom 0.38s cubic-bezier(0.22, 1, 0.36, 1),
-        box-shadow 0.3s ease !important;
+    padding: 16px 18px !important;
+    box-shadow: var(--shadow) !important;
+    transition: none !important;
 }
 .settings-panel.open {
-    grid-template-rows: 1fr !important;
+    display: block !important;
     margin-bottom: 14px !important;
-    box-shadow: var(--shadow) !important;
 }
 .settings-inner {
-    overflow: hidden !important;
-    min-height: 0 !important;
-    padding: 16px 18px !important;
+    display: contents !important;
 }
 </style>
 </head>
@@ -640,7 +637,6 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
         <div class="srow" onclick="toggleOpt('big_text')"><span class="srow-label" data-ico="🔠">Крупный шрифт</span><span class="srow-value" id="val-big_text">выкл</span></div>
         <div class="srow" onclick="toggleOpt('show_weekday')"><span class="srow-label" data-ico="📅">День недели в шапке</span><span class="srow-value" id="val-show_weekday">вкл</span></div>
         <div class="srow" onclick="toggleOpt('today_pill')"><span class="srow-label" data-ico="🏷️">Плашка «Сегодня»</span><span class="srow-value" id="val-today_pill">вкл</span></div>
-        <div class="srow" onclick="toggleOpt('hide_weekend')"><span class="srow-label" data-ico="🚫">Скрыть субботу</span><span class="srow-value" id="val-hide_weekend">выкл</span></div>
 
         <div class="acc-sub">📅 Иконка в шапке</div>
         <div class="acc-emoji">
