@@ -33,7 +33,7 @@ MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/
 
 ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#7950f2"/></linearGradient></defs><rect width="512" height="512" rx="110" fill="url(#g)"/><text x="256" y="360" font-family="Arial,sans-serif" font-size="230" font-weight="900" fill="#fff" text-anchor="middle">8Г</text></svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v13';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v13').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v14';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v14').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -391,11 +391,25 @@ body {
 
 .header-card { background: var(--card-bg); border:1px solid var(--border); border-radius:22px; padding:14px 16px; box-shadow: var(--shadow); margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:8px; position:relative; min-width:0; overflow:hidden; }
 h2 { margin:0; font-size:1.4rem; font-weight:800; display:flex; align-items:center; gap:8px; min-width:0; flex-shrink:1; overflow:hidden; }
-h2 span:not(#adminTap):not(.brand-emoji) { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+h2 span:not(#adminTap):not(.brand-emoji) { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 #adminTap, #brandEmoji { background:none !important; -webkit-text-fill-color:initial !important; color:initial !important; font-size:1.4rem; }
 #adminTap.hidden { display:none !important; }
 #adminTap { cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent; }
 .header-right { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.stat-stack { display:flex; flex-direction:column; gap:2px; width:44px; flex-shrink:0; }
+.stat-stack .online-pill,
+.stat-stack .badge-class {
+  padding:0 4px !important;
+  height:18px !important;
+  font-size:0.68rem !important;
+  border-radius:7px !important;
+  width:100% !important;
+  box-sizing:border-box;
+  margin:0 !important;
+}
+.stat-stack .badge-class { display:flex !important; align-items:center; justify-content:center; line-height:1; }
+.stat-stack .online-pill { gap:3px !important; }
+.stat-stack .online-pill::before { width:5px !important; height:5px !important; flex-shrink:0; }
 .badge-class { background: var(--accent-light); color: var(--accent); padding:6px 10px; border-radius:11px; font-weight:800; font-size:0.9rem; flex-shrink:0; }
 .icon-btn { background: var(--accent-light); color: var(--accent); border:none; width:38px; height:38px; border-radius:11px; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:inherit; flex-shrink:0; }
 .icon-btn:active { transform:scale(0.92); }
@@ -621,6 +635,13 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
 
 
 
+/* Узкие экраны: Расписание подстраивается */
+@media (max-width: 400px) {
+  h2 { font-size: 1.15rem !important; gap:6px !important; }
+  .header-card { padding: 12px 14px !important; }
+  #adminTap { font-size: 1.2rem !important; }
+}
+
 /* ===== ПАНЕЛЬ: по умолчанию МГНОВЕННО ===== */
 .settings-panel {
     display: block !important;
@@ -683,15 +704,17 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-26';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-27';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
     <h2><span id="adminTap">📅</span> <span>Расписание</span></h2>
 <script>(function(){var e=localStorage.getItem('rs_emoji');if(e&&e.indexOf('\uFFFD')===-1){var t=document.getElementById('adminTap');if(t)t.textContent=e;}})();</script>
     <div class="header-right">
-        <span class="online-pill" id="onlinePill" style="display:none;"><span id="onlineCount">0</span></span>
-        <div class="badge-class">8Г</div>
+        <div class="stat-stack">
+            <span class="online-pill" id="onlinePill" style="display:none;"><span id="onlineCount">0</span></span>
+            <div class="badge-class">8Г</div>
+        </div>
         <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
     </div>
 </div>
