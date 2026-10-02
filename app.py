@@ -950,6 +950,27 @@ html.scanlines-on body::after { content:""; position:fixed; inset:0; pointer-eve
 .srow-label::before { content: attr(data-ico); font-size: 1.15rem; }
 .srow-value { color: var(--text-muted, var(--muted)); font-size: 0.82rem; font-weight: 800; }
 .srow-value.on { color: var(--accent); }
+
+/* ЗАЩИТА ОТ СДВИГА КОНТЕНТА */
+html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    width: 100% !important;
+}
+.container {
+    margin: 0 auto !important;
+    max-width: 500px !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+}
+.subscreen {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+}
+/* Если filter должен быть — только на контейнер */
+.container {
+    transition: filter 0.3s ease;
+}
 </style>
 </head><body>
 <h1>🔐 Админ</h1>
