@@ -51,7 +51,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v26';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v26').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v27';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v27').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -415,7 +415,7 @@ body {
 [data-theme="sunset"] body { background-image: linear-gradient(180deg,#ffe0a8,#ffb572 40%,#e88898); }
 [data-theme="forest"] body { background-image: linear-gradient(180deg,#dff0d0,#b8dfa8 40%,#7abb6c); }
 [data-theme="sakura"] body { background-image: linear-gradient(180deg,#ffeaf0,#ffd0dd 50%,#ffb0c8); }
-.container { width:100%; max-width:380px; margin:0 auto; padding:0 22px; box-sizing:border-box; position:relative; z-index:1; }
+.container { width:100%; max-width:400px; margin:0 auto; padding:0 20px; box-sizing:border-box; position:relative; z-index:1; }
 
 
 
@@ -477,7 +477,7 @@ h2 span:not(#adminTap):not(.brand-emoji) { background: linear-gradient(135deg, v
 .open-sub .ico { font-size:1.15rem; }
 .open-sub .srow-arrow { color: var(--text-muted); font-size:1.3rem; font-weight:800; }
 
-.subscreen { position:fixed; inset:0; background: var(--bg); z-index:9999; transform:translateX(100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding:0 22px 30px; overscroll-behavior:contain; box-sizing:border-box; }
+.subscreen { position:fixed; inset:0; background: var(--bg); z-index:9999; transform:translateX(100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding:0 20px 30px; overscroll-behavior:contain; box-sizing:border-box; }
 .subscreen.open { transform:translateX(0); }
 [data-theme="light"] .subscreen { background:#f1f5fa; }
 [data-theme="dark"] .subscreen { background:#10131a; }
@@ -508,7 +508,6 @@ html.scroll-guard .srow:active, html.scroll-guard .theme-btn:active, html.scroll
 .acc-slider input[type="range"] { touch-action: pan-y; -webkit-tap-highlight-color: transparent; width:100%; height:5px; background: var(--border); border-radius:3px; outline:none; -webkit-appearance:none; }
 .acc-slider input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius:50%; cursor:pointer; box-shadow: 0 2px 6px var(--accent-light); }
 
-.tab, .tabs { display:flex; gap:4px; margin-bottom:10px; padding:4px; scrollbar-width:none; background: var(--card-bg); border-radius:var(--radius-block); border:1px solid var(--border); box-shadow: var(--shadow); overflow-x:auto; box-sizing:border-box; }
 .tabs { display:flex; gap:6px; margin-bottom:14px; overflow-x:auto; padding:4px; scrollbar-width:none; background: var(--card-bg); border-radius:16px; border:1px solid var(--border); box-shadow: var(--shadow); }
 .tabs::-webkit-scrollbar { display:none; }
 .tab { flex:1 1 0; min-width:0; padding:7px 2px; border-radius:var(--radius-pill); border:none; background:transparent; color: var(--text-muted); font-weight:800; font-size:0.82rem; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; position:relative; min-height:44px; box-sizing:border-box; text-align:center; }
@@ -615,7 +614,7 @@ html.hide-tabs .tabs { display:none !important; }
 html.hide-numbers .num { display:none !important; }
 html.hide-sheet-link .sheet-link { display:none !important; }
 html.hide-day-title .day-title { display:none !important; }
-html.mirror-on 
+html.mirror-on .container { transform: scaleX(-1); }
 html.uppercase-on .lesson, html.uppercase-on .live-lesson { text-transform: uppercase; }
 html.bold-all .lesson, html.bold-all .live-lesson, html.bold-all .time, html.bold-all .day-title { font-weight: 900 !important; }
 html.italic-on .lesson, html.italic-on .live-lesson { font-style: italic; }
@@ -798,7 +797,7 @@ html body .subscreen {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-38';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-39';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -2686,21 +2685,44 @@ class H(BaseHTTPRequestHandler):
                 self._json({"count": cnt, "total": len(d_on)}); return
 
             if _pt == "/api/live":
-                days_l, _ = get_schedule()
+                days_l, err_l = get_schedule()
                 now_l = datetime.now(PERM_TZ)
                 wi_l = now_l.weekday()
                 cur_day_l = DAY_FULL[wi_l] if wi_l < 5 else "\u0421\u0443\u0431\u0431\u043e\u0442\u0430"
+                today_full_l = DAY_FULL[wi_l] if wi_l < 5 else ""
                 is_weekend_l = wi_l >= 5
                 today_lessons_l = days_l.get(cur_day_l, [])
+                # Определяем активный день (та же логика, что в do_GET)
+                hour_l, min_l = now_l.hour, now_l.minute
+                school_over_l = (hour_l > 14 or (hour_l == 14 and min_l >= 40) or is_weekend_l or not today_lessons_l)
+                if school_over_l and wi_l < 5:
+                    ni_l = wi_l + 1
+                    if ni_l < 5:
+                        tmr_l = DAY_FULL[ni_l]
+                        active_l = tmr_l if days_l.get(tmr_l) else cur_day_l
+                    else:
+                        active_l = cur_day_l
+                else:
+                    active_l = cur_day_l
+                if active_l not in DAY_FULL: active_l = cur_day_l
+                if not days_l.get(active_l) and days_l.get(cur_day_l): active_l = cur_day_l
                 st_l = get_live_status(today_lessons_l) if not is_weekend_l else None
-                resp = {"ts": change_tracker.get("ts", 0), "live": st_l}
+                html_live = build_live(st_l)
+                html_tabs = build_tabs(active_l, days_l)
+                html_content = build_content(days_l, active_l, err_l, st_l)
+                resp = {"ts": change_tracker.get("ts", 0), "live": st_l,
+                        "html_live": html_live, "html_tabs": html_tabs, "html_content": html_content,
+                        "day_today": today_full_l, "day_active": active_l}
                 if _vid:
                     resp["blocked"] = is_blocked(_vid)
                     m = get_pending(_vid)
                     if m: resp["msg"] = m
+                d_all = _ld(VISITORS_FILE, {})
+                now_ts = int(time.time())
+                resp["online"] = sum(1 for v in d_all.values() if (now_ts - int(v.get("last", 0))) < 90)
+                resp["total"] = len(d_all)
                 if _admin == ADMIN_KEY:
-                    d_v = _ld(VISITORS_FILE, {})
-                    resp["vcount"] = len(d_v)
+                    resp["vcount"] = resp["total"]
                 self._json(resp); return
 
             # Main
