@@ -604,8 +604,14 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
 .settings-panel {
     position: relative !important;
 }
-
-</script>
+</style>
+</head>
+<body data-changed-at="{changed_at}">
+<div id="particles"></div>
+<div class="container">
+<div class="header-card">
+    <h2><span id="adminTap">📅</span> <span>Расписание</span></h2>
+<script>(function(){var e=localStorage.getItem('rs_emoji');if(e){var t=document.getElementById('adminTap');if(t)t.textContent=e;}})();</script>
     <div class="header-right">
         <div class="badge-class">8Г</div>
         <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
@@ -944,9 +950,7 @@ function setSize(s){
     localStorage.setItem('rs_size', s);
     document.querySelectorAll('[data-size]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-size')===s); });
 }
-function toggleSettings(){
-    document.getElementById('settingsPanel').classList.toggle('open');
-}
+function toggleSettings(){ document.getElementById('settingsPanel').classList.toggle('open'); }
 function showDay(day){
     document.querySelectorAll('.day-block').forEach(function(el){ el.classList.remove('active-day'); });
     var t = document.getElementById('block-' + day);
@@ -1338,7 +1342,6 @@ function initAllNew(){
 /* Стартуем новые */
 if (document.readyState !== "loading") initAllNew(); else document.addEventListener("DOMContentLoaded", initAllNew);
 </script>
-
 </body>
 </html>"""
 
