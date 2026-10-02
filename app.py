@@ -51,7 +51,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v16';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v16').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v17';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v17').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -274,7 +274,8 @@ def get_live_status(lessons):
             prog = int((cur - ss) / max(ee - ss, 1) * 100)
             return {"type":"now","num":num,"lesson":lesson,"progress":prog,
                     "left":ee-cur,"until":e,"end_unix":int(now.replace(hour=eh,minute=em,second=0,microsecond=0).timestamp()),
-                    "start_unix":int(now.replace(hour=sh,minute=sm,second=0,microsecond=0).timestamp())}
+                    "start_unix":int(now.replace(hour=sh,minute=sm,second=0,microsecond=0).timestamp()),
+                    "duration":(ee-ss)*60, "elapsed":(cur-ss)*60}
         if cur < ss:
             st_unix = int(now.replace(hour=sh,minute=sm,second=0,microsecond=0).timestamp())
             if prev_end is not None:
@@ -677,7 +678,7 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
 .install-banner .install-btn:active { transform:scale(0.95); }
 
 /* Статус-бар урока на экране блокировки (визуализация в приложении) */
-.lock-bar { position:fixed; top:0; left:0; right:0; height:3px; z-index:99999; background: transparent; }
+.lock-bar { position:fixed; top:0; left:0; right:0; height:4px; z-index:99999; background: rgba(0,0,0,0.15); }
 .lock-bar-fill { height:100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 1s linear; }
 
 /* ===== ПАНЕЛЬ: по умолчанию МГНОВЕННО ===== */
@@ -742,7 +743,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-29b';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-30';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -1800,27 +1801,56 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         return wrap;
     }
 
-    // ─── 4. Media Session (появляется на экране блокировки в Android Chrome) ───
+    // ─── 4a. Silent audio — чтобы Chrome держал Media Session ───
+    var silentAudio = document.getElementById('silentAudio');
+    if (!silentAudio) {
+        silentAudio = document.createElement('audio');
+        silentAudio.id = 'silentAudio';
+        silentAudio.loop = true;
+        silentAudio.preload = 'auto';
+        // 1-секундная пустая WAV дорожка (base64)
+        silentAudio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+        silentAudio.volume = 0.001;
+        silentAudio.style.display = 'none';
+        silentAudio.setAttribute('playsinline', '');
+        document.body.appendChild(silentAudio);
+    }
+    function startSilent(){
+        if (!silentAudio) return;
+        var p = silentAudio.play();
+        if (p && p.catch) p.catch(function(){});
+    }
+    // Пробуем сразу (может сработать если пользователь уже взаимодействовал)
+    startSilent();
+    // И после первого касания (Chrome требует user gesture)
+    ['touchstart','click','keydown'].forEach(function(ev){
+        document.addEventListener(ev, startSilent, { once: true, passive: true });
+    });
+    // При возврате во вкладку — перезапускаем (Chrome мог остановить)
+    document.addEventListener('visibilitychange', function(){
+        if (!document.hidden) setTimeout(startSilent, 100);
+    });
+
+    // ─── 4b. Media Session metadata ───
     function updateMediaSession(d){
         if (!('mediaSession' in navigator)) return;
-        if (!d || !d.live || !d.live.type) {
-            try { navigator.mediaSession.metadata = null; } catch(e){}
-            return;
-        }
+        // Не отключаем сессию когда нет live — пусть висит "Расписание 8Г"
         var title, artist, album = 'Расписание 8Г';
-        if (d.live.type === 'now') {
+        if (d && d.live && d.live.type === 'now') {
             var secLeft = Math.max(0, d.live.end_unix - Math.floor(Date.now()/1000));
             var mLeft = Math.ceil(secLeft / 60);
             title = 'Сейчас: ' + d.live.lesson;
             artist = 'до ' + d.live.until + ' · осталось ' + mLeft + ' мин';
-        } else if (d.live.type === 'before') {
+        } else if (d && d.live && d.live.type === 'before') {
             title = 'Скоро урок';
             artist = d.live.lesson + ' · в ' + d.live.start + ' · через ' + d.live.wait + ' мин';
-        } else if (d.live.type === 'break') {
+        } else if (d && d.live && d.live.type === 'break') {
             title = 'Перемена';
             artist = 'Следующий: ' + d.live.lesson + ' в ' + d.live.start;
         } else {
-            return;
+            // нет урока сейчас
+            title = 'Расписание 8Г';
+            artist = 'Нет активного урока';
         }
         try {
             navigator.mediaSession.metadata = new MediaMetadata({
@@ -1828,13 +1858,34 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                 artist: artist,
                 album: album,
                 artwork: [
+                    { src: '/icon.svg', sizes: '96x96', type: 'image/svg+xml' },
+                    { src: '/icon.svg', sizes: '192x192', type: 'image/svg+xml' },
                     { src: '/icon.svg', sizes: '512x512', type: 'image/svg+xml' }
                 ]
             });
             navigator.mediaSession.playbackState = 'playing';
+            // Прогресс-бар на lock screen
+            if (d && d.live && d.live.type === 'now' && d.live.duration) {
+                var pos = Math.max(0, Math.min(d.live.duration, Math.floor(Date.now()/1000) - d.live.start_unix));
+                try {
+                    navigator.mediaSession.setPositionState({
+                        duration: d.live.duration,
+                        playbackRate: 1,
+                        position: pos
+                    });
+                } catch(e){}
+            }
+            // Обработчики кнопок на lock screen (ничего не делают, но нужны Chrome)
+            ['play','pause','previoustrack','nexttrack'].forEach(function(action){
+                try {
+                    navigator.mediaSession.setActionHandler(action, function(){});
+                } catch(e){}
+            });
         } catch(e){}
     }
     window.__updateMediaSession = updateMediaSession;
+    // Инициализируем сразу
+    updateMediaSession(null);
 
     // ─── 5. Хук в pollLive: обновляем lock-bar + MediaSession ───
     window.__updateLockBar = function(d){
