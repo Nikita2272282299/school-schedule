@@ -51,7 +51,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v19';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v19').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v20';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v20').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -500,7 +500,7 @@ html.scroll-guard .srow:active, html.scroll-guard .theme-btn:active, html.scroll
 .srow-value.on { color: var(--accent); }
 
 .acc-sub { font-size:0.72rem; font-weight:800; letter-spacing:0.08em; color: var(--text-muted); text-transform:uppercase; margin:14px 0 8px; padding-bottom:6px; border-bottom:1px dashed var(--border); }
-.acc-slider { padding:10px 12px; margin-bottom:6px; border-radius:10px; background: var(--accent-light); }
+.acc-slider { padding:10px 12px; margin-bottom:6px; border-radius:10px; background: var(--accent-light); touch-action: pan-y; }
 .acc-slider label { display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:0.82rem; color: var(--text-main); margin-bottom:6px; }
 .acc-slider output { color: var(--accent); font-weight:800; }
 .acc-slider input[type="range"] { width:100%; height:5px; background: var(--border); border-radius:3px; outline:none; -webkit-appearance:none; }
@@ -632,7 +632,7 @@ html.corners-sharp .card, html.corners-sharp .num, html.corners-sharp .theme-btn
 
 /* Anti-misclick: браузер сам не путает скролл и тап */
 .srow, .theme-btn, .size-btn, .open-sub, .emoji-opt, .ap-btn, .tab, .icon-btn, .subscreen-back, .subscreen, .admin-tab, .admin-block, .acc-slider, .acc-emoji { touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-.acc-slider input[type="range"] { touch-action: none; }
+.acc-slider input[type="range"] { touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
 
 /* Переменные для новых слайдеров */
 .card { padding: var(--card-pad, 16px) !important; }
@@ -756,7 +756,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-32';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-33';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -997,7 +997,10 @@ html.anim-wobble .settings-panel.open {
 
 <div class="subscreen" id="sub-app">
     <div class="subscreen-header"><button class="subscreen-back" onclick="closeSub('app')">←</button><div class="subscreen-title">📱 Приложение</div></div>
-    <div class="subscreen-body"><div id="installSection"></div></div>
+    <div class="subscreen-body">
+        <div id="installSection"></div>
+        <button class="link-btn" style="width:100%;padding:12px;margin-top:14px;border:1px solid var(--border);border-radius:12px;background:var(--accent-light);color:var(--text-muted);" onclick="resetInstallState()">🔄 Сбросить статус «установлено»</button>
+    </div>
 </div>
 
 <div class="subscreen" id="sub-admin">
@@ -1744,10 +1747,23 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
 (function(){
     // ─── 1. Обнаружение standalone + возврат кнопки установки ───
     function isStandalone(){
-        return window.matchMedia('(display-mode: standalone)').matches
-            || window.navigator.standalone === true
-            || document.referrer.indexOf('android-app://') === 0;
+        try {
+            if (window.matchMedia('(display-mode: standalone)').matches) return true;
+            if (window.matchMedia('(display-mode: fullscreen)').matches) return true;
+            if (window.matchMedia('(display-mode: minimal-ui)').matches) return true;
+            if (window.navigator.standalone === true) return true;
+            if (document.referrer.indexOf('android-app://') === 0) return true;
+        } catch(e){}
+        return false;
     }
+    window.resetInstallState = function(){
+        try {
+            localStorage.removeItem('rs_installed');
+            sessionStorage.removeItem('rs_install_dismissed');
+        } catch(e){}
+        alert('Сброшено. Если приложение установлено — Chrome покажет «Установлено». Если нет — появится кнопка «Установить».');
+        if (typeof window.__updateInstallUI === 'function') window.__updateInstallUI();
+    };
     function updateInstallUI(){
         var banner = document.getElementById('installBanner');
         if (!banner) return;
@@ -1757,9 +1773,13 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
             banner.style.display = 'none';
             return;
         }
-        // Не standalone -> значит или не установлено, или удалили. Сбрасываем флаг.
-        try { localStorage.removeItem('rs_installed'); } catch(e){}
-        // Показываем баннер только если пользователь не закрыл его в этой сессии
+        // Не standalone -> значит браузер (или удалили PWA). Всегда сбрасываем флаг и
+        // показываем баннер, если пользователь не скрыл его в этой сессии.
+        try {
+            if (localStorage.getItem('rs_installed') === '1') {
+                localStorage.removeItem('rs_installed');
+            }
+        } catch(e){}
         if (sessionStorage.getItem('rs_install_dismissed') === '1') {
             banner.style.display = 'none';
             return;
@@ -1821,27 +1841,37 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         silentAudio.id = 'silentAudio';
         silentAudio.loop = true;
         silentAudio.preload = 'auto';
-        // 1-секундная пустая WAV дорожка (base64)
+        silentAudio.muted = false;
+        // 1-секундная абсолютно пустая WAV дорожка (base64)
         silentAudio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
-        silentAudio.volume = 0.001;
-        silentAudio.style.display = 'none';
+        silentAudio.volume = 0.01;
+        silentAudio.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;';
         silentAudio.setAttribute('playsinline', '');
+        silentAudio.setAttribute('webkit-playsinline', '');
         document.body.appendChild(silentAudio);
     }
     function startSilent(){
         if (!silentAudio) return;
-        var p = silentAudio.play();
-        if (p && p.catch) p.catch(function(){});
+        if (silentAudio.paused) {
+            var p = silentAudio.play();
+            if (p && p.catch) p.catch(function(){});
+        }
     }
-    // Пробуем сразу (может сработать если пользователь уже взаимодействовал)
+    window.__startSilent = startSilent;
+
+    // Пробуем сразу
     startSilent();
-    // И после первого касания (Chrome требует user gesture)
-    ['touchstart','click','keydown'].forEach(function(ev){
-        document.addEventListener(ev, startSilent, { once: true, passive: true });
+    // Пробуем на КАЖДОЕ взаимодействие (без once)
+    ['touchstart','touchend','click','keydown','pointerdown','scroll'].forEach(function(ev){
+        document.addEventListener(ev, function(){
+            startSilent();
+        }, { passive: true, capture: true });
     });
-    // При возврате во вкладку — перезапускаем (Chrome мог остановить)
+    // И раз в 3 секунды — если Chrome поставил на паузу, вернём
+    setInterval(startSilent, 3000);
+    // При возврате — тоже
     document.addEventListener('visibilitychange', function(){
-        if (!document.hidden) setTimeout(startSilent, 100);
+        if (!document.hidden) setTimeout(startSilent, 200);
     });
 
     // ─── 4b. Media Session metadata ───
@@ -1877,6 +1907,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                 ]
             });
             navigator.mediaSession.playbackState = 'playing';
+            if (typeof window.__startSilent === 'function') window.__startSilent();
             // Прогресс-бар на lock screen
             if (d && d.live && d.live.type === 'now' && d.live.duration) {
                 var pos = Math.max(0, Math.min(d.live.duration, Math.floor(Date.now()/1000) - d.live.start_unix));
