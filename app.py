@@ -1,80 +1,59 @@
-import threading, urllib.request, csv, io, time, os, json, hashlib
+import threading, urllib.request, csv, io, time, os, json, uuid, hashlib
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, timezone, timedelta
 
+# ============ CONFIG ============
 SPREADSHEET_ID = "1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE"
 CSV_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/export?format=csv"
 SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit"
 SELF_URL = "https://school-schedule-4ldw.onrender.com/"
 PERM_TZ = timezone(timedelta(hours=5))
+CLASS_CODE = "8г"
+ADMIN_KEY = "nikita_admin_2026"
 
 TIME_TO_NUM = {"8:00-8:40":1,"8:50-9:30":2,"9:45-10:25":3,"10:40-11:20":4,
     "11:35-12:15":5,"12:25-13:05":6,"13:15-13:55":7,"14:00-14:40":8}
 DAY_SHORT = {"Понедельник":"Пн","Вторник":"Вт","Среда":"Ср","Четверг":"Чт","Пятница":"Пт","Суббота":"Сб"}
 DAY_FULL = ["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"]
 
-cache = {"days_schedule": {}, "error_msg": "", "last_update": 0}
-CACHE_TTL = 300
-
-
+VISITORS_FILE = "visitors.json"
+MESSAGES_FILE = "messages.json"
+BLOCKED_FILE = "blocked.json"
+CHANGE_FILE = "last_change.json"
+FILLED_FILE = "filled_days.json"
 CACHE_FILE = "schedule_cache.json"
 
-def _week_key():
-    now = datetime.now(PERM_TZ)
-    iso = now.isocalendar()
-    return f"{iso[0]}-W{iso[1]}"
+cache = {"days_schedule": {}, "error_msg": "", "last_update": 0}
+CACHE_TTL = 300
+change_tracker = {"prev_hash": "", "ts": 0}
+new_days_for_render = []
+_lock = threading.Lock()
 
-def load_disk_cache():
+MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/","display":"standalone","background_color":"#0a0620","theme_color":"#6366f1","icons":[{"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}'
+
+ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#7950f2"/></linearGradient></defs><rect width="512" height="512" rx="110" fill="url(#g)"/><text x="256" y="360" font-family="Arial,sans-serif" font-size="230" font-weight="900" fill="#fff" text-anchor="middle">8Г</text></svg>'''
+
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>self.clients.claim());self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v5').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+
+# ============ HELPERS ============
+def _ld(path, default):
     try:
-        with open(CACHE_FILE, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        if data.get('week') != _week_key():
-            return None
-        days = {}
-        for k, v in data.get('days', {}).items():
-            days[k] = [tuple(x) for x in v]
-        return days
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
     except Exception:
-        return None
+        return default
 
-def save_disk_cache(days):
+def _sv(path, data):
     try:
-        with open(CACHE_FILE, 'w', encoding='utf-8') as f:
-            json.dump({
-                'week': _week_key(),
-                'days': {k: [list(x) for x in v] for k, v in days.items()}
-            }, f, ensure_ascii=False)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
     except Exception:
         pass
 
-
-MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/","display":"standalone","background_color":"#0a0620","theme_color":"#4c6ef5","icons":[{"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}'
-
-ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4c6ef5"/><stop offset="1" stop-color="#7950f2"/></linearGradient></defs><rect width="512" height="512" rx="110" fill="url(#g)"/><rect x="130" y="110" width="252" height="46" rx="23" fill="#ffffff" opacity="0.25"/><text x="256" y="360" font-family="Arial,Helvetica,sans-serif" font-size="230" font-weight="900" fill="#ffffff" text-anchor="middle">8Г</text></svg>'''
-
-SW_JS = """self.addEventListener('install',e=>self.skipWaiting());
-self.addEventListener('activate',e=>self.clients.claim());
-self.addEventListener('fetch',function(e){
-    if(e.request.method!=='GET')return;
-    e.respondWith(
-        caches.open('school-v3').then(function(cache){
-            return fetch(e.request).then(function(resp){
-                if(resp&&resp.status===200)cache.put(e.request,resp.clone());
-                return resp;
-            }).catch(function(){
-                return cache.match(e.request).then(function(r){
-                    return r||cache.match('/');
-                });
-            });
-        })
-    );
-});"""
-
-
-
-
-CHANGE_FILE = "last_change.json"
-change_tracker = {"prev_hash": "", "ts": 0}
+def _week_key():
+    n = datetime.now(PERM_TZ)
+    iso = n.isocalendar()
+    return f"{iso[0]}-W{iso[1]}"
 
 def _sched_hash(s):
     try:
@@ -82,111 +61,48 @@ def _sched_hash(s):
     except Exception:
         return ""
 
-def load_change_tracker():
+def load_disk_cache():
     try:
-        with open(CHANGE_FILE) as f:
+        with open(CACHE_FILE, "r", encoding="utf-8") as f:
             d = json.load(f)
-        change_tracker["prev_hash"] = d.get("prev_hash", "")
-        change_tracker["ts"] = int(d.get("ts", 0))
+        if d.get("week") != _week_key(): return None
+        days = {k: [tuple(x) for x in v] for k, v in d.get("days", {}).items()}
+        return days
     except Exception:
-        pass
+        return None
 
-def save_change_tracker():
+def save_disk_cache(days):
     try:
-        with open(CHANGE_FILE, "w") as f:
-            json.dump(change_tracker, f)
+        with open(CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump({"week": _week_key(), "days": {k: [list(x) for x in v] for k, v in days.items()}}, f, ensure_ascii=False)
     except Exception:
         pass
 
-load_change_tracker()
+def load_change():
+    d = _ld(CHANGE_FILE, {})
+    change_tracker["prev_hash"] = d.get("prev_hash", "")
+    change_tracker["ts"] = int(d.get("ts", 0))
 
-
-
-FILLED_FILE = "filled_days.json"
-new_days_for_render = []
-
-def _week_key():
-    n = datetime.now(PERM_TZ)
-    iso = n.isocalendar()
-    return f"{iso[0]}-W{iso[1]}"
+def save_change():
+    _sv(CHANGE_FILE, {"prev_hash": change_tracker["prev_hash"], "ts": change_tracker["ts"]})
 
 def check_new_days(days):
-    """Возвращает список дней, которые впервые получили расписание на этой неделе"""
     global new_days_for_render
     try:
-        try:
-            with open(FILLED_FILE, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-        except Exception:
-            data = {}
+        data = _ld(FILLED_FILE, {})
         wk = _week_key()
-        if data.get('week') != wk:
-            data = {'week': wk, 'filled': []}
-        prev = set(data.get('filled', []))
+        if data.get("week") != wk: data = {"week": wk, "filled": []}
+        prev = set(data.get("filled", []))
         cur = set(d for d, v in days.items() if v)
-        new_days = sorted(cur - prev)
-        data['filled'] = sorted(cur)
-        try:
-            with open(FILLED_FILE, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False)
-        except Exception:
-            pass
-        new_days_for_render = new_days
-        return new_days
+        new_days_for_render = sorted(cur - prev)
+        data["filled"] = sorted(cur)
+        _sv(FILLED_FILE, data)
     except Exception:
-        return []
+        new_days_for_render = []
 
-
-
-BLOCKED_FILE = "blocked.json"
-_block_lock = threading.Lock()
-
-def _is_blocked(vid):
-    if not vid: return False
-    with _block_lock:
-        d = _ld(BLOCKED_FILE, {})
-        return bool(d.get(vid))
-
-def _block(vid):
+def log_visit(vid, ip, ua):
     if not vid: return
-    with _block_lock:
-        d = _ld(BLOCKED_FILE, {})
-        d[vid] = int(time.time())
-        _sv(BLOCKED_FILE, d)
-
-def _unblock(vid):
-    if not vid: return
-    with _block_lock:
-        d = _ld(BLOCKED_FILE, {})
-        if vid in d: del d[vid]
-        _sv(BLOCKED_FILE, d)
-
-import json as _json_mod
-import uuid as _uuid_mod
-
-ADMIN_KEY = "nikita_admin_2026"
-VISITORS_FILE = "visitors.json"
-MESSAGES_FILE = "messages.json"
-BLOCKED_FILE = "blocked.json"
-_admin_lock = threading.Lock()
-
-def _ld(path, default):
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return _json_mod.load(f)
-    except Exception:
-        return default
-
-def _sv(path, data):
-    try:
-        with open(path, "w", encoding="utf-8") as f:
-            _json_mod.dump(data, f, ensure_ascii=False)
-    except Exception:
-        pass
-
-def _log_visit(vid, ip, ua):
-    if not vid: return
-    with _admin_lock:
+    with _lock:
         d = _ld(VISITORS_FILE, {})
         now = int(time.time())
         if vid in d:
@@ -194,3247 +110,407 @@ def _log_visit(vid, ip, ua):
             d[vid]["count"] = d[vid].get("count", 0) + 1
             d[vid]["ip"] = ip
         else:
-            d[vid] = {"ip": ip, "ua": (ua or "")[:200], "first": now, "last": now, "count": 1}
+            d[vid] = {"ip": ip, "ua": (ua or "")[:200], "first": now, "last": now, "count": 1, "name": ""}
         _sv(VISITORS_FILE, d)
 
-def _get_pending(vid):
+def get_pending(vid):
     if not vid: return None
-    with _admin_lock:
+    with _lock:
         d = _ld(MESSAGES_FILE, {})
         for m in d.get(vid, []):
-            if not m.get("read"):
-                return m
-    return None
+            if not m.get("read"): return m
+        return None
 
-def _mark_read(vid, mid):
-    with _admin_lock:
+def mark_read(vid, mid):
+    with _lock:
         d = _ld(MESSAGES_FILE, {})
         for m in d.get(vid, []):
-            if m.get("id") == mid:
-                m["read"] = True
+            if m.get("id") == mid: m["read"] = True
         _sv(MESSAGES_FILE, d)
 
-def _send_msg(vid, text):
+def send_msg(vid, text):
     if not vid or not text: return
-    with _admin_lock:
+    with _lock:
         d = _ld(MESSAGES_FILE, {})
-        d.setdefault(vid, []).append({
-            "id": _uuid_mod.uuid4().hex[:8],
-            "text": text,
-            "ts": int(time.time()),
-            "read": False
-        })
+        d.setdefault(vid, []).append({"id": uuid.uuid4().hex[:8], "text": text, "ts": int(time.time()), "read": False})
         _sv(MESSAGES_FILE, d)
 
-def _send_all(text):
+def send_all(text):
     v = _ld(VISITORS_FILE, {})
-    for vid in list(v.keys()):
-        _send_msg(vid, text)
+    for vid in list(v.keys()): send_msg(vid, text)
 
-def _is_blocked(vid):
+def is_blocked(vid):
     if not vid: return False
-    with _admin_lock:
+    with _lock:
         d = _ld(BLOCKED_FILE, {})
         return bool(d.get(vid))
 
-def _block(vid):
+def block_v(vid):
     if not vid: return
-    with _admin_lock:
-        d = _ld(BLOCKED_FILE, {})
-        d[vid] = int(time.time())
-        _sv(BLOCKED_FILE, d)
+    with _lock:
+        d = _ld(BLOCKED_FILE, {}); d[vid] = int(time.time()); _sv(BLOCKED_FILE, d)
 
-def _unblock(vid):
+def unblock_v(vid):
     if not vid: return
-    with _admin_lock:
+    with _lock:
         d = _ld(BLOCKED_FILE, {})
         if vid in d: del d[vid]
         _sv(BLOCKED_FILE, d)
 
+def rename_v(vid, name):
+    if not vid: return
+    with _lock:
+        d = _ld(VISITORS_FILE, {})
+        if vid in d:
+            d[vid]["name"] = (name or "")[:30]
+            _sv(VISITORS_FILE, d)
+
+# ============ SCHEDULE ============
 def get_schedule():
-    current_time = time.time()
-    if cache["days_schedule"] and (current_time - cache["last_update"] < CACHE_TTL):
+    now = time.time()
+    if cache["days_schedule"] and (now - cache["last_update"] < CACHE_TTL):
         return cache["days_schedule"], cache["error_msg"]
-    days_schedule = {}
-    error_msg = ""
+    days = {}; err = ""
     try:
-        req = urllib.request.urlopen(CSV_URL, timeout=4)
-        data = req.read().decode('utf-8')
+        req = urllib.request.urlopen(CSV_URL, timeout=6)
+        data = req.read().decode("utf-8")
         reader = list(csv.reader(io.StringIO(data)))
-        col_index = -1
+        col = -1
         for row in reader:
-            for c_idx, cell in enumerate(row):
-                if cell.replace(" ", "").lower() == "8г":
-                    col_index = c_idx
-                    break
-            if col_index != -1: break
-        if col_index != -1:
-            current_day = ""
+            for i, c in enumerate(row):
+                if c.replace(" ", "").lower() == CLASS_CODE:
+                    col = i; break
+            if col != -1: break
+        if col != -1:
+            cur_day = ""
             days_list = ["понедельник","вторник","среда","четверг","пятница","суббота"]
             for row in reader:
                 if not row: continue
-                row_text = " ".join(row).lower()
-                found_day = None
+                text = " ".join(row).lower()
+                found = None
                 for d in days_list:
-                    if d in row_text:
-                        found_day = d.capitalize(); break
-                if found_day:
-                    current_day = found_day
-                    if current_day not in days_schedule:
-                        days_schedule[current_day] = []
-                    continue
-                if not current_day: continue
-                time_val = ""
-                for cell in row:
-                    cc = cell.strip()
-                    if cc in TIME_TO_NUM:
-                        time_val = cc; break
-                if not time_val: continue
-                if len(row) > col_index:
-                    lv = row[col_index].strip()
+                    if d in text: found = d.capitalize(); break
+                if found:
+                    cur_day = found; days.setdefault(cur_day, []); continue
+                if not cur_day: continue
+                tv = ""
+                for c in row:
+                    cc = c.strip()
+                    if cc in TIME_TO_NUM: tv = cc; break
+                if not tv: continue
+                if len(row) > col:
+                    lv = row[col].strip()
                     if not lv or len(lv) < 2 or ":" in lv: continue
                     if lv.lower() in ["урок","-","—",""]: continue
-                    n = TIME_TO_NUM[time_val]
-                    if n not in [x[1] for x in days_schedule[current_day]]:
-                        days_schedule[current_day].append((time_val, n, lv))
-            for d in days_schedule:
-                days_schedule[d].sort(key=lambda x: x[1])
-            cache["days_schedule"] = days_schedule
-            cache["error_msg"] = ""
-            cache["last_update"] = current_time
-        else:
-            error_msg = "Класс 8Г не найден."
-            cache["error_msg"] = error_msg
-    except Exception:
-        if cache["days_schedule"]:
-            return cache["days_schedule"], ""
-        disk = load_disk_cache()
-        if disk:
-            cache["days_schedule"] = disk
-            cache["last_update"] = now
-            return disk, ""
-        cache["error_msg"] = "Офлайн-режим (нет сети)"
-    if days_schedule:
-        save_disk_cache(days_schedule)
-        check_new_days(days_schedule)
-        try:
-            _h = _sched_hash(days_schedule)
+                    n = TIME_TO_NUM[tv]
+                    if n not in [x[1] for x in days[cur_day]]:
+                        days[cur_day].append((tv, n, lv))
+            for d in days: days[d].sort(key=lambda x: x[1])
+            cache["days_schedule"] = days; cache["error_msg"] = ""; cache["last_update"] = now
+            _h = _sched_hash(days)
             if change_tracker["prev_hash"] and _h and _h != change_tracker["prev_hash"]:
                 change_tracker["ts"] = int(time.time())
-                print(f"[schedule] CHANGED at {datetime.now(PERM_TZ).strftime('%H:%M:%S')}")
             change_tracker["prev_hash"] = _h
-            save_change_tracker()
-        except Exception as _e:
-            print(f"[tracker] {_e}")
+            save_change()
+            save_disk_cache(days)
+            check_new_days(days)
+        else:
+            err = f"Класс {CLASS_CODE.upper()} не найден."; cache["error_msg"] = err
+    except Exception:
+        if cache["days_schedule"]: return cache["days_schedule"], ""
+        disk = load_disk_cache()
+        if disk:
+            cache["days_schedule"] = disk; cache["last_update"] = now
+            return disk, ""
+        cache["error_msg"] = "Офлайн-режим"
     return cache["days_schedule"], cache["error_msg"]
 
-
-def get_live_status(today_lessons):
-    if not today_lessons: return None
+def get_live_status(lessons):
+    if not lessons: return None
     now = datetime.now(PERM_TZ)
     cur = now.hour * 60 + now.minute
-    if cur < 6*60 + 30:
-        return None
-    for tv, num, lesson in today_lessons:
+    if cur < 6*60 + 30: return None
+    for tv, num, lesson in lessons:
         try:
-            start, end = tv.split("-")
-            sh, sm = map(int, start.split(":"))
-            eh, em = map(int, end.split(":"))
+            s, e = tv.split("-")
+            sh, sm = map(int, s.split(":")); eh, em = map(int, e.split(":"))
         except Exception: continue
-        s = sh*60+sm; e = eh*60+em
-        if s <= cur < e:
-            prog = int((cur - s) / max(e - s, 1) * 100)
-            end_dt = now.replace(hour=eh, minute=em, second=0, microsecond=0)
+        ss = sh*60+sm; ee = eh*60+em
+        if ss <= cur < ee:
+            prog = int((cur - ss) / max(ee - ss, 1) * 100)
             return {"type":"now","num":num,"lesson":lesson,"progress":prog,
-                    "left":e-cur,"until":end,"end_unix":int(end_dt.timestamp())}
-        if cur < s:
-            start_dt = now.replace(hour=sh, minute=sm, second=0, microsecond=0)
-            return {"type":"before","num":num,"lesson":lesson,"wait":s-cur,"start":start,
-                    "start_unix":int(start_dt.timestamp())}
+                    "left":ee-cur,"until":e,"end_unix":int(now.replace(hour=eh,minute=em,second=0,microsecond=0).timestamp())}
+        if cur < ss:
+            return {"type":"before","num":num,"lesson":lesson,"wait":ss-cur,"start":s,
+                    "start_unix":int(now.replace(hour=sh,minute=sm,second=0,microsecond=0).timestamp())}
     return None
 
-
-ADMIN_PAGE = """<!DOCTYPE html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Админ</title>
-<style>body{font-family:-apple-system,sans-serif;background:#0f1115;color:#e6e8ec;margin:0;padding:16px;max-width:800px;margin:0 auto;}h1{font-size:1.2rem;}p{color:#9aa3b2;}#secretTrigger{display:block;width:70px;height:70px;margin:10px auto 0;background:transparent;cursor:default;user-select:none;-webkit-tap-highlight-color:transparent;border-radius:50%;}
-#adminPanel{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9998;padding:20px;padding-top:50px;overflow-y:auto;justify-content:center;align-items:flex-start;}
-#adminPanel.show{display:flex;}
-.ap-inner{background:var(--card);border-radius:20px;padding:20px;max-width:500px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.55),0 0 0 2px var(--accent);}
-.ap-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-weight:800;font-size:1.1rem;color:var(--text);}
-.ap-close{background:var(--accent-light);color:var(--accent);border:none;width:38px;height:38px;border-radius:10px;font-size:1.05rem;cursor:pointer;font-family:inherit;font-weight:800;}
-.ap-visitor{background:rgba(128,128,128,0.08);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;}
-.ap-visitor.blocked{border-color:#ef4444;background:rgba(239,68,68,0.08);}
-.ap-vid{font-weight:800;color:var(--accent);font-size:0.85rem;word-break:break-all;}
-.ap-info{color:var(--muted);font-size:0.78rem;margin-top:4px;}
-.ap-ago{color:#10b981;font-weight:700;font-size:0.78rem;margin-top:4px;}
-.ap-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
-.ap-input{flex:1;min-width:120px;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;font-size:0.85rem;}
-.ap-btn{padding:9px 14px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent)));color:#fff;font-weight:800;font-size:0.82rem;cursor:pointer;font-family:inherit;}
-.ap-btn.danger{background:#ef4444;}
-.ap-btn.success{background:#10b981;}
-
-#secretTrigger.admin-active {
-    background: linear-gradient(135deg, var(--accent-light), transparent) !important;
-    border-top: 1px dashed var(--accent) !important;
-    border-bottom: 1px dashed var(--accent) !important;
-    opacity: 0.5 !important;
-    cursor: pointer !important;
-}
-#secretTrigger.admin-active::after {
-    content: "👑 админ";
-    display: block;
-    text-align: center;
-    padding-top: 14px;
-    font-size: 0.7rem;
-    color: var(--accent);
-    font-weight: 800;
-    letter-spacing: 0.1em;
-}
-
-.ap-visitor.is-me{border-color:var(--accent) !important;background:linear-gradient(135deg,var(--accent-light),transparent) !important;box-shadow:0 4px 16px var(--accent-light);}
-.ap-badge{display:inline-block;background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent)));color:#fff;font-size:0.65rem;font-weight:800;letter-spacing:0.08em;padding:3px 8px;border-radius:8px;margin-bottom:8px;text-transform:uppercase;}
-
-[data-theme="custom"] {
-    --bg: var(--cu-bg, #eef2f7);
-    --card-bg: var(--cu-card, #ffffff);
-    --card: var(--cu-card, #ffffff);
-    --text-main: var(--cu-text, #0f172a);
-    --text: var(--cu-text, #0f172a);
-    --text-muted: var(--cu-muted, #64748b);
-    --muted: var(--cu-muted, #64748b);
-    --accent: var(--cu-accent, #6366f1);
-    --accent2: var(--cu-accent2, #a855f7);
-    --accent-light: var(--cu-accent-light, rgba(99,102,241,0.12));
-    --border: rgba(127,127,127,0.15);
-    --shadow: 0 4px 20px rgba(0,0,0,0.08);
-    --num-bg: var(--cu-accent, #6366f1);
-    --num-color: #fff;
-    --num-shadow: 0 3px 10px var(--cu-accent-light, rgba(99,102,241,0.3));
-}
-[data-theme="custom"] body { background: var(--cu-bg, #eef2f7) !important; background-image: none !important; }
-.custom-picker { display: none; margin: 10px 0; padding: 12px; border-radius: 14px; background: linear-gradient(180deg, rgba(255,255,255,0.4), transparent); border: 1px solid var(--border); }
-[data-theme="custom"] .custom-picker { display: block; }
-.custom-picker label { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-weight: 700; font-size: 0.85rem; color: var(--text-main); }
-.custom-picker input[type="color"] { width: 48px; height: 34px; padding: 2px; border: 2px solid var(--border); border-radius: 8px; background: transparent; cursor: pointer; }
-
-.subscreen {
-    position: fixed; inset: 0;
-    background: var(--bg);
-    z-index: 8000;
-    transform: translateX(100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow-y: auto;
-    padding: 0 16px 40px;
-    overscroll-behavior: contain;
-}
-.subscreen.open { transform: translateX(0); }
-.subscreen-header {
-    display: flex; align-items: center; gap: 12px;
-    padding: 16px 0;
-    position: sticky; top: 0;
-    background: var(--bg);
-    z-index: 10;
-    border-bottom: 1px solid var(--border);
-    margin: 0 -16px;
-    padding: 16px 16px 14px;
-}
-.subscreen-back {
-    background: var(--accent-light); color: var(--accent);
-    border: none; width: 40px; height: 40px;
-    border-radius: 12px; font-size: 1.2rem; font-weight: 800;
-    cursor: pointer; flex-shrink: 0; font-family: inherit;
-}
-.subscreen-back:active { transform: scale(0.92); }
-.subscreen-title { font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
-.subscreen-body { padding-top: 16px; }
-
-.srow {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 14px 16px; margin-bottom: 8px;
-    border-radius: 14px;
-    background: var(--card-bg); border: 1px solid var(--border);
-    cursor: pointer;
-}
-.srow:active { background: var(--accent-light); }
-.srow-label { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.9rem; color: var(--text-main); }
-.srow-label::before { content: attr(data-ico); font-size: 1.15rem; }
-.srow-arrow { color: var(--text-muted); font-size: 1.2rem; font-weight: 800; }
-.srow-value { color: var(--text-muted); font-size: 0.85rem; font-weight: 700; }
-.srow-value.on { color: var(--accent); }
-
-.open-sub {
-    display: flex; justify-content: space-between; align-items: center;
-    width: 100%; padding: 14px 16px; margin-bottom: 8px;
-    border-radius: 14px;
-    background: var(--card-bg); border: 1px solid var(--border);
-    color: var(--text-main); font-weight: 800; font-size: 0.9rem;
-    cursor: pointer; font-family: inherit; text-align: left;
-}
-.open-sub:active { background: var(--accent-light); }
-.open-sub > span:first-child { display: flex; align-items: center; gap: 10px; }
-.open-sub .ico { font-size: 1.15rem; }
-html.hide-weekend .tab[data-day="Сб"] { display: none; }
-
-/* ========== АБСОЛЮТНО ВСЁ ПОД ТЕМУ (override) ========== */
-
-/* Заголовок "Расписание" — цвет темы */
-h2 span, .brand-title {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-    -webkit-background-clip: text !important;
-    background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-}
-
-/* Логотип — градиент акцента */
-.brand-logo {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-    box-shadow: 0 6px 20px var(--accent-light, rgba(99,102,241,0.25)) !important;
-    border: none !important;
-}
-.brand-logo::before {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-    filter: blur(3px) !important;
-    opacity: 0.6 !important;
-}
-
-/* Бейдж 8Г */
-.badge-class {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-    color: #fff !important;
-    border: none !important;
-    box-shadow: 0 3px 10px var(--accent-light, rgba(99,102,241,0.3)) !important;
-}
-
-/* Кнопка ⚙️ */
-.icon-btn {
-    background: linear-gradient(135deg, var(--accent-light, rgba(99,102,241,0.15)), var(--card-bg, var(--card))) !important;
-    color: var(--accent) !important;
-    border: 1.5px solid var(--accent) !important;
-    box-shadow: 0 3px 10px var(--accent-light, rgba(99,102,241,0.2)) !important;
-}
-
-/* Шапка */
-.header-card {
-    background: var(--card-bg, var(--card)) !important;
-    border-color: var(--border) !important;
-}
-
-/* Панель настроек */
-.settings-panel {
-    background: var(--card-bg, var(--card)) !important;
-    border: 1px solid var(--border) !important;
-}
-
-/* Табы */
-.tabs {
-    background: var(--card-bg, var(--card)) !important;
-    border-color: var(--border) !important;
-}
-.tab:not(.active) { color: var(--text-muted, var(--muted)) !important; }
-.tab.active { color: #fff !important; }
-.tab.today:not(.active)::after { background: var(--accent) !important; }
-
-/* Карточки */
-.card {
-    background: var(--card-bg, var(--card)) !important;
-    border-color: var(--border) !important;
-}
-.time { color: var(--text-muted, var(--muted)) !important; }
-.lesson { color: var(--text-main, var(--text)) !important; }
-.day-title { color: var(--text-muted, var(--muted)) !important; }
-.day-title.today { color: var(--text-main, var(--text)) !important; }
-
-/* Номера */
-.num {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-    color: #fff !important;
-    box-shadow: 0 3px 10px var(--accent-light, rgba(99,102,241,0.3)) !important;
-}
-
-/* Таблетка "Сегодня" */
-.today-pill {
-    background: var(--accent-light, rgba(99,102,241,0.12)) !important;
-    color: var(--accent) !important;
-    border-color: var(--accent) !important;
-}
-
-/* Баннеры */
-.live-banner {
-    background: var(--card-bg, var(--card)) !important;
-    border-color: var(--border) !important;
-}
-.live-banner.now, .live-banner.before {
-    background: linear-gradient(135deg, var(--accent-light, rgba(99,102,241,0.15)), var(--card-bg, var(--card))) !important;
-}
-.live-banner .live-label { color: var(--accent) !important; }
-.live-banner .live-dot { background: var(--accent) !important; }
-.live-banner .live-timer { color: var(--accent) !important; }
-.live-banner .progress-fill {
-    background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent))) !important;
-}
-
-/* Кнопки выбора тем */
-.theme-btn {
-    background: linear-gradient(180deg, var(--accent-light, rgba(99,102,241,0.1)), transparent) !important;
-    border-color: var(--border) !important;
-    color: var(--text-main, var(--text)) !important;
-}
-.theme-btn.active {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-    color: #fff !important;
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 3px var(--accent), 0 6px 16px var(--accent-light) !important;
-}
-
-/* Размер текста */
-.size-btn {
-    background: linear-gradient(180deg, var(--accent-light, rgba(99,102,241,0.1)), transparent) !important;
-    border-color: var(--border) !important;
-    color: var(--text-main, var(--text)) !important;
-}
-.size-btn.active {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-    color: #fff !important;
-    border-color: var(--accent) !important;
-}
-
-/* Тумблеры */
-.toggle {
-    background: rgba(127,127,127,0.2) !important;
-}
-.toggle.on {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-}
-
-/* Кнопки разделов и строки */
-.open-sub, .srow {
-    background: linear-gradient(180deg, var(--accent-light, rgba(99,102,241,0.08)), var(--card-bg, var(--card))) !important;
-    border-color: var(--border) !important;
-    color: var(--text-main, var(--text)) !important;
-}
-.open-sub .ico { filter: drop-shadow(0 2px 3px var(--accent-light, rgba(0,0,0,0.15))); }
-
-/* Заголовки в настройках */
-.settings-title {
-    background: linear-gradient(90deg, var(--text-main, var(--text)), var(--accent)) !important;
-    -webkit-background-clip: text !important;
-    background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-}
-.settings-title::before { background: var(--accent) !important; box-shadow: 0 0 8px var(--accent) !important; }
-
-/* Превью-полоска */
-.settings-preview {
-    background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent)), var(--accent)) !important;
-    box-shadow: 0 3px 12px var(--accent-light, rgba(99,102,241,0.3)) !important;
-}
-
-/* Ссылка на таблицу */
-.sheet-link {
-    color: var(--accent) !important;
-    border-color: var(--accent) !important;
-    background: linear-gradient(135deg, var(--accent-light, rgba(99,102,241,0.1)), var(--card-bg, var(--card))) !important;
-}
-
-/* Кнопка установки */
-.install-btn {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-    box-shadow: 0 6px 18px var(--accent-light, rgba(99,102,241,0.3)) !important;
-}
-
-/* Подэкраны — заголовки */
-.subscreen { background: var(--bg) !important; }
-.subscreen-title {
-    background: linear-gradient(90deg, var(--text-main, var(--text)), var(--accent)) !important;
-    -webkit-background-clip: text !important;
-    background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-}
-.subscreen-back {
-    background: var(--accent-light, rgba(99,102,241,0.12)) !important;
-    color: var(--accent) !important;
-}
-
-/* Custom picker */
-.custom-picker {
-    background: linear-gradient(180deg, var(--accent-light, rgba(99,102,241,0.1)), transparent) !important;
-    border-color: var(--border) !important;
-}
-.custom-picker label { color: var(--text-main, var(--text)) !important; }
-.custom-picker input[type="color"] { border-color: var(--accent) !important; }
-
-/* Админка */
-.ap-inner {
-    background: var(--card-bg, var(--card)) !important;
-    border: 1.5px solid var(--accent) !important;
-}
-.ap-header { color: var(--text-main, var(--text)) !important; }
-.ap-close {
-    background: var(--accent-light, rgba(99,102,241,0.12)) !important;
-    color: var(--accent) !important;
-}
-.ap-visitor {
-    background: linear-gradient(180deg, var(--accent-light, rgba(99,102,241,0.08)), transparent) !important;
-    border-color: var(--border) !important;
-}
-.ap-vid { color: var(--accent) !important; }
-.ap-input {
-    background: var(--bg) !important;
-    color: var(--text-main, var(--text)) !important;
-    border-color: var(--border) !important;
-}
-.ap-btn {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-}
-
-/* Скроллбар панели */
-.settings-panel::-webkit-scrollbar-thumb {
-    background: var(--accent) !important;
-}
-
-/* Фокус на любом input */
-input:focus, button:focus {
-    outline: 2px solid var(--accent) !important;
-    outline-offset: 2px !important;
-}
-
-/* Убираем тяжёлые анимации */
-* {
-    animation-duration: 0.25s !important;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-.card, .theme-btn, .size-btn, .toggle, .tab, .open-sub, .srow, .icon-btn {
-    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease !important;
-}
-
-/* Оставляем анимацию "сейчас идёт" пульс */
-.live-dot { animation-duration: 1.6s !important; }
-@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 var(--accent); } 70% { box-shadow: 0 0 0 10px transparent; } }
-
-/* ===== АККОРДЕОН ВНУТРИ ПАНЕЛИ ===== */
-.acc-block {
-    margin-bottom: 8px;
-    border-radius: 14px;
-    background: linear-gradient(180deg, var(--accent-light, rgba(99,102,241,0.08)), transparent);
-    border: 1px solid var(--border);
-    overflow: hidden;
-}
-.acc-header {
-    display: flex; justify-content: space-between; align-items: center;
-    width: 100%; padding: 14px 16px;
-    background: transparent; border: none;
-    color: var(--text-main, var(--text));
-    font-weight: 800; font-size: 0.9rem;
-    cursor: pointer; font-family: inherit; text-align: left;
-}
-.acc-header:active { background: var(--accent-light, rgba(99,102,241,0.1)); }
-.acc-header > span:first-child { display: flex; align-items: center; gap: 10px; }
-.acc-header .ico { font-size: 1.15rem; }
-.acc-arrow {
-    color: var(--accent);
-    font-size: 1rem; font-weight: 800;
-    transition: transform 0.2s ease;
-}
-.acc-block.open .acc-arrow { transform: rotate(180deg); }
-.acc-body {
-    max-height: 0; overflow: hidden;
-    transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 0 14px;
-}
-.acc-block.open .acc-body { max-height: 3000px; padding-bottom: 14px; }
-.acc-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 11px 12px; margin-bottom: 4px;
-    border-radius: 10px;
-    cursor: pointer;
-    background: rgba(255,255,255,0.3);
-    border: 1px solid transparent;
-}
-[data-theme="dark"] .acc-row,
-[data-theme="cosmic"] .acc-row { background: rgba(255,255,255,0.04); }
-.acc-row:active { background: var(--accent-light, rgba(99,102,241,0.12)); border-color: var(--accent); }
-.acc-lbl { font-weight: 700; font-size: 0.85rem; color: var(--text-main, var(--text)); }
-.acc-val { font-weight: 800; font-size: 0.8rem; color: var(--text-muted, var(--muted)); }
-.acc-val.on { color: var(--accent); }
-.acc-sub {
-    font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em;
-    color: var(--text-muted, var(--muted));
-    text-transform: uppercase;
-    margin: 14px 0 8px;
-    padding-bottom: 6px;
-    border-bottom: 1px dashed var(--border);
-}
-.acc-slider {
-    padding: 10px 12px;
-    margin-bottom: 6px;
-    border-radius: 10px;
-    background: rgba(255,255,255,0.3);
-}
-[data-theme="dark"] .acc-slider,
-[data-theme="cosmic"] .acc-slider { background: rgba(255,255,255,0.04); }
-.acc-slider label {
-    display: flex; justify-content: space-between; align-items: center;
-    font-weight: 700; font-size: 0.82rem;
-    color: var(--text-main, var(--text));
-    margin-bottom: 6px;
-}
-.acc-slider output {
-    color: var(--accent);
-    font-weight: 800;
-}
-.acc-slider input[type="range"] {
-    width: 100%; height: 5px;
-    background: var(--accent-light, rgba(99,102,241,0.15));
-    border-radius: 3px;
-    outline: none;
-    -webkit-appearance: none;
-}
-.acc-slider input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 20px; height: 20px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)));
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 2px 6px var(--accent-light, rgba(99,102,241,0.4));
-}
-html.no-glow .card.now { box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
-html.no-progress .progress-bar { display: none !important; }
-html.no-live .live-banner { display: none !important; }
-html.no-today-pill .today-pill { display: none !important; }
-html.no-weekday .brand-sub { display: none !important; }
-html.no-card-anim .card { animation: none !important; }
-html.no-blur-bg .card { backdrop-filter: none !important; }
-html.no-round-nums .num { border-radius: 11px !important; }
-html.style-sharp .card, html.style-sharp .theme-btn, html.style-sharp .btn-round { border-radius: 0 !important; }
-html.style-sharp .num { border-radius: 0 !important; }
-html.style-sharp .tab { border-radius: 0 !important; }
-html.style-round .card, html.style-round .theme-btn { border-radius: 28px !important; }
-html.style-round .num { border-radius: 50% !important; }
-html.style-round .tab { border-radius: 24px !important; }
-
-.container { filter: var(--global-filter, none); transition: filter 0.3s ease; }
-.card { border-radius: var(--card-radius, 16px) !important; margin-bottom: var(--card-gap, 10px) !important; }
-.num { width: var(--num-size, 40px) !important; height: var(--num-size, 40px) !important; }
-.lesson { font-size: var(--lesson-size, 1.05rem) !important; }
-h2 { font-size: var(--header-size, 1.4rem) !important; }
-.container { padding: var(--page-pad, 14px) !important; }
-.card, .theme-btn, .btn-round, .tab { transition-duration: var(--trans, 0.15s) !important; }
-html.noise-on body::after { content:""; position:fixed; inset:0; pointer-events:none; z-index:1; opacity:0.04; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence baseFrequency='0.9'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
-html.vignette-on body::after { content:""; position:fixed; inset:0; pointer-events:none; z-index:1; background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%); }
-html.scanlines-on body::after { content:""; position:fixed; inset:0; pointer-events:none; z-index:1; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.08) 0 1px, transparent 1px 3px); }
-
-/* ===== АДМИН ПАНЕЛЬ 2.0 ===== */
-.admin-tabs {
-    display: flex; gap: 4px; margin-bottom: 14px;
-    overflow-x: auto; padding: 4px;
-    background: var(--accent-light, rgba(99,102,241,0.08));
-    border-radius: 12px;
-}
-.admin-tab {
-    flex: 1; min-width: 90px; padding: 10px 8px;
-    background: transparent; border: none;
-    color: var(--text-muted, var(--muted));
-    font-weight: 800; font-size: 0.82rem;
-    cursor: pointer; font-family: inherit;
-    border-radius: 9px;
-    white-space: nowrap;
-}
-.admin-tab.active {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)));
-    color: #fff;
-    box-shadow: 0 3px 10px var(--accent-light, rgba(99,102,241,0.3));
-}
-.admin-pane { display: none; }
-.admin-pane.active { display: block; }
-.admin-block {
-    padding: 14px 16px; margin-bottom: 12px;
-    border-radius: 14px;
-    background: var(--card-bg, var(--card));
-    border: 1px solid var(--border);
-}
-.admin-block-title {
-    font-weight: 800; font-size: 0.88rem;
-    color: var(--text-main, var(--text));
-    margin-bottom: 10px;
-}
-.admin-textarea {
-    width: 100%; box-sizing: border-box;
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text-main, var(--text));
-    font-family: inherit;
-    font-size: 0.9rem;
-    resize: vertical;
-    min-height: 80px;
-    margin-bottom: 10px;
-}
-.admin-kv {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 8px 0; border-bottom: 1px solid var(--border);
-    font-size: 0.85rem;
-}
-.admin-kv:last-child { border-bottom: none; }
-.admin-kv b { color: var(--accent); font-weight: 800; word-break: break-all; margin-left: 10px; text-align: right; }
-.ap-visitor-name {
-    display: inline-block;
-    padding: 2px 8px; border-radius: 8px;
-    background: var(--accent-light, rgba(99,102,241,0.12));
-    color: var(--accent);
-    font-weight: 800; font-size: 0.75rem;
-    margin-left: 6px;
-}
-.ap-rename {
-    background: transparent; border: 1px solid var(--border);
-    width: 32px; height: 32px; border-radius: 8px;
-    font-size: 0.9rem; cursor: pointer; color: var(--text-muted, var(--muted));
-    margin-left: 4px;
-}
-.ap-rename:active { background: var(--accent-light); color: var(--accent); }
-
-/* ===== ПОДЭКРАНЫ (выезжают справа) ===== */
-.subscreen {
-    position: fixed; inset: 0;
-    background: var(--bg) !important;
-    background-image: none !important;
-    z-index: 99999 !important;
-    transform: translateX(100%);
-    transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow-y: auto;
-    padding: 0 16px 40px;
-    overscroll-behavior: contain;
-    box-shadow: -10px 0 40px rgba(0,0,0,0.3);
-}
-.subscreen.open { transform: translateX(0); }
-[data-theme="light"] .subscreen { background: #f1f5fa !important; }
-[data-theme="dark"] .subscreen { background: #10131a !important; }
-[data-theme="cosmic"] .subscreen { background: #05021a !important; }
-[data-theme="ocean"] .subscreen { background: #c7e8f5 !important; }
-[data-theme="sunset"] .subscreen { background: #ffd9b0 !important; }
-[data-theme="forest"] .subscreen { background: #dff0d0 !important; }
-[data-theme="sakura"] .subscreen { background: #ffeaf0 !important; }
-[data-theme="custom"] .subscreen { background: var(--cu-bg, #eef2f7) !important; }
-
-.subscreen-header {
-    display: flex; align-items: center; gap: 12px;
-    padding: 16px 0 14px;
-    position: sticky; top: 0;
-    background: inherit;
-    z-index: 10;
-    border-bottom: 1px solid var(--border);
-    margin: 0 -16px;
-    padding-left: 16px;
-    padding-right: 16px;
-}
-.subscreen-back {
-    background: var(--accent-light, rgba(99,102,241,0.12));
-    color: var(--accent);
-    border: none; width: 40px; height: 40px;
-    border-radius: 12px; font-size: 1.2rem; font-weight: 800;
-    cursor: pointer; flex-shrink: 0; font-family: inherit;
-}
-.subscreen-back:active { transform: scale(0.92); }
-.subscreen-title { font-size: 1.1rem; font-weight: 800; color: var(--text-main, var(--text)); }
-.subscreen-body { padding-top: 16px; }
-
-.srow {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 14px 16px; margin-bottom: 8px;
-    border-radius: 14px;
-    background: var(--card-bg, var(--card)); border: 1px solid var(--border);
-    cursor: pointer;
-}
-.srow:active { background: var(--accent-light, rgba(99,102,241,0.1)); }
-.srow-label { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.9rem; color: var(--text-main, var(--text)); }
-.srow-label::before { content: attr(data-ico); font-size: 1.15rem; }
-.srow-value { color: var(--text-muted, var(--muted)); font-size: 0.82rem; font-weight: 800; }
-.srow-value.on { color: var(--accent); }
-
-/* ЗАЩИТА ОТ СДВИГА КОНТЕНТА */
-html, body {
-    overflow-x: hidden !important;
-    max-width: 100vw !important;
-    width: 100% !important;
-}
-.container {
-    margin: 0 auto !important;
-    max-width: 500px !important;
-    width: 100% !important;
-    overflow-x: hidden !important;
-}
-.subscreen {
-    max-width: 100vw !important;
-    overflow-x: hidden !important;
-}
-/* Если filter должен быть — только на контейнер */
-.container {
-    transition: filter 0.3s ease;
-}
-
-/* ========== ЖЁСТКИЙ ФИКС СДВИГА ========== */
-body {
-    display: block !important;
-    overflow-x: hidden !important;
-    max-width: 100vw !important;
-    padding: 20px 14px 30px !important;
-    margin: 0 !important;
-}
-.container {
-    margin: 0 auto !important;
-    max-width: 500px !important;
-    width: 100% !important;
-    padding: 0 !important;
-    filter: none !important;
-    overflow: visible !important;
-}
-.subscreen {
-    visibility: hidden !important;
-    pointer-events: none !important;
-}
-.subscreen.open {
-    visibility: visible !important;
-    pointer-events: auto !important;
-}
-html, body {
-    overflow-x: hidden !important;
-    max-width: 100vw !important;
-}
-</style>
-</head><body>
-<h1>🔐 Админ</h1>
-<p>Панель доступна по адресу <b>/admin?key=nikita_admin_2026</b></p>
-</body></html>"""
-
-PAGE_TEMPLATE = """<!DOCTYPE html>
+# ============ HTML ============
+PAGE = """<!DOCTYPE html>
 <html lang="ru" data-theme="light">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f0f4f8" id="themeColorMeta">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f0f4f8" id="tcMeta">
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="8Г">
-{refresh_tag}
 <title>Расписание 8Г</title>
 <style>
 :root, [data-theme="light"] {
-    --bg:#f0f4f8; --card-bg:#ffffff; --text-main:#1a202c; --text-muted:#4a5568;
-    --accent:#4c6ef5; --accent-light:#edf2ff; --today-badge:#38a169;
-    --error:#e03131; --shadow:0 4px 16px rgba(0,0,0,0.06); --border:#edf2f7;
+    --bg:#f0f4f8; --card-bg:#ffffff; --card:#ffffff;
+    --text-main:#1a202c; --text:#1a202c; --text-muted:#4a5568; --muted:#4a5568;
+    --accent:#4c6ef5; --accent2:#7950f2; --accent-light:rgba(76,110,245,0.12);
+    --border:rgba(15,23,42,0.08); --shadow:0 4px 16px rgba(15,23,42,0.06);
     --green:#10b981; --green-soft:rgba(16,185,129,0.12);
     --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.12);
-    --num-bg:#edf2ff; --num-color:#4c6ef5; --num-shadow:none;
+    --num-bg:var(--accent); --num-color:#fff; --num-shadow:0 3px 10px var(--accent-light);
 }
 [data-theme="dark"] {
-    --bg:#0f1115; --card-bg:#1a1d24; --text-main:#e6e8ec; --text-muted:#9aa3b2;
-    --accent:#7c93ff; --accent-light:#232741; --today-badge:#4ade80;
-    --error:#ff6b6b; --shadow:0 4px 16px rgba(0,0,0,0.4); --border:#232733;
+    --bg:#0f1115; --card-bg:#1a1d24; --card:#1a1d24;
+    --text-main:#e6e8ec; --text:#e6e8ec; --text-muted:#9aa3b2; --muted:#9aa3b2;
+    --accent:#7c93ff; --accent2:#c084fc; --accent-light:rgba(124,147,255,0.15);
+    --border:rgba(255,255,255,0.07); --shadow:0 4px 16px rgba(0,0,0,0.4);
     --green:#34d399; --green-soft:rgba(52,211,153,0.14);
     --orange:#fbbf24; --orange-soft:rgba(251,191,36,0.14);
-    --num-bg:#232741; --num-color:#c7d2fe; --num-shadow:none;
+    --num-bg:var(--accent); --num-color:#fff; --num-shadow:0 3px 10px var(--accent-light);
     color-scheme:dark;
 }
 [data-theme="cosmic"] {
-    --bg:#05021a; --card-bg:rgba(30,20,65,0.72); --text-main:#ece6ff; --text-muted:#a89cc7;
-    --accent:#b794f6; --accent-light:rgba(183,148,246,0.18); --today-badge:#7cf5c0;
-    --error:#ff8ab5; --shadow:0 8px 32px rgba(120,60,220,0.28); --border:rgba(183,148,246,0.16);
-    --green:#7cf5c0; --green-soft:rgba(124,245,192,0.14);
-    --orange:#fbbf77; --orange-soft:rgba(251,191,119,0.14);
-    --num-bg:linear-gradient(135deg,rgba(183,148,246,0.35),rgba(124,245,192,0.25));
-    --num-color:#ece6ff;
-    --num-shadow:0 0 14px rgba(183,148,246,0.4);
+    --bg:#05021a; --card-bg:rgba(30,20,60,0.72); --card:rgba(30,20,60,0.72);
+    --text-main:#eae4ff; --text:#eae4ff; --text-muted:#b3a8d9; --muted:#b3a8d9;
+    --accent:#b794f6; --accent2:#7cf5c0; --accent-light:rgba(183,148,246,0.18);
+    --border:rgba(183,148,246,0.2); --shadow:0 8px 30px rgba(140,80,255,0.25);
+    --green:#7cf5c0; --green-soft:rgba(124,245,192,0.15);
+    --orange:#fbbf24; --orange-soft:rgba(251,191,36,0.15);
+    --num-bg:var(--accent); --num-color:#1a1030; --num-shadow:0 0 12px rgba(183,148,246,0.5);
     color-scheme:dark;
 }
 [data-theme="ocean"] {
-    --bg:#b8e0f0; --card-bg:rgba(255,255,255,0.95); --text-main:#062b3d; --text-muted:#4a7a8f;
-    --accent:#0891b2; --accent-light:rgba(8,145,178,0.12); --today-badge:#10b981;
-    --error:#ef4444; --shadow:0 4px 16px rgba(8,145,178,0.12); --border:rgba(6,43,61,0.08);
-    --green:#10b981; --green-soft:rgba(16,185,129,0.14);
-    --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.14);
-    --num-bg:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.9),rgba(34,211,238,0.5) 60%,rgba(8,145,178,0.75));
-    --num-color:#fff; --num-shadow:0 3px 10px rgba(8,145,178,0.3);
-    color-scheme:light;
+    --bg:#c7e8f5; --card-bg:#ffffff; --card:#ffffff;
+    --text-main:#062b3d; --text:#062b3d; --text-muted:#5a7d92; --muted:#5a7d92;
+    --accent:#0891b2; --accent2:#22d3ee; --accent-light:rgba(8,145,178,0.12);
+    --border:rgba(6,43,61,0.08); --shadow:0 4px 16px rgba(8,145,178,0.1);
+    --green:#10b981; --green-soft:rgba(16,185,129,0.12);
+    --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.12);
+    --num-bg:var(--accent); --num-color:#fff; --num-shadow:0 3px 10px var(--accent-light);
 }
 [data-theme="sunset"] {
-    --bg:#ffd9b0; --card-bg:rgba(255,251,245,0.95); --text-main:#3d1a0a; --text-muted:#8a6550;
-    --accent:#f97316; --accent-light:rgba(249,115,22,0.12); --today-badge:#059669;
-    --error:#dc2626; --shadow:0 4px 16px rgba(249,115,22,0.15); --border:rgba(61,26,10,0.08);
-    --green:#059669; --green-soft:rgba(5,150,105,0.14);
-    --orange:#d97706; --orange-soft:rgba(217,119,6,0.14);
-    --num-bg:linear-gradient(135deg,#f97316,#ec4899); --num-color:#fff;
-    --num-shadow:0 3px 10px rgba(249,115,22,0.35);
-    color-scheme:light;
+    --bg:#ffd9b0; --card-bg:#fffbf5; --card:#fffbf5;
+    --text-main:#3d1a0a; --text:#3d1a0a; --text-muted:#8a6550; --muted:#8a6550;
+    --accent:#f97316; --accent2:#ec4899; --accent-light:rgba(249,115,22,0.12);
+    --border:rgba(61,26,10,0.08); --shadow:0 4px 16px rgba(249,115,22,0.14);
+    --green:#059669; --green-soft:rgba(5,150,105,0.12);
+    --orange:#d97706; --orange-soft:rgba(217,119,6,0.12);
+    --num-bg:var(--accent); --num-color:#fff; --num-shadow:0 3px 10px var(--accent-light);
 }
 [data-theme="forest"] {
-    --bg:#c9e6bf; --card-bg:rgba(255,255,255,0.95); --text-main:#0f2e1b; --text-muted:#5f7c68;
-    --accent:#059669; --accent-light:rgba(5,150,105,0.12); --today-badge:#16a34a;
-    --error:#dc2626; --shadow:0 4px 16px rgba(5,150,105,0.12); --border:rgba(15,46,27,0.08);
-    --green:#16a34a; --green-soft:rgba(22,163,74,0.14);
-    --orange:#ca8a04; --orange-soft:rgba(202,138,4,0.14);
-    --num-bg:linear-gradient(135deg,#059669,#84cc16); --num-color:#fff;
-    --num-shadow:0 3px 10px rgba(5,150,105,0.3);
-    color-scheme:light;
+    --bg:#d4e8c8; --card-bg:#ffffff; --card:#ffffff;
+    --text-main:#0f2e1b; --text:#0f2e1b; --text-muted:#5f7c68; --muted:#5f7c68;
+    --accent:#059669; --accent2:#84cc16; --accent-light:rgba(5,150,105,0.12);
+    --border:rgba(15,46,27,0.08); --shadow:0 4px 16px rgba(5,150,105,0.1);
+    --green:#16a34a; --green-soft:rgba(22,163,74,0.12);
+    --orange:#ca8a04; --orange-soft:rgba(202,138,4,0.12);
+    --num-bg:var(--accent); --num-color:#fff; --num-shadow:0 3px 10px var(--accent-light);
 }
 [data-theme="sakura"] {
-    --bg:#ffd6e4; --card-bg:rgba(255,255,255,0.95); --text-main:#3d1029; --text-muted:#9a6782;
-    --accent:#ec4899; --accent-light:rgba(236,72,153,0.12); --today-badge:#059669;
-    --error:#dc2626; --shadow:0 4px 16px rgba(236,72,153,0.12); --border:rgba(61,16,41,0.08);
-    --green:#059669; --green-soft:rgba(5,150,105,0.14);
-    --orange:#ea580c; --orange-soft:rgba(234,88,12,0.14);
-    --num-bg:linear-gradient(135deg,#ec4899,#a855f7); --num-color:#fff;
-    --num-shadow:0 3px 10px rgba(236,72,153,0.3);
-    color-scheme:light;
+    --bg:#ffd6e4; --card-bg:#ffffff; --card:#ffffff;
+    --text-main:#3d1029; --text:#3d1029; --text-muted:#9a6782; --muted:#9a6782;
+    --accent:#ec4899; --accent2:#a855f7; --accent-light:rgba(236,72,153,0.12);
+    --border:rgba(61,16,41,0.08); --shadow:0 4px 16px rgba(236,72,153,0.1);
+    --green:#059669; --green-soft:rgba(5,150,105,0.12);
+    --orange:#ea580c; --orange-soft:rgba(234,88,12,0.12);
+    --num-bg:var(--accent); --num-color:#fff; --num-shadow:0 3px 10px var(--accent-light);
 }
-[data-theme="ocean"] body { background-image:linear-gradient(180deg,#c7e8f5 0%,#94d0e6 45%,#5aafd0 100%); }
-[data-theme="sunset"] body { background-image:linear-gradient(180deg,#ffe0a8 0%,#ffb572 40%,#e88898 100%); }
-[data-theme="forest"] body { background-image:linear-gradient(180deg,#dff0d0 0%,#b8dfa8 40%,#7abb6c 100%); }
-[data-theme="sakura"] body { background-image:linear-gradient(180deg,#ffeaf0 0%,#ffd0dd 50%,#ffb0c8 100%); }
-
-html { min-height:100%; background:var(--bg); }
+[data-theme="custom"] {
+    --bg: var(--cu-bg,#eef2f7); --card-bg: var(--cu-card,#ffffff); --card: var(--cu-card,#ffffff);
+    --text-main: var(--cu-text,#0f172a); --text: var(--cu-text,#0f172a);
+    --text-muted: var(--cu-muted,#64748b); --muted: var(--cu-muted,#64748b);
+    --accent: var(--cu-accent,#6366f1); --accent2: var(--cu-accent2,#a855f7);
+    --accent-light: var(--cu-accent-light,rgba(99,102,241,0.12));
+    --border: rgba(127,127,127,0.15); --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --green:#10b981; --green-soft:rgba(16,185,129,0.12);
+    --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.12);
+    --num-bg:var(--accent); --num-color:#fff; --num-shadow:0 3px 10px var(--accent-light);
+}
+html { min-height:100%; background: var(--bg); }
 * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 body {
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:var(--bg); color:var(--text-main); margin:0;
-    padding:20px 16px 30px; display:flex; justify-content:center;
+    background: var(--bg); color: var(--text-main); margin:0;
+    padding:20px 14px 30px;
     min-height:100vh; -webkit-font-smoothing:antialiased;
-    transition:background 0.4s ease, color 0.3s ease;
-    position:relative; overflow-x:hidden;
+    transition: background 0.3s ease, color 0.3s ease;
+    overflow-x: hidden;
 }
-[data-theme="light"] body { background-image:linear-gradient(180deg,#f1f5fa 0%,#e4ebf3 100%); }
-[data-theme="dark"] body { background-image:linear-gradient(180deg,#10131a 0%,#0b0d12 100%); }
-[data-theme="cosmic"] body {
-    background-image:
-        radial-gradient(ellipse at 20% 15%, rgba(139,92,246,0.28), transparent 45%),
-        radial-gradient(ellipse at 85% 75%, rgba(56,189,248,0.18), transparent 50%),
-        radial-gradient(ellipse at 60% 40%, rgba(124,245,192,0.08), transparent 55%),
-        linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%);
-    background-attachment:scroll;
-}
-[data-theme="cosmic"] body::before {
-    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
-    background-image:
-        radial-gradient(1.5px 1.5px at 24px 32px, rgba(255,255,255,0.95), transparent 60%),
-        radial-gradient(1px 1px at 118px 88px, rgba(255,255,255,0.8), transparent 60%),
-        radial-gradient(2px 2px at 210px 156px, rgba(183,148,246,1), transparent 60%),
-        radial-gradient(1px 1px at 60px 200px, rgba(255,255,255,0.7), transparent 60%),
-        radial-gradient(1.5px 1.5px at 260px 40px, rgba(124,245,192,1), transparent 60%),
-        radial-gradient(1.2px 1.2px at 180px 240px, rgba(255,255,255,0.85), transparent 60%),
-        radial-gradient(1px 1px at 340px 100px, rgba(255,255,255,0.65), transparent 60%),
-        radial-gradient(1.8px 1.8px at 90px 130px, rgba(183,148,246,0.9), transparent 60%);
-    background-size:460px 380px; background-repeat:repeat;
-    
-}
- 100% { opacity:1; } }
-.container { width:100%; max-width:500px; position:relative; z-index:1; }
+[data-theme="light"] body { background-image: linear-gradient(180deg,#f1f5fa,#e4ebf3); }
+[data-theme="dark"] body { background-image: linear-gradient(180deg,#10131a,#0b0d12); }
+[data-theme="cosmic"] body { background-image: radial-gradient(ellipse at 20% 15%, rgba(139,92,246,0.3), transparent 50%), radial-gradient(ellipse at 85% 75%, rgba(56,189,248,0.2), transparent 55%), linear-gradient(180deg,#0a0424,#05021a 55%,#01000a); }
+[data-theme="ocean"] body { background-image: linear-gradient(180deg,#c7e8f5,#94d0e6 45%,#5aafd0); }
+[data-theme="sunset"] body { background-image: linear-gradient(180deg,#ffe0a8,#ffb572 40%,#e88898); }
+[data-theme="forest"] body { background-image: linear-gradient(180deg,#dff0d0,#b8dfa8 40%,#7abb6c); }
+[data-theme="sakura"] body { background-image: linear-gradient(180deg,#ffeaf0,#ffd0dd 50%,#ffb0c8); }
+.container { width:100%; max-width:500px; margin:0 auto; position:relative; z-index:1; }
 
-.header-card {
-    background:var(--card-bg); padding:18px 22px; border-radius:22px;
-    box-shadow:var(--shadow); margin-bottom:14px;
-    display:flex; align-items:center; justify-content:space-between;
-    border:1px solid var(--border); gap:10px;
-    position:relative;
-}
+#particles { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.particle { position:absolute; top:-40px; user-select:none; animation-name:fall; animation-timing-function:linear; animation-iteration-count:infinite; }
+@keyframes fall { 0%{transform:translate3d(0,-40px,0) rotate(0);opacity:0} 10%{opacity:.85} 90%{opacity:.85} 100%{transform:translate3d(30px,110vh,0) rotate(360deg);opacity:0} }
+
+.header-card { background: var(--card-bg); border:1px solid var(--border); border-radius:22px; padding:16px 20px; box-shadow: var(--shadow); margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; }
 h2 { margin:0; font-size:1.4rem; font-weight:800; display:flex; align-items:center; gap:10px; }
-h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-[data-theme="dark"] h2 span { background:linear-gradient(135deg,#7c93ff,#b794f6); -webkit-background-clip:text; background-clip:text; }
-[data-theme="cosmic"] h2 span { background:linear-gradient(135deg,#b794f6,#7cf5c0); -webkit-background-clip:text; background-clip:text; }
+h2 span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+#adminTap { cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent; }
 .header-right { display:flex; align-items:center; gap:8px; }
-.badge-class { background:var(--accent-light); color:var(--accent); padding:7px 14px; border-radius:12px; font-weight:800; font-size:1rem; }
-.icon-btn {
-    background:var(--accent-light); color:var(--accent); border:none;
-    width:40px; height:40px; border-radius:12px; font-size:1.15rem;
-    cursor:pointer; display:flex; align-items:center; justify-content:center;
-    transition:transform 0.15s ease;
-}
+.badge-class { background: var(--accent-light); color: var(--accent); padding:7px 14px; border-radius:12px; font-weight:800; font-size:1rem; }
+.icon-btn { background: var(--accent-light); color: var(--accent); border:none; width:40px; height:40px; border-radius:12px; font-size:1.15rem; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:inherit; }
 .icon-btn:active { transform:scale(0.92); }
-[data-theme="cosmic"] .icon-btn { box-shadow:0 0 14px rgba(183,148,246,0.35); }
 
-/* === НАСТРОЙКИ — выпадающая панель под кнопкой, быстрая === */
-.settings-panel {
-    position:absolute;
-    top:100%;
-    right:0;
-    margin-top:8px;
-    width:320px;
-    max-width:calc(100vw - 44px);
-    background:var(--card-bg);
-    border:1px solid var(--border);
-    border-radius:16px;
-    box-shadow:0 12px 40px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.08);
-    padding:16px 18px;
-    z-index:50;
-    transform-origin:top right;
-    transform:scale(0.94) translateY(-4px);
-    opacity:0;
-    pointer-events:none;
-    transition:transform 0.12s cubic-bezier(0.4,0,0.2,1), opacity 0.1s ease;
-    will-change:transform, opacity;
-}
-[data-theme="cosmic"] .settings-panel {
-    box-shadow:0 12px 40px rgba(120,60,220,0.35), 0 0 0 1px rgba(183,148,246,0.2);
-}
-.settings-panel.open {
-    transform:scale(1) translateY(0);
-    opacity:1;
-    pointer-events:auto;
-}
-.settings-title { font-weight:800; font-size:0.85rem; margin-bottom:10px; color:var(--text-main); }
-.settings-title:not(:first-child) { margin-top:14px; }
-.theme-options { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
-.theme-btn {
-    flex:1; padding:10px 6px; border-radius:10px; border:2px solid var(--border);
-    background:transparent; color:var(--text-main); font-weight:700; font-size:0.72rem;
-    cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;
-    font-family:inherit; transition:background 0.12s, border-color 0.12s;
-}
-.theme-btn.active { border-color:var(--accent); background:var(--accent-light); }
-.theme-btn .emoji { font-size:1.25rem; }
-.size-options { display:flex; gap:8px; }
-.size-btn {
-    flex:1; padding:9px; border-radius:10px; border:2px solid var(--border);
-    background:transparent; color:var(--text-main); font-weight:800; cursor:pointer;
-    font-family:inherit; transition:background 0.12s, border-color 0.12s;
-}
-.size-btn[data-size="small"] { font-size:0.8rem; }
-.size-btn[data-size="normal"] { font-size:1rem; }
-.size-btn[data-size="large"] { font-size:1.18rem; }
-.size-btn.active { border-color:var(--accent); background:var(--accent-light); }
-.toggle-row {
-    display:flex; justify-content:space-between; align-items:center;
-    padding:8px 0; border-bottom:1px solid var(--border);
-}
-.toggle-row:last-child { border-bottom:none; }
-.toggle-label { font-weight:700; font-size:0.85rem; }
-.toggle {
-    position:relative; width:44px; height:24px; background:var(--border);
-    border-radius:12px; cursor:pointer; transition:background 0.15s;
-    flex-shrink:0;
-}
-.toggle::after {
-    content:""; position:absolute; top:2px; left:2px;
-    width:20px; height:20px; background:#fff; border-radius:50%;
-    transition:transform 0.18s cubic-bezier(0.4,0,0.2,1);
-    box-shadow:0 1px 3px rgba(0,0,0,0.15);
-}
-.toggle.on { background:var(--accent); }
-.toggle.on::after { transform:translateX(20px); }
-.install-btn {
-    width:100%; padding:11px; border-radius:10px; border:none;
-    background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent))); color:white;
-    font-weight:800; font-size:0.88rem; cursor:pointer; font-family:inherit;
-}
-[data-theme="cosmic"] .install-btn { background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent))); color:#1a1030; }
-.link-btn {
-    background:none; border:none; color:var(--text-muted); font-weight:600;
-    font-size:0.8rem; cursor:pointer; padding:6px 4px; text-decoration:underline;
-    font-family:inherit;
-}
-.installed-badge { color:var(--today-badge); font-weight:700; font-size:0.88rem; padding:6px 0; }
-.hint-text { color:var(--text-muted); font-size:0.8rem; line-height:1.4; margin-top:4px; }
+.settings-panel { background: var(--card-bg); border:1px solid var(--border); border-radius:16px; padding:0 18px; margin-bottom:0; box-shadow:none; max-height:0; overflow:hidden; opacity:0; transition: max-height 0.22s cubic-bezier(0.4,0,0.2,1), opacity 0.14s ease, padding 0.22s ease, margin-bottom 0.22s ease; }
+.settings-panel.open { max-height: 3000px; opacity:1; padding:16px 18px; margin-bottom:14px; box-shadow: var(--shadow); }
+.settings-title { font-weight:800; font-size:0.9rem; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+.settings-title:not(:first-child) { margin-top:18px; }
+.settings-title::before { content:""; width:4px; height:4px; border-radius:50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.theme-options { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:8px; }
+.theme-btn { padding:10px 4px; border-radius:12px; border:2px solid transparent; background: var(--accent-light); color: var(--text-main); font-weight:700; font-size:0.62rem; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; font-family:inherit; }
+.theme-btn.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+.theme-btn .emoji { font-size:1.25rem; line-height:1; }
+.size-options { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:8px; }
+.size-btn { padding:11px; border-radius:12px; border:2px solid var(--border); background: var(--accent-light); color: var(--text-main); font-weight:800; cursor:pointer; font-family:inherit; }
+.size-btn[data-size="small"] { font-size:0.85rem; } .size-btn[data-size="normal"] { font-size:1.05rem; } .size-btn[data-size="large"] { font-size:1.25rem; }
+.size-btn.active { border-color: var(--accent); }
 
-/* === ТАБЫ ПН–СБ === */
-.tabs {
-    display:flex; gap:5px; margin-bottom:14px; overflow-x:auto;
-    padding:4px; scrollbar-width:none;
-    background:var(--card-bg); border-radius:16px; border:1px solid var(--border);
-    box-shadow:var(--shadow);
-}
+.custom-picker { display:none; margin:8px 0; padding:12px; border-radius:14px; background: var(--accent-light); border:1px solid var(--border); }
+[data-theme="custom"] .custom-picker { display:block; }
+.custom-picker label { display:flex; justify-content:space-between; align-items:center; padding:7px 0; font-weight:700; font-size:0.85rem; color: var(--text-main); }
+.custom-picker input[type="color"] { width:48px; height:34px; padding:2px; border:2px solid var(--border); border-radius:8px; background:transparent; cursor:pointer; }
+.link-btn { background:none; border:none; color: var(--text-muted); font-weight:700; font-size:0.85rem; cursor:pointer; padding:8px; text-decoration:underline; font-family:inherit; }
+
+.open-sub { display:flex; justify-content:space-between; align-items:center; width:100%; padding:14px 16px; margin-bottom:8px; border-radius:14px; background: var(--accent-light); border:1px solid var(--border); color: var(--text-main); font-weight:800; font-size:0.9rem; cursor:pointer; font-family:inherit; text-align:left; }
+.open-sub:active { opacity:0.9; }
+.open-sub > span:first-child { display:flex; align-items:center; gap:10px; }
+.open-sub .ico { font-size:1.15rem; }
+.open-sub .srow-arrow { color: var(--text-muted); font-size:1.3rem; font-weight:800; }
+
+.subscreen { position:fixed; inset:0; background: var(--bg); z-index:9999; transform:translateX(100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); overflow-y:auto; padding:0 16px 40px; overscroll-behavior:contain; }
+.subscreen.open { transform:translateX(0); }
+[data-theme="light"] .subscreen { background:#f1f5fa; }
+[data-theme="dark"] .subscreen { background:#10131a; }
+[data-theme="cosmic"] .subscreen { background:#05021a; }
+[data-theme="ocean"] .subscreen { background:#c7e8f5; }
+[data-theme="sunset"] .subscreen { background:#ffd9b0; }
+[data-theme="forest"] .subscreen { background:#dff0d0; }
+[data-theme="sakura"] .subscreen { background:#ffeaf0; }
+[data-theme="custom"] .subscreen { background: var(--cu-bg,#eef2f7); }
+.subscreen-header { display:flex; align-items:center; gap:12px; padding:16px 0 14px; position:sticky; top:0; background:inherit; z-index:10; border-bottom:1px solid var(--border); margin:0 -16px; padding-left:16px; padding-right:16px; }
+.subscreen-back { background: var(--accent-light); color: var(--accent); border:none; width:40px; height:40px; border-radius:12px; font-size:1.2rem; font-weight:800; cursor:pointer; flex-shrink:0; font-family:inherit; }
+.subscreen-back:active { transform:scale(0.92); }
+.subscreen-title { font-size:1.1rem; font-weight:800; color: var(--text-main); }
+.subscreen-body { padding-top:16px; }
+
+.srow { display:flex; justify-content:space-between; align-items:center; padding:14px 16px; margin-bottom:8px; border-radius:14px; background: var(--card-bg); border:1px solid var(--border); cursor:pointer; }
+.srow:active { background: var(--accent-light); }
+.srow-label { display:flex; align-items:center; gap:10px; font-weight:800; font-size:0.9rem; color: var(--text-main); }
+.srow-label::before { content: attr(data-ico); font-size:1.15rem; }
+.srow-value { color: var(--text-muted); font-size:0.82rem; font-weight:800; }
+.srow-value.on { color: var(--accent); }
+
+.acc-sub { font-size:0.72rem; font-weight:800; letter-spacing:0.08em; color: var(--text-muted); text-transform:uppercase; margin:14px 0 8px; padding-bottom:6px; border-bottom:1px dashed var(--border); }
+.acc-slider { padding:10px 12px; margin-bottom:6px; border-radius:10px; background: var(--accent-light); }
+.acc-slider label { display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:0.82rem; color: var(--text-main); margin-bottom:6px; }
+.acc-slider output { color: var(--accent); font-weight:800; }
+.acc-slider input[type="range"] { width:100%; height:5px; background: var(--border); border-radius:3px; outline:none; -webkit-appearance:none; }
+.acc-slider input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius:50%; cursor:pointer; box-shadow: 0 2px 6px var(--accent-light); }
+
+.tab, .tabs { user-select:none; }
+.tabs { display:flex; gap:6px; margin-bottom:14px; overflow-x:auto; padding:4px; scrollbar-width:none; background: var(--card-bg); border-radius:16px; border:1px solid var(--border); box-shadow: var(--shadow); }
 .tabs::-webkit-scrollbar { display:none; }
-.tab {
-    flex:1; min-width:48px; padding:10px 6px; border-radius:11px; border:none;
-    background:transparent; color:var(--text-muted); font-weight:800; font-size:0.85rem;
-    cursor:pointer; font-family:inherit;
-    display:flex; flex-direction:column; align-items:center; gap:2px; position:relative;
-    transition:background 0.15s ease, color 0.15s ease;
-}
+.tab { flex:1; min-width:48px; padding:10px 6px; border-radius:11px; border:none; background:transparent; color: var(--text-muted); font-weight:800; font-size:0.85rem; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:2px; position:relative; }
 .tab .tab-day { font-size:0.65rem; font-weight:700; opacity:0.7; }
-.tab.active { background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent))); color:white; }
-[data-theme="cosmic"] .tab.active { background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent))); color:#1a1030; }
+.tab.active { background: linear-gradient(135deg, var(--accent), var(--accent2)); color:white; box-shadow: 0 3px 10px var(--accent-light); }
 .tab.active .tab-day { opacity:0.9; }
-.tab.today:not(.active)::after {
-    content:""; position:absolute; bottom:3px; left:50%; transform:translateX(-50%);
-    width:4px; height:4px; border-radius:50%; background:var(--accent);
-}
+.tab.today:not(.active)::after { content:""; position:absolute; bottom:3px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background: var(--accent); }
 
-/* === LIVE BANNER === */
-.live-banner {
-    border-radius:16px; padding:14px 16px; margin-bottom:14px;
-    display:flex; align-items:center; gap:12px; box-shadow:var(--shadow);
-    border:1px solid var(--border);
-    animation:fadeIn 0.3s ease;
-}
-@keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
-.live-banner.now { background:linear-gradient(135deg,var(--accent-light),var(--card-bg)); box-shadow:0 6px 20px var(--accent-light); }
-.live-banner.before { background:linear-gradient(135deg,var(--orange-soft),var(--card-bg)); }
-.live-dot { width:10px; height:10px; border-radius:50%; background:var(--accent); flex-shrink:0;
-    animation:pulse 1.6s infinite; }
-.live-banner.before .live-dot { background:var(--orange); }
-@keyframes pulse {
-    0%,100% { box-shadow:0 0 0 0 var(--green); }
-    70% { box-shadow:0 0 0 10px transparent; }
-}
+.live-banner { border-radius:16px; padding:14px 16px; margin-bottom:14px; display:flex; align-items:center; gap:12px; box-shadow: var(--shadow); border:1px solid var(--border); background: var(--card-bg); }
+.live-banner.now, .live-banner.before { background: linear-gradient(135deg, var(--accent-light), var(--card-bg)); border:1.5px solid var(--accent); }
+.live-dot { width:10px; height:10px; border-radius:50%; background: var(--accent); flex-shrink:0; animation: pulseDot 1.6s infinite; }
+@keyframes pulseDot { 0%,100%{box-shadow:0 0 0 0 var(--accent)} 70%{box-shadow:0 0 0 10px transparent} }
 .live-info { flex:1; min-width:0; }
-.live-label { font-size:0.7rem; font-weight:800; text-transform:uppercase;
-    letter-spacing:0.08em; color:var(--accent); margin-bottom:3px; }
-.live-banner.before .live-label { color:var(--orange); }
-.live-lesson { font-size:1.02rem; font-weight:800;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.live-time { font-size:0.76rem; color:var(--text-muted); font-weight:700; margin-top:2px; }
-.progress-bar { height:4px; border-radius:2px; background:var(--border); overflow:hidden; margin-top:7px; }
-.progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2,var(--accent))); border-radius:2px; }
+.live-label { font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color: var(--accent); margin-bottom:3px; }
+.live-lesson { font-size:1.02rem; font-weight:800; color: var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.live-time { font-size:0.76rem; color: var(--text-muted); font-weight:700; margin-top:2px; }
+.live-timer { color: var(--accent); font-weight:800; }
+.progress-bar { height:4px; border-radius:2px; background: var(--border); overflow:hidden; margin-top:7px; }
+.progress-fill { height:100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius:2px; }
 
-/* === DAY / CARDS === */
 .day-block { display:none; }
 .day-block.active-day { display:block; }
-.day-title {
-    font-size:1.12rem; font-weight:800; color:var(--text-muted); margin-bottom:12px;
-    padding-left:6px; display:flex; justify-content:space-between; align-items:center;
-}
-.day-title.today { color:var(--text-main); }
-.today-pill {
-    font-size:0.68rem; background:var(--accent-light); color:var(--today-badge);
-    padding:5px 11px; border-radius:20px; font-weight:800; text-transform:uppercase;
-}
-.card {
-    background:var(--card-bg); padding:16px 18px; margin-bottom:10px; border-radius:16px;
-    box-shadow:var(--shadow); display:flex; align-items:center; gap:14px;
-    border:1px solid var(--border);
-    animation:fadeUp 0.3s ease backwards;
-}
-@keyframes fadeUp {
-    from { opacity:0; transform:translateY(8px); }
-    to { opacity:1; transform:none; }
-}
-.card:nth-child(2) { animation-delay:0.03s; }
-.card:nth-child(3) { animation-delay:0.06s; }
-.card:nth-child(4) { animation-delay:0.09s; }
-.card:nth-child(5) { animation-delay:0.12s; }
-.card:nth-child(6) { animation-delay:0.15s; }
-.card:nth-child(7) { animation-delay:0.18s; }
-.card:nth-child(8) { animation-delay:0.21s; }
-.card.now {
-    box-shadow:0 6px 24px var(--accent-light), 0 0 0 1.5px var(--accent);
-    background:linear-gradient(135deg,var(--accent-light),var(--card-bg));
-}
-.card.next-up { box-shadow:0 6px 20px var(--orange-soft), 0 0 0 1px var(--orange); }
-.num {
-    min-width:38px; height:38px; border-radius:11px;
-    background:var(--num-bg); color:var(--num-color);
-    display:flex; align-items:center; justify-content:center;
-    font-weight:800; font-size:1.05rem; flex-shrink:0;
-    box-shadow:var(--num-shadow);
-}
-.card.now .num { background:linear-gradient(135deg,var(--accent),var(--accent)); color:#fff; box-shadow:0 4px 14px var(--accent-light); }
+.day-title { font-size:1.12rem; font-weight:800; color: var(--text-muted); margin-bottom:12px; padding-left:6px; display:flex; justify-content:space-between; align-items:center; }
+.day-title.today { color: var(--text-main); }
+.today-pill { font-size:0.68rem; background: var(--accent-light); color: var(--accent); padding:5px 11px; border-radius:20px; font-weight:800; text-transform:uppercase; }
+.card { background: var(--card-bg); padding:16px 18px; margin-bottom:10px; border-radius:16px; box-shadow: var(--shadow); display:flex; align-items:center; gap:14px; border:1px solid var(--border); }
+.card.now { box-shadow: 0 6px 24px var(--accent-light), 0 0 0 1.5px var(--accent); background: linear-gradient(135deg, var(--accent-light), var(--card-bg)); }
+.card.next-up { box-shadow: 0 6px 20px var(--orange-soft), 0 0 0 1px var(--orange); }
+.num { min-width:40px; height:40px; border-radius:11px; background: var(--num-bg); color: var(--num-color); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.05rem; flex-shrink:0; box-shadow: var(--num-shadow); }
+.card.now .num { background: linear-gradient(135deg, var(--accent), var(--accent2)); color:#fff; }
 .left-side { display:flex; flex-direction:column; gap:3px; flex-grow:1; min-width:0; }
-.time { font-size:0.8rem; color:var(--text-muted); font-weight:700; }
-.lesson { font-size:1.05rem; font-weight:800; color:var(--text-main); word-wrap:break-word; }
-.now-pill {
-    font-size:0.6rem; background:var(--accent); color:#fff;
-    padding:3px 8px; border-radius:20px; font-weight:800;
-    text-transform:uppercase; letter-spacing:0.06em;
-    margin-left:auto; flex-shrink:0;
-}
-.error { background:rgba(224,49,49,0.1); color:var(--error); padding:16px; border-radius:16px; font-weight:700; text-align:center; }
-.info-box {
-    background:var(--card-bg); padding:28px 20px; border-radius:18px; box-shadow:var(--shadow);
-    text-align:center; font-size:1.02rem; font-weight:700; color:var(--text-muted);
-    border:1px solid var(--border);
-}
-.sheet-link { margin-bottom: 0 !important;
-    display:flex; align-items:center; justify-content:center; gap:8px;
-    text-align:center; margin-top:22px;
-    color: var(--accent);
-    text-decoration:none; font-size:0.85rem; font-weight:800;
-    padding:13px 16px; border-radius:14px;
-    border: 1.5px solid var(--accent);
-    background: linear-gradient(135deg, var(--accent-light), var(--card-bg));
-    box-shadow: 0 4px 14px var(--accent-light), inset 0 1px 0 rgba(255,255,255,0.5);
-    transition: transform 0.12s, box-shadow 0.15s;
-}
-.sheet-link:active {
-    transform: scale(0.97);
-    box-shadow: 0 2px 8px var(--accent-light);
-}
-.sheet-link .sheet-icon {
-    font-size:1.05rem;
-    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15));
-}
-
-/* Тёмные темы — особый стиль */
-[data-theme="dark"] .sheet-link,
-[data-theme="cosmic"] .sheet-link { margin-bottom: 0 !important;
-    background: linear-gradient(135deg, var(--accent-light), var(--card-bg));
-    border-color: var(--accent);
-    box-shadow: 0 4px 16px var(--accent-light), inset 0 1px 0 rgba(255,255,255,0.06);
-}
-
-/* Космос — со свечением */
-[data-theme="cosmic"] .sheet-link { margin-bottom: 0 !important;
-    box-shadow: 0 4px 20px rgba(183,148,246,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
-}
-
-html.font-small .lesson { font-size:0.9rem; }
-html.font-small .live-lesson { font-size:0.92rem; }
-html.font-large .lesson { font-size:1.18rem; }
-html.font-large .live-lesson { font-size:1.16rem; }
-html.font-large .day-title { font-size:1.28rem; }
-html.compact .card { padding:11px 14px; margin-bottom:7px; }
-html.compact .num { min-width:34px; height:34px; font-size:0.9rem; }
-html.compact .header-card { padding:14px 18px; }
-/* ========== ТЕМАТИЧЕСКИЕ НАСТРОЙКИ ========== */
-
-/* ОБЩЕЕ — базовое скругление для кнопок-тем */
-.theme-btn, .size-btn { position:relative; overflow:hidden; }
-
-/* === КОСМОС — светящиеся плашки === */
-[data-theme="cosmic"] .theme-btn {
-    background:rgba(30,20,65,0.75);
-    border-color:rgba(183,148,246,0.3);
-    border-radius:50%;
-    aspect-ratio:1;
-    padding:8px 4px;
-}
-[data-theme="cosmic"] .theme-btn.active {
-    border-color:#b794f6;
-    background:linear-gradient(135deg,#b794f6,#7cf5c0);
-    color:#1a1030;
-}
-[data-theme="cosmic"] .theme-btn:not(.active) { color:#a89cc7; }
-[data-theme="cosmic"] .size-btn {
-    background:rgba(30,20,65,0.75);
-    border-color:rgba(183,148,246,0.3);
-    border-radius:50%;
-}
-[data-theme="cosmic"] .size-btn.active {
-    border-color:#b794f6;
-    background:linear-gradient(135deg,#b794f6,#7cf5c0);
-    color:#1a1030;
-}
-[data-theme="cosmic"] .toggle { background:rgba(183,148,246,0.25); }
-[data-theme="cosmic"] .toggle.on {
-    background:linear-gradient(135deg,#b794f6,#7cf5c0);
-}
-
-/* === ОКЕАН — пузырьки с бликом === */
-[data-theme="ocean"] .theme-btn {
-    border-radius:50% !important;
-    aspect-ratio:1;
-    padding:8px 4px;
-    background:radial-gradient(circle at 30% 25%, rgba(255,255,255,0.95), rgba(34,211,238,0.45) 55%, rgba(8,145,178,0.7));
-    border:2px solid rgba(255,255,255,0.85);
-    box-shadow:0 3px 10px rgba(8,145,178,0.3), inset -3px -4px 8px rgba(8,145,178,0.25), inset 3px 3px 10px rgba(255,255,255,0.7);
-    color:#0e7490;
-}
-[data-theme="ocean"] .theme-btn::before {
-    content:""; position:absolute; top:5px; left:8px;
-    width:11px; height:6px; border-radius:50%;
-    background:rgba(255,255,255,0.9);
-    pointer-events:none;
-}
-[data-theme="ocean"] .theme-btn.active {
-    border-color:#fff;
-    background:radial-gradient(circle at 30% 25%, #fff, #22d3ee 55%, #0891b2);
-    box-shadow:0 0 0 3px rgba(255,255,255,0.4), 0 4px 14px rgba(8,145,178,0.5);
-}
-[data-theme="ocean"] .size-btn {
-    border-radius:50% !important;
-    background:radial-gradient(circle at 30% 25%, rgba(255,255,255,0.95), rgba(34,211,238,0.45) 55%, rgba(8,145,178,0.7));
-    border:2px solid rgba(255,255,255,0.85);
-    box-shadow:0 3px 10px rgba(8,145,178,0.3), inset -3px -4px 8px rgba(8,145,178,0.25), inset 3px 3px 10px rgba(255,255,255,0.7);
-    color:#0e7490;
-}
-[data-theme="ocean"] .size-btn.active { border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,0.4), 0 4px 14px rgba(8,145,178,0.5); }
-[data-theme="ocean"] .toggle { background:rgba(8,145,178,0.2); }
-[data-theme="ocean"] .toggle.on { background:linear-gradient(135deg,#22d3ee,#0891b2); }
-[data-theme="ocean"] .settings-panel { background:rgba(255,255,255,0.97); }
-
-/* === ЗАКАТ — тёплые градиентные кнопки === */
-[data-theme="sunset"] .theme-btn {
-    background:linear-gradient(135deg,#ffe4b8,#ffb572);
-    border-color:rgba(249,115,22,0.2);
-    color:#7c2d12;
-    border-radius:14px 14px 14px 4px;
-    box-shadow:0 3px 10px rgba(249,115,22,0.18);
-}
-[data-theme="sunset"] .theme-btn.active {
-    background:linear-gradient(135deg,#f97316,#ec4899);
-    color:white; border-color:transparent;
-    box-shadow:0 4px 14px rgba(249,115,22,0.45), 0 0 0 2px rgba(255,255,255,0.5);
-}
-[data-theme="sunset"] .size-btn {
-    background:linear-gradient(135deg,#ffe4b8,#ffb572);
-    border-color:rgba(249,115,22,0.2);
-    color:#7c2d12;
-    border-radius:14px 14px 14px 4px;
-}
-[data-theme="sunset"] .size-btn.active {
-    background:linear-gradient(135deg,#f97316,#ec4899);
-    color:white; border-color:transparent;
-    box-shadow:0 4px 14px rgba(249,115,22,0.45);
-}
-[data-theme="sunset"] .toggle.on { background:linear-gradient(135deg,#f97316,#ec4899); }
-[data-theme="sunset"] .settings-panel { background:rgba(255,251,245,0.98); }
-
-/* === ЛЕС — листочки (асимметричные скругления) === */
-[data-theme="forest"] .theme-btn {
-    background:linear-gradient(135deg,rgba(220,245,210,0.9),rgba(132,204,22,0.4));
-    border-color:rgba(5,150,105,0.25);
-    color:#064e3b;
-    border-radius:24px 8px 24px 8px;
-    box-shadow:0 3px 10px rgba(5,150,105,0.15);
-}
-[data-theme="forest"] .theme-btn.active {
-    background:linear-gradient(135deg,#059669,#84cc16);
-    color:white; border-color:transparent;
-    box-shadow:0 4px 14px rgba(5,150,105,0.4), 0 0 0 2px rgba(255,255,255,0.5);
-}
-[data-theme="forest"] .size-btn {
-    background:linear-gradient(135deg,rgba(220,245,210,0.9),rgba(132,204,22,0.4));
-    border-color:rgba(5,150,105,0.25);
-    color:#064e3b;
-    border-radius:24px 8px 24px 8px;
-}
-[data-theme="forest"] .size-btn.active {
-    background:linear-gradient(135deg,#059669,#84cc16);
-    color:white; border-color:transparent;
-    box-shadow:0 4px 14px rgba(5,150,105,0.4);
-}
-[data-theme="forest"] .toggle.on { background:linear-gradient(135deg,#059669,#84cc16); }
-[data-theme="forest"] .settings-panel { background:rgba(255,255,255,0.97); }
-
-/* === САКУРА — лепестки (мягкие круглые) === */
-[data-theme="sakura"] .theme-btn {
-    background:radial-gradient(circle at 30% 25%, #fff, #ffd0dd 60%, #f9a8d4);
-    border-color:rgba(236,72,153,0.15);
-    color:#831843;
-    border-radius:50% 50% 50% 12px;
-    aspect-ratio:1;
-    padding:8px 4px;
-    box-shadow:0 3px 10px rgba(236,72,153,0.2);
-}
-[data-theme="sakura"] .theme-btn::before {
-    content:""; position:absolute; top:6px; left:50%;
-    transform:translateX(-50%);
-    width:14px; height:4px;
-    background:rgba(255,255,255,0.9);
-    border-radius:50%;
-    filter:blur(2px);
-    pointer-events:none;
-}
-[data-theme="sakura"] .theme-btn.active {
-    background:radial-gradient(circle at 30% 25%, #fff, #ec4899 60%, #a855f7);
-    color:white; border-color:transparent;
-    box-shadow:0 4px 14px rgba(236,72,153,0.45), 0 0 0 2px rgba(255,255,255,0.5);
-}
-[data-theme="sakura"] .size-btn {
-    background:radial-gradient(circle at 30% 25%, #fff, #ffd0dd 60%, #f9a8d4);
-    border-color:rgba(236,72,153,0.15);
-    color:#831843;
-    border-radius:50% 50% 50% 12px;
-}
-[data-theme="sakura"] .size-btn.active {
-    background:radial-gradient(circle at 30% 25%, #fff, #ec4899 60%, #a855f7);
-    color:white; border-color:transparent;
-    box-shadow:0 4px 14px rgba(236,72,153,0.45);
-}
-[data-theme="sakura"] .toggle.on { background:linear-gradient(135deg,#ec4899,#a855f7); }
-[data-theme="sakura"] .settings-panel { background:rgba(255,255,255,0.97); }
-
-/* === СВЕТЛАЯ / ТЁМНАЯ — чистый минимализм === */
-[data-theme="light"] .theme-btn,
-[data-theme="dark"] .theme-btn {
-    border-radius:12px;
-}
-
-/* ========== ТЕМАТИЧЕСКАЯ ШАПКА ========== */
-
-/* === КОСМОС — космическая станция === */
-[data-theme="cosmic"] .header-card {
-    background:rgba(30,20,65,0.85);
-    border-color:rgba(183,148,246,0.28);
-}
-[data-theme="cosmic"] .badge-class {
-    background:linear-gradient(135deg,rgba(183,148,246,0.35),rgba(124,245,192,0.2));
-    color:#ece6ff;
-    border:1px solid rgba(183,148,246,0.4);
-    border-radius:50%;
-    width:42px; height:42px;
-    padding:0; display:flex; align-items:center; justify-content:center;
-    font-size:0.9rem;
-}
-[data-theme="cosmic"] .icon-btn {
-    background:linear-gradient(135deg,rgba(183,148,246,0.3),rgba(124,245,192,0.2));
-    color:#ece6ff;
-    border:1px solid rgba(183,148,246,0.4);
-    border-radius:50%;
-}
-[data-theme="cosmic"] .icon-btn:active { background:linear-gradient(135deg,#b794f6,#7cf5c0); color:#1a1030; }
-
-/* === ОКЕАН — пузыри с бликом, лёгкое парение === */
-[data-theme="ocean"] .header-card {
-    background:rgba(255,255,255,0.55);
-    border:2px solid rgba(255,255,255,0.8);
-    box-shadow:0 8px 24px rgba(8,145,178,0.18), inset 0 2px 12px rgba(255,255,255,0.85);
-}
-[data-theme="ocean"] .badge-class {
-    background:radial-gradient(circle at 30% 25%, rgba(255,255,255,0.95), rgba(34,211,238,0.5) 55%, rgba(8,145,178,0.8));
-    color:#fff;
-    border:2px solid rgba(255,255,255,0.9);
-    border-radius:50%;
-    width:44px; height:44px;
-    padding:0; display:flex; align-items:center; justify-content:center;
-    font-size:0.95rem;
-    box-shadow:0 3px 12px rgba(8,145,178,0.35), inset -3px -4px 8px rgba(8,145,178,0.25), inset 3px 3px 10px rgba(255,255,255,0.75);
-    position:relative;
-    animation:floaty 4s ease-in-out infinite;
-}
-[data-theme="ocean"] .badge-class::before {
-    content:""; position:absolute; top:6px; left:8px;
-    width:14px; height:7px; border-radius:50%;
-    background:rgba(255,255,255,0.9);
-    pointer-events:none;
-}
-[data-theme="ocean"] .icon-btn {
-    background:radial-gradient(circle at 30% 25%, rgba(255,255,255,0.95), rgba(34,211,238,0.5) 55%, rgba(8,145,178,0.8));
-    color:#fff;
-    border:2px solid rgba(255,255,255,0.9);
-    border-radius:50%;
-    box-shadow:0 3px 12px rgba(8,145,178,0.35), inset -3px -4px 8px rgba(8,145,178,0.25), inset 3px 3px 10px rgba(255,255,255,0.75);
-    position:relative;
-    animation:floaty 5s ease-in-out infinite;
-}
-[data-theme="ocean"] .icon-btn::before {
-    content:""; position:absolute; top:6px; left:8px;
-    width:12px; height:6px; border-radius:50%;
-    background:rgba(255,255,255,0.9);
-    pointer-events:none;
-}
-[data-theme="ocean"] .icon-btn:active {
-    animation:none;
-    box-shadow:0 0 0 3px rgba(255,255,255,0.5), 0 2px 8px rgba(8,145,178,0.4);
-}
-@keyframes floaty {
-    0%,100% { transform:translate3d(0,0,0); }
-    50% { transform:translate3d(0,-3px,0); }
-}
-
-/* === ЗАКАТ — тёплые асимметричные формы === */
-[data-theme="sunset"] .header-card {
-    background:rgba(255,251,245,0.92);
-    border:1px solid rgba(249,115,22,0.2);
-    border-radius:24px 24px 24px 8px;
-}
-[data-theme="sunset"] .badge-class {
-    background:linear-gradient(135deg,#f97316,#ec4899);
-    color:white;
-    border:none;
-    border-radius:14px 14px 14px 4px;
-}
-[data-theme="sunset"] .icon-btn {
-    background:linear-gradient(135deg,#f97316,#ec4899);
-    color:white;
-    border:none;
-    border-radius:14px 14px 4px 14px;
-}
-[data-theme="sunset"] .icon-btn:active { opacity:0.85; }
-
-/* === ЛЕС — листики === */
-[data-theme="forest"] .header-card {
-    background:rgba(255,255,255,0.9);
-    border:1px solid rgba(5,150,105,0.2);
-    border-radius:28px 12px 28px 12px;
-}
-[data-theme="forest"] .badge-class {
-    background:linear-gradient(135deg,#059669,#84cc16);
-    color:white;
-    border:none;
-    border-radius:24px 8px 24px 8px;
-}
-[data-theme="forest"] .icon-btn {
-    background:linear-gradient(135deg,#059669,#84cc16);
-    color:white;
-    border:none;
-    border-radius:24px 8px 24px 8px;
-}
-[data-theme="forest"] .icon-btn:active { opacity:0.85; }
-
-/* === САКУРА — лепестки === */
-[data-theme="sakura"] .header-card {
-    background:rgba(255,255,255,0.9);
-    border:2px solid rgba(236,72,153,0.15);
-    border-radius:26px;
-}
-[data-theme="sakura"] .badge-class {
-    background:radial-gradient(circle at 30% 25%, #fff, #ec4899 60%, #a855f7);
-    color:white;
-    border:none;
-    border-radius:50% 50% 50% 12px;
-    width:44px; height:44px;
-    padding:0; display:flex; align-items:center; justify-content:center;
-    font-size:0.95rem;
-    box-shadow:0 3px 12px rgba(236,72,153,0.3);
-    position:relative;
-}
-[data-theme="sakura"] .badge-class::before {
-    content:""; position:absolute; top:6px; left:50%;
-    transform:translateX(-50%);
-    width:14px; height:4px;
-    background:rgba(255,255,255,0.9);
-    border-radius:50%;
-    filter:blur(2px);
-    pointer-events:none;
-}
-[data-theme="sakura"] .icon-btn {
-    background:radial-gradient(circle at 30% 25%, #fff, #ec4899 60%, #a855f7);
-    color:white;
-    border:none;
-    border-radius:50% 50% 50% 12px;
-    box-shadow:0 3px 12px rgba(236,72,153,0.3);
-    position:relative;
-}
-[data-theme="sakura"] .icon-btn::before {
-    content:""; position:absolute; top:6px; left:50%;
-    transform:translateX(-50%);
-    width:12px; height:4px;
-    background:rgba(255,255,255,0.9);
-    border-radius:50%;
-    filter:blur(2px);
-    pointer-events:none;
-}
-[data-theme="sakura"] .icon-btn:active { opacity:0.85; }
-
-/* === НОВЫЕ ТЕМЫ === */
-/* === ЧЁТКОЕ КОЛЬЦО У АКТИВНОЙ (видно во всех темах) === */
-
-
-/* Новые темы: базовый стиль кнопок */
-
-/* === АКТИВНАЯ КНОПКА — чёткий бордер без прослойки === */
-.theme-btn.active,
-.size-btn.active {
-    border: 3px solid var(--accent) !important;
-    outline: none !important;
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-    color: #fff !important;
-    font-weight: 800 !important;
-}
-[data-theme="sakura"] .theme-btn.active,
-[data-theme="sakura"] .size-btn.active,
-/* Убираем aspect-ratio — border больше не обрезается */
-[data-theme="ocean"] .theme-btn,
-[data-theme="sakura"] .theme-btn,
-[data-theme="cosmic"] .theme-btn,
-[data-theme="ocean"] .size-btn,
-[data-theme="sakura"] .size-btn,
-[data-theme="cosmic"] .size-btn { aspect-ratio: auto !important; }
-
-/* === НОВЫЕ 5 ТЕМ === */
-
-/* 💎 Бирюза */
-/* 🍑 Персик */
-/* 🌺 Магнолия */
-/* 🔥 Огонь */
-/* 🌈 Радуга */
-
-/* === АКТИВНАЯ КНОПКА ТЕМЫ: чистое кольцо без прослоек === */
-.theme-btn.active,
-.size-btn.active {
-    box-shadow: 0 0 0 3px var(--accent), 0 4px 14px var(--accent-light) !important;
-    border-color: transparent !important;
-}
-/* В светлых темах (Океан/Сакура/Закат/Лес) — только ring + заливка через тему */
-[data-theme="ocean"] .theme-btn.active,
-[data-theme="sunset"] .theme-btn.active,
-[data-theme="forest"] .theme-btn.active,
-[data-theme="sakura"] .theme-btn.active { box-shadow: 0 0 0 3px var(--accent), 0 4px 16px var(--accent-light) !important; }
-
-/* Убираем aspect-ratio (обрезало кольцо) */
-[data-theme="ocean"] .theme-btn,
-[data-theme="sakura"] .theme-btn,
-[data-theme="cosmic"] .theme-btn,
-[data-theme="ocean"] .size-btn,
-[data-theme="sakura"] .size-btn,
-[data-theme="cosmic"] .size-btn { aspect-ratio: auto !important; }
-
-/* === УЛУЧШЕНИЯ 7 ТЕМ === */
-
-/* СВЕТЛАЯ — мягкие тени */
-[data-theme="light"] .header-card { box-shadow: 0 6px 20px rgba(99,102,241,0.08); }
-[data-theme="light"] .card { border-color: rgba(99,102,241,0.06); }
-
-/* ТЁМНАЯ — глянцевые карточки */
-[data-theme="dark"] .card { border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04); }
-[data-theme="dark"] .header-card { border: 1px solid rgba(255,255,255,0.09); box-shadow: 0 6px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05); }
-
-/* КОСМОС — насыщенней туманности и свечение */
-[data-theme="cosmic"] .header-card {
-    border:1px solid rgba(183,148,246,0.35);
-    box-shadow:0 8px 32px rgba(120,60,220,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
-}
-[data-theme="cosmic"] .card {
-    border:1px solid rgba(183,148,246,0.28);
-    box-shadow:0 6px 22px rgba(120,60,220,0.28), inset 0 1px 0 rgba(255,255,255,0.06);
-}
-
-/* ОКЕАН — волны снизу + блики */
-[data-theme="ocean"] .card {
-    background:rgba(255,255,255,0.96);
-    border:1px solid rgba(34,211,238,0.25);
-    box-shadow:0 4px 16px rgba(8,145,178,0.14), inset 0 1px 0 rgba(255,255,255,0.9);
-}
-[data-theme="ocean"] .header-card {
-    border:2px solid rgba(255,255,255,0.85);
-    box-shadow:0 8px 28px rgba(8,145,178,0.22), inset 0 2px 14px rgba(255,255,255,0.85);
-}
-
-/* ЗАКАТ — тёплое свечение снизу */
-[data-theme="sunset"] .card {
-    background:rgba(255,252,245,0.96);
-    border:1px solid rgba(249,115,22,0.18);
-    box-shadow:0 4px 16px rgba(249,115,22,0.16), inset 0 1px 0 rgba(255,255,255,0.9);
-}
-[data-theme="sunset"] .header-card {
-    border:1px solid rgba(249,115,22,0.22);
-    box-shadow:0 6px 24px rgba(249,115,22,0.2);
-}
-
-/* ЛЕС — органичные тени */
-[data-theme="forest"] .card {
-    background:rgba(255,255,255,0.96);
-    border:1px solid rgba(5,150,105,0.2);
-    box-shadow:0 4px 16px rgba(5,150,105,0.14), inset 0 1px 0 rgba(255,255,255,0.9);
-}
-[data-theme="forest"] .header-card {
-    border:1px solid rgba(5,150,105,0.2);
-    box-shadow:0 6px 24px rgba(5,150,105,0.18);
-}
-
-/* САКУРА — лепестковое свечение */
-[data-theme="sakura"] .card {
-    background:rgba(255,255,255,0.96);
-    border:1px solid rgba(236,72,153,0.16);
-    box-shadow:0 4px 16px rgba(236,72,153,0.14), inset 0 1px 0 rgba(255,255,255,0.9);
-}
-[data-theme="sakura"] .header-card {
-    border:2px solid rgba(236,72,153,0.18);
-    box-shadow:0 6px 24px rgba(236,72,153,0.18);
-}
-
-/* === КРАСОТА — без тормозов === */
-
-/* Атмосферные фоны для каждой темы */
-[data-theme="light"] body {
-    background-image:
-        radial-gradient(ellipse at 20% 10%, rgba(99,102,241,0.15), transparent 45%),
-        radial-gradient(ellipse at 80% 90%, rgba(168,85,247,0.10), transparent 45%),
-        linear-gradient(180deg,#f1f5fa 0%,#e4ebf3 100%);
-}
-[data-theme="dark"] body {
-    background-image:
-        radial-gradient(ellipse at 20% 10%, rgba(99,102,241,0.18), transparent 45%),
-        radial-gradient(ellipse at 80% 90%, rgba(192,132,252,0.12), transparent 45%),
-        linear-gradient(180deg,#10131a 0%,#0b0d12 100%);
-}
-[data-theme="cosmic"] body {
-    background-image:
-        radial-gradient(ellipse at 20% 15%, rgba(139,92,246,0.32), transparent 45%),
-        radial-gradient(ellipse at 85% 75%, rgba(56,189,248,0.22), transparent 50%),
-        radial-gradient(ellipse at 60% 40%, rgba(124,245,192,0.10), transparent 55%),
-        linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%);
-}
-[data-theme="ocean"] body {
-    background-image:
-        radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.55), transparent 50%),
-        radial-gradient(ellipse at 20% 80%, rgba(34,211,238,0.25), transparent 50%),
-        linear-gradient(180deg,#c7e8f5 0%,#94d0e6 45%,#5aafd0 100%);
-}
-[data-theme="sunset"] body {
-    background-image:
-        radial-gradient(circle at 75% 25%, rgba(255,240,180,0.55), transparent 30%),
-        radial-gradient(circle at 75% 25%, rgba(255,180,90,0.4), transparent 45%),
-        linear-gradient(180deg,#ffe0a8 0%,#ffb572 40%,#e88898 100%);
-}
-[data-theme="forest"] body {
-    background-image:
-        radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.5), transparent 45%),
-        radial-gradient(ellipse at 15% 85%, rgba(132,204,22,0.22), transparent 50%),
-        linear-gradient(180deg,#dff0d0 0%,#b8dfa8 40%,#7abb6c 100%);
-}
-[data-theme="sakura"] body {
-    background-image:
-        radial-gradient(ellipse at 85% 15%, rgba(255,180,215,0.7), transparent 45%),
-        radial-gradient(ellipse at 15% 80%, rgba(220,180,255,0.5), transparent 45%),
-        linear-gradient(180deg,#ffeaf0 0%,#ffd0dd 50%,#ffb0c8 100%);
-}
-
-/* Космос — звёзды поверх фона */
-[data-theme="cosmic"] body::before {
-    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
-    background-image:
-        radial-gradient(1.5px 1.5px at 24px 32px, rgba(255,255,255,0.95), transparent 60%),
-        radial-gradient(1px 1px at 118px 88px, rgba(255,255,255,0.8), transparent 60%),
-        radial-gradient(2px 2px at 210px 156px, rgba(183,148,246,1), transparent 60%),
-        radial-gradient(1px 1px at 60px 200px, rgba(255,255,255,0.7), transparent 60%),
-        radial-gradient(1.5px 1.5px at 260px 40px, rgba(124,245,192,1), transparent 60%),
-        radial-gradient(1.2px 1.2px at 180px 240px, rgba(255,255,255,0.85), transparent 60%),
-        radial-gradient(1px 1px at 340px 100px, rgba(255,255,255,0.65), transparent 60%),
-        radial-gradient(1.8px 1.8px at 90px 130px, rgba(183,148,246,0.9), transparent 60%),
-        radial-gradient(1px 1px at 400px 300px, rgba(255,255,255,0.75), transparent 60%),
-        radial-gradient(1.3px 1.3px at 30px 340px, rgba(124,245,192,0.85), transparent 60%);
-    background-size:460px 380px; background-repeat:repeat;
-    
-}
- 100% { opacity:1; } }
-
-/* Океан — волны снизу */
-[data-theme="ocean"] body::before {
-    content:""; position:fixed; left:0; right:0; bottom:0;
-    height:160px; z-index:0; pointer-events:none;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 160' preserveAspectRatio='none'><path d='M0,80 Q75,40 150,80 T300,80 T450,80 T600,80 L600,160 L0,160 Z' fill='%230891b2' opacity='0.3'/><path d='M0,110 Q75,70 150,110 T300,110 T450,110 T600,110 L600,160 L0,160 Z' fill='%2306b6d4' opacity='0.45'/><path d='M0,135 Q75,105 150,135 T300,135 T450,135 T600,135 L600,160 L0,160 Z' fill='%23064a5c' opacity='0.5'/></svg>");
-    background-size:100% 100%; background-repeat:repeat-x;
-}
-[data-theme="ocean"] body::after {
-    content:""; position:fixed; top:40px; right:30px;
-    width:120px; height:120px; border-radius:50%; z-index:0; pointer-events:none;
-    background:radial-gradient(circle, rgba(255,255,255,0.5), transparent 70%);
-    
-}
- to { transform:translateY(-10px); } }
-
-/* Закат — пульсирующее солнце */
-[data-theme="sunset"] body::before {
-    content:""; position:fixed; top:60px; right:50px;
-    width:160px; height:160px; border-radius:50%; z-index:0; pointer-events:none;
-    background:radial-gradient(circle, rgba(255,250,200,0.9) 0%, rgba(255,200,120,0.5) 40%, transparent 70%);
-    
-}
-
-    50% { transform:scale(1.08); opacity:1; }
-}
-
-/* Лес — силуэты ёлок снизу */
-[data-theme="forest"] body::before {
-    content:""; position:fixed; left:0; right:0; bottom:0;
-    height:150px; z-index:0; pointer-events:none;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 150' preserveAspectRatio='none'><g fill='%232d5a1f' opacity='0.55'><path d='M30,150 L30,100 L15,100 L40,65 L65,100 L50,100 L50,150 Z'/><path d='M110,150 L110,90 L90,90 L120,50 L150,90 L130,90 L130,150 Z'/><path d='M200,150 L200,110 L185,110 L210,75 L235,110 L220,110 L220,150 Z'/><path d='M290,150 L290,95 L270,95 L300,55 L330,95 L310,95 L310,150 Z'/><path d='M370,150 L370,105 L355,105 L380,70 L405,105 L390,105 L390,150 Z'/></g></svg>");
-    background-size:100% 100%; background-repeat:repeat-x;
-}
-
-/* Сакура — розовые пятна */
-[data-theme="sakura"] body::before {
-    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
-    background-image:
-        radial-gradient(circle at 15% 20%, rgba(236,72,153,0.18), transparent 25%),
-        radial-gradient(circle at 85% 15%, rgba(255,150,200,0.2), transparent 30%),
-        radial-gradient(circle at 75% 75%, rgba(236,72,153,0.12), transparent 30%),
-        radial-gradient(circle at 25% 85%, rgba(255,192,220,0.18), transparent 25%);
-    
-}
- to { transform:translateY(-8px); } }
-
-/* Частицы (JS создаёт) */
-#particles { position:fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden; }
-.particle {
-    position:absolute; top:-40px; user-select:none;
-    animation-name:fall; animation-timing-function:linear; animation-iteration-count:infinite;
-    will-change:transform;
-}
-@keyframes fall {
-    0% { transform:translate3d(0,-40px,0) rotate(0deg); opacity:0; }
-    10% { opacity:0.85; }
-    90% { opacity:0.85; }
-    100% { transform:translate3d(30px,110vh,0) rotate(360deg); opacity:0; }
-}
-
-/* Улучшенные тени карточек */
-.card {
-    box-shadow: 0 3px 14px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.03);
-}
-[data-theme="cosmic"] .card {
-    box-shadow: 0 4px 20px rgba(120,60,220,0.25), 0 0 0 1px rgba(183,148,246,0.15);
-}
-[data-theme="ocean"] .card {
-    box-shadow: 0 3px 14px rgba(8,145,178,0.14);
-}
-[data-theme="sunset"] .card {
-    box-shadow: 0 3px 14px rgba(249,115,22,0.14);
-}
-[data-theme="forest"] .card {
-    box-shadow: 0 3px 14px rgba(5,150,105,0.12);
-}
-[data-theme="sakura"] .card {
-    box-shadow: 0 3px 14px rgba(236,72,153,0.12);
-}
-
-/* Логотип: лёгкая тень */
-.brand-logo { box-shadow:0 4px 14px var(--accent-light, rgba(0,0,0,0.08)); }
-[data-theme="cosmic"] .brand-logo { box-shadow:0 4px 18px rgba(183,148,246,0.4); }
-
-/* Кнопки-темы: мягкий подъём */
-.theme-btn, .size-btn { transition: background 0.15s, box-shadow 0.15s, transform 0.1s; }
-.theme-btn:active, .size-btn:active { transform: scale(0.94); }
-
-/* === ТЕМАТИЧЕСКИЕ КАРТОЧКИ УРОКОВ === */
-
-/* 🌿 ЛЕС — деревянные доски / кора */
-[data-theme="forest"] .card {
-    background:
-        linear-gradient(180deg, rgba(140,100,60,0.15) 0%, rgba(90,60,30,0.05) 100%),
-        linear-gradient(90deg,
-            rgba(180,140,90,0.12) 0%, transparent 3%,
-            transparent 10%, rgba(140,100,60,0.08) 12%, transparent 15%,
-            transparent 45%, rgba(140,100,60,0.06) 47%, transparent 50%,
-            transparent 82%, rgba(140,100,60,0.08) 84%, transparent 88%,
-            rgba(180,140,90,0.1) 100%),
-        linear-gradient(180deg, #f5ecd8 0%, #e8d9b8 40%, #d8c498 100%);
-    border: 1px solid rgba(90,60,30,0.25);
-    border-radius: 10px 6px 10px 6px;
-    box-shadow: 0 3px 10px rgba(60,40,20,0.2), inset 0 1px 0 rgba(255,240,210,0.6), inset 0 -2px 4px rgba(90,60,30,0.12);
-    position: relative;
-    overflow: hidden;
-}
-[data-theme="forest"] .card::before {
-    content:""; position:absolute; inset:0; pointer-events:none;
-    background:
-        repeating-linear-gradient(90deg, transparent 0px, transparent 28px, rgba(90,60,30,0.06) 28px, rgba(90,60,30,0.06) 29px);
-    opacity:0.7;
-}
-[data-theme="forest"] .card::after {
-    content:""; position:absolute; top:8px; bottom:8px; left:6px; width:2px;
-    background:linear-gradient(180deg, transparent, rgba(90,60,30,0.2), transparent);
-    border-radius:1px;
-}
-[data-theme="forest"] .card.now {
-    background:
-        linear-gradient(180deg, rgba(140,200,80,0.35) 0%, rgba(80,150,40,0.15) 100%),
-        linear-gradient(180deg, #f0f8dd 0%, #d4e8a8 40%, #a8d478 100%);
-    border-color: rgba(80,140,40,0.5);
-    box-shadow: 0 3px 14px rgba(80,140,40,0.3), inset 0 1px 0 rgba(255,255,255,0.7);
-}
-[data-theme="forest"] .num {
-    background: linear-gradient(180deg, #c9a86a 0%, #a8874a 50%, #8a6a2f 100%);
-    color: #fffbf0;
-    border-radius: 8px 4px 8px 4px;
-    border: 1px solid rgba(90,60,20,0.4);
-    box-shadow: 0 2px 6px rgba(60,40,10,0.3), inset 0 1px 0 rgba(255,240,200,0.5);
-    font-family: Georgia, serif;
-    font-weight: 900;
-}
-
-/* 🌊 ОКЕАН — капли воды / стекло */
-[data-theme="ocean"] .card {
-    background:
-        radial-gradient(ellipse at 15% 20%, rgba(255,255,255,0.6), transparent 45%),
-        linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(220,245,252,0.85) 50%, rgba(180,230,245,0.8) 100%);
-    border: 1px solid rgba(34,211,238,0.35);
-    border-radius: 18px 18px 18px 6px;
-    box-shadow: 0 6px 16px rgba(8,145,178,0.2), inset 0 2px 6px rgba(255,255,255,0.95), inset 0 -3px 6px rgba(8,145,178,0.1);
-    position: relative;
-    overflow: hidden;
-}
-[data-theme="ocean"] .card::before {
-    content:""; position:absolute; top:8px; left:12px; width:44px; height:14px;
-    border-radius:50%;
-    background:radial-gradient(ellipse, rgba(255,255,255,0.9), transparent 70%);
-    pointer-events:none;
-}
-[data-theme="ocean"] .card.now {
-    background:
-        radial-gradient(ellipse at 15% 20%, rgba(255,255,255,0.7), transparent 50%),
-        linear-gradient(180deg, #b8f5e8 0%, #6ee7d0 50%, #14b8a6 100%);
-    border-color: rgba(20,184,166,0.6);
-    box-shadow: 0 6px 20px rgba(20,184,166,0.4), inset 0 2px 8px rgba(255,255,255,0.8);
-}
-[data-theme="ocean"] .num {
-    background: radial-gradient(circle at 30% 25%, #ffffff, #22d3ee 55%, #0891b2 100%);
-    color: #fff;
-    border-radius: 50%;
-    box-shadow: 0 3px 10px rgba(8,145,178,0.4), inset -3px -4px 8px rgba(8,145,178,0.3), inset 3px 3px 10px rgba(255,255,255,0.7);
-    border: 2px solid rgba(255,255,255,0.9);
-}
-
-/* 🌅 ЗАКАТ — тёплый пергамент */
-[data-theme="sunset"] .card {
-    background:
-        linear-gradient(135deg, rgba(255,220,160,0.4) 0%, rgba(255,180,120,0.2) 50%, rgba(255,150,120,0.3) 100%),
-        linear-gradient(180deg, #fff8ec 0%, #ffe9cc 60%, #ffd9b0 100%);
-    border: 1px solid rgba(249,115,22,0.28);
-    border-radius: 16px 6px 16px 6px;
-    box-shadow: 0 4px 14px rgba(249,115,22,0.22), inset 0 1px 0 rgba(255,255,255,0.85);
-    position: relative;
-    overflow: hidden;
-}
-[data-theme="sunset"] .card::before {
-    content:""; position:absolute; top:-30px; right:-30px; width:100px; height:100px;
-    border-radius:50%;
-    background:radial-gradient(circle, rgba(255,200,100,0.4), transparent 70%);
-    pointer-events:none;
-}
-[data-theme="sunset"] .card.now {
-    background:
-        linear-gradient(135deg, rgba(255,180,80,0.5) 0%, rgba(249,115,22,0.3) 50%, rgba(236,72,153,0.3) 100%),
-        linear-gradient(180deg, #ffe9cc 0%, #ffb572 50%, #f97316 100%);
-    border-color: rgba(249,115,22,0.6);
-    box-shadow: 0 6px 20px rgba(249,115,22,0.45), inset 0 2px 6px rgba(255,255,255,0.5);
-}
-[data-theme="sunset"] .num {
-    background: linear-gradient(135deg, #f97316 0%, #ec4899 100%);
-    color: #fff;
-    border-radius: 14px 4px 14px 4px;
-    box-shadow: 0 3px 10px rgba(249,115,22,0.4), inset 0 1px 0 rgba(255,255,255,0.4);
-}
-
-/* 🌸 САКУРА — лепестки / мягкие */
-[data-theme="sakura"] .card {
-    background:
-        radial-gradient(ellipse at 80% 15%, rgba(255,220,235,0.7), transparent 40%),
-        radial-gradient(ellipse at 15% 85%, rgba(255,200,225,0.6), transparent 40%),
-        linear-gradient(180deg, #fffafc 0%, #ffe8f0 50%, #ffd0dd 100%);
-    border: 1px solid rgba(236,72,153,0.2);
-    border-radius: 20px 20px 20px 8px;
-    box-shadow: 0 4px 14px rgba(236,72,153,0.18), inset 0 1px 0 rgba(255,255,255,0.9);
-    position: relative;
-    overflow: hidden;
-}
-[data-theme="sakura"] .card::before {
-    content:""; position:absolute; top:6px; right:10px; width:16px; height:8px;
-    border-radius:50%;
-    background:rgba(255,255,255,0.75);
-    pointer-events:none;
-    filter:blur(1px);
-}
-[data-theme="sakura"] .card.now {
-    background:
-        radial-gradient(ellipse at 80% 15%, rgba(255,200,225,0.7), transparent 50%),
-        linear-gradient(180deg, #ffd0dd 0%, #f9a8d4 50%, #ec4899 100%);
-    border-color: rgba(236,72,153,0.5);
-    box-shadow: 0 6px 20px rgba(236,72,153,0.4), inset 0 2px 6px rgba(255,255,255,0.5);
-}
-[data-theme="sakura"] .num {
-    background: radial-gradient(circle at 30% 25%, #ffffff 0%, #f9a8d4 50%, #ec4899 100%);
-    color: #fff;
-    border-radius: 50% 50% 50% 14px;
-    box-shadow: 0 3px 10px rgba(236,72,153,0.35), inset 0 1px 0 rgba(255,255,255,0.6);
-}
-
-/* 🌌 КОСМОС — звёздные плиты */
-[data-theme="cosmic"] .card {
-    background:
-        radial-gradient(1px 1px at 15% 20%, rgba(255,255,255,0.6), transparent 60%),
-        radial-gradient(1px 1px at 80% 70%, rgba(183,148,246,0.7), transparent 60%),
-        radial-gradient(1.5px 1.5px at 45% 85%, rgba(124,245,192,0.6), transparent 60%),
-        linear-gradient(135deg, rgba(50,30,100,0.85) 0%, rgba(25,15,60,0.95) 60%, rgba(15,8,40,0.98) 100%);
-    border: 1px solid rgba(183,148,246,0.3);
-    border-radius: 16px;
-    box-shadow: 0 6px 22px rgba(120,60,220,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
-    position: relative;
-    overflow: hidden;
-}
-[data-theme="cosmic"] .card.now {
-    background:
-        radial-gradient(1.5px 1.5px at 20% 25%, rgba(255,255,255,0.9), transparent 60%),
-        radial-gradient(1px 1px at 80% 70%, rgba(124,245,192,0.9), transparent 60%),
-        linear-gradient(135deg, rgba(80,50,150,0.95) 0%, rgba(50,30,110,0.95) 60%, rgba(30,15,70,0.98) 100%);
-    border-color: rgba(183,148,246,0.7);
-    box-shadow: 0 6px 26px rgba(183,148,246,0.5), inset 0 0 20px rgba(124,245,192,0.15);
-}
-[data-theme="cosmic"] .num {
-    background: linear-gradient(135deg, #b794f6 0%, #7cf5c0 100%);
-    color: #1a1030;
-    border-radius: 12px;
-    box-shadow: 0 0 16px rgba(183,148,246,0.55), inset 0 1px 0 rgba(255,255,255,0.4);
-    font-weight: 900;
-}
-
-/* ☀️ СВЕТЛАЯ — мягкий глянец */
-[data-theme="light"] .card {
-    background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
-    box-shadow: 0 3px 12px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,1);
-}
-[data-theme="light"] .num {
-    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-    color: #4c6ef5;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 3px rgba(99,102,241,0.15);
-}
-
-/* 🌙 ТЁМНАЯ — глянец */
-[data-theme="dark"] .card {
-    background: linear-gradient(135deg, #232733 0%, #1a1d24 60%, #15171e 100%);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
-}
-[data-theme="dark"] .num {
-    background: linear-gradient(135deg, #2d3142 0%, #232741 100%);
-    color: #c7d2fe;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 1px 4px rgba(0,0,0,0.4);
-}
-
-/* БОЛЬШЕ ГРАДИЕНТОВ: заголовки дней */
-.day-title {
-    background: linear-gradient(90deg, var(--text-main) 0%, var(--text-main) 40%, transparent 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-}
-[data-theme="cosmic"] .day-title {
-    background: linear-gradient(90deg, #ece6ff 0%, #b794f6 50%, #7cf5c0 100%);
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-[data-theme="ocean"] .day-title {
-    background: linear-gradient(90deg, #062b3d 0%, #0891b2 50%, #22d3ee 100%);
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-[data-theme="sunset"] .day-title {
-    background: linear-gradient(90deg, #3d1a0a 0%, #f97316 50%, #ec4899 100%);
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-[data-theme="forest"] .day-title {
-    background: linear-gradient(90deg, #0f2e1b 0%, #059669 50%, #84cc16 100%);
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-[data-theme="sakura"] .day-title {
-    background: linear-gradient(90deg, #3d1029 0%, #ec4899 50%, #a855f7 100%);
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* ========== GRAPHICS 2X ========== */
-
-/* Красивый фон — многослойные градиенты */
-body {
-    background-attachment: scroll;
-}
-[data-theme="light"] body {
-    background-image:
-        radial-gradient(ellipse 60% 40% at 15% 10%, rgba(99,102,241,0.18), transparent 60%),
-        radial-gradient(ellipse 50% 40% at 85% 85%, rgba(168,85,247,0.14), transparent 60%),
-        radial-gradient(ellipse 40% 30% at 50% 50%, rgba(56,189,248,0.06), transparent 60%),
-        linear-gradient(180deg,#f5f8fc 0%,#e4ebf3 100%);
-}
-[data-theme="dark"] body {
-    background-image:
-        radial-gradient(ellipse 60% 40% at 15% 10%, rgba(99,102,241,0.22), transparent 60%),
-        radial-gradient(ellipse 50% 40% at 85% 85%, rgba(192,132,252,0.16), transparent 60%),
-        radial-gradient(ellipse 40% 30% at 50% 50%, rgba(56,189,248,0.06), transparent 60%),
-        linear-gradient(180deg,#10131a 0%,#05060a 100%);
-}
-[data-theme="cosmic"] body {
-    background-image:
-        radial-gradient(ellipse 55% 35% at 15% 10%, rgba(139,92,246,0.45), transparent 60%),
-        radial-gradient(ellipse 50% 40% at 85% 80%, rgba(56,189,248,0.3), transparent 60%),
-        radial-gradient(ellipse 45% 35% at 50% 55%, rgba(124,245,192,0.15), transparent 65%),
-        radial-gradient(circle at 50% 100%, rgba(120,60,220,0.35), transparent 60%),
-        linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%);
-}
-[data-theme="ocean"] body {
-    background-image:
-        radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,255,255,0.7), transparent 60%),
-        radial-gradient(ellipse 50% 35% at 15% 80%, rgba(34,211,238,0.35), transparent 55%),
-        radial-gradient(ellipse 45% 35% at 85% 90%, rgba(6,182,212,0.25), transparent 55%),
-        linear-gradient(180deg,#d6f0fa 0%,#8dcce4 45%,#4898b8 100%);
-}
-[data-theme="sunset"] body {
-    background-image:
-        radial-gradient(circle at 78% 22%, rgba(255,250,200,0.85), transparent 22%),
-        radial-gradient(circle at 78% 22%, rgba(255,180,90,0.5), transparent 40%),
-        radial-gradient(ellipse 60% 35% at 20% 90%, rgba(236,72,153,0.3), transparent 60%),
-        linear-gradient(180deg,#ffe0a8 0%,#ffb572 40%,#e88898 100%);
-}
-[data-theme="forest"] body {
-    background-image:
-        radial-gradient(ellipse 60% 35% at 50% 0%, rgba(255,255,255,0.55), transparent 55%),
-        radial-gradient(ellipse 50% 35% at 15% 85%, rgba(132,204,22,0.3), transparent 55%),
-        radial-gradient(ellipse 45% 35% at 90% 80%, rgba(5,150,105,0.22), transparent 55%),
-        linear-gradient(180deg,#e8f5dc 0%,#b8dfa8 40%,#7abb6c 100%);
-}
-[data-theme="sakura"] body {
-    background-image:
-        radial-gradient(ellipse 60% 40% at 85% 12%, rgba(255,180,215,0.75), transparent 55%),
-        radial-gradient(ellipse 50% 40% at 10% 80%, rgba(220,180,255,0.6), transparent 55%),
-        radial-gradient(circle at 50% 50%, rgba(255,220,235,0.35), transparent 45%),
-        linear-gradient(180deg,#fff0f5 0%,#ffd0dd 50%,#ff9dc0 100%);
-}
-
-/* Логотип — крутая градиентная рамка */
-.brand-logo {
-    position: relative;
-    background: linear-gradient(135deg, #fff, #f0f4ff);
-    border: 2px solid transparent;
-    background-clip: padding-box;
-    box-shadow: 0 6px 20px rgba(99,102,241,0.25), inset 0 1px 0 rgba(255,255,255,1);
-    font-size: 1.5rem;
-}
-.brand-logo::before {
-    content: ""; position: absolute; inset: -3px; border-radius: inherit;
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)));
-    z-index: -1;
-    filter: blur(2px);
-    opacity: 0.7;
-}
-[data-theme="dark"] .brand-logo {
-    background: linear-gradient(135deg, #232733, #1a1d24);
-    box-shadow: 0 6px 20px rgba(124,147,255,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
-}
-[data-theme="cosmic"] .brand-logo {
-    background: linear-gradient(135deg, #2a1a55, #1a1040);
-    box-shadow: 0 8px 26px rgba(183,148,246,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
-}
-[data-theme="cosmic"] .brand-logo::before {
-    filter: blur(4px);
-    opacity: 0.9;
-}
-
-/* Заголовок — с градиентом */
-h2 span {
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2, var(--accent)) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* Шапка — многослойная тень */
-.header-card {
-    box-shadow:
-        0 1px 2px rgba(0,0,0,0.04),
-        0 4px 12px rgba(0,0,0,0.06),
-        0 12px 32px var(--accent-light, rgba(99,102,241,0.1)),
-        inset 0 1px 0 rgba(255,255,255,0.9);
-}
-[data-theme="dark"] .header-card,
-[data-theme="cosmic"] .header-card {
-    box-shadow:
-        0 1px 2px rgba(0,0,0,0.4),
-        0 4px 12px rgba(0,0,0,0.5),
-        0 12px 32px var(--accent-light, rgba(124,147,255,0.15)),
-        inset 0 1px 0 rgba(255,255,255,0.06);
-}
-
-/* Карточки — двойная тень */
-.card {
-    box-shadow:
-        0 1px 2px rgba(0,0,0,0.03),
-        0 4px 12px rgba(0,0,0,0.05),
-        0 10px 28px rgba(0,0,0,0.03),
-        inset 0 1px 0 rgba(255,255,255,0.6);
-}
-[data-theme="dark"] .card,
-[data-theme="cosmic"] .card {
-    box-shadow:
-        0 1px 2px rgba(0,0,0,0.4),
-        0 4px 14px rgba(0,0,0,0.5),
-        0 10px 28px rgba(0,0,0,0.4),
-        inset 0 1px 0 rgba(255,255,255,0.06);
-}
-[data-theme="cosmic"] .card {
-    box-shadow:
-        0 1px 2px rgba(0,0,0,0.4),
-        0 4px 14px rgba(120,60,220,0.3),
-        0 12px 32px rgba(120,60,220,0.25),
-        inset 0 1px 0 rgba(255,255,255,0.08);
-}
-
-/* Табы — красивее */
-.tabs {
-    box-shadow:
-        0 1px 2px rgba(0,0,0,0.04),
-        0 4px 14px rgba(0,0,0,0.06);
-}
-.tab.active {
-    box-shadow:
-        0 2px 6px var(--accent-light, rgba(99,102,241,0.3)),
-        0 6px 16px var(--accent-light, rgba(99,102,241,0.4)),
-        inset 0 1px 0 rgba(255,255,255,0.3);
-    font-weight: 900;
-}
-.tab:not(.active) {
-    transition: background 0.15s, color 0.15s, transform 0.15s;
-}
-.tab:not(.active):hover {
-    background: var(--accent-light, rgba(99,102,241,0.1));
-}
-
-/* Кнопка настроек — свечение */
-.icon-btn {
-    box-shadow:
-        0 2px 6px rgba(0,0,0,0.06),
-        0 6px 16px var(--accent-light, rgba(99,102,241,0.15)),
-        inset 0 1px 0 rgba(255,255,255,0.5);
-    transition: transform 0.15s, box-shadow 0.2s;
-}
-.icon-btn:active {
-    transform: scale(0.9);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15), inset 0 2px 6px rgba(0,0,0,0.15);
-}
-
-/* Бейдж 8Г — градиент */
-.badge-class {
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2, var(--accent)) 100%);
-    color: #fff;
-    box-shadow:
-        0 2px 6px rgba(0,0,0,0.1),
-        0 4px 14px var(--accent-light, rgba(99,102,241,0.3)),
-        inset 0 1px 0 rgba(255,255,255,0.35);
-    border: none !important;
-    font-weight: 900;
-}
-
-/* Номера уроков — градиент */
-.num {
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2, var(--accent)) 100%);
-    color: #fff;
-    box-shadow:
-        0 2px 6px rgba(0,0,0,0.1),
-        0 4px 12px var(--accent-light, rgba(99,102,241,0.25)),
-        inset 0 1px 0 rgba(255,255,255,0.4);
-    font-weight: 900;
-}
-
-/* Кнопки тем — глубже */
-.theme-btn {
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.5);
-}
-.theme-btn.active {
-    box-shadow:
-        0 2px 6px var(--accent-light),
-        0 6px 16px var(--accent-light),
-        0 0 0 3px var(--accent),
-        inset 0 1px 0 rgba(255,255,255,0.3);
-}
-
-/* Тумблер — со свечением */
-.toggle.on {
-    box-shadow: 0 2px 8px var(--accent-light, rgba(99,102,241,0.3));
-}
-
-/* Плавные появления */
-.day-block.active .card {
-    animation: cardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-}
-@keyframes cardIn {
-    from { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.97); }
-    to { opacity: 1; transform: none; }
-}
-.day-block.active .card:nth-child(2) { animation-delay: 0.04s; }
-.day-block.active .card:nth-child(3) { animation-delay: 0.08s; }
-.day-block.active .card:nth-child(4) { animation-delay: 0.12s; }
-.day-block.active .card:nth-child(5) { animation-delay: 0.16s; }
-.day-block.active .card:nth-child(6) { animation-delay: 0.2s; }
-.day-block.active .card:nth-child(7) { animation-delay: 0.24s; }
-.day-block.active .card:nth-child(8) { animation-delay: 0.28s; }
-
-/* ===== КРАСИВЫЕ НАСТРОЙКИ ===== */
-.settings-panel {
-    border-radius: 22px !important;
-    padding: 18px 20px !important;
-    box-shadow: 0 8px 28px rgba(0,0,0,0.15) !important;
-}
-[data-theme="dark"] .settings-panel,
-[data-theme="cosmic"] .settings-panel {
-    box-shadow: 0 8px 28px rgba(0,0,0,0.5) !important;
-}
-.settings-preview {
-    height: 6px; border-radius: 3px;
-    background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent)));
-    margin-bottom: 16px;
-    box-shadow: 0 2px 8px var(--accent-light);
-}
-.settings-title {
-    display:flex; align-items:center; gap:8px;
-    font-size:0.72rem; letter-spacing:0.08em;
-    padding:0 0 8px 0;
-    border-bottom:1px dashed var(--border);
-    margin-bottom:12px;
-}
-.settings-title::before {
-    content:""; width:4px; height:4px; border-radius:50%;
-    background:linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)));
-    box-shadow:0 0 8px var(--accent);
-}
-.toggle-row {
-    padding:11px 12px;
-    border-radius:12px;
-    border-bottom:none !important;
-    margin-bottom:4px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.3), transparent);
-    transition: background 0.15s;
-}
-.toggle-label { display:flex; align-items:center; gap:8px; font-size:0.85rem; }
-.toggle-label::before { content: attr(data-ico); font-size:1.05rem; width:20px; text-align:center; }
-.toggle {
-    width:46px; height:26px; border-radius:13px;
-    background: linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.15));
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
-}
-.toggle.on {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)));
-    box-shadow: inset 0 -2px 4px rgba(0,0,0,0.2), 0 2px 8px var(--accent-light);
-}
-.theme-btn .emoji { font-size:1.5rem !important; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); }
-
-html.round-nums .num { border-radius: 50% !important; }
-html.round-nums .card.now .num { border-radius: 50% !important; }
-
-/* ===== БОКОВЫЕ ДЕКОРАЦИИ ПО ТЕМАМ ===== */
-.side-decor {
-    position: fixed;
-    bottom: 0;
-    width: 140px;
-    height: 260px;
-    z-index: 0;
-    pointer-events: none;
-    background-repeat: no-repeat;
-    background-size: contain;
-    opacity: 0.85;
-}
-.side-left { left: 0; background-position: left bottom; }
-.side-right { right: 0; background-position: right bottom; transform: scaleX(-1); }
-
-/* По умолчанию скрыты */
-.side-decor { display: none; }
-
-/* 🌿 ЛЕС — ёлки с обоих сторон */
-[data-theme="forest"] .side-decor { display: block; }
-[data-theme="forest"] .side-decor {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 260'><g fill='%232d5a1f' opacity='0.85'><path d='M70,260 L70,150 L40,150 L75,80 L110,150 L80,150 L80,260 Z'/><path d='M70,150 L20,150 L70,50 L120,150 L70,150 Z'/><path d='M70,90 L35,90 L70,20 L105,90 Z'/></g><g fill='%233d6b30' opacity='0.7'><path d='M40,260 L40,200 L20,200 L45,150 L70,200 L55,200 L55,260 Z'/><path d='M100,260 L100,210 L85,210 L105,170 L125,210 L112,210 L112,260 Z'/></g></svg>");
-}
-
-/* 🌸 САКУРА — ствол сакуры с ветками */
-[data-theme="sakura"] .side-decor { display: block; }
-[data-theme="sakura"] .side-decor {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 260'><path d='M60,260 Q55,200 60,150 Q65,100 75,70' stroke='%238b5a2b' stroke-width='14' fill='none' stroke-linecap='round'/><path d='M60,180 Q40,160 25,140' stroke='%238b5a2b' stroke-width='10' fill='none' stroke-linecap='round'/><path d='M62,140 Q85,120 105,105' stroke='%238b5a2b' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M70,100 Q90,80 100,60' stroke='%238b5a2b' stroke-width='7' fill='none' stroke-linecap='round'/><g fill='%23ffb8d0'><circle cx='25' cy='140' r='7'/><circle cx='35' cy='130' r='5'/><circle cx='15' cy='130' r='5'/><circle cx='105' cy='105' r='7'/><circle cx='115' cy='95' r='5'/><circle cx='95' cy='98' r='5'/><circle cx='100' cy='60' r='6'/><circle cx='110' cy='50' r='5'/><circle cx='88' cy='52' r='5'/><circle cx='75' cy='70' r='8'/><circle cx='60' cy='150' r='6'/><circle cx='48' cy='142' r='5'/></g><g fill='%23ec4899'><circle cx='28' cy='145' r='3'/><circle cx='110' cy='100' r='3'/><circle cx='104' cy='65' r='3'/><circle cx='80' cy='75' r='3'/></g></svg>");
-}
-
-/* 🌊 ОКЕАН — водоросли снизу */
-[data-theme="ocean"] .side-decor { display: block; }
-[data-theme="ocean"] .side-decor {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 260'><path d='M30,260 Q20,220 35,180 Q50,140 30,100 Q15,70 30,30' stroke='%2310b981' stroke-width='10' fill='none' stroke-linecap='round' opacity='0.7'/><path d='M55,260 Q70,220 55,180 Q40,140 60,100 Q75,70 60,40' stroke='%23059669' stroke-width='9' fill='none' stroke-linecap='round' opacity='0.65'/><path d='M85,260 Q70,210 85,170 Q100,130 85,90' stroke='%230ea5e9' stroke-width='8' fill='none' stroke-linecap='round' opacity='0.6'/><path d='M110,260 Q120,220 110,180 Q95,150 115,110' stroke='%2314b8a6' stroke-width='8' fill='none' stroke-linecap='round' opacity='0.55'/><g fill='%23fb7185'><circle cx='30' cy='30' r='6'/><circle cx='60' cy='40' r='5'/><circle cx='85' cy='90' r='5'/><circle cx='115' cy='110' r='6'/></g><g fill='%23fbbf24'><circle cx='45' cy='55' r='3'/><circle cx='70' cy='30' r='3'/><circle cx='100' cy='75' r='3'/></g></svg>");
-}
-
-/* 🌅 ЗАКАТ — пальма */
-[data-theme="sunset"] .side-decor { display: block; }
-[data-theme="sunset"] .side-decor {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 260'><path d='M50,260 Q55,200 60,140 Q62,100 65,60' stroke='%23431407' stroke-width='10' fill='none' stroke-linecap='round'/><path d='M65,60 Q45,40 25,55 Q40,42 65,60 Q55,30 40,15 Q58,32 65,60 Q75,25 95,15 Q80,35 65,60 Q90,45 110,50 Q90,50 65,60' fill='%2316634a' opacity='0.9'/><path d='M65,60 Q85,40 105,50 Q88,50 65,60' fill='%2315803d'/><path d='M65,60 Q50,45 35,42 Q52,48 65,60' fill='%2315803d'/></svg>");
-}
-
-/* 🌌 КОСМОС — планета */
-[data-theme="cosmic"] .side-decor { display: block; }
-[data-theme="cosmic"] .side-decor {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 260'><defs><radialGradient id='p' cx='35%25' cy='30%25'><stop offset='0%25' stop-color='%23e0d4ff'/><stop offset='40%25' stop-color='%23b794f6'/><stop offset='100%25' stop-color='%234c1d95'/></radialGradient></defs><circle cx='70' cy='110' r='55' fill='url(%23p)'/><ellipse cx='70' cy='110' rx='95' ry='14' fill='none' stroke='%23fbbf24' stroke-width='3' opacity='0.7' transform='rotate(-20 70 110)'/><ellipse cx='70' cy='110' rx='95' ry='14' fill='none' stroke='%23fbbf24' stroke-width='2' opacity='0.4' transform='rotate(-20 70 110)' stroke-dasharray='3 4'/><circle cx='50' cy='95' r='8' fill='%23e0d4ff' opacity='0.5'/><circle cx='90' cy='130' r='6' fill='%23e0d4ff' opacity='0.4'/><circle cx='80' cy='85' r='5' fill='%23e0d4ff' opacity='0.5'/><circle cx='30' cy='40' r='2' fill='%23fff'/><circle cx='110' cy='30' r='1.5' fill='%23fff'/><circle cx='100' cy='220' r='2' fill='%237cf5c0'/><circle cx='20' cy='180' r='1.5' fill='%23fff'/></svg>");
-}
-
-/* ☀️ СВЕТЛАЯ — облака */
-[data-theme="light"] .side-decor { display: block; }
-[data-theme="light"] .side-decor {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 260'><g fill='%23ffffff' opacity='0.9'><ellipse cx='70' cy='60' rx='55' ry='28'/><ellipse cx='45' cy='50' rx='30' ry='20'/><ellipse cx='95' cy='52' rx='35' ry='22'/></g><g fill='%23e0e7ff' opacity='0.5'><ellipse cx='70' cy='150' rx='40' ry='18'/><ellipse cx='50' cy='145' rx='22' ry='12'/><ellipse cx='92' cy='148' rx='25' ry='14'/></g></svg>");
-}
-
-/* 🌙 ТЁМНАЯ — луна и облака */
-[data-theme="dark"] .side-decor { display: block; }
-[data-theme="dark"] .side-decor {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 260'><defs><radialGradient id='m' cx='35%25' cy='35%25'><stop offset='0%25' stop-color='%23fff'/><stop offset='70%25' stop-color='%23e2e8f0'/><stop offset='100%25' stop-color='%2394a3b8'/></radialGradient></defs><circle cx='75' cy='70' r='45' fill='url(%23m)'/><circle cx='60' cy='55' r='6' fill='%23cbd5e1' opacity='0.6'/><circle cx='88' cy='80' r='5' fill='%23cbd5e1' opacity='0.5'/><circle cx='70' cy='95' r='4' fill='%23cbd5e1' opacity='0.5'/><g fill='%231f2937' opacity='0.85'><ellipse cx='70' cy='180' rx='55' ry='22'/><ellipse cx='40' cy='172' rx='28' ry='16'/><ellipse cx='100' cy='176' rx='32' ry='18'/></g><g fill='%23374151' opacity='0.7'><ellipse cx='70' cy='230' rx='50' ry='18'/><ellipse cx='45' cy='225' rx='25' ry='13'/><ellipse cx='95' cy='228' rx='28' ry='14'/></g></svg>");
-}
-
-/* На мобильных — поменьше */
-@media (max-width: 500px) {
-    .side-decor { width: 100px; height: 200px; opacity: 0.75; }
-}
-
-/* Когда включен режим "компактный" — не мешать */
-html.compact .side-decor { opacity: 0.5; }
-
-/* ===== КРАСИВЫЕ НАСТРОЙКИ ПОД ТЕМУ ===== */
-
-/* Превью-полоска сверху */
-.settings-preview {
-    height: 8px !important;
-    border-radius: 4px !important;
-    background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent)), var(--accent)) !important;
-    margin-bottom: 16px !important;
-    box-shadow: 0 3px 12px var(--accent-light, rgba(99,102,241,0.3)) !important;
-}
-
-/* Стилизация панели под каждую тему */
-[data-theme="ocean"] .settings-panel {
-    border: 2px solid rgba(34,211,238,0.35);
-    box-shadow: 0 8px 28px rgba(8,145,178,0.25) !important;
-}
-[data-theme="sunset"] .settings-panel {
-    border: 2px solid rgba(249,115,22,0.25);
-    box-shadow: 0 8px 28px rgba(249,115,22,0.22) !important;
-}
-[data-theme="forest"] .settings-panel {
-    border: 2px solid rgba(5,150,105,0.25);
-    box-shadow: 0 8px 28px rgba(5,150,105,0.22) !important;
-}
-[data-theme="sakura"] .settings-panel {
-    border: 2px solid rgba(236,72,153,0.25);
-    box-shadow: 0 8px 28px rgba(236,72,153,0.22) !important;
-}
-[data-theme="cosmic"] .settings-panel {
-    border: 1px solid rgba(183,148,246,0.4);
-    box-shadow: 0 8px 32px rgba(120,60,220,0.4) !important;
-}
-[data-theme="dark"] .settings-panel {
-    border: 1px solid rgba(255,255,255,0.1);
-}
-[data-theme="light"] .settings-panel {
-    border: 1px solid rgba(99,102,241,0.15);
-}
-
-/* Заголовок с градиентной точкой */
-.settings-title {
-    background: linear-gradient(90deg, var(--text-main), var(--accent));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 800;
-}
-
-/* Кнопка-раздел «Дополнительно» */
-/* Сворачиваемый блок настроек */
-/* Тумблеры внутри */
-/* Панель настроек — углы под тему */
-[data-theme="ocean"] .settings-panel { border-radius: 22px 22px 22px 8px !important; }
-[data-theme="sunset"] .settings-panel { border-radius: 22px 8px 22px 8px !important; }
-[data-theme="forest"] .settings-panel { border-radius: 26px 10px 26px 10px !important; }
-[data-theme="sakura"] .settings-panel { border-radius: 24px !important; }
-[data-theme="cosmic"] .settings-panel { border-radius: 22px !important; }
-
-/* ===== ШАПКА ПОД ТЕМУ ===== */
-[data-theme="light"] .header-card {
-    background: linear-gradient(135deg, #ffffff 0%, #eef3fb 100%);
-    border-color: rgba(99,102,241,0.12);
-}
-[data-theme="dark"] .header-card {
-    background: linear-gradient(135deg, #1e222e 0%, #15171f 100%);
-    border-color: rgba(255,255,255,0.08);
-}
-[data-theme="cosmic"] .header-card {
-    background: linear-gradient(135deg, rgba(60,40,120,0.9) 0%, rgba(30,18,70,0.95) 100%);
-    border-color: rgba(183,148,246,0.35);
-}
-[data-theme="ocean"] .header-card {
-    background: linear-gradient(135deg, rgba(220,245,252,0.95) 0%, rgba(180,230,245,0.9) 100%);
-    border-color: rgba(34,211,238,0.4);
-}
-[data-theme="sunset"] .header-card {
-    background: linear-gradient(135deg, rgba(255,240,220,0.95) 0%, rgba(255,210,170,0.9) 100%);
-    border-color: rgba(249,115,22,0.3);
-}
-[data-theme="forest"] .header-card {
-    background: linear-gradient(135deg, rgba(230,245,220,0.95) 0%, rgba(190,225,170,0.9) 100%);
-    border-color: rgba(5,150,105,0.3);
-}
-[data-theme="sakura"] .header-card {
-    background: linear-gradient(135deg, rgba(255,240,246,0.95) 0%, rgba(255,210,225,0.9) 100%);
-    border-color: rgba(236,72,153,0.3);
-}
-
-/* ========== ВСЁ ПОД ТЕМУ ========== */
-
-/* Панель настроек — фон под тему */
-[data-theme="light"] .settings-panel { background: linear-gradient(180deg, #ffffff 0%, #eef3fb 100%); }
-[data-theme="dark"] .settings-panel { background: linear-gradient(180deg, #1e222e 0%, #15171f 100%); }
-[data-theme="cosmic"] .settings-panel { background: linear-gradient(180deg, rgba(40,25,90,0.98) 0%, rgba(20,12,55,0.98) 100%); }
-[data-theme="ocean"] .settings-panel { background: linear-gradient(180deg, rgba(230,250,255,0.98) 0%, rgba(200,235,250,0.98) 100%); }
-[data-theme="sunset"] .settings-panel { background: linear-gradient(180deg, rgba(255,245,230,0.98) 0%, rgba(255,220,190,0.98) 100%); }
-[data-theme="forest"] .settings-panel { background: linear-gradient(180deg, rgba(240,250,230,0.98) 0%, rgba(210,235,190,0.98) 100%); }
-[data-theme="sakura"] .settings-panel { background: linear-gradient(180deg, rgba(255,245,250,0.98) 0%, rgba(255,220,235,0.98) 100%); }
-
-/* Кнопки тем — фон под тему */
-.theme-btn {
-    background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.2)) !important;
-}
-[data-theme="dark"] .theme-btn,
-[data-theme="cosmic"] .theme-btn {
-    background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02)) !important;
-}
-[data-theme="ocean"] .theme-btn { background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(200,235,250,0.5)) !important; }
-[data-theme="sunset"] .theme-btn { background: linear-gradient(180deg, rgba(255,250,240,0.9), rgba(255,220,190,0.7)) !important; }
-[data-theme="forest"] .theme-btn { background: linear-gradient(180deg, rgba(250,255,245,0.9), rgba(210,235,190,0.6)) !important; }
-[data-theme="sakura"] .theme-btn { background: linear-gradient(180deg, rgba(255,250,253,0.9), rgba(255,220,235,0.7)) !important; }
-
-/* Активная кнопка — всегда яркая темы (уже есть, но усилим) */
-.theme-btn.active {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-    color: #fff !important;
-    box-shadow: 0 0 0 3px var(--accent), 0 6px 16px var(--accent-light) !important;
-}
-[data-theme="lemon"] .theme-btn.active,
-[data-theme="sakura"] .theme-btn.active { color: #fff !important; }
-
-/* Размер текста A-A-A под тему */
-.size-btn {
-    background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.2)) !important;
-}
-[data-theme="dark"] .size-btn,
-[data-theme="cosmic"] .size-btn {
-    background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02)) !important;
-}
-[data-theme="ocean"] .size-btn { background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(200,235,250,0.5)) !important; }
-[data-theme="sunset"] .size-btn { background: linear-gradient(180deg, rgba(255,250,240,0.9), rgba(255,220,190,0.7)) !important; }
-[data-theme="forest"] .size-btn { background: linear-gradient(180deg, rgba(250,255,245,0.9), rgba(210,235,190,0.6)) !important; }
-[data-theme="sakura"] .size-btn { background: linear-gradient(180deg, rgba(255,250,253,0.9), rgba(255,220,235,0.7)) !important; }
-.size-btn.active {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-    color: #fff !important;
-    box-shadow: 0 0 0 3px var(--accent), 0 6px 16px var(--accent-light) !important;
-}
-[data-theme="light"] .size-btn.active,
-[data-theme="dark"] .size-btn.active,
-[data-theme="cosmic"] .size-btn.active { color: #fff !important; }
-
-/* Тумблеры — неактивные тоже под тему */
-.toggle {
-    background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(0,0,0,0.05)) !important;
-}
-[data-theme="dark"] .toggle,
-[data-theme="cosmic"] .toggle {
-    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.3)) !important;
-}
-[data-theme="ocean"] .toggle { background: linear-gradient(180deg, rgba(200,235,250,0.8), rgba(8,145,178,0.2)) !important; }
-[data-theme="sunset"] .toggle { background: linear-gradient(180deg, rgba(255,220,190,0.8), rgba(249,115,22,0.2)) !important; }
-[data-theme="forest"] .toggle { background: linear-gradient(180deg, rgba(210,235,190,0.8), rgba(5,150,105,0.2)) !important; }
-[data-theme="sakura"] .toggle { background: linear-gradient(180deg, rgba(255,220,235,0.8), rgba(236,72,153,0.2)) !important; }
-.toggle.on {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-}
-
-/* Заголовки секций — под цвет темы */
-.settings-title {
-    background: linear-gradient(90deg, var(--text-main), var(--accent)) !important;
-    -webkit-background-clip: text !important;
-    background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-}
-.settings-title::before {
-    background: var(--accent) !important;
-}
-
-/* Превью-полоска */
-.settings-preview {
-    background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent))) !important;
-}
-
-/* Кнопка установки приложения — под тему */
-.install-btn {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-    box-shadow: 0 6px 18px var(--accent-light) !important;
-}
-
-/* Плашка "8Г" — под тему */
-.badge-class {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-    color: #fff !important;
-    border: none !important;
-    box-shadow: 0 3px 10px var(--accent-light) !important;
-}
-
-/* Кнопка настроек — под тему */
-.icon-btn {
-    background: linear-gradient(135deg, var(--accent-light), var(--card-bg)) !important;
-    color: var(--accent) !important;
-    border: 1.5px solid var(--accent) !important;
-    box-shadow: 0 3px 10px var(--accent-light) !important;
-}
-
-/* Ссылка на таблицу — уже тематическая */
-.sheet-link { margin-bottom: 0 !important;
-    color: var(--accent) !important;
-    border-color: var(--accent) !important;
-}
-
-/* Активная вкладка — под тему */
-.tab.active {
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
-    color: #fff !important;
-}
-
-/* День "Сегодня" пилюля — под тему */
-.today-pill {
-    background: linear-gradient(135deg, var(--accent-light), var(--accent-light)) !important;
-    color: var(--accent) !important;
-    border-color: var(--accent) !important;
-}
-
-/* Баннер "Сейчас идёт" — под тему */
-.live-banner.now {
-    background: linear-gradient(135deg, var(--accent-light), var(--card-bg)) !important;
-    border-left-color: var(--accent) !important;
-}
-.live-banner.now .live-dot { background: var(--accent) !important; }
-.live-banner.now .live-label { color: var(--accent) !important; }
-.live-banner.now .progress-fill { background: var(--accent) !important; }
-
-/* Кнопка "Открыть таблицу" — иконка под тему */
-.sheet-link .sheet-icon { color: var(--accent) !important; }
-
-/* ========== ПРОРАБОТАННЫЕ НАСТРОЙКИ И КНОПКИ ========== */
-
-/* Панель настроек — элегантнее */
-.settings-panel {
-    padding: 20px 18px 18px !important;
-    border-radius: 24px !important;
-}
-
-/* Заголовки секций — крупнее, с воздухом */
-.settings-title {
-    font-size: 0.75rem !important;
-    letter-spacing: 0.1em !important;
-    padding: 4px 0 10px 0 !important;
-    margin-bottom: 14px !important;
-}
-.settings-title::before {
-    width: 6px !important; height: 6px !important;
-    box-shadow: 0 0 10px var(--accent) !important;
-}
-
-/* Превью-полоска — толще */
-.settings-preview {
-    height: 10px !important;
-    border-radius: 6px !important;
-    margin-bottom: 20px !important;
-    box-shadow: 0 4px 14px var(--accent-light), inset 0 1px 0 rgba(255,255,255,0.4) !important;
-}
-
-/* ===== КНОПКИ ТЕМ — объёмные с бликом ===== */
-.theme-btn {
-    padding: 16px 6px 14px !important;
-    border-radius: 16px !important;
-    border: none !important;
-    position: relative !important;
-    overflow: hidden !important;
-    box-shadow:
-        0 4px 10px rgba(0,0,0,0.08),
-        0 1px 2px rgba(0,0,0,0.06),
-        inset 0 1px 0 rgba(255,255,255,0.9),
-        inset 0 -2px 4px rgba(0,0,0,0.06) !important;
-    transition: transform 0.12s ease, box-shadow 0.15s ease !important;
-}
-.theme-btn::before {
-    content: "" !important;
-    position: absolute !important;
-    top: 0 !important; left: 10% !important; right: 10% !important;
-    height: 40% !important;
-    border-radius: 16px 16px 50% 50% !important;
-    background: linear-gradient(180deg, rgba(255,255,255,0.55), transparent) !important;
-    pointer-events: none !important;
-}
-.theme-btn::after {
-    content: "" !important;
-    position: absolute !important;
-    inset: 0 !important;
-    border-radius: 16px !important;
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05) !important;
-    pointer-events: none !important;
-}
-.theme-btn:active {
-    transform: scale(0.95) !important;
-    box-shadow:
-        0 2px 4px rgba(0,0,0,0.1),
-        inset 0 2px 4px rgba(0,0,0,0.12) !important;
-}
-.theme-btn .emoji {
-    font-size: 1.6rem !important;
-    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.18)) !important;
-    position: relative !important;
-    z-index: 1 !important;
-}
-.theme-btn.active {
-    box-shadow:
-        0 0 0 3px var(--accent),
-        0 6px 18px var(--accent-light),
-        inset 0 1px 0 rgba(255,255,255,0.4),
-        inset 0 -2px 6px rgba(0,0,0,0.15) !important;
-    transform: translateY(-2px) !important;
-}
-[data-theme="dark"] .theme-btn {
-    box-shadow:
-        0 4px 10px rgba(0,0,0,0.4),
-        inset 0 1px 0 rgba(255,255,255,0.1),
-        inset 0 -2px 4px rgba(0,0,0,0.3) !important;
-}
-[data-theme="cosmic"] .theme-btn {
-    box-shadow:
-        0 4px 10px rgba(0,0,0,0.5),
-        0 0 12px rgba(183,148,246,0.15),
-        inset 0 1px 0 rgba(255,255,255,0.12),
-        inset 0 -2px 4px rgba(0,0,0,0.3) !important;
-}
-
-/* ===== РАЗМЕР ТЕКСТА A-A-A ===== */
-.size-btn {
-    padding: 14px !important;
-    border-radius: 14px !important;
-    border: none !important;
-    position: relative !important;
-    box-shadow:
-        0 4px 10px rgba(0,0,0,0.08),
-        inset 0 1px 0 rgba(255,255,255,0.85),
-        inset 0 -2px 4px rgba(0,0,0,0.06) !important;
-    transition: transform 0.12s ease, box-shadow 0.15s ease !important;
-}
-.size-btn:active {
-    transform: scale(0.95) !important;
-    box-shadow:
-        0 2px 4px rgba(0,0,0,0.1),
-        inset 0 2px 4px rgba(0,0,0,0.12) !important;
-}
-.size-btn.active {
-    box-shadow:
-        0 0 0 3px var(--accent),
-        0 6px 18px var(--accent-light),
-        inset 0 1px 0 rgba(255,255,255,0.4),
-        inset 0 -2px 6px rgba(0,0,0,0.15) !important;
-    transform: translateY(-2px) !important;
-}
-[data-theme="dark"] .size-btn,
-[data-theme="cosmic"] .size-btn {
-    box-shadow:
-        0 4px 10px rgba(0,0,0,0.4),
-        inset 0 1px 0 rgba(255,255,255,0.1),
-        inset 0 -2px 4px rgba(0,0,0,0.3) !important;
-}
-
-/* ===== ТУМБЛЕРЫ — объёмные ===== */
-.toggle {
-    width: 50px !important;
-    height: 28px !important;
-    border-radius: 15px !important;
-    box-shadow:
-        inset 0 3px 6px rgba(0,0,0,0.15),
-        inset 0 -1px 2px rgba(255,255,255,0.5),
-        0 1px 0 rgba(255,255,255,0.6) !important;
-    position: relative !important;
-}
-[data-theme="dark"] .toggle,
-[data-theme="cosmic"] .toggle {
-    box-shadow:
-        inset 0 3px 6px rgba(0,0,0,0.5),
-        inset 0 -1px 2px rgba(255,255,255,0.05),
-        0 1px 0 rgba(255,255,255,0.05) !important;
-}
-.toggle::after {
-    width: 24px !important;
-    height: 24px !important;
-    top: 2px !important;
-    left: 2px !important;
-    background: linear-gradient(180deg, #ffffff 0%, #e8ecf3 100%) !important;
-    box-shadow:
-        0 3px 6px rgba(0,0,0,0.22),
-        0 1px 2px rgba(0,0,0,0.15),
-        inset 0 -1px 2px rgba(0,0,0,0.08),
-        inset 0 1px 0 #fff !important;
-    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-.toggle.on {
-    background: linear-gradient(180deg, var(--accent), var(--accent2, var(--accent))) !important;
-    box-shadow:
-        inset 0 2px 5px rgba(0,0,0,0.25),
-        inset 0 -1px 2px rgba(255,255,255,0.25),
-        0 3px 10px var(--accent-light) !important;
-}
-.toggle.on::after {
-    transform: translateX(22px) !important;
-}
-
-/* ===== ПЛАШКИ ТУМБЛЕРОВ ===== */
-.toggle-row {
-    padding: 13px 14px !important;
-    border-radius: 14px !important;
-    margin-bottom: 8px !important;
-    background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.1)) !important;
-    border: 1px solid rgba(255,255,255,0.6) !important;
-    box-shadow:
-        0 2px 6px rgba(0,0,0,0.04),
-        inset 0 1px 0 rgba(255,255,255,0.9) !important;
-    transition: transform 0.12s, box-shadow 0.15s, background 0.15s !important;
-}
-.toggle-row:active {
-    transform: scale(0.98) !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08), inset 0 2px 4px rgba(0,0,0,0.06) !important;
-}
-[data-theme="dark"] .toggle-row,
-[data-theme="cosmic"] .toggle-row {
-    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01)) !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
-    box-shadow:
-        0 2px 6px rgba(0,0,0,0.3),
-        inset 0 1px 0 rgba(255,255,255,0.05) !important;
-}
-.toggle-label {
-    font-weight: 800 !important;
-    font-size: 0.86rem !important;
-}
-.toggle-label::before {
-    font-size: 1.15rem !important;
-    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15)) !important;
-}
-
-/* ===== КНОПКА УСТАНОВКИ ПРИЛОЖЕНИЯ ===== */
-.install-btn {
-    padding: 15px !important;
-    border-radius: 16px !important;
-    font-size: 0.95rem !important;
-    box-shadow:
-        0 6px 18px var(--accent-light),
-        0 2px 4px rgba(0,0,0,0.1),
-        inset 0 1px 0 rgba(255,255,255,0.3),
-        inset 0 -2px 6px rgba(0,0,0,0.15) !important;
-    position: relative !important;
-    overflow: hidden !important;
-    transition: transform 0.12s, box-shadow 0.15s !important;
-}
-.install-btn::before {
-    content: "" !important;
-    position: absolute !important;
-    top: 0 !important; left: 10% !important; right: 10% !important;
-    height: 50% !important;
-    border-radius: 16px 16px 50% 50% !important;
-    background: linear-gradient(180deg, rgba(255,255,255,0.3), transparent) !important;
-    pointer-events: none !important;
-}
-.install-btn:active {
-    transform: scale(0.97) !important;
-    box-shadow:
-        0 2px 6px var(--accent-light),
-        inset 0 3px 6px rgba(0,0,0,0.2) !important;
-}
-
-/* ===== КНОПКА УСТАНОВЛЕНА — тоже красивее ===== */
-.installed-badge {
-    padding: 12px 14px !important;
-    border-radius: 12px !important;
-    background: linear-gradient(135deg, var(--accent-light), transparent) !important;
-    border: 1px solid var(--accent-light) !important;
-}
-
-/* ===== ИКОНКА СЕТТИНГСА ===== */
-.icon-btn {
-    box-shadow:
-        0 4px 12px var(--accent-light),
-        0 1px 3px rgba(0,0,0,0.08),
-        inset 0 1px 0 rgba(255,255,255,0.6) !important;
-    transition: transform 0.12s !important;
-}
-.icon-btn:active {
-    transform: scale(0.9) rotate(15deg) !important;
-}
-
-/* ===== БЕЙДЖ 8Г ===== */
-.badge-class {
-    box-shadow:
-        0 4px 12px var(--accent-light),
-        0 1px 3px rgba(0,0,0,0.1),
-        inset 0 1px 0 rgba(255,255,255,0.35),
-        inset 0 -2px 4px rgba(0,0,0,0.12) !important;
-}
-
-/* ===== ФИНАЛЬНЫЙ OVERRIDE (только то что надо) ===== */
-
-/* 1. Полоска снизу — убираем только фон html, не трогаем body */
-html {
-    background: transparent !important;
-    background-image: none !important;
-    background-color: transparent !important;
-}
-
-/* 2. Отступы между тумблерами */
-.toggle-row {
-    margin-bottom: 10px !important;
-}
-.toggle-row:last-child {
-    margin-bottom: 0 !important;
-}
-.settings-title {
-    margin-top: 20px !important;
-    margin-bottom: 10px !important;
-}
-.settings-title:first-of-type {
-    margin-top: 0 !important;
-}
-
-/* 3. Убираем боковые декорации */
-.side-decor {
-    display: none !important;
-}
-
-/* Полоса снизу — убрать */
-html, body {
-    background-attachment: scroll !important;
-}
-body {
-    min-height: 100vh !important;
-}
-
-/* ===== ОТСТУПЫ МЕЖДУ СЕКЦИЯМИ ===== */
-
-/* После A-A-A — отступ перед первым тумблером */
-.size-options, .size-grid {
-    margin-bottom: 24px !important;
-}
-/* После кнопок тем — тоже */
-.theme-options, .theme-grid {
-    margin-bottom: 20px !important;
-}
-/* Между заголовком секции и её содержимым */
-.settings-title {
-    margin-top: 22px !important;
-    margin-bottom: 12px !important;
-}
-.settings-title:first-of-type {
-    margin-top: 0 !important;
-}
-/* Первый тумблер — отступ сверху */
-.toggle-row:first-of-type {
-    margin-top: 4px !important;
-}
-/* Между тумблерами */
-.toggle-row {
-    margin-bottom: 10px !important;
-}
-.toggle-row:last-child {
-    margin-bottom: 0 !important;
-}
-
-/* ===== ДУБЛИРУЕМ ФОН НА HTML (полоса исчезнет) ===== */
-html {
-    background: transparent !important;
-}
-html[data-theme="light"] {
-    background-image: linear-gradient(180deg,#f1f5fa 0%,#e4ebf3 100%) !important;
-}
-html[data-theme="dark"] {
-    background-image: linear-gradient(180deg,#10131a 0%,#0b0d12 100%) !important;
-}
-html[data-theme="cosmic"] {
-    background-image: linear-gradient(180deg,#0a0424 0%,#05021a 55%,#01000a 100%) !important;
-}
-html[data-theme="ocean"] {
-    background-image: linear-gradient(180deg,#c7e8f5 0%,#94d0e6 45%,#5aafd0 100%) !important;
-}
-html[data-theme="sunset"] {
-    background-image: linear-gradient(180deg,#ffe0a8 0%,#ffb572 40%,#e88898 100%) !important;
-}
-html[data-theme="forest"] {
-    background-image: linear-gradient(180deg,#dff0d0 0%,#b8dfa8 40%,#7abb6c 100%) !important;
-}
-html[data-theme="sakura"] {
-    background-image: linear-gradient(180deg,#ffeaf0 0%,#ffd0dd 50%,#ffb0c8 100%) !important;
-}
-body {
-    min-height: 100vh !important;
-    min-height: 100dvh !important;
-}
-
-/* ===== БЫСТРАЯ ПАНЕЛЬ ===== */
-.settings-panel {
-    transition: transform 0.08s cubic-bezier(0.4,0,0.2,1), opacity 0.06s ease !important;
-    will-change: transform, opacity;
-}
-
-/* ===== СТОП-СКРОЛЛ ПОСЛЕ КНОПКИ ===== */
-html, body {
-    overflow-x: hidden !important;
-    overscroll-behavior-y: none !important;
-}
-body {
-    min-height: auto !important;
-    height: auto !important;
-}
-.container {
-    padding-bottom: 40px !important;
-}
-.sheet-link { margin-bottom: 0 !important;
-    margin-bottom: 0 !important;
-}
-
-/* ===== КРАСИВЫЙ НИЗ ===== */
-.sheet-link { margin-bottom: 0 !important;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.12s, box-shadow 0.15s;
-}
-.sheet-link::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.25) 50%, transparent 70%);
-    background-size: 200% 100%;
-    pointer-events: none;
-    opacity: 0;
-}
-.sheet-link:active::after {
-    opacity: 1;
-    animation: shine 0.4s ease;
-}
-@keyframes shine {
-    from { background-position: 200% 0; }
-    to { background-position: -100% 0; }
-}
-.sheet-link:active {
-    transform: scale(0.97);
-}
-
-/* Конец страницы — декоративная точка */
-.container::after {
-    content: "";
-    display: block;
-    width: 40px;
-    height: 3px;
-    margin: 26px auto 0;
-    border-radius: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    opacity: 0.5;
-}
-
-/* ===== СКРОЛЛ ДО КНОПКИ + ПАНЕЛЬ СО СВОИМ СКРОЛЛОМ ===== */
-
-/* 1. Возвращаем нормальный скролл (можно до конца страницы) */
-html, body {
-    overscroll-behavior-y: auto !important;
-}
-body {
-    min-height: 100vh !important;
-}
-.container {
-    padding-bottom: 24px !important;
-}
-
-/* 2. Панель настроек — со своим скроллом внутри */
-.settings-panel {
-    max-height: 75vh !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: contain !important;
-    scrollbar-width: thin !important;
-}
-.settings-panel::-webkit-scrollbar {
-    width: 5px;
-}
-.settings-panel::-webkit-scrollbar-thumb {
-    background: var(--accent);
-    border-radius: 3px;
-    opacity: 0.5;
-}
-.settings-panel::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-/* Защита от дёргания скроллбара на ПК */
-
-
-/* ===== СКРЫТЬ ПРАВЫЙ СКРОЛЛБАР (не дёргает) ===== */
-html {
-    scrollbar-width: none !important;      /* Firefox */
-    -ms-overflow-style: none !important;   /* IE/Edge */
-    scrollbar-gutter: auto !important;     /* убираем зарезервированное место */
-}
-body {
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-}
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-    width: 0 !important;
-    height: 0 !important;
-    display: none !important;              /* Chrome/Safari */
-}
-
-/* ===== ПЛАШКИ ПОД ТЕМУ (одинаковый цвет) ===== */
-.live-banner.before {
-    background: linear-gradient(135deg, var(--accent-light), var(--card)) !important;
-    border: 1.5px solid var(--accent) !important;
-    box-shadow: 0 6px 20px var(--accent-light) !important;
-    opacity: 1 !important;
-}
-.live-banner.before .live-label {
-    color: var(--accent) !important;
-    font-weight: 800;
-}
-.live-banner.before .live-dot {
-    background: var(--accent) !important;
-    animation: pulseSoon 1.6s ease-in-out infinite !important;
-}
-.live-banner.before .live-timer {
-    color: var(--accent) !important;
-    font-weight: 700;
-}
-@keyframes pulseSoon {
-    0%,100% { box-shadow: 0 0 0 0 var(--accent); }
-    50% { box-shadow: 0 0 0 8px transparent; }
-}
-
-/* Тёмные темы — усилить свечение */
-[data-theme="dark"] .live-banner.before,
-[data-theme="cosmic"] .live-banner.before {
-    box-shadow: 0 6px 22px var(--accent-light), inset 0 1px 0 rgba(255,255,255,0.06) !important;
-}
-
-/* ===== БАННЕР "РАСПИСАНИЕ ИЗМЕНЕНО" ===== */
-#changeBanner {
-    display: none;
-    margin-bottom: 12px;
-    padding: 12px 16px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, var(--accent-light), var(--card));
-    border: 1.5px solid var(--accent);
-    color: var(--text);
-    font-weight: 700;
-    font-size: 0.88rem;
-    box-shadow: 0 6px 20px var(--accent-light);
-    align-items: center;
-    gap: 10px;
-    animation: bannerSlide 0.35s cubic-bezier(0.4,0,0.2,1);
-}
-#changeBanner.show { display: flex; }
-#changeBanner .bn-icon { font-size: 1.2rem; }
-#changeBanner .bn-time { color: var(--accent); font-weight: 800; }
-@keyframes bannerSlide {
-    from { opacity: 0; transform: translateY(-6px); }
-    to { opacity: 1; transform: none; }
-}
-
-/* ===== ПУЛЬСАЦИЯ НОВОГО ДНЯ ===== */
-@keyframes newDayPulse {
-    0%, 100% {
-        box-shadow: 0 0 0 0 var(--accent), inset 0 0 0 0 var(--accent-light);
-        transform: scale(1);
-    }
-    50% {
-        box-shadow: 0 0 0 6px transparent, inset 0 0 0 4px var(--accent-light);
-        transform: scale(1.06);
-    }
-}
-.tab.new-day {
-    animation: newDayPulse 1.5s ease-in-out infinite !important;
-    background: linear-gradient(135deg, var(--accent-light), transparent) !important;
-    color: var(--accent) !important;
-    font-weight: 900 !important;
-    border: 1px solid var(--accent) !important;
-}
-.tab.new-day .tab-day {
-    color: var(--accent) !important;
-    opacity: 1 !important;
-    font-weight: 900 !important;
-}
-
-/* ===== АДМИН-ПАНЕЛЬ ===== */
-@keyframes fabIn { from { opacity:0; transform: scale(0); } to { opacity:1; transform: scale(1); } }
-
-#adminPanel {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.75);
-    z-index: 9998;
-    padding: 20px;
-    align-items: flex-start;
-    justify-content: center;
-    padding-top: 60px;
-    overflow-y: auto;
-}
-#adminPanel.show { display: flex; }
-.ap-inner {
-    background: var(--card);
-    border-radius: 20px;
-    padding: 20px;
-    max-width: 500px;
-    width: 100%;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-}
-.ap-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    font-weight: 800;
-    font-size: 1.1rem;
-    color: var(--text);
-}
-.ap-close {
-    background: var(--accent-light);
-    color: var(--accent);
-    border: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    font-size: 1rem;
-    cursor: pointer;
-    font-family: inherit;
-}
-.ap-visitor {
-    background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.1));
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 14px;
-    margin-bottom: 10px;
-}
-[data-theme="dark"] .ap-visitor,
-[data-theme="cosmic"] .ap-visitor {
-    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
-}
-.ap-visitor.blocked { border-color: #ef4444; background: rgba(239,68,68,0.08); }
-.ap-vid { font-weight: 800; color: var(--accent); font-size: 0.85rem; word-break: break-all; }
-.ap-info { color: var(--muted); font-size: 0.78rem; margin-top: 4px; }
-.ap-ago { color: var(--green, #10b981); font-weight: 700; font-size: 0.78rem; margin-top: 4px; }
-.ap-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
-.ap-input {
-    flex: 1;
-    min-width: 120px;
-    padding: 9px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text);
-    font-family: inherit;
-    font-size: 0.85rem;
-}
-.ap-btn {
-    padding: 9px 14px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)));
-    color: #fff;
-    font-weight: 800;
-    font-size: 0.82rem;
-    cursor: pointer;
-    font-family: inherit;
-}
-.ap-btn.danger { background: #ef4444; }
-.ap-btn.success { background: #10b981; }
-.ap-btn:active { transform: scale(0.95); }
-#secretTrigger{display:block;width:70px;height:70px;margin:10px auto 0;background:transparent;cursor:default;user-select:none;-webkit-tap-highlight-color:transparent;border-radius:50%;}
-#secretTrigger.admin-active{background:linear-gradient(135deg,var(--accent-light),transparent) !important;opacity:0.5 !important;cursor:pointer !important;}
-#secretTrigger.admin-active::after{content:"👑";display:block;text-align:center;padding-top:22px;font-size:1.4rem;opacity:0.7;}
+.time { font-size:0.8rem; color: var(--text-muted); font-weight:700; }
+.lesson { font-size:1.05rem; font-weight:800; color: var(--text-main); word-wrap:break-word; }
+.now-pill { font-size:0.6rem; background: var(--accent); color:#fff; padding:3px 8px; border-radius:20px; font-weight:800; text-transform:uppercase; margin-left:auto; flex-shrink:0; }
+.info-box { background: var(--card-bg); padding:28px 20px; border-radius:18px; box-shadow: var(--shadow); text-align:center; font-size:1.02rem; font-weight:700; color: var(--text-muted); border:1px solid var(--border); }
+.error { background: rgba(224,49,49,0.1); color:#e03131; padding:16px; border-radius:16px; font-weight:700; text-align:center; }
+.sheet-link { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:20px; padding:13px 16px; color: var(--accent); text-decoration:none; font-size:0.85rem; font-weight:800; border-radius:14px; border:1.5px solid var(--accent); background: var(--accent-light); }
+
+html.font-small .lesson { font-size:0.9rem; } html.font-small .live-lesson { font-size:0.92rem; }
+html.font-large .lesson { font-size:1.18rem; } html.font-large .live-lesson { font-size:1.16rem; } html.font-large .day-title { font-size:1.28rem; }
+html.compact .card { padding:11px 14px; margin-bottom:7px; } html.compact .num { min-width:34px; height:34px; font-size:0.9rem; }
+html.hide-time .time { display:none; }
+html.round-nums .num { border-radius:50% !important; }
+html.hide-weekend .tab[data-day="Суббота"] { display:none; }
+html.no-live .live-banner { display:none !important; }
+html.no-progress .progress-bar { display:none !important; }
+html.no-glow .card.now { box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important; }
+html.no-today-pill .today-pill { display:none !important; }
+html.no-weekday .brand-sub { display:none !important; }
+
+.ap-inner { background: var(--card-bg); border-radius:20px; padding:20px; border:1.5px solid var(--accent); }
+.ap-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; font-weight:800; font-size:1.1rem; color: var(--text-main); }
+.ap-close { background: var(--accent-light); color: var(--accent); border:none; width:38px; height:38px; border-radius:10px; font-size:1rem; cursor:pointer; font-family:inherit; font-weight:800; }
+.ap-visitor { background: var(--accent-light); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px; }
+.ap-visitor.blocked { border-color:#ef4444; background: rgba(239,68,68,0.08); }
+.ap-visitor.is-me { border-color: var(--accent); background: linear-gradient(135deg, var(--accent-light), transparent); box-shadow: 0 4px 16px var(--accent-light); }
+.ap-badge { display:inline-block; background: linear-gradient(135deg, var(--accent), var(--accent2)); color:#fff; font-size:0.65rem; font-weight:800; padding:3px 8px; border-radius:8px; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.05em; }
+.ap-vid { font-weight:800; color: var(--accent); font-size:0.85rem; word-break:break-all; }
+.ap-info { color: var(--text-muted); font-size:0.78rem; margin-top:4px; }
+.ap-ago { color:#10b981; font-weight:700; font-size:0.78rem; margin-top:4px; }
+.ap-actions { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+.ap-input { flex:1; min-width:120px; padding:9px; border-radius:10px; border:1px solid var(--border); background: var(--bg); color: var(--text-main); font-family:inherit; font-size:0.85rem; }
+.ap-btn { padding:9px 14px; border-radius:10px; border:none; background: linear-gradient(135deg, var(--accent), var(--accent2)); color:#fff; font-weight:800; font-size:0.82rem; cursor:pointer; font-family:inherit; }
+.ap-btn.danger { background:#ef4444; } .ap-btn.success { background:#10b981; }
+.ap-rename { background:transparent; border:1px solid var(--border); width:34px; height:34px; border-radius:10px; font-size:0.9rem; cursor:pointer; color: var(--text-muted); font-family:inherit; }
+
+.admin-tabs { display:flex; gap:4px; margin-bottom:14px; padding:4px; background: var(--accent-light); border-radius:12px; }
+.admin-tab { flex:1; padding:10px 8px; background:transparent; border:none; color: var(--text-muted); font-weight:800; font-size:0.82rem; cursor:pointer; font-family:inherit; border-radius:9px; }
+.admin-tab.active { background: linear-gradient(135deg, var(--accent), var(--accent2)); color:#fff; }
+.admin-pane { display:none; } .admin-pane.active { display:block; }
+.admin-block { padding:14px 16px; margin-bottom:12px; border-radius:14px; background: var(--card-bg); border:1px solid var(--border); }
+.admin-block-title { font-weight:800; font-size:0.88rem; color: var(--text-main); margin-bottom:10px; }
+.admin-textarea { width:100%; box-sizing:border-box; padding:12px; border-radius:10px; border:1px solid var(--border); background: var(--bg); color: var(--text-main); font-family:inherit; font-size:0.9rem; min-height:80px; margin-bottom:10px; }
 </style>
 </head>
 <body data-changed-at="{changed_at}">
 <div id="particles"></div>
-<div class="side-decor side-left"></div>
-<div class="side-decor side-right"></div>
 <div class="container">
-<div id="changeBanner"><span class="bn-icon">🔔</span><span>Расписание изменено в <span class="bn-time">--:--</span></span></div>
-
 <div class="header-card">
-    <h2><span id="adminTap" style="cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;">📅</span> <span>Расписание</span></h2>
+    <h2><span id="adminTap">📅</span> <span>Расписание</span></h2>
     <div class="header-right">
         <div class="badge-class">8Г</div>
-        <button class="icon-btn" onclick="toggleSettings(event)" title="Настройки">⚙️</button>
+        <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
     </div>
+</div>
 
-    <div class="settings-panel" id="settingsPanel">
-    <div class="settings-preview"></div>
+<div class="settings-panel" id="settingsPanel">
     <div class="settings-title">🎨 Тема</div>
     <div class="theme-options">
         <button class="theme-btn" data-theme-btn="light" onclick="setTheme('light')"><span class="emoji">☀️</span>Светлая</button>
@@ -3446,7 +522,6 @@ body::-webkit-scrollbar {
         <button class="theme-btn" data-theme-btn="sakura" onclick="setTheme('sakura')"><span class="emoji">🌸</span>Сакура</button>
         <button class="theme-btn" data-theme-btn="custom" onclick="setTheme('custom')"><span class="emoji">🎨</span>Кастом</button>
     </div>
-
     <div class="custom-picker">
         <label>Основной <input type="color" id="cuAccent" value="#6366f1" onchange="applyCustom()"></label>
         <label>Второй <input type="color" id="cuAccent2" value="#a855f7" onchange="applyCustom()"></label>
@@ -3475,628 +550,158 @@ body::-webkit-scrollbar {
 {content}
 
 <a class="sheet-link" href="{sheet_url}" target="_blank" rel="noopener">📊 Открыть таблицу в Google Sheets</a>
-<div id="secretTrigger" aria-hidden="true"></div>
 </div>
 
-<script>
-(function() {
-    var saved = localStorage.getItem('rs_theme') || 'light';
-    document.documentElement.setAttribute('data-theme', saved);
-    var meta = document.getElementById('themeColorMeta');
-    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4'};
-var icons = {light:'☀️', dark:'🌙', cosmic:'🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸'};
-    if (meta) meta.setAttribute('content', colors[saved] || '#f0f4f8');
-    document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
-        if (b.getAttribute('data-theme-btn') === saved) b.classList.add('active');
-    });
-    var size = localStorage.getItem('rs_size') || 'normal';
-    if (size === 'small') document.documentElement.classList.add('font-small');
-    if (size === 'large') document.documentElement.classList.add('font-large');
-    document.querySelectorAll('[data-size]').forEach(function(b) {
-        if (b.getAttribute('data-size') === size) b.classList.add('active');
-    });
-    if (localStorage.getItem('rs_compact') === '1') document.documentElement.classList.add('compact');
-    if (localStorage.getItem('rs_round_nums') === '1') document.documentElement.classList.add('round-nums');
-    document.getElementById('tCompact').classList.toggle('on', localStorage.getItem('rs_compact') === '1');
-    document.getElementById('tHideTime').classList.toggle('on', localStorage.getItem('rs_hide_time') === '1');
-    var _t4=document.getElementById('tRoundNums'); if(_t4) _t4.classList.toggle('on', localStorage.getItem('rs_round_nums')==='1');
-    var _t5=document.getElementById('tParticles'); if(_t5) _t5.classList.toggle('on', localStorage.getItem('rs_particles')!=='0');
-})();
-
-function toggleRoundNums(){var on=document.documentElement.classList.toggle('round-nums');localStorage.setItem('rs_round_nums',on?'1':'0');var e=document.getElementById('tRoundNums');if(e)e.classList.toggle('on',on);}
-function toggleParticles(){var on=localStorage.getItem('rs_particles')!=='0';on=!on;localStorage.setItem('rs_particles',on?'1':'0');var e=document.getElementById('tParticles');if(e)e.classList.toggle('on',on);if(on){spawnParticles(document.documentElement.getAttribute('data-theme'));}else{var c=document.getElementById('particles');if(c)c.innerHTML='';}}
-
-function setTheme(t) {
-    document.documentElement.setAttribute('data-theme', t);
-    localStorage.setItem('rs_theme', t);
-    document.querySelectorAll('[data-theme-btn]').forEach(function(b) {
-        b.classList.toggle('active', b.getAttribute('data-theme-btn') === t);
-    });
-    var meta = document.getElementById('themeColorMeta');
-    var colors = {light:'#f0f4f8', dark:'#0f1115', cosmic:'#05021a', ocean:'#b8e0f0', sunset:'#ffd9b0', forest:'#c9e6bf', sakura:'#ffd6e4'};
-var icons = {light:'☀️', dark:'🌙', cosmic:'🌌', ocean:'🌊', sunset:'🌅', forest:'🌿', sakura:'🌸'};
-    if (meta) meta.setAttribute('content', colors[t] || '#f0f4f8');
-    spawnParticles(t);
-}
-function setSize(s) {
-    document.documentElement.classList.remove('font-small','font-large');
-    if (s === 'small') document.documentElement.classList.add('font-small');
-    if (s === 'large') document.documentElement.classList.add('font-large');
-    localStorage.setItem('rs_size', s);
-    document.querySelectorAll('[data-size]').forEach(function(b) {
-        b.classList.toggle('active', b.getAttribute('data-size') === s);
-    });
-}
-function toggleCompact() {
-    var on = document.documentElement.classList.toggle('compact');
-    localStorage.setItem('rs_compact', on ? '1' : '0');
-    document.getElementById('tCompact').classList.toggle('on', on);
-}
-function toggleSettings(e) {
-    if (e) e.stopPropagation();
-    document.getElementById('settingsPanel').classList.toggle('open');
-}
-document.addEventListener('click', function(e) {
-    var p = document.getElementById('settingsPanel');
-    if (!p.classList.contains('open')) return;
-    if (p.contains(e.target)) return;
-    if (e.target.closest('.icon-btn')) return;
-    p.classList.remove('open');
-});
-function showDay(day) {
-    document.querySelectorAll('.day-block').forEach(function(el) { el.classList.remove('active-day'); });
-    var t = document.getElementById('block-' + day);
-    if (t) t.classList.add('active-day');
-    document.querySelectorAll('.tab').forEach(function(x) {
-        x.classList.toggle('active', x.getAttribute('data-day') === day);
-    });
-}
-var deferredPrompt = null;
-var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); deferredPrompt = e; renderInstallSection(); });
-window.addEventListener('appinstalled', function() { deferredPrompt = null; localStorage.setItem('rs_installed','1'); renderInstallSection(); });
-function renderInstallSection() {
-    var el = document.getElementById('installSection');
-    if (!el) return;
-    if (isStandalone || localStorage.getItem('rs_installed') === '1') {
-        el.innerHTML = '<div class="installed-badge">✅ Приложение установлено</div>';
-        return;
-    }
-    if (deferredPrompt) {
-        el.innerHTML = '<button class="install-btn" onclick="doInstall()">📲 Установить приложение</button>';
-        return;
-    }
-    var ua = navigator.userAgent, hint;
-    if (/iPhone|iPad|iPod/i.test(ua)) hint = 'iPhone: Safari → «Поделиться» → «На экран Домой».';
-    else if (/Android/i.test(ua)) hint = 'Android: Chrome → ⋮ → «Установить приложение».';
-    else hint = 'ПК: в Chrome — иконка в адресной строке.';
-    el.innerHTML = '<div class="hint-text">📱 ' + hint + '</div>';
-}
-function doInstall() {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(function(c) {
-        if (c.outcome === 'accepted') localStorage.setItem('rs_installed','1');
-        deferredPrompt = null; renderInstallSection();
-    });
-}
-
-
-
-
-/* === ЧАСТИЦЫ ПО ТЕМАМ === */
-function spawnParticles(theme) {
-    var container = document.getElementById('particles');
-    if (!container) return;
-    container.innerHTML = '';
-    if (localStorage.getItem('rs_particles') === '0') return;
-    if (window.innerWidth < 300) return;
-    var configs = {
-        cosmic: { chars: ['✦','✧','·','+'], colors: ['#ffffff','#b794f6','#7cf5c0','#e0d4ff'], count: 18, sizes: [10,18], dur: [15,28] },
-        sakura: { chars: ['🌸','🌸','❀'], colors: ['#ec4899','#f9a8d4','#fbcfe8'], count: 14, sizes: [14,22], dur: [11,20] },
-        forest: { chars: ['🍃','🌿'], colors: ['#059669','#16a34a','#84cc16'], count: 12, sizes: [14,22], dur: [13,24] },
-        ocean:  { chars: ['●','○','·'], colors: ['rgba(34,211,238,0.75)','rgba(8,145,178,0.65)','rgba(255,255,255,0.55)'], count: 12, sizes: [8,16], dur: [11,20] },
-        sunset: { chars: ['✨','·','✦'], colors: ['#f97316','#ec4899','#fbbf24'], count: 10, sizes: [10,18], dur: [13,22] }
-    };
-    var cfg = configs[theme];
-    if (!cfg) return;
-    var isMobile = window.innerWidth < 820;
-    var n = isMobile ? Math.max(6, Math.round(cfg.count * 0.6)) : cfg.count;
-    var frag = document.createDocumentFragment();
-    for (var i = 0; i < n; i++) {
-        var el = document.createElement('span');
-        el.className = 'particle';
-        el.textContent = cfg.chars[Math.floor(Math.random() * cfg.chars.length)];
-        el.style.left = (Math.random() * 100) + '%';
-        var size = cfg.sizes[0] + Math.random() * (cfg.sizes[1] - cfg.sizes[0]);
-        el.style.fontSize = size + 'px';
-        el.style.color = cfg.colors[Math.floor(Math.random() * cfg.colors.length)];
-        var dur = cfg.dur[0] + Math.random() * (cfg.dur[1] - cfg.dur[0]);
-        el.style.animationDuration = dur + 's';
-        el.style.animationDelay = (-Math.random() * dur) + 's';
-        frag.appendChild(el);
-    }
-    container.appendChild(frag);
-}
-spawnParticles(localStorage.getItem('rs_theme') || 'light');
-document.addEventListener('visibilitychange', function() {
-    var ps = document.hidden ? 'paused' : 'running';
-    document.querySelectorAll('.particle').forEach(function(p) { p.style.animationPlayState = ps; });
-});
-
-renderInstallSection();
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js').catch(function() {});
-    });
-}
-
-/* === ЖИВОЙ ТАЙМЕР === */
-(function(){
-    function pad(n){ return (n<10?'0':'')+n; }
-    function update(){
-        var nowSec = Math.floor(Date.now()/1000);
-        var nowEl = document.querySelector('.live-banner.now');
-        if (nowEl) {
-            var endUnix = parseInt(nowEl.getAttribute('data-end-unix'), 10);
-            var until = nowEl.getAttribute('data-until') || '';
-            var tEl = nowEl.querySelector('.live-timer');
-            if (endUnix && tEl) {
-                var left = Math.max(0, Math.ceil((endUnix - nowSec) / 60));
-                tEl.textContent = 'до ' + until + ' · осталось ' + left + ' мин';
-            }
-        }
-        var beforeEl = document.querySelector('.live-banner.before');
-        if (beforeEl) {
-            var startUnix = parseInt(beforeEl.getAttribute('data-start-unix'), 10);
-            var startStr = beforeEl.getAttribute('data-start') || '';
-            var tEl2 = beforeEl.querySelector('.live-timer');
-            if (startUnix && tEl2) {
-                var wait = Math.max(0, Math.ceil((startUnix - nowSec) / 60));
-                var waitStr;
-                if (wait >= 60) {
-                    var h = Math.floor(wait / 60);
-                    var m = wait % 60;
-                    waitStr = m ? (h + ' ч ' + m + ' мин') : (h + ' ч');
-                } else {
-                    waitStr = wait + ' мин';
-                }
-                tEl2.textContent = 'в ' + startStr + ' · через ' + waitStr;
-                var lbl = beforeEl.querySelector('.live-label');
-                if (lbl) lbl.textContent = wait <= 30 ? 'Скоро урок' : 'Следующий урок';
-            }
-        }
-    }
-    update();
-    setInterval(update, 10000);
-    document.addEventListener('visibilitychange', function(){
-        if (!document.hidden) update();
-    });
-})();
-
-
-
-/* ===== УВЕДОМЛЕНИЕ ОБ ИЗМЕНЕНИИ ===== */
-(function(){
-    var changedAt = parseInt(document.body.getAttribute('data-changed-at') || '0', 10);
-    if (!changedAt) return;
-    var seen = parseInt(localStorage.getItem('rs_seen_change') || '0', 10);
-    var shownAt = parseInt(localStorage.getItem('rs_shown_at') || '0', 10);
-    var nowSec = Math.floor(Date.now()/1000);
-    var shouldShow = false;
-    if (changedAt > seen) {
-        localStorage.setItem('rs_seen_change', changedAt);
-        localStorage.setItem('rs_shown_at', nowSec);
-        shouldShow = true;
-    } else if (changedAt === seen && shownAt && (nowSec - shownAt) < 30) {
-        shouldShow = true;
-    }
-    if (!shouldShow) return;
-    var banner = document.getElementById('changeBanner');
-    if (!banner) return;
-    var d = new Date(changedAt * 1000);
-    var hh = ('0'+d.getHours()).slice(-2);
-    var mm = ('0'+d.getMinutes()).slice(-2);
-    var timeEl = banner.querySelector('.bn-time');
-    if (timeEl) timeEl.textContent = hh+':'+mm;
-    banner.classList.add('show');
-})();
-
-/* ===== ПУЛЬСАЦИЯ НОВОГО ДНЯ + ПАМЯТЬ ДНЯ ===== */
-(function(){
-    // ISO-неделя
-    function wk(){
-        var d = new Date();
-        var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-        var dn = t.getUTCDay() || 7;
-        t.setUTCDate(t.getUTCDate() + 4 - dn);
-        var ys = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
-        var wn = Math.ceil((((t - ys) / 86400000) + 1) / 7);
-        return t.getUTCFullYear() + '-W' + wn;
-    }
-    // Сброс в новую неделю
-    if (localStorage.getItem('rs_week_pulse') !== wk()) {
-        localStorage.removeItem('rs_seen_days');
-        localStorage.setItem('rs_week_pulse', wk());
-    }
-
-    // Список увиденных новых дней
-    var seen;
-    try { seen = JSON.parse(localStorage.getItem('rs_seen_days') || '[]'); }
-    catch(e){ seen = []; }
-
-    // 1. Открываем на СЕГОДНЯ, если пусто — на ЗАВТРА
-    var daysRu = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
-    var todayIdx = new Date().getDay() - 1; // 0=Пн
-    if (todayIdx < 0) todayIdx = 5;
-    if (todayIdx > 5) todayIdx = 5;
-    var todayName = daysRu[todayIdx];
-    var tomorrowName = daysRu[(todayIdx + 1) % 6];
-    var todayBlock = document.getElementById('block-' + todayName);
-    var targetDay = todayName;
-    if (todayBlock) {
-        var hasToday = todayBlock.querySelectorAll('.card').length > 0;
-        if (!hasToday) targetDay = tomorrowName;
-    }
-    var tb = document.getElementById('block-' + targetDay);
-    if (tb) {
-        document.querySelectorAll('.day-block').forEach(function(el){ el.classList.remove('active-day'); });
-        tb.classList.add('active-day');
-        document.querySelectorAll('.tab').forEach(function(x){
-            x.classList.toggle('active', x.getAttribute('data-day') === targetDay);
-        });
-    }
-
-    // 2. Обработка пульсации
-    document.querySelectorAll('.tab.new-day').forEach(function(tab){
-        var day = tab.getAttribute('data-day');
-        if (seen.indexOf(day) !== -1) {
-            // Уже видел — снять пульсацию
-            tab.classList.remove('new-day');
-        }
-    });
-
-    // 3. Клик на любой таб — снять пульсацию + сохранить день
-    document.querySelectorAll('.tab').forEach(function(tab){
-        tab.addEventListener('click', function(){
-            var day = tab.getAttribute('data-day');
-            // Убираем пульсацию
-            if (tab.classList.contains('new-day')) {
-                tab.classList.remove('new-day');
-                if (seen.indexOf(day) === -1) {
-                    seen.push(day);
-                    try { localStorage.setItem('rs_seen_days', JSON.stringify(seen)); } catch(e){}
-                }
-            }
-
-        });
-    });
-})();
-
-
-</script>
-
-<div id="adminPanel">
-    <div class="ap-header">
-        <span>👥 Посетители</span>
-        <button class="ap-close" onclick="closeAdminPanel()">✕</button>
+<div class="subscreen" id="sub-interface">
+    <div class="subscreen-header"><button class="subscreen-back" onclick="closeSub('interface')">←</button><div class="subscreen-title">🎨 Интерфейс</div></div>
+    <div class="subscreen-body">
+        <div class="srow" onclick="toggleOpt('particles')"><span class="srow-label" data-ico="✨">Частицы фона</span><span class="srow-value" id="val-particles">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('round_nums')"><span class="srow-label" data-ico="🔢">Круглые номера</span><span class="srow-value" id="val-round_nums">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('compact')"><span class="srow-label" data-ico="📏">Компактный режим</span><span class="srow-value" id="val-compact">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('show_time')"><span class="srow-label" data-ico="⏱️">Показывать время</span><span class="srow-value" id="val-show_time">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('live_banner')"><span class="srow-label" data-ico="📢">Баннер «Сейчас идёт»</span><span class="srow-value" id="val-live_banner">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('progress_bar')"><span class="srow-label" data-ico="📊">Прогресс-бар урока</span><span class="srow-value" id="val-progress_bar">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('glow')"><span class="srow-label" data-ico="💡">Свечение акцента</span><span class="srow-value" id="val-glow">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('big_text')"><span class="srow-label" data-ico="🔠">Крупный шрифт</span><span class="srow-value" id="val-big_text">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('show_weekday')"><span class="srow-label" data-ico="📅">День недели в шапке</span><span class="srow-value" id="val-show_weekday">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('today_pill')"><span class="srow-label" data-ico="🏷️">Плашка «Сегодня»</span><span class="srow-value" id="val-today_pill">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('hide_weekend')"><span class="srow-label" data-ico="🚫">Скрыть субботу</span><span class="srow-value" id="val-hide_weekend">выкл</span></div>
     </div>
-    <div class="ap-list" id="apList">Загрузка…</div>
+</div>
+
+<div class="subscreen" id="sub-advanced">
+    <div class="subscreen-header"><button class="subscreen-back" onclick="closeSub('advanced')">←</button><div class="subscreen-title">🔧 Дополнительно</div></div>
+    <div class="subscreen-body">
+        <div class="acc-sub">📐 Размеры</div>
+        <div class="acc-slider"><label>Шрифт уроков <output id="o-lesson_size">1.05</output>rem</label><input type="range" min="0.85" max="1.35" step="0.05" id="s-lesson_size" oninput="setVar('lesson_size',this.value,'rem')"></div>
+        <div class="acc-slider"><label>Размер номеров <output id="o-num_size">40</output>px</label><input type="range" min="30" max="56" step="2" id="s-num_size" oninput="setVar('num_size',this.value,'px')"></div>
+        <div class="acc-slider"><label>Радиус карточек <output id="o-card_radius">16</output>px</label><input type="range" min="0" max="30" step="2" id="s-card_radius" oninput="setVar('card_radius',this.value,'px')"></div>
+        <div class="acc-slider"><label>Промежутки карточек <output id="o-card_gap">10</output>px</label><input type="range" min="4" max="24" step="2" id="s-card_gap" oninput="setVar('card_gap',this.value,'px')"></div>
+        <div class="acc-sub">🎨 Цвета</div>
+        <div class="acc-slider"><label>Насыщенность <output id="o-saturate">100</output>%</label><input type="range" min="0" max="200" step="5" id="s-saturate" oninput="setFilter('saturate',this.value)"></div>
+        <div class="acc-slider"><label>Яркость <output id="o-brightness">100</output>%</label><input type="range" min="60" max="140" step="5" id="s-brightness" oninput="setFilter('brightness',this.value)"></div>
+        <div class="acc-slider"><label>Оттенок <output id="o-hue">0</output>°</label><input type="range" min="-180" max="180" step="5" id="s-hue" oninput="setFilter('hue-rotate',this.value,'deg')"></div>
+        <div class="acc-sub">⚡ Производительность</div>
+        <div class="acc-slider"><label>Количество частиц <output id="o-particle_count">18</output></label><input type="range" min="0" max="40" step="1" id="s-particle_count" oninput="setParticleCount(this.value)"></div>
+        <div class="acc-slider"><label>Скорость анимаций <output id="o-anim_speed">1</output>x</label><input type="range" min="0.5" max="2" step="0.1" id="s-anim_speed" oninput="setAnimSpeed(this.value)"></div>
+        <button class="link-btn" style="width:100%;padding:14px;margin-top:14px;" onclick="resetAllOpts()">🔄 Сбросить все настройки</button>
+    </div>
+</div>
+
+<div class="subscreen" id="sub-app">
+    <div class="subscreen-header"><button class="subscreen-back" onclick="closeSub('app')">←</button><div class="subscreen-title">📱 Приложение</div></div>
+    <div class="subscreen-body"><div id="installSection"></div></div>
+</div>
+
+<div class="subscreen" id="sub-admin">
+    <div class="subscreen-header"><button class="subscreen-back" onclick="closeSub('admin')">←</button><div class="subscreen-title">👑 Админ</div></div>
+    <div class="subscreen-body">
+        <div class="admin-tabs">
+            <button class="admin-tab active" data-atab="visitors" onclick="switchAdminTab('visitors')">👥</button>
+            <button class="admin-tab" data-atab="broadcast" onclick="switchAdminTab('broadcast')">📢</button>
+            <button class="admin-tab" data-atab="blocked" onclick="switchAdminTab('blocked')">🚫</button>
+        </div>
+        <div class="admin-pane active" id="atab-visitors"><div id="apList">Загрузка…</div></div>
+        <div class="admin-pane" id="atab-broadcast">
+            <div class="admin-block">
+                <div class="admin-block-title">📢 Отправить всем</div>
+                <textarea class="admin-textarea" id="broadcastText" placeholder="Текст..."></textarea>
+                <button class="ap-btn" onclick="sendBroadcast()">Отправить всем</button>
+            </div>
+        </div>
+        <div class="admin-pane" id="atab-blocked"><div id="blockedList">Загрузка…</div></div>
+    </div>
 </div>
 
 <script>
-(function(){
-    var ADMIN_PWD = 'SixSeveeen';
-    var isAdmin = localStorage.getItem('rs_admin') === '1';
-    var taps = parseInt(localStorage.getItem('rs_taps') || '0', 10);
-    var secret = document.getElementById('secretTrigger');
-    if (!secret) return;
-    function ensurePanel(){
-        var p = document.getElementById('adminPanel');
-        if (p) return p;
-        p = document.createElement('div');
-        p.id = 'adminPanel';
-        p.innerHTML = '<div class="ap-inner"><div class="ap-header"><span>👥 Посетители</span><button class="ap-close" onclick="closeAdminPanel()">✕</button></div><div class="ap-list" id="apList">Загрузка…</div></div>';
-        document.body.appendChild(p);
-        return p;
-    }
-    function agoStr(s){
-        if (s < 60) return s + ' сек назад';
-        if (s < 3600) return Math.floor(s/60) + ' мин назад';
-        if (s < 86400) return Math.floor(s/3600) + ' ч назад';
-        return Math.floor(s/86400) + ' дн назад';
-    }
-    function esc(x){var d=document.createElement('div');d.textContent=x;return d.innerHTML;}
-    window.loadVisitors = function(){
-        var savedInputs = {};
-        document.querySelectorAll('.ap-input').forEach(function(inp){
-            if (inp.id && inp.id.indexOf('msg_') === 0 && inp.value) {
-                savedInputs[inp.id] = inp.value;
-            }
-        });
-        fetch('/api/admin/list?admin=nikita_admin_2026&t=' + Date.now())
-            .then(function(r){ return r.json(); })
-            .then(function(list){
-                var el = document.getElementById('apList');
-                if (!el) return;
-                var myVid = localStorage.getItem('rs_vid') || '';
-                var mv = document.getElementById('myVid');
-                if (mv) mv.textContent = myVid;
-                if (!Array.isArray(list) || !list.length) {
-                    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">Пока никого</div>';
-                    return;
-                }
-                // Разделяем: я, остальные
-                var me = list.filter(function(v){ return v.vid === myVid; });
-                var others = list.filter(function(v){ return v.vid !== myVid; });
-                var sorted = me.concat(others);
-                // Список забаненных
-                var bl = document.getElementById('blockedList');
-                var banned = list.filter(function(v){ return v.blocked; });
-                if (bl) {
-                    if (!banned.length) bl.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">Никто не забанен</div>';
-                    else {
-                        var bh = '';
-                        for (var bi = 0; bi < banned.length; bi++) {
-                            var bv = banned[bi];
-                            bh += '<div class="ap-visitor blocked">';
-                            bh += '<div class="ap-vid">' + esc(bv.name || bv.vid) + ' 🚫</div>';
-                            bh += '<div class="ap-info">IP ' + esc(bv.ip) + ' · визитов ' + bv.count + '</div>';
-                            bh += '<div class="ap-actions">';
-                            bh += '<button class="ap-btn success" data-act="unblock" data-vid="' + bv.vid + '">🔓 Разблокировать</button>';
-                            bh += '</div></div>';
-                        }
-                        bl.innerHTML = bh;
-                    }
-                }
-                // Основной список
-                var html = '';
-                for (var i = 0; i < sorted.length; i++) {
-                    var v = sorted[i];
-                    var isMe = (v.vid === myVid);
-                    var cls = 'ap-visitor';
-                    if (v.blocked) cls += ' blocked';
-                    if (isMe) cls += ' is-me';
-                    html += '<div class="' + cls + '">';
-                    if (isMe) html += '<div class="ap-badge">👤 МОЙ АКК</div>';
-                    html += '<div class="ap-vid">' + esc(v.name || v.vid) + (v.blocked ? ' 🚫' : '') + '</div>';
-                    if (v.name) html += '<div class="ap-info" style="font-size:0.7rem;opacity:0.6;">' + esc(v.vid) + '</div>';
-                    html += '<div class="ap-info">IP ' + esc(v.ip) + ' · визитов ' + v.count + '</div>';
-                    html += '<div class="ap-ago">' + agoStr(v.ago) + '</div>';
-                    html += '<div class="ap-actions">';
-                    html += '<input class="ap-input" id="msg_' + v.vid + '" placeholder="Сообщение">';
-                    html += '<button class="ap-btn" data-act="send" data-vid="' + v.vid + '">📩</button>';
-                    html += '<button class="ap-rename" data-act="rename" data-vid="' + v.vid + '" title="Переименовать">✏️</button>';
-                    if (!isMe) {
-                        if (v.blocked) {
-                            html += '<button class="ap-btn success" data-act="unblock" data-vid="' + v.vid + '">🔓</button>';
-                        } else {
-                            html += '<button class="ap-btn danger" data-act="block" data-vid="' + v.vid + '">🚫</button>';
-                        }
-                    }
-                    html += '</div></div>';
-                }
-                el.innerHTML = html;
-                for (var sid in savedInputs) {
-                    var sInp = document.getElementById(sid);
-                    if (sInp && !sInp.value) sInp.value = savedInputs[sid];
-                }
-            }).catch(function(){});
-    };
-    document.addEventListener('click', function(e){
-        var b = e.target.closest && e.target.closest('[data-act]');
-        if (!b) return;
-        var act = b.getAttribute('data-act');
-        var vid = b.getAttribute('data-vid');
-        var key = 'nikita_admin_2026';
-        if (act === 'send') {
-            var inp = document.getElementById('msg_' + vid);
-            if (!inp || !inp.value) return;
-            fetch('/api/admin/send?admin=' + key + '&to=' + encodeURIComponent(vid) + '&text=' + encodeURIComponent(inp.value)).then(function(){ inp.value = ''; });
-        } else if (act === 'rename') {
-            var current = b.closest('.ap-visitor').querySelector('.ap-vid').textContent.replace(' 🚫','');
-            var newName = prompt('Новое имя:', current);
-            if (newName === null) return;
-            fetch('/api/admin/rename?admin=' + key + '&to=' + encodeURIComponent(vid) + '&name=' + encodeURIComponent(newName)).then(function(){ loadVisitors(); });
-        } else if (act === 'block') {
-            if (!confirm('Заблокировать ' + vid + '?')) return;
-            fetch('/api/admin/block?admin=' + key + '&to=' + encodeURIComponent(vid)).then(function(){ loadVisitors(); });
-        } else if (act === 'unblock') {
-            fetch('/api/admin/unblock?admin=' + key + '&to=' + encodeURIComponent(vid)).then(function(){ loadVisitors(); });
-        }
-    });
-    window.openAdminPanel = function(){
-        var p = ensurePanel();
-        p.classList.add('show');
-        loadVisitors();
-    };
-    window.closeAdminPanel = function(){
-        var p = document.getElementById('adminPanel');
-        if (p) p.classList.remove('show');
-    };
-    // ==== АДМИН: только полоска ====
-    if (isAdmin) {
-        secret.classList.add('admin-active');
-        secret.addEventListener('click', function(ev){
-            ev.preventDefault();
-            ev.stopPropagation();
-            openAdminPanel();
-        }, {passive: false});
-    } else {
-        // Не админ — 50 тапов в нижней части
-        function tryOpenAdmin(){
-            taps++;
-            localStorage.setItem('rs_taps', String(taps));
-            if (taps >= 50) {
-                var pwd = prompt('Пароль:');
-                if (pwd === ADMIN_PWD) {
-                    localStorage.setItem('rs_admin', '1');
-                    localStorage.setItem('rs_taps', '0');
-                    isAdmin = true;
-                    taps = 0;
-                    secret.classList.add('admin-active');
-                    openAdminPanel();
-                } else {
-                    localStorage.setItem('rs_taps', '0');
-                    taps = 0;
-                }
-            }
-        }
-    }
+var THEME_COLORS = {light:'#f0f4f8',dark:'#0f1115',cosmic:'#05021a',ocean:'#c7e8f5',sunset:'#ffd9b0',forest:'#d4e8c8',sakura:'#ffd6e4',custom:'#eef2f7'};
 
-    setInterval(function(){
-        var p = document.getElementById('adminPanel');
-        if (!p || !p.classList.contains('show')) return;
-        // Не обновляем если фокус в поле ввода
-        var ae = document.activeElement;
-        if (ae && ae.classList && ae.classList.contains('ap-input')) return;
-        loadVisitors();
-    }, 5000);
-})();
-(function(){
-    var vid = localStorage.getItem('rs_vid');
-    if (!vid) {
-        vid = 'v' + Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
-        localStorage.setItem('rs_vid', vid);
-    }
-    fetch('/api/visit?vid=' + vid).then(function(r){return r.json();}).then(function(d){
-        if (d && d.blocked) {
-            var ov = document.createElement('div');
-            ov.id = 'blockedOverlay';
-            ov.style.cssText = 'position:fixed;inset:0;background:#0f1115;z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center;color:#e6e8ec;font-family:-apple-system,sans-serif;';
-            ov.innerHTML = '<div style="max-width:320px;"><div style="font-size:4rem;margin-bottom:20px;">🚫</div><h1 style="font-size:1.4rem;margin:0 0 10px;">Доступ закрыт</h1><p style="color:#9aa3b2;margin:0;">Владелец сайта ограничил вам доступ.</p></div>';
-            document.body.appendChild(ov);
-        }
-    }).catch(function(){});
-    var lastId = null;
-    function poll(){
-        if (document.hidden) return;
-        fetch('/api/messages?vid=' + vid + '&t=' + Date.now(), {cache:'no-store'})
-            .then(function(r){ return r.json(); })
-            .then(function(m){
-                if (m && m.blocked) {
-                    if (!document.getElementById('blockedOverlay')) {
-                        var ov = document.createElement('div');
-                        ov.id = 'blockedOverlay';
-                        ov.style.cssText = 'position:fixed;inset:0;background:#0f1115;z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center;color:#e6e8ec;font-family:-apple-system,sans-serif;';
-                        ov.innerHTML = '<div style="max-width:320px;"><div style="font-size:4rem;margin-bottom:20px;">🚫</div><h1 style="font-size:1.4rem;margin:0 0 10px;">Доступ закрыт</h1><p style="color:#9aa3b2;margin:0;">Владелец сайта ограничил вам доступ.</p></div>';
-                        document.body.appendChild(ov);
-                    }
-                    return;
-                }
-                if (m && m.id && m.id !== lastId) {
-                    lastId = m.id;
-                    var ov = document.getElementById('smsOverlay');
-                    if (!ov) {
-                        ov = document.createElement('div');
-                        ov.id = 'smsOverlay';
-                        ov.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:99999;align-items:center;justify-content:center;padding:20px;';
-                        ov.innerHTML = '<div style="background:var(--card);border-radius:24px;padding:32px 24px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 0 2px var(--accent);"><div style="font-size:0.75rem;color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:18px;">💬 Сообщение</div><div id="smsText" style="font-size:1.5rem;font-weight:800;color:var(--text);margin-bottom:26px;word-wrap:break-word;line-height:1.3;"></div><button onclick="closeSms()" style="width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent)));color:#fff;font-weight:800;font-size:1rem;cursor:pointer;font-family:inherit;">Понятно</button></div>';
-                        document.body.appendChild(ov);
-                    }
-                    var el = document.getElementById('smsText');
-                    if (el) el.textContent = m.text;
-                    ov.style.display = 'flex';
-                    window.__smsId = m.id;
-                }
-            }).catch(function(){});
-    }
-    window.closeSms = function(){
-        var ov = document.getElementById('smsOverlay');
-        if (ov) ov.style.display = 'none';
-        if (window.__smsId) {
-            fetch('/api/messages/read?vid=' + vid + '&id=' + window.__smsId).catch(function(){});
-            window.__smsId = null;
-        }
-        lastId = null;
-    };
-    setInterval(poll, 5000);
-    setTimeout(poll, 1500);
-})();
-
-/* ===== ПОДЭКРАНЫ ===== */
-function openSub(name){
-    var el = document.getElementById('sub-' + name);
-    if (!el) return;
-    el.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    if (name === 'admin') {
-        var c = document.getElementById('adminSectionContent');
-        if (c) {
-            c.innerHTML = '<div id="apList">Загрузка…</div>';
-            if (typeof loadVisitors === 'function') setTimeout(loadVisitors, 100);
-        }
-    }
-}
-function closeSub(name){
-    var el = document.getElementById('sub-' + name);
-    if (!el) return;
-    el.classList.remove('open');
-    document.body.style.overflow = '';
-}
-function toggleOpt(key){
+function _optIsOn(key){
     var cur = localStorage.getItem('rs_opt_' + key);
-    var isOn;
-    if (key === 'particles' || key === 'show_time') isOn = cur !== '0';
-    else isOn = cur === '1';
-    var newOn = !isOn;
-    localStorage.setItem('rs_opt_' + key, newOn ? '1' : '0');
-    applyOpt(key, newOn);
-    updateOptUI();
+    if (['particles','show_time','live_banner','progress_bar','glow','show_weekday','today_pill'].indexOf(key) >= 0) return cur !== '0';
+    return cur === '1';
 }
+
 function applyOpt(key, on){
     var h = document.documentElement;
-    if (key === 'particles') {
-        var c = document.getElementById('particles');
-        if (c) {
-            if (on) spawnParticles(h.getAttribute('data-theme'));
-            else c.innerHTML = '';
-        }
-    } else if (key === 'round_nums') h.classList.toggle('round-nums', on);
+    if (key === 'particles') { var c=document.getElementById('particles'); if(c){ if(on) spawnParticles(h.getAttribute('data-theme')); else c.innerHTML=''; } }
+    else if (key === 'round_nums') h.classList.toggle('round-nums', on);
     else if (key === 'compact') h.classList.toggle('compact', on);
     else if (key === 'big_text') h.classList.toggle('font-large', on);
     else if (key === 'hide_weekend') h.classList.toggle('hide-weekend', on);
     else if (key === 'show_time') h.classList.toggle('hide-time', !on);
+    else if (key === 'live_banner') h.classList.toggle('no-live', !on);
+    else if (key === 'progress_bar') h.classList.toggle('no-progress', !on);
+    else if (key === 'glow') h.classList.toggle('no-glow', !on);
+    else if (key === 'today_pill') h.classList.toggle('no-today-pill', !on);
+    else if (key === 'show_weekday') h.classList.toggle('no-weekday', !on);
 }
-function updateOptUI(){
-    var keys = ['particles','round_nums','compact','show_time','big_text','hide_weekend'];
-    keys.forEach(function(k){
-        var el = document.getElementById('val-' + k);
-        if (!el) return;
-        var cur = localStorage.getItem('rs_opt_' + k);
-        var isOn;
-        if (k === 'particles' || k === 'show_time') isOn = cur !== '0';
-        else isOn = cur === '1';
-        el.textContent = isOn ? 'вкл' : 'выкл';
-        el.className = 'srow-value' + (isOn ? ' on' : '');
-    });
-}
-function initOpts(){
-    var keys = ['particles','round_nums','compact','show_time','big_text','hide_weekend'];
-    keys.forEach(function(k){
-        var cur = localStorage.getItem('rs_opt_' + k);
-        var isOn;
-        if (k === 'particles' || k === 'show_time') isOn = cur !== '0';
-        else isOn = cur === '1';
-        applyOpt(k, isOn);
-    });
+
+function toggleOpt(key){
+    var on = _optIsOn(key);
+    localStorage.setItem('rs_opt_' + key, !on ? '1' : '0');
+    applyOpt(key, !on);
     updateOptUI();
 }
 
-/* ===== КАСТОМ ===== */
-function hex2rgb(h){
-    h = h.replace('#','');
-    if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
-    return parseInt(h.substr(0,2),16)+','+parseInt(h.substr(2,2),16)+','+parseInt(h.substr(4,2),16);
+function updateOptUI(){
+    document.querySelectorAll('.srow-value').forEach(function(el){
+        var key = el.id.replace('val-','');
+        var on = _optIsOn(key);
+        el.textContent = on ? 'вкл' : 'выкл';
+        el.className = 'srow-value' + (on ? ' on' : '');
+    });
 }
+
+function setVar(name, val, unit){
+    document.documentElement.style.setProperty('--u-' + name, val + (unit||''));
+    var o = document.getElementById('o-' + name); if (o) o.textContent = val;
+    localStorage.setItem('rs_u_' + name, val);
+    applyVars();
+}
+function applyVars(){
+    var h = document.documentElement, v;
+    if ((v = localStorage.getItem('rs_u_lesson_size'))) h.style.setProperty('--lesson-size', v + 'rem');
+    if ((v = localStorage.getItem('rs_u_num_size'))) h.style.setProperty('--num-size', v + 'px');
+    if ((v = localStorage.getItem('rs_u_card_radius'))) h.style.setProperty('--card-radius', v + 'px');
+    if ((v = localStorage.getItem('rs_u_card_gap'))) h.style.setProperty('--card-gap', v + 'px');
+    if ((v = localStorage.getItem('rs_u_num_size'))) {
+        document.querySelectorAll('.num').forEach(function(n){ n.style.minWidth = v + 'px'; n.style.height = v + 'px'; });
+    }
+    if ((v = localStorage.getItem('rs_u_card_radius'))) {
+        document.querySelectorAll('.card').forEach(function(c){ c.style.borderRadius = v + 'px'; });
+    }
+    if ((v = localStorage.getItem('rs_u_card_gap'))) {
+        document.querySelectorAll('.card').forEach(function(c){ c.style.marginBottom = v + 'px'; });
+    }
+    if ((v = localStorage.getItem('rs_u_lesson_size'))) {
+        document.querySelectorAll('.lesson').forEach(function(l){ l.style.fontSize = v + 'rem'; });
+    }
+}
+function setFilter(name, val, unit){
+    var o = document.getElementById('o-' + name.replace('-rotate','')); if (o) o.textContent = val;
+    localStorage.setItem('rs_f_' + name, val);
+    applyFilters();
+}
+function applyFilters(){
+    var h = document.documentElement;
+    var s = localStorage.getItem('rs_f_saturate') || '100';
+    var b = localStorage.getItem('rs_f_brightness') || '100';
+    var hu = localStorage.getItem('rs_f_hue-rotate') || '0';
+    h.style.setProperty('--global-filter', 'saturate('+s+'%) brightness('+b+'%) hue-rotate('+hu+'deg)');
+    document.querySelectorAll('.card, .num, .lesson, .header-card').forEach(function(el){
+        el.style.filter = 'saturate('+s+'%) brightness('+b+'%) hue-rotate('+hu+'deg)';
+    });
+}
+function setParticleCount(v){ localStorage.setItem('rs_particle_count', v); var o=document.getElementById('o-particle_count'); if(o)o.textContent=v; spawnParticles(document.documentElement.getAttribute('data-theme')); }
+function setAnimSpeed(v){ localStorage.setItem('rs_anim_speed', v); var o=document.getElementById('o-anim_speed'); if(o)o.textContent=v; }
+function resetAllOpts(){ if(!confirm('Сбросить все настройки?'))return; Object.keys(localStorage).forEach(function(k){ if(k.indexOf('rs_opt_')===0||k.indexOf('rs_u_')===0||k.indexOf('rs_f_')===0) localStorage.removeItem(k); }); location.reload(); }
+
+function hex2rgb(h){ h=h.replace('#',''); if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; return parseInt(h.substr(0,2),16)+','+parseInt(h.substr(2,2),16)+','+parseInt(h.substr(4,2),16); }
 function applyCustom(){
     var map = {cuAccent:'rs_cu_accent',cuAccent2:'rs_cu_accent2',cuBg:'rs_cu_bg',cuCard:'rs_cu_card',cuText:'rs_cu_text',cuMuted:'rs_cu_muted'};
+    for (var elId in map) { var el=document.getElementById(elId); if(el) localStorage.setItem(map[elId], el.value); }
     var h = document.documentElement;
-    for (var elId in map) {
-        var el = document.getElementById(elId);
-        if (!el) continue;
-        localStorage.setItem(map[elId], el.value);
-    }
     var c1 = localStorage.getItem('rs_cu_accent') || '#6366f1';
     var c2 = localStorage.getItem('rs_cu_accent2') || '#a855f7';
     var bg = localStorage.getItem('rs_cu_bg') || '#eef2f7';
@@ -4109,233 +714,44 @@ function applyCustom(){
     h.style.setProperty('--cu-card', card);
     h.style.setProperty('--cu-text', txt);
     h.style.setProperty('--cu-muted', muted);
-    h.style.setProperty('--cu-accent-light', 'rgba(' + hex2rgb(c1) + ', 0.12)');
+    h.style.setProperty('--cu-accent-light', 'rgba('+hex2rgb(c1)+', 0.12)');
 }
-function resetCustom(){
-    var def = {cuAccent:'#6366f1',cuAccent2:'#a855f7',cuBg:'#eef2f7',cuCard:'#ffffff',cuText:'#0f172a',cuMuted:'#64748b'};
-    for (var k in def) {
-        var el = document.getElementById(k);
-        if (el) el.value = def[k];
-    }
-    applyCustom();
-}
-function initCustom(){
-    var map = {cuAccent:'rs_cu_accent',cuAccent2:'rs_cu_accent2',cuBg:'rs_cu_bg',cuCard:'rs_cu_card',cuText:'rs_cu_text',cuMuted:'rs_cu_muted'};
-    for (var elId in map) {
-        var v = localStorage.getItem(map[elId]);
-        var el = document.getElementById(elId);
-        if (el && v) el.value = v;
-    }
-    if (localStorage.getItem('rs_cu_accent')) applyCustom();
-}
+function resetCustom(){ var def={cuAccent:'#6366f1',cuAccent2:'#a855f7',cuBg:'#eef2f7',cuCard:'#ffffff',cuText:'#0f172a',cuMuted:'#64748b'}; for(var k in def){ var el=document.getElementById(k); if(el) el.value=def[k]; } applyCustom(); }
+function initCustom(){ var map={cuAccent:'rs_cu_accent',cuAccent2:'rs_cu_accent2',cuBg:'rs_cu_bg',cuCard:'rs_cu_card',cuText:'rs_cu_text',cuMuted:'rs_cu_muted'}; for(var elId in map){ var v=localStorage.getItem(map[elId]); var el=document.getElementById(elId); if(el&&v) el.value=v; } applyCustom(); }
 
-/* Показ админ-кнопки только админу */
-(function(){
-    function checkAdmin(){
-        var btn = document.getElementById('adminBtn');
-        if (!btn) return;
-        if (localStorage.getItem('rs_admin') === '1') {
-            btn.style.display = 'flex';
-        } else {
-            btn.style.display = 'none';
-        }
-    }
-    checkAdmin();
-    window.addEventListener('storage', checkAdmin);
-    // После успешного входа — перезагружаем
-    var _origPrompt = window.prompt;
-    window.prompt = function(msg){
-        var r = _origPrompt.apply(this, arguments);
-        setTimeout(checkAdmin, 100);
-        return r;
-    };
-})();
-
-/* ===== АККОРДЕОН + МНОГО НАСТРОЕК ===== */
-function toggleAcc(btn){
-    var block = btn.closest('.acc-block');
-    if (!block) return;
-    block.classList.toggle('open');
+function setTheme(t){
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('rs_theme', t);
+    document.querySelectorAll('[data-theme-btn]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-theme-btn')===t); });
+    var meta = document.getElementById('tcMeta');
+    if (meta) meta.setAttribute('content', THEME_COLORS[t] || '#f0f4f8');
+    if (t === 'custom') applyCustom();
+    spawnParticles(t);
 }
-function _optIsOn(key){
-    var cur = localStorage.getItem('rs_opt_' + key);
-    if (['particles','show_time','live_banner','progress_bar','card_anim','glow','show_weekday','today_pill'].indexOf(key) >= 0) return cur !== '0';
-    return cur === '1';
+function setSize(s){
+    document.documentElement.classList.remove('font-small','font-large');
+    if (s === 'small') document.documentElement.classList.add('font-small');
+    if (s === 'large') document.documentElement.classList.add('font-large');
+    localStorage.setItem('rs_size', s);
+    document.querySelectorAll('[data-size]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-size')===s); });
 }
-function applyOpt(key, on){
-    var h = document.documentElement;
-    var cls = {
-        glow: 'no-glow',
-        progress_bar: 'no-progress',
-        live_banner: 'no-live',
-        today_pill: 'no-today-pill',
-        show_weekday: 'no-weekday',
-        card_anim: 'no-card-anim',
-        blur_bg: 'no-blur-bg',
-        round_nums: 'round-nums',
-        compact: 'compact',
-        big_text: 'font-large',
-        hide_weekend: 'hide-weekend',
-        noise: 'noise-on',
-        vignette: 'vignette-on',
-        scanlines: 'scanlines-on'
-    };
-    var invert = ['glow','progress_bar','live_banner','today_pill','show_weekday','card_anim','blur_bg','show_time'];
-    if (invert.indexOf(key) >= 0) h.classList.toggle(cls[key], !on);
-    else h.classList.toggle(cls[key], on);
-
-    if (key === 'particles') {
-        var c = document.getElementById('particles');
-        if (c) { if (on) spawnParticles(h.getAttribute('data-theme')); else c.innerHTML = ''; }
-    }
-    if (key === 'show_time') h.classList.toggle('hide-time', !on);
+function toggleSettings(){ document.getElementById('settingsPanel').classList.toggle('open'); }
+function showDay(day){
+    document.querySelectorAll('.day-block').forEach(function(el){ el.classList.remove('active-day'); });
+    var t = document.getElementById('block-' + day);
+    if (t) t.classList.add('active-day');
+    document.querySelectorAll('.tab').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-day')===day); });
 }
-function updateOptUI(){
-    document.querySelectorAll('.acc-val').forEach(function(el){
-        var key = el.id.replace('val-','');
-        var on = _optIsOn(key);
-        el.textContent = on ? 'вкл' : 'выкл';
-        el.className = 'acc-val' + (on ? ' on' : '');
-    });
-    document.querySelectorAll('html').forEach(function(){}); // stub
-}
-function setVar(name, val, unit){
-    document.documentElement.style.setProperty('--u-' + name, val + (unit||''));
-    document.getElementById('o-' + name).textContent = val;
-    localStorage.setItem('rs_u_' + name, val);
-    applyVars();
-}
-function applyVars(){
-    var h = document.documentElement;
-    var v;
-    if ((v = localStorage.getItem('rs_u_lesson_size'))) h.style.setProperty('--lesson-size', v + 'rem');
-    if ((v = localStorage.getItem('rs_u_header_size'))) h.style.setProperty('--header-size', v + 'rem');
-    if ((v = localStorage.getItem('rs_u_num_size'))) h.style.setProperty('--num-size', v + 'px');
-    if ((v = localStorage.getItem('rs_u_card_radius'))) h.style.setProperty('--card-radius', v + 'px');
-    if ((v = localStorage.getItem('rs_u_btn_radius'))) h.style.setProperty('--btn-radius', v + 'px');
-    if ((v = localStorage.getItem('rs_u_card_gap'))) h.style.setProperty('--card-gap', v + 'px');
-    if ((v = localStorage.getItem('rs_u_page_pad'))) h.style.setProperty('--page-pad', v + 'px');
-}
-function initVars(){
-    ['lesson_size','header_size','num_size','card_radius','btn_radius','card_gap','page_pad'].forEach(function(k){
-        var v = localStorage.getItem('rs_u_' + k);
-        if (!v) return;
-        var inp = document.getElementById('s-' + k);
-        var out = document.getElementById('o-' + k);
-        if (inp) inp.value = v;
-        if (out) out.textContent = v;
-    });
-    applyVars();
-}
-function setFilter(name, val, unit){
-    document.documentElement.style.setProperty('--u-' + name, val + (unit||'%'));
-    document.getElementById('o-' + name.replace('-rotate','')).textContent = val;
-    localStorage.setItem('rs_f_' + name, val);
-    applyFilters();
-}
-function applyFilters(){
-    var h = document.documentElement;
-    var s = localStorage.getItem('rs_f_saturate') || '100';
-    var b = localStorage.getItem('rs_f_brightness') || '100';
-    var c = localStorage.getItem('rs_f_contrast') || '100';
-    var hu = localStorage.getItem('rs_f_hue-rotate') || '0';
-    h.style.setProperty('--global-filter', 'saturate('+s+'%) brightness('+b+'%) contrast('+c+'%) hue-rotate('+hu+'deg)');
-}
-function initFilters(){
-    ['saturate','brightness','contrast','hue-rotate'].forEach(function(k){
-        var v = localStorage.getItem('rs_f_' + k);
-        if (!v) return;
-        var inp = document.getElementById('s-' + k.replace('hue-rotate','hue'));
-        if (inp) inp.value = v;
-    });
-    applyFilters();
-}
-function setParticleCount(v){ localStorage.setItem('rs_particle_count', v); document.getElementById('o-particle_count').textContent = v; }
-function setParticleSize(v){ localStorage.setItem('rs_particle_size', v); document.getElementById('o-particle_size').textContent = v; }
-function setAnimSpeed(v){ localStorage.setItem('rs_anim_speed', v); document.getElementById('o-anim_speed').textContent = v; document.documentElement.style.setProperty('--anim-speed', v); }
-function setTransition(v){ localStorage.setItem('rs_transition', v); document.getElementById('o-transition').textContent = v; document.documentElement.style.setProperty('--trans', v + 's'); }
-function setStyle(type, val){
-    document.documentElement.className = document.documentElement.className.replace(/style-[a-z]+/g, '').trim();
-    document.documentElement.classList.add('style-' + val);
-    localStorage.setItem('rs_style_' + type, val);
-    ['round','sharp','soft'].forEach(function(x){
-        var el = document.getElementById('val-btn-' + x);
-        if (el) el.textContent = (x === val) ? '✓' : '';
-    });
-}
-function resetAllOpts(){
-    if (!confirm('Сбросить все настройки?')) return;
-    Object.keys(localStorage).forEach(function(k){
-        if (k.indexOf('rs_opt_') === 0 || k.indexOf('rs_u_') === 0 || k.indexOf('rs_f_') === 0) localStorage.removeItem(k);
-    });
-    localStorage.removeItem('rs_particle_count');
-    localStorage.removeItem('rs_particle_size');
-    localStorage.removeItem('rs_anim_speed');
-    localStorage.removeItem('rs_transition');
-    location.reload();
-}
-function initAll(){
-    // opts
-    ['particles','round_nums','compact','show_time','live_banner','progress_bar','card_anim','glow','big_text','show_weekday','today_pill','hide_weekend','blur_bg','noise','vignette','scanlines'].forEach(function(k){
-        applyOpt(k, _optIsOn(k));
-    });
-    updateOptUI();
-    initVars();
-    initFilters();
-    var v;
-    if ((v = localStorage.getItem('rs_particle_count'))) { var e = document.getElementById('s-particle_count'); if (e) e.value = v; var o = document.getElementById('o-particle_count'); if (o) o.textContent = v; }
-    if ((v = localStorage.getItem('rs_particle_size'))) { var e = document.getElementById('s-particle_size'); if (e) e.value = v; var o = document.getElementById('o-particle_size'); if (o) o.textContent = v; }
-    if ((v = localStorage.getItem('rs_anim_speed'))) { var e = document.getElementById('s-anim_speed'); if (e) e.value = v; var o = document.getElementById('o-anim_speed'); if (o) o.textContent = v; document.documentElement.style.setProperty('--anim-speed', v); }
-    if ((v = localStorage.getItem('rs_transition'))) { var e = document.getElementById('s-transition'); if (e) e.value = v; var o = document.getElementById('o-transition'); if (o) o.textContent = v; document.documentElement.style.setProperty('--trans', v + 's'); }
-    var st = localStorage.getItem('rs_style_btn');
-    if (st) setStyle('btn', st);
-}
-
-function switchAdminTab(name){
-    document.querySelectorAll('.admin-tab').forEach(function(t){
-        t.classList.toggle('active', t.getAttribute('data-atab') === name);
-    });
-    document.querySelectorAll('.admin-pane').forEach(function(p){
-        p.classList.toggle('active', p.id === 'atab-' + name);
-    });
-    if (name === 'visitors' || name === 'blocked') loadVisitors();
-}
-function sendBroadcast(){
-    var t = document.getElementById('broadcastText');
-    if (!t || !t.value) return;
-    fetch('/api/admin/send?admin=nikita_admin_2026&to=__all__&text=' + encodeURIComponent(t.value)).then(function(){
-        t.value = '';
-        alert('✅ Отправлено всем');
-    });
-}
-function clearMyMsgHistory(){
-    if (!confirm('Очистить историю?')) return;
-    alert('Скоро');
-}
-function clearAllVisits(){
-    if (!confirm('Точно сбросить всех посетителей? Это удалит и баны!')) return;
-    alert('Функция очистки появится позже');
-}
-
 function openSub(name){
     if (name === 'admin' && localStorage.getItem('rs_admin') !== '1') return;
-    document.querySelectorAll('.subscreen').forEach(function(s){
-        if (s.id !== 'sub-' + name) s.classList.remove('open');
-    });
+    document.querySelectorAll('.subscreen').forEach(function(s){ if (s.id !== 'sub-' + name) s.classList.remove('open'); });
     var el = document.getElementById('sub-' + name);
     if (!el) return;
     void el.offsetWidth;
     el.classList.add('open');
-    el.scrollTop = 0;
     document.body.style.overflow = 'hidden';
-    if (name === 'admin') {
-        var pl = document.getElementById('apList');
-        if (pl) pl.innerHTML = 'Загрузка…';
-        if (typeof loadVisitors === 'function') setTimeout(loadVisitors, 100);
-    }
-    if (name === 'app') {
-        if (typeof renderInstallSection === 'function') setTimeout(renderInstallSection, 50);
-    }
+    if (name === 'admin') { if (typeof loadVisitors === 'function') setTimeout(loadVisitors, 100); }
+    if (name === 'app') { if (typeof renderInstallSection === 'function') setTimeout(renderInstallSection, 50); }
 }
 function closeSub(name){
     var el = document.getElementById('sub-' + name);
@@ -4343,370 +759,458 @@ function closeSub(name){
     el.classList.remove('open');
     document.body.style.overflow = '';
 }
-// После пароля — обновляем кнопку
 
+function spawnParticles(theme){
+    var c = document.getElementById('particles');
+    if (!c) return;
+    c.innerHTML = '';
+    if (!_optIsOn('particles')) return;
+    if (window.innerWidth < 320) return;
+    var base = { cosmic:{chars:['✦','✧','·','+'],colors:['#fff','#b794f6','#7cf5c0','#e0d4ff'],dur:[15,28]}, sakura:{chars:['🌸','🌸','❀','✿'],colors:['#ec4899','#f9a8d4','#fbcfe8'],dur:[11,20]}, forest:{chars:['🍃','🌿'],colors:['#059669','#16a34a','#84cc16'],dur:[13,24]}, ocean:{chars:['●','○','·'],colors:['rgba(34,211,238,0.75)','rgba(8,145,178,0.65)'],dur:[11,20]}, sunset:{chars:['✨','·','✦'],colors:['#f97316','#ec4899','#fbbf24'],dur:[13,22]} }[theme];
+    if (!base) return;
+    var n = parseInt(localStorage.getItem('rs_particle_count') || '18', 10);
+    if (window.innerWidth < 820) n = Math.max(4, Math.round(n * 0.6));
+    var frag = document.createDocumentFragment();
+    for (var i=0;i<n;i++){
+        var el = document.createElement('span');
+        el.className = 'particle';
+        el.textContent = base.chars[Math.floor(Math.random()*base.chars.length)];
+        el.style.left = (Math.random()*100)+'%';
+        var sz = 10 + Math.random()*8;
+        el.style.fontSize = sz+'px';
+        el.style.color = base.colors[Math.floor(Math.random()*base.colors.length)];
+        var d = base.dur[0]+Math.random()*(base.dur[1]-base.dur[0]);
+        el.style.animationDuration = d+'s';
+        el.style.animationDelay = (-Math.random()*d)+'s';
+        frag.appendChild(el);
+    }
+    c.appendChild(frag);
+}
 
-/* ===== АДМИН: тап по календарику ===== */
+/* Таймер */
+(function(){
+    function tick(){
+        var nowSec = Math.floor(Date.now()/1000);
+        var nEl = document.querySelector('.live-banner.now');
+        if (nEl) {
+            var end = parseInt(nEl.getAttribute('data-end-unix'),10);
+            var until = nEl.getAttribute('data-until')||'';
+            var tEl = nEl.querySelector('.live-timer');
+            if (end && tEl) { var left = Math.max(0, Math.ceil((end-nowSec)/60)); tEl.textContent = 'до '+until+' · осталось '+left+' мин'; }
+        }
+        var bEl = document.querySelector('.live-banner.before');
+        if (bEl) {
+            var st = parseInt(bEl.getAttribute('data-start-unix'),10);
+            var start = bEl.getAttribute('data-start')||'';
+            var tEl2 = bEl.querySelector('.live-timer');
+            if (st && tEl2) {
+                var wait = Math.max(0, Math.ceil((st-nowSec)/60));
+                var ws;
+                if (wait >= 60) { var h=Math.floor(wait/60); var m=wait%60; ws=m?(h+' ч '+m+' мин'):(h+' ч'); }
+                else ws = wait+' мин';
+                tEl2.textContent = 'в '+start+' · через '+ws;
+                var lbl = bEl.querySelector('.live-label');
+                if (lbl) lbl.textContent = wait <= 30 ? 'Скоро урок' : 'Следующий урок';
+            }
+        }
+    }
+    tick();
+    setInterval(tick, 10000);
+})();
+
+/* Восстановление дня */
+(function(){
+    var daysRu = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+    var todayIdx = new Date().getDay() - 1;
+    if (todayIdx < 0) todayIdx = 5; if (todayIdx > 5) todayIdx = 5;
+    var todayName = daysRu[todayIdx];
+    var tomorrowName = daysRu[(todayIdx+1)%6];
+    var todayBlock = document.getElementById('block-' + todayName);
+    var targetDay = todayName;
+    if (todayBlock) { var has = todayBlock.querySelectorAll('.card').length > 0; if (!has) targetDay = tomorrowName; }
+    var tb = document.getElementById('block-' + targetDay);
+    if (tb) {
+        document.querySelectorAll('.day-block').forEach(function(el){ el.classList.remove('active-day'); });
+        tb.classList.add('active-day');
+        document.querySelectorAll('.tab').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-day') === targetDay); });
+    }
+})();
+
+/* PWA install */
+var deferredPrompt = null;
+var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferredPrompt = e; renderInstallSection(); });
+window.addEventListener('appinstalled', function(){ deferredPrompt = null; localStorage.setItem('rs_installed','1'); renderInstallSection(); });
+function renderInstallSection(){
+    var el = document.getElementById('installSection');
+    if (!el) return;
+    if (isStandalone || localStorage.getItem('rs_installed') === '1') { el.innerHTML = '<div style="color:#10b981;font-weight:800;padding:10px 0;">✅ Приложение установлено</div>'; return; }
+    if (deferredPrompt) { el.innerHTML = '<button class="ap-btn" style="width:100%;padding:14px;" onclick="doInstall()">📲 Установить приложение</button>'; return; }
+    var ua = navigator.userAgent, hint;
+    if (/iPhone|iPad|iPod/i.test(ua)) hint = '📱 iPhone: Safari → «Поделиться» → «На экран Домой».';
+    else if (/Android/i.test(ua)) hint = '📱 Android: Chrome → ⋮ → «Установить приложение».';
+    else hint = '💻 ПК: в Chrome — иконка в адресной строке.';
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;padding:10px 0;">'+hint+'</div>';
+}
+function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferredPrompt.userChoice.then(function(c){ if(c.outcome==='accepted') localStorage.setItem('rs_installed','1'); deferredPrompt=null; renderInstallSection(); }); }
+
+/* Админка */
 (function(){
     var ADMIN_PWD = 'SixSeveeen';
     var isAdmin = localStorage.getItem('rs_admin') === '1';
     var taps = parseInt(localStorage.getItem('rs_taps') || '0', 10);
     var tapEl = document.getElementById('adminTap');
-    if (!tapEl) return;
-
-    tapEl.addEventListener('click', function(ev){
-        ev.preventDefault();
-        ev.stopPropagation();
-        if (isAdmin) {
-            openSub('admin');
-            return;
-        }
-        taps++;
-        localStorage.setItem('rs_taps', String(taps));
-        if (taps >= 50) {
-            var pwd = prompt('Пароль:');
-            if (pwd === ADMIN_PWD) {
-                localStorage.setItem('rs_admin', '1');
-                localStorage.setItem('rs_taps', '0');
-                isAdmin = true;
-                taps = 0;
-                tapEl.style.filter = 'drop-shadow(0 0 8px #fbbf24)';
-                openSub('admin');
-            } else {
-                localStorage.setItem('rs_taps', '0');
-                taps = 0;
+    if (tapEl) {
+        if (isAdmin) tapEl.style.filter = 'drop-shadow(0 0 8px #fbbf24)';
+        tapEl.addEventListener('click', function(ev){
+            ev.preventDefault(); ev.stopPropagation();
+            if (isAdmin) { openSub('admin'); return; }
+            taps++;
+            localStorage.setItem('rs_taps', String(taps));
+            if (taps >= 50) {
+                var pwd = prompt('Пароль:');
+                if (pwd === ADMIN_PWD) {
+                    localStorage.setItem('rs_admin','1'); localStorage.setItem('rs_taps','0');
+                    isAdmin = true; taps = 0;
+                    tapEl.style.filter = 'drop-shadow(0 0 8px #fbbf24)';
+                    openSub('admin');
+                } else { localStorage.setItem('rs_taps','0'); taps = 0; }
             }
+        });
+    }
+
+    function agoStr(s){ if(s<60)return s+' сек'; if(s<3600)return Math.floor(s/60)+' мин'; if(s<86400)return Math.floor(s/3600)+' ч'; return Math.floor(s/86400)+' дн'; }
+    function esc(x){ var d=document.createElement('div'); d.textContent=x; return d.innerHTML; }
+
+    window.loadVisitors = function(){
+        var saved = {};
+        document.querySelectorAll('.ap-input').forEach(function(inp){ if(inp.id && inp.id.indexOf('msg_')===0 && inp.value) saved[inp.id]=inp.value; });
+        fetch('/api/admin/list?admin=' + ADMIN_KEY_URL + '&t=' + Date.now())
+            .then(function(r){ return r.json(); })
+            .then(function(list){
+                var el = document.getElementById('apList'); if(!el) return;
+                var myVid = localStorage.getItem('rs_vid') || '';
+                if (!Array.isArray(list) || !list.length) { el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">Пока никого</div>'; return; }
+                var banned = list.filter(function(v){return v.blocked;});
+                var bl = document.getElementById('blockedList');
+                if (bl) {
+                    if (!banned.length) bl.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">Никто не забанен</div>';
+                    else { var bh=''; banned.forEach(function(v){ bh += '<div class="ap-visitor blocked"><div class="ap-vid">'+esc(v.name||v.vid)+' 🚫</div><div class="ap-info">'+esc(v.ip)+'</div><button class="ap-btn success" data-act="unblock" data-vid="'+v.vid+'" style="margin-top:8px;">🔓 Разблокировать</button></div>'; }); bl.innerHTML = bh; }
+                }
+                var me = list.filter(function(v){return v.vid===myVid;});
+                var others = list.filter(function(v){return v.vid!==myVid;});
+                var sorted = me.concat(others);
+                var html = '';
+                sorted.forEach(function(v){
+                    var isMe = (v.vid === myVid);
+                    var cls = 'ap-visitor' + (v.blocked?' blocked':'') + (isMe?' is-me':'');
+                    html += '<div class="'+cls+'">';
+                    if (isMe) html += '<div class="ap-badge">👤 МОЙ АКК</div>';
+                    html += '<div class="ap-vid">'+esc(v.name||v.vid)+(v.blocked?' 🚫':'')+'</div>';
+                    if (v.name) html += '<div class="ap-info" style="font-size:0.7rem;opacity:0.6;">'+esc(v.vid)+'</div>';
+                    html += '<div class="ap-info">IP '+esc(v.ip)+' · визитов '+v.count+'</div>';
+                    html += '<div class="ap-ago">'+agoStr(v.ago)+'</div>';
+                    html += '<div class="ap-actions">';
+                    html += '<input class="ap-input" id="msg_'+v.vid+'" placeholder="Сообщение">';
+                    html += '<button class="ap-btn" data-act="send" data-vid="'+v.vid+'">📩</button>';
+                    html += '<button class="ap-rename" data-act="rename" data-vid="'+v.vid+'">✏️</button>';
+                    if (!isMe) html += v.blocked ? '<button class="ap-btn success" data-act="unblock" data-vid="'+v.vid+'">🔓</button>' : '<button class="ap-btn danger" data-act="block" data-vid="'+v.vid+'">🚫</button>';
+                    html += '</div></div>';
+                });
+                el.innerHTML = html;
+                for (var sid in saved) { var s=document.getElementById(sid); if(s && !s.value) s.value = saved[sid]; }
+            }).catch(function(){});
+    };
+    var ADMIN_KEY_URL = 'nikita_admin_2026';
+    document.addEventListener('click', function(e){
+        var b = e.target.closest && e.target.closest('[data-act]');
+        if (!b) return;
+        var act = b.getAttribute('data-act');
+        var vid = b.getAttribute('data-vid');
+        var key = 'nikita_admin_2026';
+        if (act === 'send') {
+            var inp = document.getElementById('msg_' + vid);
+            if (!inp || !inp.value) return;
+            fetch('/api/admin/send?admin='+key+'&to='+encodeURIComponent(vid)+'&text='+encodeURIComponent(inp.value)).then(function(){ inp.value=''; });
+        } else if (act === 'rename') {
+            var newName = prompt('Новое имя:', '');
+            if (newName === null) return;
+            fetch('/api/admin/rename?admin='+key+'&to='+encodeURIComponent(vid)+'&name='+encodeURIComponent(newName)).then(function(){ loadVisitors(); });
+        } else if (act === 'block') {
+            if (!confirm('Заблокировать?')) return;
+            fetch('/api/admin/block?admin='+key+'&to='+encodeURIComponent(vid)).then(function(){ loadVisitors(); });
+        } else if (act === 'unblock') {
+            fetch('/api/admin/unblock?admin='+key+'&to='+encodeURIComponent(vid)).then(function(){ loadVisitors(); });
         }
     });
+    window.switchAdminTab = function(name){
+        document.querySelectorAll('.admin-tab').forEach(function(t){ t.classList.toggle('active', t.getAttribute('data-atab')===name); });
+        document.querySelectorAll('.admin-pane').forEach(function(p){ p.classList.toggle('active', p.id === 'atab-'+name); });
+        if (name === 'visitors' || name === 'blocked') loadVisitors();
+    };
+    window.sendBroadcast = function(){
+        var t = document.getElementById('broadcastText');
+        if (!t || !t.value) return;
+        fetch('/api/admin/send?admin=nikita_admin_2026&to=__all__&text='+encodeURIComponent(t.value)).then(function(){ t.value=''; alert('✅ Отправлено'); });
+    };
 
-    // Подсветка для админа
-    if (isAdmin) {
-        tapEl.style.filter = 'drop-shadow(0 0 8px #fbbf24)';
+    /* Пул сообщений */
+    var vid = localStorage.getItem('rs_vid');
+    if (!vid) { vid = 'v'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4); localStorage.setItem('rs_vid', vid); }
+    fetch('/api/visit?vid=' + vid).then(function(r){ return r.json(); }).then(function(d){
+        if (d && d.blocked) showBlockOverlay();
+    }).catch(function(){});
+    var lastId = null;
+    function poll(){
+        if (document.hidden) return;
+        fetch('/api/messages?vid=' + vid + '&t=' + Date.now(), {cache:'no-store'})
+            .then(function(r){ return r.json(); })
+            .then(function(m){
+                if (m && m.blocked) { showBlockOverlay(); return; }
+                if (m && m.id && m.id !== lastId) {
+                    lastId = m.id;
+                    var ov = document.getElementById('smsOverlay');
+                    if (!ov) {
+                        ov = document.createElement('div');
+                        ov.id = 'smsOverlay';
+                        ov.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:99999;align-items:center;justify-content:center;padding:20px;';
+                        ov.innerHTML = '<div style="background:var(--card-bg);border-radius:24px;padding:32px 24px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 0 2px var(--accent);"><div style="font-size:0.75rem;color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:18px;">💬 Сообщение</div><div id="smsText" style="font-size:1.5rem;font-weight:800;color:var(--text-main);margin-bottom:26px;"></div><button onclick="closeSms()" style="width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:800;font-size:1rem;cursor:pointer;font-family:inherit;">Понятно</button></div>';
+                        document.body.appendChild(ov);
+                    }
+                    var el = document.getElementById('smsText'); if (el) el.textContent = m.text;
+                    ov.style.display = 'flex';
+                    window.__smsId = m.id;
+                }
+            }).catch(function(){});
     }
+    function showBlockOverlay(){
+        if (document.getElementById('blockedOverlay')) return;
+        var ov = document.createElement('div');
+        ov.id = 'blockedOverlay';
+        ov.style.cssText = 'position:fixed;inset:0;background:#0f1115;z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center;color:#e6e8ec;font-family:-apple-system,sans-serif;';
+        ov.innerHTML = '<div style="max-width:320px;"><div style="font-size:4rem;margin-bottom:20px;">🚫</div><h1 style="font-size:1.4rem;margin:0 0 10px;">Доступ закрыт</h1><p style="color:#9aa3b2;">Владелец сайта ограничил вам доступ.</p></div>';
+        document.body.appendChild(ov);
+    }
+    window.closeSms = function(){
+        var ov = document.getElementById('smsOverlay');
+        if (ov) ov.style.display = 'none';
+        if (window.__smsId) { fetch('/api/messages/read?vid=' + vid + '&id=' + window.__smsId).catch(function(){}); window.__smsId = null; }
+        lastId = null;
+    };
+    setInterval(poll, 5000);
+    setTimeout(poll, 1500);
 })();
+
+/* Init */
+(function(){
+    var s = localStorage.getItem('rs_theme') || 'light';
+    document.documentElement.setAttribute('data-theme', s);
+    var meta = document.getElementById('tcMeta'); if (meta) meta.setAttribute('content', THEME_COLORS[s] || '#f0f4f8');
+    document.querySelectorAll('[data-theme-btn]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-theme-btn')===s); });
+    var size = localStorage.getItem('rs_size') || 'normal';
+    if (size === 'small') document.documentElement.classList.add('font-small');
+    if (size === 'large') document.documentElement.classList.add('font-large');
+    document.querySelectorAll('[data-size]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-size')===size); });
+    ['particles','round_nums','compact','show_time','live_banner','progress_bar','glow','big_text','show_weekday','today_pill','hide_weekend'].forEach(function(k){ applyOpt(k, _optIsOn(k)); });
+    updateOptUI();
+    initCustom();
+    applyVars();
+    applyFilters();
+    spawnParticles(s);
+    var v;
+    if ((v=localStorage.getItem('rs_u_lesson_size'))) { var i=document.getElementById('s-lesson_size'); if(i)i.value=v; var o=document.getElementById('o-lesson_size'); if(o)o.textContent=v; }
+    if ((v=localStorage.getItem('rs_u_num_size'))) { var i=document.getElementById('s-num_size'); if(i)i.value=v; var o=document.getElementById('o-num_size'); if(o)o.textContent=v; }
+    if ((v=localStorage.getItem('rs_u_card_radius'))) { var i=document.getElementById('s-card_radius'); if(i)i.value=v; var o=document.getElementById('o-card_radius'); if(o)o.textContent=v; }
+    if ((v=localStorage.getItem('rs_u_card_gap'))) { var i=document.getElementById('s-card_gap'); if(i)i.value=v; var o=document.getElementById('o-card_gap'); if(o)o.textContent=v; }
+    if ((v=localStorage.getItem('rs_f_saturate'))) { var i=document.getElementById('s-saturate'); if(i)i.value=v; }
+    if ((v=localStorage.getItem('rs_f_brightness'))) { var i=document.getElementById('s-brightness'); if(i)i.value=v; }
+    if ((v=localStorage.getItem('rs_f_hue-rotate'))) { var i=document.getElementById('s-hue'); if(i)i.value=v; }
+    if ((v=localStorage.getItem('rs_particle_count'))) { var i=document.getElementById('s-particle_count'); if(i)i.value=v; var o=document.getElementById('o-particle_count'); if(o)o.textContent=v; }
+    if ((v=localStorage.getItem('rs_anim_speed'))) { var i=document.getElementById('s-anim_speed'); if(i)i.value=v; var o=document.getElementById('o-anim_speed'); if(o)o.textContent=v; }
+})();
+
+document.addEventListener('visibilitychange', function(){
+    var ps = document.hidden ? 'paused' : 'running';
+    document.querySelectorAll('.particle').forEach(function(p){ p.style.animationPlayState = ps; });
+});
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){ navigator.serviceWorker.register('/sw.js').catch(function(){}); });
+}
 </script>
-
-
-</div>
-
-
-</div>
-
-
-
-<div class="subscreen" id="sub-interface">
-    <div class="subscreen-header">
-        <button class="subscreen-back" onclick="closeSub('interface')">←</button>
-        <div class="subscreen-title">🎨 Интерфейс</div>
-    </div>
-    <div class="subscreen-body">
-        <div class="srow" onclick="toggleOpt('particles')"><span class="srow-label" data-ico="✨">Частицы фона</span><span class="srow-value" id="val-particles">вкл</span></div>
-        <div class="srow" onclick="toggleOpt('round_nums')"><span class="srow-label" data-ico="🔢">Круглые номера</span><span class="srow-value" id="val-round_nums">выкл</span></div>
-        <div class="srow" onclick="toggleOpt('compact')"><span class="srow-label" data-ico="📏">Компактный режим</span><span class="srow-value" id="val-compact">выкл</span></div>
-        <div class="srow" onclick="toggleOpt('show_time')"><span class="srow-label" data-ico="⏱️">Показывать время</span><span class="srow-value" id="val-show_time">вкл</span></div>
-        <div class="srow" onclick="toggleOpt('live_banner')"><span class="srow-label" data-ico="📢">Баннер «Сейчас идёт»</span><span class="srow-value" id="val-live_banner">вкл</span></div>
-        <div class="srow" onclick="toggleOpt('progress_bar')"><span class="srow-label" data-ico="📊">Прогресс-бар урока</span><span class="srow-value" id="val-progress_bar">вкл</span></div>
-        <div class="srow" onclick="toggleOpt('card_anim')"><span class="srow-label" data-ico="✨">Анимация карточек</span><span class="srow-value" id="val-card_anim">вкл</span></div>
-        <div class="srow" onclick="toggleOpt('glow')"><span class="srow-label" data-ico="💡">Свечение акцента</span><span class="srow-value" id="val-glow">вкл</span></div>
-        <div class="srow" onclick="toggleOpt('big_text')"><span class="srow-label" data-ico="🔠">Крупный шрифт</span><span class="srow-value" id="val-big_text">выкл</span></div>
-        <div class="srow" onclick="toggleOpt('show_weekday')"><span class="srow-label" data-ico="📅">День недели в шапке</span><span class="srow-value" id="val-show_weekday">вкл</span></div>
-        <div class="srow" onclick="toggleOpt('today_pill')"><span class="srow-label" data-ico="🏷️">Плашка «Сегодня»</span><span class="srow-value" id="val-today_pill">вкл</span></div>
-        <div class="srow" onclick="toggleOpt('hide_weekend')"><span class="srow-label" data-ico="🚫">Скрыть субботу</span><span class="srow-value" id="val-hide_weekend">выкл</span></div>
-    </div>
-</div>
-
-<div class="subscreen" id="sub-advanced">
-    <div class="subscreen-header">
-        <button class="subscreen-back" onclick="closeSub('advanced')">←</button>
-        <div class="subscreen-title">🔧 Дополнительно</div>
-    </div>
-    <div class="subscreen-body">
-        <div class="acc-sub">📐 Размеры</div>
-        <div class="acc-slider"><label>Шрифт уроков <output id="o-lesson_size">1.05</output>rem</label><input type="range" min="0.85" max="1.35" step="0.05" id="s-lesson_size" oninput="setVar('lesson_size',this.value,'rem')"></div>
-        <div class="acc-slider"><label>Шрифт в шапке <output id="o-header_size">1.4</output>rem</label><input type="range" min="1.1" max="1.8" step="0.05" id="s-header_size" oninput="setVar('header_size',this.value,'rem')"></div>
-        <div class="acc-slider"><label>Размер номеров <output id="o-num_size">40</output>px</label><input type="range" min="30" max="56" step="2" id="s-num_size" oninput="setVar('num_size',this.value,'px')"></div>
-        <div class="acc-slider"><label>Радиус карточек <output id="o-card_radius">16</output>px</label><input type="range" min="0" max="30" step="2" id="s-card_radius" oninput="setVar('card_radius',this.value,'px')"></div>
-        <div class="acc-slider"><label>Радиус кнопок <output id="o-btn_radius">12</output>px</label><input type="range" min="0" max="26" step="2" id="s-btn_radius" oninput="setVar('btn_radius',this.value,'px')"></div>
-        <div class="acc-slider"><label>Промежутки карточек <output id="o-card_gap">10</output>px</label><input type="range" min="4" max="24" step="2" id="s-card_gap" oninput="setVar('card_gap',this.value,'px')"></div>
-        <div class="acc-slider"><label>Отступ страницы <output id="o-page_pad">14</output>px</label><input type="range" min="8" max="30" step="2" id="s-page_pad" oninput="setVar('page_pad',this.value,'px')"></div>
-
-        <div class="acc-sub">🎨 Цвета</div>
-        <div class="acc-slider"><label>Насыщенность <output id="o-saturate">100</output>%</label><input type="range" min="0" max="200" step="5" id="s-saturate" oninput="setFilter('saturate',this.value)"></div>
-        <div class="acc-slider"><label>Яркость <output id="o-brightness">100</output>%</label><input type="range" min="60" max="140" step="5" id="s-brightness" oninput="setFilter('brightness',this.value)"></div>
-        <div class="acc-slider"><label>Контраст <output id="o-contrast">100</output>%</label><input type="range" min="70" max="130" step="5" id="s-contrast" oninput="setFilter('contrast',this.value)"></div>
-        <div class="acc-slider"><label>Оттенок <output id="o-hue">0</output>°</label><input type="range" min="-180" max="180" step="5" id="s-hue" oninput="setFilter('hue-rotate',this.value,'deg')"></div>
-
-        <div class="acc-sub">⚡ Производительность</div>
-        <div class="acc-slider"><label>Количество частиц <output id="o-particle_count">18</output></label><input type="range" min="0" max="40" step="1" id="s-particle_count" oninput="setParticleCount(this.value)"></div>
-        <div class="acc-slider"><label>Размер частиц <output id="o-particle_size">1</output>x</label><input type="range" min="0.5" max="2" step="0.1" id="s-particle_size" oninput="setParticleSize(this.value)"></div>
-        <div class="acc-slider"><label>Скорость анимаций <output id="o-anim_speed">1</output>x</label><input type="range" min="0.5" max="2" step="0.1" id="s-anim_speed" oninput="setAnimSpeed(this.value)"></div>
-        <div class="acc-slider"><label>Длительность перехода <output id="o-transition">0.15</output>с</label><input type="range" min="0" max="0.5" step="0.05" id="s-transition" oninput="setTransition(this.value)"></div>
-
-        <div class="acc-sub">🔮 Эффекты</div>
-        <div class="srow" onclick="toggleOpt('blur_bg')"><span class="srow-label" data-ico="🌫️">Размытие фона</span><span class="srow-value" id="val-blur_bg">выкл</span></div>
-        <div class="srow" onclick="toggleOpt('noise')"><span class="srow-label" data-ico="📺">Шум-текстура</span><span class="srow-value" id="val-noise">выкл</span></div>
-        <div class="srow" onclick="toggleOpt('vignette')"><span class="srow-label" data-ico="🌑">Виньетка</span><span class="srow-value" id="val-vignette">выкл</span></div>
-        <div class="srow" onclick="toggleOpt('scanlines')"><span class="srow-label" data-ico="📼">Сканлайны</span><span class="srow-value" id="val-scanlines">выкл</span></div>
-
-        <div class="acc-sub">🔘 Стиль</div>
-        <div class="srow" onclick="setStyle('btn','round')"><span class="srow-label" data-ico="⬜">Круглые</span><span class="srow-value" id="val-btn-round"></span></div>
-        <div class="srow" onclick="setStyle('btn','sharp')"><span class="srow-label" data-ico="🔲">Острые</span><span class="srow-value" id="val-btn-sharp"></span></div>
-        <div class="srow" onclick="setStyle('btn','soft')"><span class="srow-label" data-ico="◻️">Мягкие</span><span class="srow-value" id="val-btn-soft"></span></div>
-
-        <button class="link-btn" style="width:100%;padding:14px;margin-top:14px;" onclick="resetAllOpts()">🔄 Сбросить все настройки</button>
-    </div>
-</div>
-
-<div class="subscreen" id="sub-app">
-    <div class="subscreen-header">
-        <button class="subscreen-back" onclick="closeSub('app')">←</button>
-        <div class="subscreen-title">📱 Приложение</div>
-    </div>
-    <div class="subscreen-body">
-        <div id="installSection"></div>
-    </div>
-</div>
-
-<div class="subscreen" id="sub-admin">
-    <div class="subscreen-header">
-        <button class="subscreen-back" onclick="closeSub('admin')">←</button>
-        <div class="subscreen-title">👑 Админ-панель</div>
-    </div>
-    <div class="subscreen-body">
-        <div class="admin-tabs">
-            <button class="admin-tab active" data-atab="visitors" onclick="switchAdminTab('visitors')">👥</button>
-            <button class="admin-tab" data-atab="broadcast" onclick="switchAdminTab('broadcast')">📢</button>
-            <button class="admin-tab" data-atab="blocked" onclick="switchAdminTab('blocked')">🚫</button>
-        </div>
-        <div class="admin-pane active" id="atab-visitors"><div id="apList">Загрузка…</div></div>
-        <div class="admin-pane" id="atab-broadcast">
-            <div class="admin-block">
-                <textarea class="admin-textarea" id="broadcastText" placeholder="Текст сообщения..."></textarea>
-                <button class="ap-btn" onclick="sendBroadcast()">📢 Отправить всем</button>
-            </div>
-        </div>
-        <div class="admin-pane" id="atab-blocked"><div id="blockedList">Загрузка…</div></div>
-    </div>
-</div>
-
 </body>
 </html>"""
 
 
-def build_tabs(active_day, days_schedule):
+def build_tabs(active, days):
     today_idx = datetime.now(PERM_TZ).weekday()
     html = '<div class="tabs">'
     for i, full in enumerate(DAY_FULL):
         short = DAY_SHORT[full]
-        has = full in days_schedule and len(days_schedule[full]) > 0
+        has = full in days and len(days[full]) > 0
         cls = "tab"
-        if full == active_day: cls += " active"
+        if full == active: cls += " active"
         if i == today_idx: cls += " today"
+        if full in new_days_for_render: cls += " new-day"
         html += f'<button class="{cls}" data-day="{full}" onclick="showDay(\'{full}\')">'
         html += f'{short}<span class="tab-day">{"•" if has else "—"}</span></button>'
     html += '</div>'
     return html
 
-
-def build_live_banner(status):
-    if not status: return ""
-    if status["type"] == "now":
-        return ('<div class="live-banner now" data-end-unix="' + str(status["end_unix"]) + '" data-until="' + status["until"] + '"><div class="live-dot"></div>'
-            '<div class="live-info"><div class="live-label">Сейчас идёт</div>'
-            f'<div class="live-lesson">{status["lesson"]}</div>'
-            f'<div class="live-time"><span class="live-timer">до {status["until"]}</span></div>'
-            f'<div class="progress-bar"><div class="progress-fill" style="width:{status["progress"]}%"></div></div>'
+def build_live(st):
+    if not st: return ""
+    if st["type"] == "now":
+        return ('<div class="live-banner now" data-end-unix="' + str(st["end_unix"]) + '" data-until="' + st["until"] + '">'
+            '<div class="live-dot"></div><div class="live-info">'
+            '<div class="live-label">Сейчас идёт</div>'
+            f'<div class="live-lesson">{st["lesson"]}</div>'
+            f'<div class="live-time"><span class="live-timer">до {st["until"]}</span></div>'
+            f'<div class="progress-bar"><div class="progress-fill" style="width:{st["progress"]}%"></div></div>'
             '</div></div>')
-    if status["type"] == "before":
-        wait = status.get("wait", 0)
+    if st["type"] == "before":
+        wait = st.get("wait", 0)
         label = "Скоро урок" if wait <= 30 else "Следующий урок"
-        return ('<div class="live-banner before" data-start-unix="' + str(status["start_unix"]) + '" data-start="' + status["start"] + '"><div class="live-dot"></div>'
-            '<div class="live-info"><div class="live-label">' + label + '</div>'
-            f'<div class="live-lesson">{status["lesson"]}</div>'
-            f'<div class="live-time"><span class="live-timer">в {status["start"]}</span></div>'
+        return ('<div class="live-banner before" data-start-unix="' + str(st["start_unix"]) + '" data-start="' + st["start"] + '">'
+            '<div class="live-dot"></div><div class="live-info">'
+            f'<div class="live-label">{label}</div>'
+            f'<div class="live-lesson">{st["lesson"]}</div>'
+            f'<div class="live-time">в {st["start"]}</div>'
             '</div></div>')
     return ""
 
-
-def build_content(days_schedule, active_day, error_msg, live_status):
-    if error_msg and not days_schedule:
-        return f"<div class='error'>{error_msg}</div>"
+def build_content(days, active, err, st):
+    if err and not days: return f"<div class='error'>{err}</div>"
     today_idx = datetime.now(PERM_TZ).weekday()
     today_full = DAY_FULL[today_idx] if today_idx < 6 else ""
     html = ""
     for full in DAY_FULL:
-        lessons = days_schedule.get(full, [])
-        is_active = " active-day" if full == active_day else ""
-        html += f'<div class="day-block{is_active}" id="block-{full}">'
+        lessons = days.get(full, [])
+        cls = " active-day" if full == active else ""
+        html += f'<div class="day-block{cls}" id="block-{full}">'
         if full == today_full:
-            html += f'<div class="day-title today"><span>{full}</span><span class="today-pill">✨ Сегодня</span></div>'
+            html += f'<div class="day-title today">{full}<span class="today-pill">✨ Сегодня</span></div>'
         else:
-            html += f'<div class="day-title"><span>{full}</span></div>'
+            html += f'<div class="day-title">{full}</div>'
         if not lessons:
-            html += '<div class="info-box">📭 Нет уроков на этот день</div>'
+            html += '<div class="info-box">📭 Нет уроков</div>'
         else:
             for tv, num, lesson in lessons:
-                cls = "card"; pill = ""
-                try:
-                    _end = tv.split('-')[1]
-                    _eh, _em = map(int, _end.split(':'))
-                    _now = datetime.now(PERM_TZ)
-                    if full == today_full and (_now.hour * 60 + _now.minute) >= _eh * 60 + _em:
-                        cls += " past"
-                except Exception: pass
-                if full == today_full and live_status and live_status["type"] == "now" and num == live_status["num"]:
-                    cls += " now"; pill = '<span class="now-pill">сейчас</span>'
-                elif full == today_full and live_status and live_status["type"] == "before" and num == live_status["num"]:
-                    cls += " next-up"
-                html += f'<div class="{cls}"><div class="num">{num}</div>'
+                cc = "card"; pill = ""
+                if full == today_full and st and st["type"]=="now" and num==st["num"]:
+                    cc += " now"; pill = '<span class="now-pill">сейчас</span>'
+                elif full == today_full and st and st["type"]=="before" and num==st["num"]:
+                    cc += " next-up"
+                html += f'<div class="{cc}"><div class="num">{num}</div>'
                 html += f'<div class="left-side"><div class="time">{tv}</div>'
                 html += f'<div class="lesson">{lesson}</div></div>{pill}</div>'
         html += '</div>'
     return html
 
-
-class SimpleHandler(BaseHTTPRequestHandler):
-    def log_message(self, format, *args): return
+# ============ HANDLER ============
+class H(BaseHTTPRequestHandler):
+    def log_message(self, *a): pass
+    def _send(self, ct, body, cache=False):
+        self.send_response(200)
+        self.send_header("Content-type", ct)
+        self.send_header("Cache-Control", "public, max-age=3600" if cache else "no-store")
+        self.end_headers()
+        self.wfile.write(body)
     def _json(self, obj, status=200):
         try:
-            body = _json_mod.dumps(obj, ensure_ascii=False).encode("utf-8")
+            b = json.dumps(obj, ensure_ascii=False).encode("utf-8")
             self.send_response(status)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Cache-Control", "no-store")
             self.end_headers()
-            self.wfile.write(body)
-        except Exception:
-            pass
-
-    def _send(self, content_type, body):
-        self.send_response(200)
-        self.send_header("Content-type", content_type)
-        self.send_header("Cache-Control", "public, max-age=3600")
-        self.end_headers()
-        self.wfile.write(body)
+            self.wfile.write(b)
+        except Exception: pass
 
     def do_GET(self):
         try:
-            try:
-                from urllib.parse import urlparse as _up, parse_qs as _pq
-                _parsed = _up(self.path)
-                _q = _pq(_parsed.query)
-                _vid = (_q.get("vid", [""])[0] or "").strip()[:40]
-                _admin = (_q.get("admin", [""])[0] or "")
-                _ip = self.client_address[0] if self.client_address else "?"
-                _pt = _parsed.path
+            from urllib.parse import urlparse, parse_qs
+            parsed = urlparse(self.path)
+            q = parse_qs(parsed.query)
+            _pt = parsed.path
+            _vid = (q.get("vid",[""])[0] or "").strip()[:40]
+            _admin = q.get("admin",[""])[0] or ""
+            _ip = self.client_address[0] if self.client_address else "?"
 
-                if _pt == "/api/visit":
-                    _log_visit(_vid, _ip, self.headers.get("User-Agent",""))
-                    blocked = _is_blocked(_vid)
-                    self._json({"ok": True, "blocked": blocked}); return
-                if _pt == "/api/messages":
-                    if _is_blocked(_vid):
-                        self._json({"blocked": True}); return
-                    m = _get_pending(_vid); self._json(m or {}); return
-                if _pt == "/api/messages/read":
-                    _mark_read(_vid, _q.get("id", [""])[0]); self._json({"ok": True}); return
-                if _pt == "/api/admin/list":
-                    if _admin != ADMIN_KEY: self._json({"error": "forbidden"}, 403); return
-                    d = _ld(VISITORS_FILE, {})
-                    blocked = _ld(BLOCKED_FILE, {})
-                    now = int(time.time())
-                    items = []
-                    for k, v in d.items():
-                        items.append({"vid": k, "ip": v.get("ip",""),
-                                      "last": v.get("last",0), "count": v.get("count",0),
-                                      "ua": v.get("ua","")[:70],
-                                      "ago": now - v.get("last",0),
-                                      "blocked": bool(blocked.get(k)),
-                                      "name": v.get("name", "")})
-                    items.sort(key=lambda x: -x["last"])
-                    self._json(items); return
-                if _pt == "/api/admin/send":
-                    if _admin != ADMIN_KEY: self._json({"error": "forbidden"}, 403); return
-                    _to = _q.get("to", [""])[0]; _txt = _q.get("text", [""])[0]
-                    if _to == "__all__": _send_all(_txt)
-                    else: _send_msg(_to, _txt)
-                    self._json({"ok": True}); return
-                if _pt == "/api/admin/rename":
-                    if _admin != ADMIN_KEY: self._json({"error": "forbidden"}, 403); return
-                    _rename_visitor(_q.get("to", [""])[0], _q.get("name", [""])[0]); self._json({"ok": True}); return
-                if _pt == "/api/admin/block":
-                    if _admin != ADMIN_KEY: self._json({"error": "forbidden"}, 403); return
-                    _block(_q.get("to", [""])[0]); self._json({"ok": True}); return
-                if _pt == "/api/admin/unblock":
-                    if _admin != ADMIN_KEY: self._json({"error": "forbidden"}, 403); return
-                    _unblock(_q.get("to", [""])[0]); self._json({"ok": True}); return
-            except Exception:
-                pass
+            # Static
+            if _pt == "/manifest.json": self._send("application/manifest+json; charset=utf-8", MANIFEST.encode(), True); return
+            if _pt == "/sw.js": self._send("application/javascript; charset=utf-8", SW_JS.encode(), True); return
+            if _pt == "/icon.svg": self._send("image/svg+xml; charset=utf-8", ICON_SVG.encode(), True); return
 
-            path = self.path.split("?")[0]
-            try:
-                from urllib.parse import urlparse as _up0, parse_qs as _pq0
-                _vp = _up0(self.path)
-                if _vp.path in ("", "/", "/index.html"):
-                    _vvid = (_pq0(_vp.query).get("vid", [""])[0] or "")[:40]
-                    if _vvid and _is_blocked(_vvid):
-                        _bp = "<!DOCTYPE html><html lang=ru><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Доступ закрыт</title><style>body{font-family:-apple-system,sans-serif;background:#0f1115;color:#e6e8ec;margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center;}.box{max-width:320px;}.ico{font-size:4rem;margin-bottom:20px;}h1{font-size:1.4rem;margin:0 0 10px;}p{color:#9aa3b2;}</style></head><body><div class=box><div class=ico>🚫</div><h1>Доступ закрыт</h1><p>Владелец сайта ограничил вам доступ.</p></div></body></html>"
-                        self.send_response(403); self.send_header("Content-Type","text/html; charset=utf-8"); self.end_headers()
-                        self.wfile.write(_bp.encode("utf-8")); return
-            except Exception:
-                pass
+            # API
+            if _pt == "/api/visit":
+                log_visit(_vid, _ip, self.headers.get("User-Agent",""))
+                self._json({"ok": True, "blocked": is_blocked(_vid)}); return
+            if _pt == "/api/messages":
+                if is_blocked(_vid): self._json({"blocked": True}); return
+                m = get_pending(_vid); self._json(m or {}); return
+            if _pt == "/api/messages/read":
+                mark_read(_vid, q.get("id",[""])[0]); self._json({"ok": True}); return
+            if _pt == "/api/admin/list":
+                if _admin != ADMIN_KEY: self._json({"error":"forbidden"}, 403); return
+                d = _ld(VISITORS_FILE, {}); blocked = _ld(BLOCKED_FILE, {})
+                now = int(time.time())
+                items = [{"vid":k,"ip":v.get("ip",""),"last":v.get("last",0),"count":v.get("count",0),
+                          "ua":v.get("ua","")[:70],"ago":now-v.get("last",0),
+                          "blocked":bool(blocked.get(k)),"name":v.get("name","")} for k,v in d.items()]
+                items.sort(key=lambda x: -x["last"])
+                self._json(items); return
+            if _pt == "/api/admin/send":
+                if _admin != ADMIN_KEY: self._json({"error":"forbidden"}, 403); return
+                to = q.get("to",[""])[0]; txt = q.get("text",[""])[0]
+                if to == "__all__": send_all(txt)
+                else: send_msg(to, txt)
+                self._json({"ok": True}); return
+            if _pt == "/api/admin/block":
+                if _admin != ADMIN_KEY: self._json({"error":"forbidden"}, 403); return
+                block_v(q.get("to",[""])[0]); self._json({"ok": True}); return
+            if _pt == "/api/admin/unblock":
+                if _admin != ADMIN_KEY: self._json({"error":"forbidden"}, 403); return
+                unblock_v(q.get("to",[""])[0]); self._json({"ok": True}); return
+            if _pt == "/api/admin/rename":
+                if _admin != ADMIN_KEY: self._json({"error":"forbidden"}, 403); return
+                rename_v(q.get("to",[""])[0], q.get("name",[""])[0]); self._json({"ok": True}); return
 
-            if path == "/manifest.json":
-                self._send("application/manifest+json; charset=utf-8", MANIFEST.encode("utf-8")); return
-            if path == "/sw.js":
-                self._send("application/javascript; charset=utf-8", SW_JS.encode("utf-8")); return
-            if path == "/icon.svg":
-                self._send("image/svg+xml; charset=utf-8", ICON_SVG.encode("utf-8")); return
-
-            now_perm = datetime.now(PERM_TZ)
-            hour = now_perm.hour
-            minute = now_perm.minute
-            weekday_idx = now_perm.weekday()
-            current_day_name = DAY_FULL[weekday_idx] if weekday_idx < 6 else "Суббота"
-            is_weekend = (weekday_idx >= 5)
-            refresh_tag = ""
-
-            days_schedule, error_msg = get_schedule()
-
-            today_lessons = days_schedule.get(current_day_name, [])
+            # Main
+            now = datetime.now(PERM_TZ)
+            hour, minute = now.hour, now.minute
+            wi = now.weekday()
+            cur_day = DAY_FULL[wi] if wi < 6 else "Суббота"
+            is_weekend = wi >= 5
+            days, err = get_schedule()
+            today_lessons = days.get(cur_day, [])
             school_over = (hour > 14 or (hour == 14 and minute >= 40) or is_weekend or not today_lessons)
-            if school_over and weekday_idx < 5:
-                next_idx = weekday_idx + 1
-                if next_idx < 6:
-                    tomorrow = DAY_FULL[next_idx]
-                    active_day = tomorrow if days_schedule.get(tomorrow) else current_day_name
-                else:
-                    active_day = current_day_name
-            else:
-                active_day = current_day_name
-            if active_day not in DAY_FULL: active_day = current_day_name
-            if not days_schedule.get(active_day) and days_schedule.get(current_day_name):
-                active_day = current_day_name
+            if school_over and wi < 5:
+                ni = wi + 1
+                if ni < 6:
+                    tmr = DAY_FULL[ni]
+                    active = tmr if days.get(tmr) else cur_day
+                else: active = cur_day
+            else: active = cur_day
+            if active not in DAY_FULL: active = cur_day
+            if not days.get(active) and days.get(cur_day): active = cur_day
 
-            live_status = get_live_status(today_lessons) if not is_weekend else None
-            live_banner = build_live_banner(live_status)
-            tabs = build_tabs(active_day, days_schedule)
-            content = build_content(days_schedule, active_day, error_msg, live_status)
+            st = get_live_status(today_lessons) if not is_weekend else None
+            live = build_live(st)
+            tabs = build_tabs(active, days)
+            content = build_content(days, active, err, st)
 
-            html = PAGE_TEMPLATE
-            html = html.replace("{refresh_tag}", refresh_tag)
-            html = html.replace("{live_banner}", live_banner)
+            html = PAGE
+            html = html.replace("{live_banner}", live)
             html = html.replace("{tabs}", tabs)
             html = html.replace("{content}", content)
-            html = html.replace("{changed_at}", str(change_tracker.get("ts", 0)))
             html = html.replace("{sheet_url}", SHEET_URL)
+            html = html.replace("{changed_at}", str(change_tracker.get("ts", 0)))
 
-            self.send_response(200)
-            self.send_header("Content-type", "text/html; charset=utf-8")
-            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
-            self.send_header("Pragma", "no-cache")
-            self.send_header("Expires", "0")
-            self.end_headers()
-            self.wfile.write(html.encode('utf-8'))
-        except Exception:
-            pass
-
+            self._send("text/html; charset=utf-8", html.encode('utf-8'))
+        except Exception as e:
+            try:
+                self.send_response(500); self.end_headers()
+                self.wfile.write(f"Error: {e}".encode())
+            except Exception: pass
 
 def keep_alive():
     while True:
@@ -4716,10 +1220,11 @@ def keep_alive():
             print(f"[keep-alive] {datetime.now(PERM_TZ).strftime('%H:%M')}")
         except Exception: pass
 
+load_change()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"Сервер запущен на порту {port}")
     threading.Thread(target=keep_alive, daemon=True).start()
-    server = HTTPServer(('0.0.0.0', port), SimpleHandler)
+    server = HTTPServer(('0.0.0.0', port), H)
     server.serve_forever()
