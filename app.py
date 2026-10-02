@@ -634,7 +634,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-12';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-13';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -1139,11 +1139,15 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
     function agoStr(s){ if(s<60)return s+' сек'; if(s<3600)return Math.floor(s/60)+' мин'; if(s<86400)return Math.floor(s/3600)+' ч'; return Math.floor(s/86400)+' дн'; }
     function esc(x){ var d=document.createElement('div'); d.textContent=x; return d.innerHTML; }
 
+    var ADMIN_KEY_URL = 'admin_k9x7m3_nikita_2026';
     window.loadVisitors = function(){
         var saved = {};
         document.querySelectorAll('.ap-input').forEach(function(inp){ if(inp.id && inp.id.indexOf('msg_')===0 && inp.value) saved[inp.id]=inp.value; });
         fetch('/api/admin/list?admin=' + ADMIN_KEY_URL + '&t=' + Date.now())
-            .then(function(r){ return r.json(); })
+            .then(function(r){
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
             .then(function(list){
                 var el = document.getElementById('apList'); if(!el) return;
                 var myVid = localStorage.getItem('rs_vid') || '';
@@ -1179,9 +1183,11 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
                 });
                 el.innerHTML = html;
                 for (var sid in saved) { var s=document.getElementById(sid); if(s && !s.value) s.value = saved[sid]; }
-            }).catch(function(){});
+            }).catch(function(err){
+                var el = document.getElementById('apList');
+                if (el) el.innerHTML = '<div style="color:var(--danger);text-align:center;padding:20px;">\u274c \u041e\u0448\u0438\u0431\u043a\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0438: '+String(err&&err.message||err)+'</div>';
+            });
     };
-    var ADMIN_KEY_URL = 'admin_k9x7m3_nikita_2026';
     document.addEventListener('click', function(e){
         var b = e.target.closest && e.target.closest('[data-act]');
         if (!b) return;
@@ -1406,6 +1412,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
     function pollLive(){
         if (busy) return;
         busy = true;
+        var _busyTimer = setTimeout(function(){ busy = false; }, 4000);
         var vid = '';
         try { vid = localStorage.getItem('rs_vid') || ''; } catch(e){}
         var isAdm = false;
@@ -1414,6 +1421,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         if (isAdm) url += '&admin=admin_k9x7m3_nikita_2026';
         fetch(url, {cache: 'no-store'})
             .then(function(r){ return r.json(); })
+            .then(function(x){ clearTimeout(_busyTimer); return x; })
             .then(function(d){
                 busy = false;
                 if (!d) return;
@@ -1434,9 +1442,10 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                 if (srvNow) {
                     var nEl = document.querySelector('.live-banner.now');
                     if (!nEl) return;
+                    var secLeft = Math.max(0, d.live.end_unix - nowSec);
+                    if (secLeft <= 0) { location.reload(); return; }
                     var tEl = nEl.querySelector('.live-timer');
                     if (tEl) {
-                        var secLeft = Math.max(0, d.live.end_unix - nowSec);
                         var txt = '\u0434\u043e ' + d.live.until + ' \u00b7 \u043e\u0441\u0442\u0430\u043b\u043e\u0441\u044c ' + Math.ceil(secLeft/60) + ' \u043c\u0438\u043d';
                         if (tEl.textContent !== txt) tEl.textContent = txt;
                     }
