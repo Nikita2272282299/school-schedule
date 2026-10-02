@@ -51,7 +51,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v32';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v32').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v33';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v33').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -1211,16 +1211,18 @@ html { scroll-behavior: smooth; }
 
 
 
+
+
 /* ============================================ */
-/* ===== LUXE — финальный слой красоты ======== */
+/* ===== LUXE v2 — красота для ВСЕХ тем ======= */
 /* ============================================ */
 
-/* --- Aurora background: медленно плавающие градиенты --- */
-@keyframes auroraA {
+/* --- Aurora: плавно плавающие градиенты в фоне --- */
+@keyframes auroraFloatA {
   0%,100% { transform: translate3d(0, 0, 0) scale(1); }
   50%     { transform: translate3d(4%, -3%, 0) scale(1.08); }
 }
-@keyframes auroraB {
+@keyframes auroraFloatB {
   0%,100% { transform: translate3d(0, 0, 0) scale(1); }
   50%     { transform: translate3d(-3%, 4%, 0) scale(1.1); }
 }
@@ -1232,24 +1234,69 @@ body::before {
   pointer-events: none;
   z-index: 0;
   will-change: transform;
+  animation: auroraFloatA 26s ease-in-out infinite,
+             auroraFloatB 32s ease-in-out infinite;
+}
+
+/* --- Цвета aurora под каждую тему --- */
+[data-theme="light"] body::before {
   background:
-    radial-gradient(circle at 22% 18%, var(--accent-light), transparent 45%),
-    radial-gradient(circle at 78% 72%, var(--accent-light), transparent 50%);
-  animation: auroraA 24s ease-in-out infinite,
-             auroraB 30s ease-in-out infinite;
-  opacity: 0.55;
+    radial-gradient(circle at 20% 15%, rgba(76, 110, 245, 0.14), transparent 45%),
+    radial-gradient(circle at 82% 78%, rgba(121, 80, 242, 0.10), transparent 50%),
+    radial-gradient(circle at 55% 92%, rgba(6, 182, 212, 0.08), transparent 55%);
+  opacity: 0.9;
+}
+[data-theme="dark"] body::before {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(124, 147, 255, 0.20), transparent 45%),
+    radial-gradient(circle at 82% 78%, rgba(192, 132, 252, 0.16), transparent 50%),
+    radial-gradient(circle at 55% 92%, rgba(56, 189, 248, 0.10), transparent 55%);
+  opacity: 1;
 }
 [data-theme="cosmic"] body::before {
   background:
     radial-gradient(circle at 20% 15%, rgba(183, 148, 246, 0.30), transparent 45%),
     radial-gradient(circle at 80% 70%, rgba(124, 245, 192, 0.16), transparent 50%),
-    radial-gradient(circle at 60% 92%, rgba(140, 80, 255, 0.20), transparent 55%);
+    radial-gradient(circle at 60% 92%, rgba(140, 80, 255, 0.22), transparent 55%);
   opacity: 1;
 }
-[data-theme="dark"] body::before,
-[data-theme="ocean"] body::before { opacity: 0.4; }
+[data-theme="ocean"] body::before {
+  background:
+    radial-gradient(circle at 25% 20%, rgba(8, 145, 178, 0.22), transparent 45%),
+    radial-gradient(circle at 80% 75%, rgba(34, 211, 238, 0.18), transparent 50%),
+    radial-gradient(circle at 55% 90%, rgba(125, 211, 252, 0.15), transparent 55%);
+  opacity: 1;
+}
+[data-theme="sunset"] body::before {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(249, 115, 22, 0.22), transparent 45%),
+    radial-gradient(circle at 82% 75%, rgba(236, 72, 153, 0.18), transparent 50%),
+    radial-gradient(circle at 50% 92%, rgba(251, 191, 36, 0.16), transparent 55%);
+  opacity: 1;
+}
+[data-theme="forest"] body::before {
+  background:
+    radial-gradient(circle at 22% 18%, rgba(5, 150, 105, 0.22), transparent 45%),
+    radial-gradient(circle at 80% 75%, rgba(132, 204, 22, 0.16), transparent 50%),
+    radial-gradient(circle at 50% 92%, rgba(22, 163, 74, 0.12), transparent 55%);
+  opacity: 1;
+}
+[data-theme="sakura"] body::before {
+  background:
+    radial-gradient(circle at 22% 18%, rgba(236, 72, 153, 0.20), transparent 45%),
+    radial-gradient(circle at 82% 75%, rgba(168, 85, 247, 0.16), transparent 50%),
+    radial-gradient(circle at 50% 92%, rgba(251, 207, 232, 0.18), transparent 55%);
+  opacity: 1;
+}
+[data-theme="custom"] body::before {
+  background:
+    radial-gradient(circle at 20% 15%, var(--accent-light), transparent 45%),
+    radial-gradient(circle at 82% 78%, var(--accent-light), transparent 50%),
+    radial-gradient(circle at 55% 92%, var(--accent-light), transparent 55%);
+  opacity: 0.85;
+}
 
-/* Узкий зигзаг поверх — очень тонкая зернистость (только на широких экранах) */
+/* --- Зернистость поверх aurora (только светлые темы — мягче) --- */
 @media (min-width: 480px) {
   body::after {
     content: "";
@@ -1257,22 +1304,20 @@ body::before {
     inset: 0;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.02;
+    opacity: 0.018;
     mix-blend-mode: overlay;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   }
 }
 
-/* Контейнер выше aurora */
+/* --- Контейнер выше aurora --- */
 html body .container { position: relative; z-index: 2; }
 html body #particles { z-index: 1 !important; }
 
-/* --- Стеклянная шапка --- */
+/* --- Стеклянная шапка на всех темах --- */
 html body .header-card {
   backdrop-filter: blur(14px) saturate(1.15);
   -webkit-backdrop-filter: blur(14px) saturate(1.15);
-  background: var(--card-bg) !important;
-  opacity: 0.98;
 }
 
 /* --- Карточка «сейчас идёт» — пульсирующее свечение --- */
@@ -1337,7 +1382,7 @@ html body .progress-fill::after {
   100% { transform: translateX(100%); }
 }
 
-/* --- Таб active — тонкий sheen сверху --- */
+/* --- Таб active — стеклянный sheen сверху --- */
 html body .tab.active {
   position: relative;
   overflow: hidden;
@@ -1352,7 +1397,7 @@ html body .tab.active::after {
   border-radius: inherit;
 }
 
-/* --- Активная иконка темы — свечение --- */
+/* --- Активная тема — эмодзи светится --- */
 html body .theme-btn.active .emoji {
   filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 55%, transparent));
   transform: scale(1.08);
@@ -1360,7 +1405,7 @@ html body .theme-btn.active .emoji {
               filter 0.28s ease;
 }
 
-/* --- Номер урока — тонкий цветной градиент (не яркий) --- */
+/* --- Номер урока — тонкий цветной градиент --- */
 html body .num {
   background: linear-gradient(145deg,
     color-mix(in srgb, var(--accent) 16%, var(--card-bg)) 0%,
@@ -1375,13 +1420,13 @@ html body .card.now .num {
               inset 0 1px 0 rgba(255,255,255,0.22) !important;
 }
 
-/* --- Кнопка ⚙️ — при hover плавно акцентная --- */
+/* --- Кнопка ⚙️ — стеклянная с обводкой --- */
 html body .icon-btn {
   background: color-mix(in srgb, var(--accent) 12%, var(--card-bg)) !important;
   border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent) !important;
 }
 
-/* --- Мягкое появление контейнера --- */
+/* --- Мягкое появление страницы --- */
 @keyframes containerIn {
   0%   { opacity: 0; transform: translateY(8px); }
   100% { opacity: 1; transform: translateY(0); }
@@ -1420,7 +1465,7 @@ html body .container {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-45';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-46';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
