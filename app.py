@@ -626,7 +626,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-5';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-6';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -1037,21 +1037,22 @@ function spawnParticles(theme){
             var end = parseInt(nEl.getAttribute('data-end-unix'),10);
             var until = nEl.getAttribute('data-until')||'';
             var tEl = nEl.querySelector('.live-timer');
-            if (end && tEl) { var left = Math.max(0, Math.ceil((end-nowSec)/60)); tEl.textContent = 'до '+until+' · осталось '+left+' мин'; }
+            if (end && tEl) { var left = Math.max(0, Math.ceil((end-nowSec)/60)); tEl.textContent = '\u0434\u043e '+until+' \u00b7 \u043e\u0441\u0442\u0430\u043b\u043e\u0441\u044c '+left+' \u043c\u0438\u043d'; }
         }
         var bEl = document.querySelector('.live-banner.before');
         if (bEl) {
             var st = parseInt(bEl.getAttribute('data-start-unix'),10);
-            var start = bEl.getAttribute('data-start')||'';
             var tEl2 = bEl.querySelector('.live-timer');
-            if (st && tEl2) {
+            var lbl = bEl.querySelector('.live-label');
+            if (st) {
                 var wait = Math.max(0, Math.ceil((st-nowSec)/60));
-                var ws;
-                if (wait >= 60) { var h=Math.floor(wait/60); var m=wait%60; ws=m?(h+' ч '+m+' мин'):(h+' ч'); }
-                else ws = wait+' мин';
-                tEl2.textContent = 'в '+start+' · через '+ws;
-                var lbl = bEl.querySelector('.live-label');
-                if (lbl) lbl.textContent = wait <= 30 ? 'Скоро урок' : 'Следующий урок';
+                if (wait <= 30) {
+                    if (tEl2) tEl2.textContent = ' \u00b7 \u0447\u0435\u0440\u0435\u0437 ' + wait + ' \u043c\u0438\u043d';
+                    if (lbl) lbl.textContent = '\u0421\u043a\u043e\u0440\u043e \u0443\u0440\u043e\u043a';
+                } else {
+                    if (tEl2) tEl2.textContent = '';
+                    if (lbl) lbl.textContent = '\u0411\u0443\u0434\u0435\u0442 \u0443\u0440\u043e\u043a';
+                }
             }
         }
     }
@@ -1399,12 +1400,17 @@ def build_live(st):
             '</div></div>')
     if st["type"] == "before":
         wait = st.get("wait", 0)
-        label = "Скоро урок" if wait <= 30 else "Следующий урок"
+        if wait <= 30:
+            label = "Скоро урок"
+            timer_html = '<span class="live-timer"> \u00b7 \u0447\u0435\u0440\u0435\u0437 ' + str(wait) + ' \u043c\u0438\u043d</span>'
+        else:
+            label = "\u0411\u0443\u0434\u0435\u0442 \u0443\u0440\u043e\u043a"
+            timer_html = '<span class="live-timer"></span>'
         return ('<div class="live-banner before" data-start-unix="' + str(st["start_unix"]) + '" data-start="' + st["start"] + '">'
             '<div class="live-dot"></div><div class="live-info">'
             f'<div class="live-label">{label}</div>'
             f'<div class="live-lesson">{st["lesson"]}</div>'
-            f'<div class="live-time">в {st["start"]}</div>'
+            f'<div class="live-time">\u0432 {st["start"]}{timer_html}</div>'
             '</div></div>')
     return ""
 
