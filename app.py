@@ -626,7 +626,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-6';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-7';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -936,6 +936,7 @@ function applyFilters(){
 }
 function setParticleCount(v){ localStorage.setItem('rs_particle_count', v); var o=document.getElementById('o-particle_count'); if(o)o.textContent=v; spawnParticles(document.documentElement.getAttribute('data-theme')); }
 function setAnimSpeed(v){ localStorage.setItem('rs_anim_speed', v); var o=document.getElementById('o-anim_speed'); if(o)o.textContent=v; }
+function setTransition(v){ localStorage.setItem('rs_transition', v); var o=document.getElementById('o-transition'); if(o)o.textContent=v; }
 function resetAllOpts(){ if(!confirm('Сбросить все настройки?'))return; Object.keys(localStorage).forEach(function(k){ if(k.indexOf('rs_opt_')===0||k.indexOf('rs_u_')===0||k.indexOf('rs_f_')===0) localStorage.removeItem(k); }); location.reload(); }
 
 function hex2rgb(h){ h=h.replace('#',''); if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; return parseInt(h.substr(0,2),16)+','+parseInt(h.substr(2,2),16)+','+parseInt(h.substr(4,2),16); }
@@ -1057,7 +1058,7 @@ function spawnParticles(theme){
         }
     }
     tick();
-    setInterval(tick, 10000);
+    setInterval(tick, 1000);
 })();
 
 /* Восстановление дня */
@@ -1239,7 +1240,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
         if (window.__smsId) { fetch('/api/messages/read?vid=' + vid + '&id=' + window.__smsId).catch(function(){}); window.__smsId = null; }
         lastId = null;
     };
-    setInterval(poll, 5000);
+    setInterval(poll, 2000);
     setTimeout(poll, 1500);
 })();
 
@@ -1368,6 +1369,93 @@ function initAllNew(){
 
 /* Стартуем новые */
 if (document.readyState !== "loading") initAllNew(); else document.addEventListener("DOMContentLoaded", initAllNew);
+</script>
+<script>
+/* AUTO-REFRESH-V7: проверка расписания, времени урока и админки — каждую секунду */
+(function(){
+    var lastTs = parseInt(document.body.getAttribute('data-changed-at') || '0', 10);
+    var busy = false;
+    function pollLive(){
+        if (document.hidden || busy) return;
+        busy = true;
+        var vid = '';
+        try { vid = localStorage.getItem('rs_vid') || ''; } catch(e){}
+        var isAdm = false;
+        try { isAdm = localStorage.getItem('rs_admin') === '1'; } catch(e){}
+        var url = '/api/live?vid=' + encodeURIComponent(vid) + '&t=' + Date.now();
+        if (isAdm) url += '&admin=admin_k9x7m3_nikita_2026';
+        fetch(url, {cache: 'no-store'})
+            .then(function(r){ return r.json(); })
+            .then(function(d){
+                busy = false;
+                if (!d) return;
+                if (d.ts && d.ts !== lastTs) { location.reload(); return; }
+                if (!d.live || !d.live.type) return;
+
+                var nowSec = Math.floor(Date.now()/1000);
+                var hasNow = !!document.querySelector('.live-banner.now');
+                var hasBefore = !!document.querySelector('.live-banner.before');
+                var srvNow = d.live.type === 'now';
+                var srvBefore = d.live.type === 'before';
+
+                if ((hasNow && !srvNow) || (hasBefore && !srvBefore) ||
+                    (!hasNow && !hasBefore && (srvNow || srvBefore))) {
+                    location.reload(); return;
+                }
+
+                if (srvNow) {
+                    var nEl = document.querySelector('.live-banner.now');
+                    if (!nEl) return;
+                    var tEl = nEl.querySelector('.live-timer');
+                    if (tEl) {
+                        var secLeft = Math.max(0, d.live.end_unix - nowSec);
+                        var txt;
+                        if (secLeft < 60) txt = '\u0434\u043e ' + d.live.until + ' \u00b7 \u043e\u0441\u0442\u0430\u043b\u043e\u0441\u044c ' + secLeft + ' \u0441\u0435\u043a';
+                        else txt = '\u0434\u043e ' + d.live.until + ' \u00b7 \u043e\u0441\u0442\u0430\u043b\u043e\u0441\u044c ' + Math.ceil(secLeft/60) + ' \u043c\u0438\u043d';
+                        tEl.textContent = txt;
+                    }
+                    var total = nEl.getAttribute('data-total-sec');
+                    if (!total) {
+                        var fill = nEl.querySelector('.progress-fill');
+                        if (fill) { var w = parseFloat(fill.style.width) || 0; }
+                    }
+                } else if (srvBefore) {
+                    var bEl = document.querySelector('.live-banner.before');
+                    if (!bEl) return;
+                    var tEl2 = bEl.querySelector('.live-timer');
+                    var lbl = bEl.querySelector('.live-label');
+                    var secWait = Math.max(0, d.live.start_unix - nowSec);
+                    var wait = Math.ceil(secWait/60);
+                    if (wait <= 30) {
+                        if (tEl2) {
+                            var wt;
+                            if (secWait < 60) wt = ' \u00b7 \u0447\u0435\u0440\u0435\u0437 ' + secWait + ' \u0441\u0435\u043a';
+                            else wt = ' \u00b7 \u0447\u0435\u0440\u0435\u0437 ' + wait + ' \u043c\u0438\u043d';
+                            tEl2.textContent = wt;
+                        }
+                        if (lbl) lbl.textContent = '\u0421\u043a\u043e\u0440\u043e \u0443\u0440\u043e\u043a';
+                    } else {
+                        if (tEl2) tEl2.textContent = '';
+                        if (lbl) lbl.textContent = '\u0411\u0443\u0434\u0435\u0442 \u0443\u0440\u043e\u043a';
+                    }
+                }
+
+                if (typeof d.vcount === 'number' && isAdm) {
+                    var adminOpen = document.querySelector('#sub-admin.open');
+                    if (adminOpen && typeof window.loadVisitors === 'function') {
+                        var t = Date.now();
+                        if (!window.__lastVLoad || t - window.__lastVLoad > 5000) {
+                            window.__lastVLoad = t;
+                            window.loadVisitors();
+                        }
+                    }
+                }
+            })
+            .catch(function(){ busy = false; });
+    }
+    setInterval(pollLive, 1000);
+    setTimeout(pollLive, 500);
+})();
 </script>
 </body>
 </html>"""
@@ -1514,6 +1602,24 @@ class H(BaseHTTPRequestHandler):
             if _pt == "/api/admin/rename":
                 if _admin != ADMIN_KEY: self._json({"error":"forbidden"}, 403); return
                 rename_v(q.get("to",[""])[0], q.get("name",[""])[0]); self._json({"ok": True}); return
+
+            if _pt == "/api/live":
+                days_l, _ = get_schedule()
+                now_l = datetime.now(PERM_TZ)
+                wi_l = now_l.weekday()
+                cur_day_l = DAY_FULL[wi_l] if wi_l < 6 else "\u0421\u0443\u0431\u0431\u043e\u0442\u0430"
+                is_weekend_l = wi_l >= 5
+                today_lessons_l = days_l.get(cur_day_l, [])
+                st_l = get_live_status(today_lessons_l) if not is_weekend_l else None
+                resp = {"ts": change_tracker.get("ts", 0), "live": st_l}
+                if _vid:
+                    resp["blocked"] = is_blocked(_vid)
+                    m = get_pending(_vid)
+                    if m: resp["msg"] = m
+                if _admin == ADMIN_KEY:
+                    d_v = _ld(VISITORS_FILE, {})
+                    resp["vcount"] = len(d_v)
+                self._json(resp); return
 
             # Main
             now = datetime.now(PERM_TZ)
