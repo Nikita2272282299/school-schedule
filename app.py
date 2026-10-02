@@ -506,8 +506,15 @@ html.no-live .live-banner { display:none !important; }
 .live-banner.break .live-dot { background: var(--green); }
 html.anim-days .day-block { animation: dayFadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
 @keyframes dayFadeIn { 0%{opacity:0; transform: translateY(8px)} 100%{opacity:1; transform:none} }
-.day-footer { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
-.day-footer .df-item { flex:1; min-width:120px; padding:10px 12px; border-radius:12px; background: var(--accent-light); border:1px solid var(--border); display:flex; align-items:center; gap:8px; font-weight:700; font-size:0.82rem; color: var(--text-main); }
+.day-footer { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:8px; margin-top:14px; }
+.day-footer .df-item { min-width:0; padding:10px 12px; border-radius:12px; background: var(--accent-light); border:1px solid var(--border); display:flex; align-items:center; gap:6px; font-weight:700; font-size:0.8rem; color: var(--text-main); overflow:hidden; }
+.day-footer .df-item .df-name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.day-footer .df-item .df-val { color: var(--accent); font-weight:800; margin-left:auto; white-space:nowrap; flex-shrink:0; }
+@media (max-width: 400px) {
+  .day-footer { grid-template-columns: 1fr 1fr; }
+  .day-footer .df-item { padding:8px 10px; font-size:0.72rem; }
+  .day-footer .df-item .df-ico { font-size:1rem; }
+}
 .day-footer .df-item .df-ico { font-size:1.2rem; }
 .day-footer .df-item .df-val { color: var(--accent); font-weight:800; margin-left:auto; }
 .online-pill { background: var(--green-soft); color: var(--green); padding:5px 10px; border-radius:12px; font-weight:800; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px; }
@@ -673,7 +680,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-17';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-18';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -1078,10 +1085,31 @@ function setSize(s){
 }
 function toggleSettings(){ document.getElementById('settingsPanel').classList.toggle('open'); }
 function showDay(day){
+    try { sessionStorage.setItem('rs_day_touched','1'); } catch(e){}
     document.querySelectorAll('.day-block').forEach(function(el){ el.classList.remove('active-day'); });
     var t = document.getElementById('block-' + day);
     if (t) t.classList.add('active-day');
     document.querySelectorAll('.tab').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-day')===day); });
+    // Показать/скрыть баннер и кнопку «назад к сегодня»
+    var daysRu = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+    var ti = new Date().getDay() - 1; if (ti < 0) ti = 5; if (ti > 5) ti = 5;
+    var todayName = daysRu[ti];
+    var isToday = (day === todayName);
+    var lb = document.querySelector('.live-banner');
+    if (lb) lb.style.display = isToday ? '' : 'none';
+    var back = document.getElementById('backToday');
+    if (!back) {
+        back = document.createElement('button');
+        back.id = 'backToday';
+        back.className = 'link-btn';
+        back.style.cssText = 'width:100%;padding:10px;margin:8px 0 0;border-radius:12px;background:var(--accent-light);color:var(--accent);font-weight:800;border:1px solid var(--border);';
+        back.textContent = '\u2190 \u0412\u0435\u0440\u043d\u0443\u0442\u044c\u0441\u044f \u043a \u0441\u0435\u0433\u043e\u0434\u043d\u044f';
+        back.onclick = function(){ showDay(todayName); };
+        var cont = document.querySelector('.container');
+        var tabs = cont && cont.querySelector('.tabs');
+        if (tabs && tabs.parentNode) tabs.parentNode.insertBefore(back, tabs.nextSibling);
+    }
+    back.style.display = isToday ? 'none' : 'block';
     if (typeof window.__buildFooter === 'function') setTimeout(window.__buildFooter, 50);
 }
 function openSub(name){
@@ -1163,6 +1191,8 @@ function spawnParticles(theme){
 
 /* Восстановление дня */
 (function(){
+    // Работает только при первой загрузке, пока пользователь ничего не тапал
+    if (sessionStorage.getItem('rs_day_touched') === '1') return;
     var daysRu = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
     var todayIdx = new Date().getDay() - 1;
     if (todayIdx < 0) todayIdx = 5; if (todayIdx > 5) todayIdx = 5;
@@ -1578,11 +1608,11 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         var active = document.querySelector('.day-block.active-day');
         if (!active) return '—';
         var n = active.querySelectorAll('.card').length;
-        if (n === 0) return 'свободно';
-        if (n <= 3) return 'легко ('+n+')';
-        if (n <= 5) return 'средне ('+n+')';
-        if (n <= 7) return 'тяжело ('+n+')';
-        return 'ого-го ('+n+')';
+        if (n === 0) return 'нет';
+        if (n <= 3) return 'легко · '+n;
+        if (n <= 5) return 'средне · '+n;
+        if (n <= 7) return 'тяжело · '+n;
+        return 'макс · '+n;
     }
 
     // ── До конца дня ──
@@ -1614,9 +1644,9 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         var f = document.createElement('div');
         f.id = 'dayFooter'; f.className = 'day-footer';
         var html = '';
-        if (_optIsOn('widget_endday')) html += '<div class="df-item" data-widget="endday"><span class="df-ico">🏁</span><span>До конца дня</span><span class="df-val">'+calcEndOfDay()+'</span></div>';
-        if (_optIsOn('widget_workload')) html += '<div class="df-item" data-widget="workload"><span class="df-ico">💪</span><span>Загруженность</span><span class="df-val">'+calcWorkload()+'</span></div>';
-        if (_optIsOn('widget_weather')) html += '<div class="df-item" data-widget="weather"><span class="df-ico">🌤</span><span>Погода</span><span class="df-val">—</span></div>';
+        if (_optIsOn('widget_endday')) html += '<div class="df-item" data-widget="endday"><span class="df-ico">🏁</span><span class="df-name">До конца дня</span><span class="df-val">'+calcEndOfDay()+'</span></div>';
+        if (_optIsOn('widget_workload')) html += '<div class="df-item" data-widget="workload"><span class="df-ico">💪</span><span class="df-name">Загруженность</span><span class="df-val">'+calcWorkload()+'</span></div>';
+        if (_optIsOn('widget_weather')) html += '<div class="df-item" data-widget="weather"><span class="df-ico">🌤</span><span class="df-name">Погода</span><span class="df-val">—</span></div>';
         f.innerHTML = html;
         if (sheet && sheet.parentNode) sheet.parentNode.insertBefore(f, sheet);
         else cont.appendChild(f);
@@ -1853,6 +1883,13 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                     location.reload(); return;
                 }
                 if (!d.live || !d.live.type) return;
+
+                // Если пользователь переключил на не-сегодня — не трогаем баннер
+                var _daysRu = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+                var _ti = new Date().getDay() - 1; if (_ti < 0) _ti = 5; if (_ti > 5) _ti = 5;
+                var _activeTab = document.querySelector('.tab.active');
+                var _activeDay = _activeTab ? _activeTab.getAttribute('data-day') : _daysRu[_ti];
+                if (_activeDay && _activeDay !== _daysRu[_ti]) return;
 
                 if (srvNow) {
                     var nEl = document.querySelector('.live-banner.now');
