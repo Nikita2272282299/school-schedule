@@ -626,7 +626,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-7';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-9';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -1390,18 +1390,18 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                 busy = false;
                 if (!d) return;
                 if (d.ts && d.ts !== lastTs) { location.reload(); return; }
-                if (!d.live || !d.live.type) return;
 
                 var nowSec = Math.floor(Date.now()/1000);
                 var hasNow = !!document.querySelector('.live-banner.now');
                 var hasBefore = !!document.querySelector('.live-banner.before');
-                var srvNow = d.live.type === 'now';
-                var srvBefore = d.live.type === 'before';
+                var srvNow = !!(d.live && d.live.type === 'now');
+                var srvBefore = !!(d.live && d.live.type === 'before');
 
                 if ((hasNow && !srvNow) || (hasBefore && !srvBefore) ||
                     (!hasNow && !hasBefore && (srvNow || srvBefore))) {
                     location.reload(); return;
                 }
+                if (!d.live || !d.live.type) return;
 
                 if (srvNow) {
                     var nEl = document.querySelector('.live-banner.now');
@@ -1409,10 +1409,8 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                     var tEl = nEl.querySelector('.live-timer');
                     if (tEl) {
                         var secLeft = Math.max(0, d.live.end_unix - nowSec);
-                        var txt;
-                        if (secLeft < 60) txt = '\u0434\u043e ' + d.live.until + ' \u00b7 \u043e\u0441\u0442\u0430\u043b\u043e\u0441\u044c ' + secLeft + ' \u0441\u0435\u043a';
-                        else txt = '\u0434\u043e ' + d.live.until + ' \u00b7 \u043e\u0441\u0442\u0430\u043b\u043e\u0441\u044c ' + Math.ceil(secLeft/60) + ' \u043c\u0438\u043d';
-                        tEl.textContent = txt;
+                        var txt = '\u0434\u043e ' + d.live.until + ' \u00b7 \u043e\u0441\u0442\u0430\u043b\u043e\u0441\u044c ' + Math.ceil(secLeft/60) + ' \u043c\u0438\u043d';
+                        if (tEl.textContent !== txt) tEl.textContent = txt;
                     }
                     var total = nEl.getAttribute('data-total-sec');
                     if (!total) {
@@ -1428,15 +1426,13 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                     var wait = Math.ceil(secWait/60);
                     if (wait <= 30) {
                         if (tEl2) {
-                            var wt;
-                            if (secWait < 60) wt = ' \u00b7 \u0447\u0435\u0440\u0435\u0437 ' + secWait + ' \u0441\u0435\u043a';
-                            else wt = ' \u00b7 \u0447\u0435\u0440\u0435\u0437 ' + wait + ' \u043c\u0438\u043d';
-                            tEl2.textContent = wt;
+                            var wt = ' \u00b7 \u0447\u0435\u0440\u0435\u0437 ' + wait + ' \u043c\u0438\u043d';
+                            if (tEl2.textContent !== wt) tEl2.textContent = wt;
                         }
-                        if (lbl) lbl.textContent = '\u0421\u043a\u043e\u0440\u043e \u0443\u0440\u043e\u043a';
+                        if (lbl && lbl.textContent !== '\u0421\u043a\u043e\u0440\u043e \u0443\u0440\u043e\u043a') lbl.textContent = '\u0421\u043a\u043e\u0440\u043e \u0443\u0440\u043e\u043a';
                     } else {
-                        if (tEl2) tEl2.textContent = '';
-                        if (lbl) lbl.textContent = '\u0411\u0443\u0434\u0435\u0442 \u0443\u0440\u043e\u043a';
+                        if (tEl2 && tEl2.textContent !== '') tEl2.textContent = '';
+                        if (lbl && lbl.textContent !== '\u0411\u0443\u0434\u0435\u0442 \u0443\u0440\u043e\u043a') lbl.textContent = '\u0411\u0443\u0434\u0435\u0442 \u0443\u0440\u043e\u043a';
                     }
                 }
 
