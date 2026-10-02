@@ -51,7 +51,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v22';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v22').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v23';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v23').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -415,7 +415,7 @@ body {
 [data-theme="sunset"] body { background-image: linear-gradient(180deg,#ffe0a8,#ffb572 40%,#e88898); }
 [data-theme="forest"] body { background-image: linear-gradient(180deg,#dff0d0,#b8dfa8 40%,#7abb6c); }
 [data-theme="sakura"] body { background-image: linear-gradient(180deg,#ffeaf0,#ffd0dd 50%,#ffb0c8); }
-.container { width:100%; max-width:420px; margin:0 auto; padding:0 16px; box-sizing:border-box; position:relative; z-index:1; }
+.container { width:100%; max-width:400px; margin:0 auto; padding:0 16px; box-sizing:border-box; position:relative; z-index:1; }
 
 #particles { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
 .particle { position:absolute; top:-40px; user-select:none; animation-name:fall; animation-timing-function:linear; animation-iteration-count:infinite; }
@@ -503,7 +503,7 @@ html.scroll-guard .srow:active, html.scroll-guard .theme-btn:active, html.scroll
 .acc-slider { padding:10px 12px; margin-bottom:6px; border-radius:10px; background: var(--accent-light); touch-action: pan-y; }
 .acc-slider label { display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:0.82rem; color: var(--text-main); margin-bottom:6px; }
 .acc-slider output { color: var(--accent); font-weight:800; }
-.acc-slider input[type="range"] { width:100%; height:5px; background: var(--border); border-radius:3px; outline:none; -webkit-appearance:none; }
+.acc-slider input[type="range"] { touch-action: pan-y; -webkit-tap-highlight-color: transparent; width:100%; height:5px; background: var(--border); border-radius:3px; outline:none; -webkit-appearance:none; }
 .acc-slider input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius:50%; cursor:pointer; box-shadow: 0 2px 6px var(--accent-light); }
 
 .tab, .tabs { display:flex; gap:4px; margin-bottom:10px; padding:4px; scrollbar-width:none; background: var(--card-bg); border-radius:var(--radius-block); border:1px solid var(--border); box-shadow: var(--shadow); overflow-x:auto; box-sizing:border-box; }
@@ -648,7 +648,7 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
 .tab { font-size: var(--tab-size, 0.85rem) !important; }
 .card { border-radius: var(--card-radius, 16px) !important; margin-bottom: var(--card-gap, 10px) !important; }
 .ap-btn, .theme-btn, .size-btn, .open-sub, .srow { border-radius: var(--btn-radius, 12px) !important; }
-.container { padding: 0 var(--page-pad, 14px) !important; max-width: var(--page-maxw, 520px) !important; }
+.container { padding: 0 var(--page-pad, 16px) !important; max-width: var(--page-maxw, 400px) !important; }
 .card, .header-card, .tabs, .live-banner { border-width: var(--border-w, 1px) !important; }
 .card { box-shadow: 0 calc(var(--card-shadow, 4px) * 1px) calc(var(--card-shadow, 4px) * 4px) rgba(0,0,0,0.08) !important; }
 .card.now { box-shadow: 0 6px 24px var(--accent-light), 0 0 0 1.5px var(--accent) !important; }
@@ -756,7 +756,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-35';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-36';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -2363,6 +2363,75 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
     }
     setInterval(pollLive, 1000);
     setTimeout(pollLive, 500);
+})();
+</script>
+<script>
+/* SLIDER-GUARD: не даём менять значение ползунков при скролле */
+(function(){
+    var scrollTs = 0;
+    var touchingSlider = null;
+    var startY = 0, startX = 0, moved = false;
+
+    function isRange(el){
+        return el && el.tagName === 'INPUT' && el.type === 'range';
+    }
+
+    // Запоминаем начальные значения
+    function saveInit(el){
+        if (el && el.dataset.savedValue === undefined) {
+            el.dataset.savedValue = el.value;
+        }
+    }
+    document.querySelectorAll('input[type=range]').forEach(saveInit);
+
+    // Начало касания
+    document.addEventListener('touchstart', function(e){
+        if (!e.touches || !e.touches[0]) return;
+        var t = e.target;
+        if (isRange(t)) {
+            touchingSlider = t;
+            startY = e.touches[0].clientY;
+            startX = e.touches[0].clientX;
+            moved = false;
+            saveInit(t);
+        }
+    }, {passive: true, capture: true});
+
+    // Движение пальца
+    document.addEventListener('touchmove', function(e){
+        if (!e.touches || !e.touches[0]) return;
+        scrollTs = Date.now();
+        var y = e.touches[0].clientY;
+        var x = e.touches[0].clientX;
+        // Отмечаем любой сдвиг > 8px как скролл
+        if (touchingSlider && (Math.abs(y - startY) > 8 || Math.abs(x - startX) > 8)) {
+            moved = true;
+        }
+    }, {passive: true, capture: true});
+
+    // Блокируем input, если был скролл
+    document.addEventListener('input', function(e){
+        var t = e.target;
+        if (!isRange(t)) return;
+        // Если был скролл в последние 250 мс — откатываем значение
+        if (moved || (scrollTs && Date.now() - scrollTs < 250)) {
+            if (t.dataset.savedValue !== undefined && t.value !== t.dataset.savedValue) {
+                t.value = t.dataset.savedValue;
+            }
+            e.stopImmediatePropagation();
+            return;
+        }
+        // Записываем новое значение после успешного ввода
+        t.dataset.savedValue = t.value;
+    }, true);
+
+    // Конец касания
+    document.addEventListener('touchend', function(){
+        setTimeout(function(){
+            moved = false;
+            touchingSlider = null;
+        }, 50);
+    }, {passive: true, capture: true});
 })();
 </script>
 <script>
