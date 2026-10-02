@@ -33,7 +33,7 @@ MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/
 
 ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#7950f2"/></linearGradient></defs><rect width="512" height="512" rx="110" fill="url(#g)"/><text x="256" y="360" font-family="Arial,sans-serif" font-size="230" font-weight="900" fill="#fff" text-anchor="middle">8Г</text></svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v9';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v9').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v11';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v11').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -675,8 +675,8 @@ html.anim-wobble .settings-panel.open {
 }
 </style>
 </head>
-<body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-20';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<body data-changed-at="{changed_at}" data-today="{day_today}">
+<script>(function(){var B='2026-10-02-22';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -1086,10 +1086,7 @@ function showDay(day){
     var t = document.getElementById('block-' + day);
     if (t) t.classList.add('active-day');
     document.querySelectorAll('.tab').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-day')===day); });
-    // Показать/скрыть баннер и кнопку «назад к сегодня»
-    var daysRu = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
-    var ti = new Date().getDay() - 1; if (ti < 0) ti = 5; if (ti > 5) ti = 5;
-    var todayName = daysRu[ti];
+    var todayName = document.body.getAttribute('data-today') || '';
     var isToday = (day === todayName);
     var lb = document.querySelector('.live-banner');
     if (lb) lb.style.display = isToday ? '' : 'none';
@@ -1185,25 +1182,7 @@ function spawnParticles(theme){
     setInterval(tick, 1000);
 })();
 
-/* Восстановление дня */
-(function(){
-    // Работает только при первой загрузке, пока пользователь ничего не тапал
-    if (sessionStorage.getItem('rs_day_touched') === '1') return;
-    var daysRu = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
-    var todayIdx = new Date().getDay() - 1;
-    if (todayIdx < 0) todayIdx = 5; if (todayIdx > 5) todayIdx = 5;
-    var todayName = daysRu[todayIdx];
-    var tomorrowName = daysRu[(todayIdx+1)%6];
-    var todayBlock = document.getElementById('block-' + todayName);
-    var targetDay = todayName;
-    if (todayBlock) { var has = todayBlock.querySelectorAll('.card').length > 0; if (!has) targetDay = tomorrowName; }
-    var tb = document.getElementById('block-' + targetDay);
-    if (tb) {
-        document.querySelectorAll('.day-block').forEach(function(el){ el.classList.remove('active-day'); });
-        tb.classList.add('active-day');
-        document.querySelectorAll('.tab').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-day') === targetDay); });
-    }
-})();
+/* Восстановление дня — делает сервер через /api/live */
 
 /* PWA install */
 var deferredPrompt = null;
@@ -1844,14 +1823,134 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
 })();
 </script>
 <script>
-/* AUTO-REFRESH-V7: проверка расписания, времени урока и админки — каждую секунду */
+/* AUTO-REFRESH-V22: soft-update без перезагрузки */
 (function(){
     var lastTs = parseInt(document.body.getAttribute('data-changed-at') || '0', 10);
     var busy = false;
+    var _redrawLock = 0;
+    function _activeDay(){
+        var t = document.querySelector('.tab.active');
+        return t ? t.getAttribute('data-day') : (document.body.getAttribute('data-today') || '');
+    }
+    function _isTyping(){
+        var a = document.activeElement;
+        if (!a) return false;
+        var tag = (a.tagName || '').toUpperCase();
+        return tag === 'INPUT' || tag === 'TEXTAREA' || a.isContentEditable;
+    }
+    function _applyFragments(d){
+        if (_isTyping()) return;
+        if (Date.now() < _redrawLock) return;
+        var cont = document.querySelector('.container');
+        if (!cont) return;
+
+        var desiredDay = _activeDay();
+
+        // 1. Live banner
+        var oldLive = cont.querySelector('.live-banner');
+        if (d.html_live && d.html_live.length) {
+            if (oldLive) {
+                var tmpL = document.createElement('div');
+                tmpL.innerHTML = d.html_live;
+                cont.replaceChild(tmpL.firstElementChild, oldLive);
+            } else {
+                var tabsAnchor = cont.querySelector('.tabs');
+                if (tabsAnchor) tabsAnchor.insertAdjacentHTML('beforebegin', d.html_live);
+            }
+        } else if (oldLive) {
+            oldLive.remove();
+        }
+
+        // 2. Tabs
+        var oldTabs = cont.querySelector('.tabs');
+        if (oldTabs && d.html_tabs) {
+            var tmpT = document.createElement('div');
+            tmpT.innerHTML = d.html_tabs;
+            cont.replaceChild(tmpT.firstElementChild, oldTabs);
+        }
+
+        // 3. Day-blocks: удалить старые, вставить новые после .tabs
+        var dayBlocks = cont.querySelectorAll('.day-block');
+        dayBlocks.forEach(function(el){ el.remove(); });
+        var tabsNow = cont.querySelector('.tabs');
+        if (tabsNow && d.html_content) {
+            tabsNow.insertAdjacentHTML('afterend', d.html_content);
+        }
+
+        // 4. Восстановить активный день пользователя
+        if (desiredDay) {
+            document.querySelectorAll('.tab').forEach(function(t){
+                t.classList.toggle('active', t.getAttribute('data-day') === desiredDay);
+            });
+            document.querySelectorAll('.day-block').forEach(function(b){
+                b.classList.toggle('active-day', b.id === 'block-' + desiredDay);
+            });
+            // live-banner показываем только если выбран сегодняшний день
+            var today = document.body.getAttribute('data-today') || '';
+            var lb = cont.querySelector('.live-banner');
+            if (lb) lb.style.display = (desiredDay === today) ? '' : 'none';
+        }
+
+        // 5. Обновить footer и погоду
+        if (typeof window.__buildFooter === 'function') setTimeout(window.__buildFooter, 30);
+        if (typeof window.__loadWeather === 'function') setTimeout(window.__loadWeather, 30);
+
+        // 6. Обновить time ago / онлайн
+        var now = new Date();
+
+        // 7. Обновить body data-today
+        if (d.day_today !== undefined) document.body.setAttribute('data-today', d.day_today);
+    }
+
+    function _updateTimerAndProgress(d, nowSec){
+        if (!d.live || !d.live.type) return;
+        var nEl = document.querySelector('.live-banner.now');
+        if (nEl && d.live.type === 'now') {
+            var secLeft = Math.max(0, d.live.end_unix - nowSec);
+            var tEl = nEl.querySelector('.live-timer');
+            if (tEl) {
+                var txt = '\u0434\u043e ' + d.live.until + ' \u00b7 \u043e\u0441\u0442\u0430\u043b\u043e\u0441\u044c ' + Math.ceil(secLeft/60) + ' \u043c\u0438\u043d';
+                if (tEl.textContent !== txt) tEl.textContent = txt;
+            }
+            var fill = nEl.querySelector('.progress-fill');
+            if (fill && d.live.start_unix && d.live.end_unix) {
+                var tt = Math.max(1, d.live.end_unix - d.live.start_unix);
+                var passed = Math.max(0, Math.min(tt, nowSec - d.live.start_unix));
+                fill.style.width = Math.round(passed/tt*100) + '%';
+            }
+        }
+        var brEl = document.querySelector('.live-banner.break');
+        if (brEl && d.live.type === 'break') {
+            var brT = brEl.querySelector('.live-timer');
+            if (brT && d.live.start_unix) {
+                var wB = Math.max(0, Math.ceil((d.live.start_unix - nowSec)/60));
+                var txtB = wB + ' \u043c\u0438\u043d';
+                if (brT.textContent !== txtB) brT.textContent = txtB;
+            }
+        }
+        var bEl = document.querySelector('.live-banner.before');
+        if (bEl && d.live.type === 'before') {
+            var tEl2 = bEl.querySelector('.live-timer');
+            var lbl = bEl.querySelector('.live-label');
+            var secWait = Math.max(0, d.live.start_unix - nowSec);
+            var wait = Math.ceil(secWait/60);
+            if (wait <= 30) {
+                if (tEl2) {
+                    var wt = ' \u00b7 \u0447\u0435\u0440\u0435\u0437 ' + wait + ' \u043c\u0438\u043d';
+                    if (tEl2.textContent !== wt) tEl2.textContent = wt;
+                }
+                if (lbl && lbl.textContent !== '\u0421\u043a\u043e\u0440\u043e \u0443\u0440\u043e\u043a') lbl.textContent = '\u0421\u043a\u043e\u0440\u043e \u0443\u0440\u043e\u043a';
+            } else {
+                if (tEl2 && tEl2.textContent !== '') tEl2.textContent = '';
+                if (lbl && lbl.textContent !== '\u0411\u0443\u0434\u0435\u0442 \u0443\u0440\u043e\u043a') lbl.textContent = '\u0411\u0443\u0434\u0435\u0442 \u0443\u0440\u043e\u043a';
+            }
+        }
+    }
+
     function pollLive(){
         if (busy) return;
         busy = true;
-        var _busyTimer = setTimeout(function(){ busy = false; }, 4000);
+        var _bt = setTimeout(function(){ busy = false; }, 4000);
         var vid = '';
         try { vid = localStorage.getItem('rs_vid') || ''; } catch(e){}
         var isAdm = false;
@@ -1860,101 +1959,54 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         if (isAdm) url += '&admin=admin_k9x7m3_nikita_2026';
         fetch(url, {cache: 'no-store'})
             .then(function(r){ return r.json(); })
-            .then(function(x){ clearTimeout(_busyTimer); return x; })
             .then(function(d){
+                clearTimeout(_bt);
                 busy = false;
                 if (!d) return;
-                if (d.ts && d.ts !== lastTs) { location.reload(); return; }
-
                 var nowSec = Math.floor(Date.now()/1000);
 
-                // Универсальный апдейт прогресс-бара (работает и для now, и когда данные приходят без live)
-                var anyFill = document.querySelector('.live-banner .progress-fill');
-                if (anyFill && d.live && d.live.type === 'now' && d.live.start_unix && d.live.end_unix) {
-                    var _stU = d.live.start_unix;
-                    var _tt = Math.max(1, d.live.end_unix - _stU);
-                    var _passed = Math.max(0, Math.min(_tt, nowSec - _stU));
-                    var _pct = Math.round(_passed / _tt * 100);
-                    anyFill.style.width = _pct + '%';
-                }
-                var hasNow = !!document.querySelector('.live-banner.now');
-                var hasBefore = !!document.querySelector('.live-banner.before');
-                var hasBreak = !!document.querySelector('.live-banner.break');
-                var srvNow = !!(d.live && d.live.type === 'now');
-                var srvBefore = !!(d.live && d.live.type === 'before');
-                var srvBreak = !!(d.live && d.live.type === 'break');
-
-                if ((hasNow && !srvNow) || (hasBefore && !srvBefore) || (hasBreak && !srvBreak) ||
-                    (!hasNow && !hasBefore && !hasBreak && (srvNow || srvBefore || srvBreak))) {
-                    location.reload(); return;
-                }
-                if (!d.live || !d.live.type) return;
-
-                // Если пользователь переключил на не-сегодня — не трогаем баннер
-                var _daysRu = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
-                var _ti = new Date().getDay() - 1; if (_ti < 0) _ti = 5; if (_ti > 5) _ti = 5;
-                var _activeTab = document.querySelector('.tab.active');
-                var _activeDay = _activeTab ? _activeTab.getAttribute('data-day') : _daysRu[_ti];
-                var _onOtherDay = _activeDay && _activeDay !== _daysRu[_ti];
-                // Если не сегодня — всё равно обновляем прогресс-бар, но не перезагружаем
-                if (_onOtherDay) {
-                    if (anyFill && d.live && d.live.type === 'now' && d.live.start_unix && d.live.end_unix) {
-                        var _stU2 = d.live.start_unix;
-                        var _tt2 = Math.max(1, d.live.end_unix - _stU2);
-                        var _pass2 = Math.max(0, Math.min(_tt2, nowSec - _stU2));
-                        anyFill.style.width = Math.round(_pass2/_tt2*100) + '%';
+                // Онлайн — каждую секунду
+                if (typeof d.online === 'number') {
+                    var pill = document.getElementById('onlinePill');
+                    var cnt = document.getElementById('onlineCount');
+                    if (pill && cnt) {
+                        if (cnt.textContent !== String(d.online)) cnt.textContent = d.online;
+                        if (pill.style.display !== 'inline-flex' && (typeof _optIsOn !== 'function' || _optIsOn('widget_online'))) {
+                            pill.style.display = 'inline-flex';
+                        }
                     }
+                }
+
+                // Если сервер изменил ts или день — soft-update
+                var dayChanged = (d.day_today !== undefined) && (document.body.getAttribute('data-today') !== d.day_today);
+                if ((d.ts && d.ts !== lastTs) || dayChanged) {
+                    lastTs = d.ts || lastTs;
+                    _redrawLock = Date.now() + 800;
+                    _applyFragments(d);
                     return;
                 }
 
-                if (srvNow) {
-                    var nEl = document.querySelector('.live-banner.now');
-                    if (!nEl) return;
-                    var secLeft = Math.max(0, d.live.end_unix - nowSec);
-                    if (secLeft <= 0) { location.reload(); return; }
-                    var tEl = nEl.querySelector('.live-timer');
-                    if (tEl) {
-                        var txt = '\u0434\u043e ' + d.live.until + ' \u00b7 \u043e\u0441\u0442\u0430\u043b\u043e\u0441\u044c ' + Math.ceil(secLeft/60) + ' \u043c\u0438\u043d';
-                        if (tEl.textContent !== txt) tEl.textContent = txt;
+                // Иначе — просто обновляем таймер и прогресс
+                _updateTimerAndProgress(d, nowSec);
+
+                // Проверяем, что тип баннера не изменился — если да, soft-update
+                if (d.live) {
+                    var hasNow = !!document.querySelector('.live-banner.now');
+                    var hasBefore = !!document.querySelector('.live-banner.before');
+                    var hasBreak = !!document.querySelector('.live-banner.break');
+                    var srvNow = d.live.type === 'now';
+                    var srvBefore = d.live.type === 'before';
+                    var srvBreak = d.live.type === 'break';
+                    if ((hasNow && !srvNow) || (hasBefore && !srvBefore) || (hasBreak && !srvBreak) ||
+                        (!hasNow && !hasBefore && !hasBreak && (srvNow || srvBefore || srvBreak))) {
+                        _applyFragments(d);
                     }
-                    var fill = nEl.querySelector('.progress-fill');
-                    if (fill) {
-                        var stU = parseInt(nEl.getAttribute('data-start-unix'),10) || (d.live.end_unix - 2400);
-                        var totalSec = Math.max(1, d.live.end_unix - stU);
-                        var passed = Math.max(0, Math.min(totalSec, nowSec - stU));
-                        var pct = Math.round(passed / totalSec * 100);
-                        fill.style.width = pct + '%';
-                    }
-                } else if (srvBreak) {
-                    var brEl = document.querySelector('.live-banner.break');
-                    if (!brEl) return;
-                    var brT = brEl.querySelector('.live-timer');
-                    var secWaitB = Math.max(0, d.live.start_unix - nowSec);
-                    if (secWaitB <= 0) { location.reload(); return; }
-                    var waitB = Math.ceil(secWaitB/60);
-                    if (brT) {
-                        var txtB = waitB + ' \u043c\u0438\u043d';
-                        if (brT.textContent !== txtB) brT.textContent = txtB;
-                    }
-                } else if (srvBefore) {
-                    var bEl = document.querySelector('.live-banner.before');
-                    if (!bEl) return;
-                    var tEl2 = bEl.querySelector('.live-timer');
-                    var lbl = bEl.querySelector('.live-label');
-                    var secWait = Math.max(0, d.live.start_unix - nowSec);
-                    var wait = Math.ceil(secWait/60);
-                    if (wait <= 30) {
-                        if (tEl2) {
-                            var wt = ' \u00b7 \u0447\u0435\u0440\u0435\u0437 ' + wait + ' \u043c\u0438\u043d';
-                            if (tEl2.textContent !== wt) tEl2.textContent = wt;
-                        }
-                        if (lbl && lbl.textContent !== '\u0421\u043a\u043e\u0440\u043e \u0443\u0440\u043e\u043a') lbl.textContent = '\u0421\u043a\u043e\u0440\u043e \u0443\u0440\u043e\u043a';
-                    } else {
-                        if (tEl2 && tEl2.textContent !== '') tEl2.textContent = '';
-                        if (lbl && lbl.textContent !== '\u0411\u0443\u0434\u0435\u0442 \u0443\u0440\u043e\u043a') lbl.textContent = '\u0411\u0443\u0434\u0435\u0442 \u0443\u0440\u043e\u043a';
-                    }
+                } else {
+                    // live == null, но баннер висит — обновляем
+                    if (document.querySelector('.live-banner')) _applyFragments(d);
                 }
 
+                // Админка — обновить список
                 if (typeof d.vcount === 'number' && isAdm) {
                     var adminOpen = document.querySelector('#sub-admin.open');
                     if (adminOpen && typeof window.loadVisitors === 'function') {
@@ -1966,7 +2018,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                     }
                 }
             })
-            .catch(function(){ busy = false; });
+            .catch(function(){ clearTimeout(_bt); busy = false; });
     }
     setInterval(pollLive, 1000);
     setTimeout(pollLive, 500);
@@ -2229,6 +2281,9 @@ class H(BaseHTTPRequestHandler):
             html = html.replace("{content}", content)
             html = html.replace("{sheet_url}", SHEET_URL)
             html = html.replace("{changed_at}", str(change_tracker.get("ts", 0)))
+            _wi_html = now.weekday()
+            _today_html = DAY_FULL[_wi_html] if _wi_html < 5 else ""
+            html = html.replace("{day_today}", _today_html)
 
             self._send("text/html; charset=utf-8", html.encode('utf-8'))
         except Exception as e:
