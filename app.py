@@ -51,7 +51,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v33';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v33').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v34';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v34').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -767,11 +767,11 @@ html body {
   --shadow-hover: 0 2px 6px rgba(0,0,0,0.05), 0 10px 28px rgba(0,0,0,0.07);
 }
 
-/* --- Container — чуть шире, воздушнее --- */
+/* --- Container — узкий, аккуратный --- */
 html body .container {
-  max-width: 420px !important;
-  padding-left: 16px !important;
-  padding-right: 16px !important;
+  max-width: 380px !important;
+  padding-left: 22px !important;
+  padding-right: 22px !important;
 }
 
 /* --- Карточки — тонкие, воздушные --- */
@@ -793,23 +793,23 @@ html body .info-box {
 
 /* --- header-card — тоньше, ниже --- */
 html body .header-card {
-  padding: 10px 14px !important;
-  min-height: 52px !important;
-  margin-bottom: 10px !important;
+  padding: 9px 12px !important;
+  min-height: 48px !important;
+  margin-bottom: 9px !important;
 }
 
 /* --- h2 — тоньше акцент --- */
 html body h2 {
-  font-size: clamp(1.05rem, 4vw, 1.25rem) !important;
+  font-size: clamp(0.98rem, 3.8vw, 1.15rem) !important;
   font-weight: 800 !important;
   letter-spacing: -0.01em;
 }
 
 /* --- Кнопка настроек — маленькая, аккуратная --- */
 html body .icon-btn {
-  width: 38px !important;
-  height: 38px !important;
-  border-radius: 11px !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
   background: var(--accent-light) !important;
   border: none !important;
   box-shadow: none !important;
@@ -821,15 +821,16 @@ html body .icon-btn:active { transform: scale(0.88) rotate(-8deg); }
 
 /* --- Табы — компактнее, мягче --- */
 html body .tabs {
-  padding: 5px !important;
+  padding: 4px !important;
   gap: 3px !important;
-  margin-bottom: 10px !important;
+  margin-bottom: 9px !important;
+  border-radius: 14px !important;
 }
 html body .tab {
-  min-height: 42px !important;
-  padding: 6px 4px !important;
-  border-radius: 12px !important;
-  font-size: 0.8rem !important;
+  min-height: 38px !important;
+  padding: 5px 3px !important;
+  border-radius: 10px !important;
+  font-size: 0.78rem !important;
   transition: background 0.22s ease,
               color 0.2s ease,
               transform 0.18s cubic-bezier(0.34,1.56,0.64,1),
@@ -845,8 +846,8 @@ html body .tab:active { transform: scale(0.94); }
 
 /* --- Day title — аккуратный --- */
 html body .day-title {
-  font-size: 0.95rem !important;
-  margin-bottom: 8px !important;
+  font-size: 0.9rem !important;
+  margin-bottom: 7px !important;
   font-weight: 800 !important;
   letter-spacing: 0.01em;
 }
@@ -861,10 +862,11 @@ html body .today-pill {
 
 /* --- Карточка урока — тоньше, элегантнее --- */
 html body .card {
-  padding: 11px 14px !important;
-  margin-bottom: 7px !important;
-  min-height: 56px !important;
-  gap: 12px !important;
+  padding: 10px 12px !important;
+  margin-bottom: 6px !important;
+  min-height: 52px !important;
+  gap: 11px !important;
+  border-radius: 14px !important;
 }
 html body .card:hover { box-shadow: var(--shadow-hover) !important; }
 html body .card:active { transform: scale(0.985); }
@@ -876,10 +878,10 @@ html body .card.now {
 
 /* --- Номер — БЕЗ градиента, аккуратный --- */
 html body .num {
-  width: 38px !important;
-  height: 38px !important;
-  min-width: 38px !important;
-  border-radius: 11px !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  border-radius: 10px !important;
   background: var(--accent-light) !important;
   color: var(--accent) !important;
   box-shadow: none !important;
@@ -896,22 +898,22 @@ html body .card.now .num {
 
 /* --- Текст урока — тонкая типографика --- */
 html body .time {
-  font-size: 0.72rem !important;
+  font-size: 0.68rem !important;
   font-weight: 600 !important;
   letter-spacing: 0.02em;
-  opacity: 0.85;
+  opacity: 0.8;
 }
 html body .lesson {
-  font-size: 1rem !important;
+  font-size: 0.96rem !important;
   font-weight: 700 !important;
   letter-spacing: -0.005em;
-  line-height: 1.3 !important;
+  line-height: 1.28 !important;
 }
 
 /* --- Живой баннер — стекло и мягкость --- */
 html body .live-banner {
-  padding: 12px 14px !important;
-  margin-bottom: 10px !important;
+  padding: 10px 12px !important;
+  margin-bottom: 9px !important;
 }
 html body .live-banner.now,
 html body .live-banner.before {
@@ -943,11 +945,11 @@ html body .progress-fill {
 }
 
 /* --- Виджеты внизу — компактнее, аккуратнее --- */
-html body .day-footer { gap: 8px !important; margin-top: 12px !important; }
+html body .day-footer { gap: 7px !important; margin-top: 10px !important; }
 html body .day-footer .df-item {
-  padding: 10px 12px !important;
-  min-height: 50px !important;
-  border-radius: 14px !important;
+  padding: 9px 11px !important;
+  min-height: 44px !important;
+  border-radius: 12px !important;
   background: var(--card-bg) !important;
   border: 1px solid var(--border) !important;
 }
@@ -1465,7 +1467,7 @@ html body .container {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-46';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-47';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
