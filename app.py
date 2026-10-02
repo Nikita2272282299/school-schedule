@@ -31,9 +31,27 @@ _lock = threading.Lock()
 
 MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/","display":"standalone","background_color":"#0a0620","theme_color":"#6366f1","icons":[{"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}'
 
-ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#7950f2"/></linearGradient></defs><rect width="512" height="512" rx="110" fill="url(#g)"/><text x="256" y="360" font-family="Arial,sans-serif" font-size="230" font-weight="900" fill="#fff" text-anchor="middle">8Г</text></svg>'''
+ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#6366f1"/>
+    <stop offset="1" stop-color="#a855f7"/>
+  </linearGradient>
+  <linearGradient id="top" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#f87171"/>
+    <stop offset="1" stop-color="#dc2626"/>
+  </linearGradient>
+</defs>
+<rect width="512" height="512" rx="115" fill="url(#bg)"/>
+<rect x="80" y="110" width="352" height="330" rx="44" fill="#ffffff"/>
+<rect x="80" y="110" width="352" height="90" rx="44" fill="url(#top)"/>
+<rect x="80" y="155" width="352" height="45" fill="url(#top)"/>
+<rect x="155" y="70" width="40" height="85" rx="20" fill="#1e293b"/>
+<rect x="317" y="70" width="40" height="85" rx="20" fill="#1e293b"/>
+<text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
+</svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v14';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v14').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v15';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v15').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -642,6 +660,19 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
   #adminTap { font-size: 1.2rem !important; }
 }
 
+/* Install banner */
+.install-banner { position:fixed; left:0; right:0; bottom:0; z-index:9998; background: var(--card-bg); border-top:1px solid var(--border); padding:10px 14px; display:flex; align-items:center; gap:10px; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); }
+.install-banner .install-ico { font-size:1.6rem; flex-shrink:0; }
+.install-banner .install-text { flex:1; min-width:0; }
+.install-banner .install-title { font-weight:800; font-size:0.9rem; color: var(--text-main); }
+.install-banner .install-sub { font-size:0.72rem; color: var(--text-muted); margin-top:1px; }
+.install-banner .install-btn { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: var(--on-accent); border:none; padding:10px 16px; border-radius:11px; font-weight:800; font-size:0.85rem; cursor:pointer; font-family:inherit; flex-shrink:0; }
+.install-banner .install-btn:active { transform:scale(0.95); }
+
+/* Статус-бар урока на экране блокировки (визуализация в приложении) */
+.lock-bar { position:fixed; top:0; left:0; right:0; height:3px; z-index:99999; background: transparent; }
+.lock-bar-fill { height:100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 1s linear; }
+
 /* ===== ПАНЕЛЬ: по умолчанию МГНОВЕННО ===== */
 .settings-panel {
     display: block !important;
@@ -704,8 +735,16 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-27';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-28';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
+<div id="installBanner" class="install-banner" style="display:none;">
+    <span class="install-ico">📲</span>
+    <div class="install-text">
+        <div class="install-title">Установить приложение</div>
+        <div class="install-sub">Быстрый доступ с домашнего экрана</div>
+    </div>
+    <button class="install-btn" onclick="triggerInstall()">Установить</button>
+</div>
 <div class="container">
 <div class="header-card">
     <h2><span id="adminTap">📅</span> <span>Расписание</span></h2>
@@ -1217,7 +1256,7 @@ function spawnParticles(theme){
 /* PWA install */
 var deferredPrompt = null;
 var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferredPrompt = e; renderInstallSection(); });
+window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferredPrompt = e; window.deferredPrompt = e; if (typeof window.__updateInstallUI === 'function') window.__updateInstallUI(); });
 window.addEventListener('appinstalled', function(){ deferredPrompt = null; localStorage.setItem('rs_installed','1'); renderInstallSection(); });
 function renderInstallSection(){
     var el = document.getElementById('installSection');
@@ -1680,6 +1719,139 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
 })();
 </script>
 <script>
+/* INSTALL-LOCK-V28: установка, media session, статус-бар */
+(function(){
+    // ─── 1. Обнаружение standalone + возврат кнопки установки ───
+    function isStandalone(){
+        return window.matchMedia('(display-mode: standalone)').matches
+            || window.navigator.standalone === true
+            || document.referrer.indexOf('android-app://') === 0;
+    }
+    function updateInstallUI(){
+        var banner = document.getElementById('installBanner');
+        if (!banner) return;
+        var standalone = isStandalone();
+        if (standalone) {
+            try { localStorage.setItem('rs_installed', '1'); } catch(e){}
+            banner.style.display = 'none';
+            return;
+        }
+        // Не standalone -> значит или не установлено, или удалили. Сбрасываем флаг.
+        try { localStorage.removeItem('rs_installed'); } catch(e){}
+        // Показываем баннер только если пользователь не закрыл его в этой сессии
+        if (sessionStorage.getItem('rs_install_dismissed') === '1') {
+            banner.style.display = 'none';
+            return;
+        }
+        banner.style.display = 'flex';
+    }
+    window.__updateInstallUI = updateInstallUI;
+    updateInstallUI();
+    setInterval(updateInstallUI, 4000);
+    document.addEventListener('visibilitychange', function(){
+        if (!document.hidden) setTimeout(updateInstallUI, 200);
+    });
+
+    // ─── 2. Prompt install ───
+    window.triggerInstall = function(){
+        if (window.deferredPrompt) {
+            window.deferredPrompt.prompt();
+            window.deferredPrompt.userChoice.then(function(c){
+                if (c.outcome === 'accepted') {
+                    try { localStorage.setItem('rs_installed','1'); } catch(e){}
+                }
+                window.deferredPrompt = null;
+                updateInstallUI();
+            });
+        } else {
+            // Нативный prompt недоступен — даём инструкцию
+            var ua = navigator.userAgent;
+            var msg;
+            if (/iPhone|iPad|iPod/i.test(ua)) msg = 'Нажми «Поделиться» → «На экран Домой»';
+            else if (/Android/i.test(ua)) msg = 'Открой меню браузера (⋮) → «Установить приложение»';
+            else msg = 'В адресной строке Chrome нажми иконку установки ⊕';
+            alert(msg);
+        }
+    };
+
+    // Скрыть баннер до конца сессии (не навсегда)
+    window.dismissInstall = function(){
+        try { sessionStorage.setItem('rs_install_dismissed','1'); } catch(e){}
+        var banner = document.getElementById('installBanner');
+        if (banner) banner.style.display = 'none';
+    };
+
+    // ─── 3. Статус-бар урока (визуально в верху страницы, имитирует lock-screen) ───
+    function ensureLockBar(){
+        var el = document.getElementById('lockBar');
+        if (el) return el;
+        var wrap = document.createElement('div');
+        wrap.id = 'lockBar';
+        wrap.className = 'lock-bar';
+        wrap.innerHTML = '<div class="lock-bar-fill" id="lockBarFill" style="width:0%"></div>';
+        document.body.insertBefore(wrap, document.body.firstChild);
+        return wrap;
+    }
+
+    // ─── 4. Media Session (появляется на экране блокировки в Android Chrome) ───
+    function updateMediaSession(d){
+        if (!('mediaSession' in navigator)) return;
+        if (!d || !d.live || !d.live.type) {
+            try { navigator.mediaSession.metadata = null; } catch(e){}
+            return;
+        }
+        var title, artist, album = 'Расписание 8Г';
+        if (d.live.type === 'now') {
+            var secLeft = Math.max(0, d.live.end_unix - Math.floor(Date.now()/1000));
+            var mLeft = Math.ceil(secLeft / 60);
+            title = 'Сейчас: ' + d.live.lesson;
+            artist = 'до ' + d.live.until + ' · осталось ' + mLeft + ' мин';
+        } else if (d.live.type === 'before') {
+            title = 'Скоро урок';
+            artist = d.live.lesson + ' · в ' + d.live.start + ' · через ' + d.live.wait + ' мин';
+        } else if (d.live.type === 'break') {
+            title = 'Перемена';
+            artist = 'Следующий: ' + d.live.lesson + ' в ' + d.live.start;
+        } else {
+            return;
+        }
+        try {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: title,
+                artist: artist,
+                album: album,
+                artwork: [
+                    { src: '/icon.svg', sizes: '512x512', type: 'image/svg+xml' }
+                ]
+            });
+            navigator.mediaSession.playbackState = 'playing';
+        } catch(e){}
+    }
+    window.__updateMediaSession = updateMediaSession;
+
+    // ─── 5. Хук в pollLive: обновляем lock-bar + MediaSession ───
+    window.__updateLockBar = function(d){
+        var bar = ensureLockBar();
+        var fill = document.getElementById('lockBarFill');
+        if (!fill) return;
+        if (d && d.live && d.live.type === 'now' && d.live.start_unix && d.live.end_unix) {
+            var nowSec = Math.floor(Date.now()/1000);
+            var total = Math.max(1, d.live.end_unix - d.live.start_unix);
+            var passed = Math.max(0, Math.min(total, nowSec - d.live.start_unix));
+            fill.style.width = Math.round(passed/total*100) + '%';
+        } else {
+            fill.style.width = '0%';
+        }
+        updateMediaSession(d);
+    };
+
+    // ─── 6. Отключаем dismiss на десктопе, чтобы не мешало ───
+    if (window.innerWidth > 720) {
+        try { sessionStorage.setItem('rs_install_dismissed','1'); } catch(e){}
+    }
+})();
+</script>
+<script>
 /* NOTIF-ICON-BADGE-V17 */
 (function(){
     // ─── Уведомления ───
@@ -2019,9 +2191,17 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                 if (!d) return;
                 var nowSec = Math.floor(Date.now()/1000);
 
-                // Уведомления — каждую секунду (без задержки)
+                // Уведомления — каждую секунду
                 if (typeof window.__checkLessonNotif === 'function') {
                     try { window.__checkLessonNotif(); } catch(e){}
+                }
+                // Lock-bar + MediaSession
+                if (typeof window.__updateLockBar === 'function') {
+                    try { window.__updateLockBar(d); } catch(e){}
+                }
+                // Install banner visibility
+                if (typeof window.__updateInstallUI === 'function' && Math.random() < 0.05) {
+                    try { window.__updateInstallUI(); } catch(e){}
                 }
 
                 // Онлайн — каждую секунду
