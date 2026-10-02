@@ -51,7 +51,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v30';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v30').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v31';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v31').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -795,347 +795,467 @@ html body .subscreen {
   box-sizing: border-box !important;
 }
 
-/* ================================================= */
-/* ===== PREMIUM POLISH — красивые кнопки и UI ===== */
-/* ================================================= */
+
+/* ============================================ */
+/* ===== ELEGANT — воздух, лёгкость, анимации == */
+/* ============================================ */
+
 html body {
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.04);
-  --shadow-md: 0 2px 6px rgba(0,0,0,0.05), 0 8px 22px rgba(0,0,0,0.07);
-  --shadow-lg: 0 4px 14px rgba(0,0,0,0.08), 0 18px 44px rgba(0,0,0,0.12);
+  --radius-block: 18px;
+  --radius-pill: 13px;
+  --gap: 12px;
+  --gap-sm: 9px;
+  --pad-x: 16px;
+  --shadow-soft: 0 1px 2px rgba(0,0,0,0.03), 0 4px 14px rgba(0,0,0,0.05);
+  --shadow-hover: 0 2px 6px rgba(0,0,0,0.05), 0 10px 28px rgba(0,0,0,0.07);
 }
 
-/* --- Мягкие многослойные тени у карточек --- */
-html body .card,
+/* --- Container — чуть шире, воздушнее --- */
+html body .container {
+  max-width: 420px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+/* --- Карточки — тонкие, воздушные --- */
 html body .header-card,
 html body .live-banner,
+html body .card,
 html body .tabs,
 html body .day-footer .df-item,
 html body .sheet-link,
-html body .info-box,
-html body .srow,
-html body .open-sub {
-  box-shadow: var(--shadow-sm) !important;
-  transition: transform 0.18s ease, box-shadow 0.22s ease,
-              border-color 0.18s ease, background 0.2s ease !important;
-}
-
-html body .card:active { transform: scale(0.985); }
-
-/* --- Карточка активного урока — премиум-свечение --- */
-html body .card.now {
-  box-shadow:
-    0 6px 20px var(--accent-light),
-    0 0 0 1.5px var(--accent) inset,
-    0 0 28px -6px var(--accent) !important;
-}
-
-/* --- Номер урока — глянцевый --- */
-html body .num {
-  background: linear-gradient(145deg, var(--accent), var(--accent2)) !important;
-  color: var(--on-accent) !important;
-  box-shadow:
-    0 4px 12px var(--accent-light),
-    0 1px 2px rgba(0,0,0,0.10),
-    inset 0 1px 0 rgba(255,255,255,0.18) !important;
-}
-
-/* --- Кнопки — пружинка, тень, глянец --- */
-html body .icon-btn,
-html body .subscreen-back,
-html body .ap-btn,
-html body .theme-btn,
-html body .size-btn,
-html body .admin-tab,
-html body .install-banner .install-btn {
-  transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1),
-              box-shadow 0.22s ease,
-              background 0.2s ease,
-              filter 0.15s ease !important;
-}
-html body .icon-btn:active,
-html body .subscreen-back:active,
-html body .ap-btn:active,
-html body .theme-btn:active,
-html body .size-btn:active,
-html body .admin-tab:active,
-html body .install-banner .install-btn:active {
-  transform: scale(0.93);
-}
-
-/* --- Иконка настроек/гамбургер --- */
-html body .icon-btn,
-html body .subscreen-back {
-  background: linear-gradient(145deg, var(--accent-light), transparent) !important;
+html body .info-box {
+  border-radius: var(--radius-block) !important;
   border: 1px solid var(--border) !important;
-  box-shadow:
-    0 3px 10px var(--accent-light),
-    inset 0 1px 0 rgba(255,255,255,0.15) !important;
+  box-shadow: var(--shadow-soft) !important;
+  background: var(--card-bg) !important;
+  transition: transform 0.22s cubic-bezier(0.22,1,0.36,1),
+              box-shadow 0.22s ease,
+              border-color 0.18s ease !important;
 }
 
-/* --- Кнопки тем — карточки, глянец, активная с подсветкой --- */
-html body .theme-btn {
-  padding: 12px 6px !important;
+/* --- header-card — тоньше, ниже --- */
+html body .header-card {
+  padding: 10px 14px !important;
+  min-height: 52px !important;
+  margin-bottom: 10px !important;
+}
+
+/* --- h2 — тоньше акцент --- */
+html body h2 {
+  font-size: clamp(1.05rem, 4vw, 1.25rem) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em;
+}
+
+/* --- Кнопка настроек — маленькая, аккуратная --- */
+html body .icon-btn {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 11px !important;
+  background: var(--accent-light) !important;
+  border: none !important;
+  box-shadow: none !important;
+  transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1),
+              background 0.2s ease !important;
+}
+html body .icon-btn:hover { background: var(--accent) !important; color: var(--on-accent) !important; }
+html body .icon-btn:active { transform: scale(0.88) rotate(-8deg); }
+
+/* --- Табы — компактнее, мягче --- */
+html body .tabs {
+  padding: 5px !important;
+  gap: 3px !important;
+  margin-bottom: 10px !important;
+}
+html body .tab {
+  min-height: 42px !important;
+  padding: 6px 4px !important;
+  border-radius: 12px !important;
+  font-size: 0.8rem !important;
+  transition: background 0.22s ease,
+              color 0.2s ease,
+              transform 0.18s cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 0.22s ease !important;
+}
+html body .tab .tab-day { font-size: 0.6rem !important; }
+html body .tab.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent2)) !important;
+  box-shadow: 0 3px 10px var(--accent-light) !important;
+}
+html body .tab:not(.active):hover { background: var(--accent-light) !important; }
+html body .tab:active { transform: scale(0.94); }
+
+/* --- Day title — аккуратный --- */
+html body .day-title {
+  font-size: 0.95rem !important;
+  margin-bottom: 8px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.01em;
+}
+html body .today-pill {
+  padding: 4px 9px !important;
+  font-size: 0.6rem !important;
+  background: var(--accent-light) !important;
+  color: var(--accent) !important;
+  border: 1px solid var(--accent) !important;
+  box-shadow: 0 1px 3px var(--accent-light) !important;
+}
+
+/* --- Карточка урока — тоньше, элегантнее --- */
+html body .card {
+  padding: 11px 14px !important;
+  margin-bottom: 7px !important;
+  min-height: 56px !important;
+  gap: 12px !important;
+}
+html body .card:hover { box-shadow: var(--shadow-hover) !important; }
+html body .card:active { transform: scale(0.985); }
+html body .card.now {
+  border-color: var(--accent) !important;
+  background: linear-gradient(120deg, var(--accent-light) 0%, var(--card-bg) 60%) !important;
+  box-shadow: 0 4px 20px var(--accent-light) !important;
+}
+
+/* --- Номер — БЕЗ градиента, аккуратный --- */
+html body .num {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  border-radius: 11px !important;
+  background: var(--accent-light) !important;
+  color: var(--accent) !important;
+  box-shadow: none !important;
+  font-size: 0.98rem !important;
+  font-weight: 800 !important;
+  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1) !important;
+}
+html body .card.now .num {
+  background: linear-gradient(135deg, var(--accent), var(--accent2)) !important;
+  color: var(--on-accent) !important;
+  box-shadow: 0 3px 10px var(--accent-light) !important;
+  transform: scale(1.05);
+}
+
+/* --- Текст урока — тонкая типографика --- */
+html body .time {
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+}
+html body .lesson {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.005em;
+  line-height: 1.3 !important;
+}
+
+/* --- Живой баннер — стекло и мягкость --- */
+html body .live-banner {
+  padding: 12px 14px !important;
+  margin-bottom: 10px !important;
+}
+html body .live-banner.now,
+html body .live-banner.before {
+  border: 1px solid var(--accent) !important;
+  background: linear-gradient(135deg, var(--accent-light) 0%, var(--card-bg) 70%) !important;
+  box-shadow: 0 4px 20px var(--accent-light) !important;
+}
+html body .live-banner.break {
+  background: linear-gradient(135deg, var(--green-soft) 0%, var(--card-bg) 70%) !important;
+  border-color: var(--green) !important;
+}
+html body .live-dot {
+  width: 8px !important;
+  height: 8px !important;
+  box-shadow: 0 0 0 4px var(--accent-light);
+}
+html body .live-label { font-size: 0.64rem !important; letter-spacing: 0.1em !important; }
+html body .live-lesson { font-size: 1rem !important; font-weight: 800 !important; }
+html body .live-time { font-size: 0.72rem !important; }
+html body .progress-bar {
+  height: 3px !important;
+  border-radius: 2px !important;
+  background: rgba(0,0,0,0.08) !important;
+}
+html body .progress-fill {
+  background: linear-gradient(90deg, var(--accent), var(--accent2)) !important;
+  border-radius: 2px !important;
+  box-shadow: 0 0 8px var(--accent-light);
+}
+
+/* --- Виджеты внизу — компактнее, аккуратнее --- */
+html body .day-footer { gap: 8px !important; margin-top: 12px !important; }
+html body .day-footer .df-item {
+  padding: 10px 12px !important;
+  min-height: 50px !important;
   border-radius: 14px !important;
   background: var(--card-bg) !important;
-  border: 1.5px solid var(--border) !important;
-  gap: 6px !important;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
+  border: 1px solid var(--border) !important;
 }
-html body .theme-btn .emoji { font-size: 1.5rem !important; line-height: 1; }
-html body .theme-btn.active {
-  background: linear-gradient(145deg, var(--accent-light), transparent) !important;
-  border-color: var(--accent) !important;
-  box-shadow:
-    0 4px 14px var(--accent-light),
-    0 0 0 3px var(--accent-light) !important;
+html body .day-footer .df-item:active { transform: scale(0.97); }
+html body .day-footer .df-item .df-ico { font-size: 1.2rem !important; }
+html body .day-footer .df-item .df-name {
+  font-size: 0.58rem !important;
+  letter-spacing: 0.08em !important;
+  font-weight: 700 !important;
+  opacity: 0.65 !important;
+}
+html body .day-footer .df-item .df-val {
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em;
 }
 
-/* --- Размеры A / A / A --- */
+/* --- Ссылка в таблицу — элегантная --- */
+html body .sheet-link {
+  padding: 12px 16px !important;
+  font-size: 0.82rem !important;
+  border: 1.5px solid var(--accent) !important;
+  background: transparent !important;
+  border-radius: 14px !important;
+  transition: background 0.22s ease, transform 0.18s ease !important;
+}
+html body .sheet-link:hover { background: var(--accent-light) !important; }
+html body .sheet-link:active { transform: scale(0.98); }
+
+/* --- Кнопки настроек — премиум --- */
+html body .theme-btn,
 html body .size-btn {
   background: var(--card-bg) !important;
-  border: 1.5px solid var(--border) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 12px !important;
-  transition: transform 0.15s ease, border-color 0.2s ease,
-              background 0.2s ease, box-shadow 0.2s ease !important;
+  transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1),
+              border-color 0.2s ease,
+              background 0.2s ease,
+              box-shadow 0.22s ease !important;
 }
+html body .theme-btn { padding: 11px 5px !important; gap: 5px !important; }
+html body .theme-btn .emoji { font-size: 1.35rem !important; }
+html body .theme-btn:hover,
+html body .size-btn:hover { border-color: var(--accent) !important; }
+html body .theme-btn:active,
+html body .size-btn:active { transform: scale(0.93); }
+html body .theme-btn.active,
 html body .size-btn.active {
-  background: linear-gradient(145deg, var(--accent-light), transparent) !important;
   border-color: var(--accent) !important;
-  box-shadow: 0 4px 14px var(--accent-light) !important;
+  background: var(--accent-light) !important;
+  box-shadow: 0 3px 12px var(--accent-light) !important;
 }
 
-/* --- Разделы (Интерфейс/Дополнительно/Приложение) --- */
+/* --- Разделы — карточки --- */
 html body .open-sub {
   background: var(--card-bg) !important;
   border: 1px solid var(--border) !important;
-  padding: 16px 18px !important;
+  border-radius: 14px !important;
+  padding: 15px 16px !important;
+  transition: transform 0.18s ease, border-color 0.2s ease,
+              background 0.2s ease !important;
 }
 html body .open-sub:hover { border-color: var(--accent) !important; }
+html body .open-sub:active { transform: scale(0.98); }
 html body .open-sub .srow-arrow {
-  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
 }
-html body .open-sub:active .srow-arrow {
-  transform: translateX(5px);
-}
+html body .open-sub:hover .srow-arrow { transform: translateX(4px); }
 
-/* --- Строки настроек — hover-подсветка --- */
+/* --- Строки настроек --- */
 html body .srow {
+  padding: 12px 14px !important;
+  border-radius: 13px !important;
   background: var(--card-bg) !important;
   border: 1px solid var(--border) !important;
+  min-height: 48px !important;
+  transition: transform 0.16s ease, border-color 0.2s ease,
+              background 0.2s ease !important;
 }
-html body .srow:hover {
-  border-color: var(--accent) !important;
-}
+html body .srow:hover { border-color: var(--accent) !important; }
 html body .srow:active {
   background: var(--accent-light) !important;
   transform: scale(0.985);
 }
+html body .srow-label { font-size: 0.88rem !important; font-weight: 700 !important; }
 
-/* --- Значение "вкл/выкл" — пилюлька --- */
+/* --- Значение "вкл/выкл" — пилюля --- */
 html body .srow-value {
-  font-size: 0.72rem !important;
+  font-size: 0.68rem !important;
   font-weight: 800 !important;
-  padding: 4px 11px !important;
-  border-radius: 20px !important;
-  background: var(--border) !important;
+  padding: 4px 10px !important;
+  border-radius: 18px !important;
+  background: transparent !important;
   color: var(--text-muted) !important;
-  letter-spacing: 0.02em;
-  transition: background 0.22s ease, color 0.22s ease !important;
+  border: 1px solid var(--border) !important;
+  letter-spacing: 0.03em;
+  transition: all 0.22s ease !important;
   flex-shrink: 0;
 }
 html body .srow-value.on {
-  background: var(--accent-light) !important;
-  color: var(--accent) !important;
-  box-shadow: inset 0 0 0 1px var(--accent) !important;
-}
-
-/* --- Табы дней --- */
-html body .tab {
-  transition: transform 0.16s ease, background 0.22s ease,
-              color 0.22s ease, box-shadow 0.22s ease !important;
-}
-html body .tab.active {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%) !important;
-  box-shadow:
-    0 4px 14px var(--accent-light),
-    0 1px 2px rgba(0,0,0,0.12),
-    inset 0 1px 0 rgba(255,255,255,0.18) !important;
-}
-html body .tab:not(.active):hover {
-  background: var(--accent-light) !important;
-}
-html body .tab:active { transform: scale(0.95); }
-
-/* --- Слайдеры — карточки с премиум-бегунком --- */
-html body .acc-slider {
-  padding: 12px 14px !important;
-  border-radius: 12px !important;
-  background: var(--card-bg) !important;
-  border: 1px solid var(--border) !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
-}
-html body .acc-slider input[type="range"] {
-  height: 6px !important;
-  background: var(--border) !important;
-  border-radius: 3px !important;
-}
-html body .acc-slider input[type="range"]::-webkit-slider-thumb {
-  width: 22px !important;
-  height: 22px !important;
-  background: linear-gradient(135deg, var(--accent), var(--accent2)) !important;
-  box-shadow:
-    0 2px 8px var(--accent-light),
-    0 0 0 3px var(--card-bg),
-    0 0 0 4px var(--border) !important;
-  transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1),
-              box-shadow 0.2s ease !important;
-}
-html body .acc-slider input[type="range"]::-webkit-slider-thumb:active {
-  transform: scale(1.15);
-  box-shadow:
-    0 4px 14px var(--accent-light),
-    0 0 0 3px var(--card-bg),
-    0 0 0 5px var(--accent) !important;
-}
-
-/* --- Эмодзи-пикер — крупнее, с пружинкой --- */
-html body .emoji-opt {
-  border-radius: 12px !important;
-  font-size: 1.5rem !important;
-  width: 48px !important;
-  height: 48px !important;
-  transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1),
-              box-shadow 0.2s ease, border-color 0.18s ease !important;
-}
-html body .emoji-opt:active { transform: scale(0.85) !important; }
-html body .emoji-opt.active {
+  background: var(--accent) !important;
   border-color: var(--accent) !important;
-  box-shadow:
-    0 0 0 3px var(--accent-light),
-    0 4px 12px var(--accent-light) !important;
-  transform: scale(1.06);
-}
-
-/* --- Шапка — акцентная полоска сверху --- */
-html body .header-card { position: relative; overflow: hidden; }
-html body .header-card::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 10%; right: 10%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  opacity: 0.55;
-  pointer-events: none;
-}
-
-/* --- Ссылка на таблицу — блик --- */
-html body .sheet-link {
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  position: relative;
-  overflow: hidden;
-}
-html body .sheet-link::before {
-  content: "";
-  position: absolute;
-  top: 0; left: -100%;
-  width: 60%; height: 100%;
-  background: linear-gradient(90deg, transparent, var(--accent-light), transparent);
-  transition: left 0.55s ease;
-  pointer-events: none;
-}
-html body .sheet-link:hover::before,
-html body .sheet-link:active::before { left: 120%; }
-
-/* --- Кнопка «Назад» — премиум --- */
-html body #backToday {
-  background: linear-gradient(145deg, var(--accent-light), var(--card-bg)) !important;
-  border: 1.5px solid var(--accent) !important;
-  color: var(--accent) !important;
-  box-shadow: 0 3px 12px var(--accent-light) !important;
-  transition: transform 0.16s ease, box-shadow 0.22s ease !important;
-}
-html body #backToday:active {
-  transform: scale(0.97);
-  box-shadow: 0 5px 16px var(--accent-light) !important;
-}
-
-/* --- Живой баннер — премиум-градиент --- */
-html body .live-banner.now,
-html body .live-banner.before {
-  background: linear-gradient(135deg, var(--accent-light) 0%, var(--card-bg) 70%) !important;
-  border: 1.5px solid var(--accent) !important;
-  box-shadow:
-    0 4px 20px var(--accent-light),
-    0 1px 2px rgba(0,0,0,0.05) !important;
-}
-
-/* --- Пилюли — глянцевые --- */
-html body .now-pill,
-html body .today-pill {
-  background: linear-gradient(135deg, var(--accent), var(--accent2)) !important;
   color: var(--on-accent) !important;
   box-shadow: 0 2px 8px var(--accent-light) !important;
 }
-html body .today-pill {
-  background: var(--accent-light) !important;
-  color: var(--accent) !important;
-  border: 1px solid var(--accent) !important;
-}
-html body .today-pill span,
-html body .today-pill { color: var(--accent) !important; }
 
-/* --- Заголовки подразделов — аккуратный вид --- */
-html body .acc-sub {
-  font-size: 0.7rem !important;
-  letter-spacing: 0.1em !important;
-  margin: 18px 0 10px !important;
-}
-
-/* --- Subscreens — стеклянный sticky-bar --- */
-html body .subscreen-header {
-  backdrop-filter: blur(14px) saturate(1.2);
-  -webkit-backdrop-filter: blur(14px) saturate(1.2);
-  background: color-mix(in srgb, var(--bg) 80%, transparent) !important;
-  box-shadow: 0 1px 0 var(--border);
-}
-
-/* --- Баннер установки — стекло + премиум-кнопка --- */
-html body .install-banner {
-  backdrop-filter: blur(14px) saturate(1.2);
-  -webkit-backdrop-filter: blur(14px) saturate(1.2);
-  background: color-mix(in srgb, var(--card-bg) 85%, transparent) !important;
-  border-top: 1px solid var(--border) !important;
-  box-shadow: 0 -8px 34px rgba(0,0,0,0.10) !important;
-}
-html body .install-banner .install-btn {
-  background: linear-gradient(135deg, var(--accent), var(--accent2)) !important;
-  box-shadow: 0 4px 16px var(--accent-light) !important;
-  border-radius: 12px !important;
-}
-
-/* --- Панель настроек — глубокий shadow --- */
-html body .settings-panel.open {
-  box-shadow: var(--shadow-lg) !important;
+/* --- Слайдеры — тонкие --- */
+html body .acc-slider {
+  padding: 10px 12px !important;
+  border-radius: 11px !important;
+  background: var(--card-bg) !important;
   border: 1px solid var(--border) !important;
+  margin-bottom: 6px !important;
+  transition: border-color 0.2s ease !important;
+}
+html body .acc-slider:hover { border-color: var(--accent) !important; }
+html body .acc-slider label { font-size: 0.78rem !important; }
+html body .acc-slider input[type="range"] {
+  height: 4px !important;
+  border-radius: 3px !important;
+  background: var(--border) !important;
+}
+html body .acc-slider input[type="range"]::-webkit-slider-thumb {
+  width: 18px !important;
+  height: 18px !important;
+  background: var(--accent) !important;
+  box-shadow: 0 2px 6px var(--accent-light), 0 0 0 2px var(--card-bg) !important;
+  transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 0.18s ease !important;
+}
+html body .acc-slider input[type="range"]:active::-webkit-slider-thumb {
+  transform: scale(1.25);
+  box-shadow: 0 3px 12px var(--accent-light), 0 0 0 3px var(--card-bg) !important;
 }
 
-/* --- Мягкая анимация переключения подразделов --- */
-html body .subscreen {
-  transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1) !important;
+/* --- Эмодзи-пикер --- */
+html body .emoji-opt {
+  width: 46px !important;
+  height: 46px !important;
+  font-size: 1.35rem !important;
+  border-radius: 12px !important;
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1),
+              border-color 0.2s ease,
+              background 0.2s ease,
+              box-shadow 0.2s ease !important;
+}
+html body .emoji-opt:hover { transform: translateY(-3px); }
+html body .emoji-opt:active { transform: scale(0.85); }
+html body .emoji-opt.active {
+  border-color: var(--accent) !important;
+  background: var(--accent-light) !important;
+  box-shadow: 0 0 0 3px var(--accent-light) !important;
+  transform: scale(1.05);
 }
 
-/* --- Тактильный hover только на десктопе --- */
-@media (hover: hover) {
-  html body .card:hover { transform: translateY(-1px); }
-  html body .theme-btn:hover { border-color: var(--accent) !important; }
-  html body .emoji-opt:hover { transform: translateY(-2px); }
+/* --- Пилюля онлайн — минимал --- */
+html body .online-pill {
+  background: var(--green-soft) !important;
+  color: var(--green) !important;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+/* --- NOW-pill — аккуратная --- */
+html body .now-pill {
+  background: var(--accent) !important;
+  color: var(--on-accent) !important;
+  font-size: 0.56rem !important;
+  padding: 3px 7px !important;
+  letter-spacing: 0.05em;
+  box-shadow: 0 2px 6px var(--accent-light) !important;
+}
+
+/* ============================================ */
+/* ===== АНИМАЦИИ ПОЯВЛЕНИЯ (staggered) ======== */
+/* ============================================ */
+
+/* Въезд карточек уроков */
+@keyframes slideInUp {
+  0%   { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+html body .day-block.active-day .card {
+  animation: slideInUp 0.42s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+html body .day-block.active-day .card:nth-child(2) { animation-delay: 0.02s; }
+html body .day-block.active-day .card:nth-child(3) { animation-delay: 0.06s; }
+html body .day-block.active-day .card:nth-child(4) { animation-delay: 0.10s; }
+html body .day-block.active-day .card:nth-child(5) { animation-delay: 0.14s; }
+html body .day-block.active-day .card:nth-child(6) { animation-delay: 0.18s; }
+html body .day-block.active-day .card:nth-child(7) { animation-delay: 0.22s; }
+html body .day-block.active-day .card:nth-child(8) { animation-delay: 0.26s; }
+html body .day-block.active-day .card:nth-child(9) { animation-delay: 0.30s; }
+
+/* Въезд баннера и шапки */
+@keyframes fadeSlideIn {
+  0%   { opacity: 0; transform: translateY(-8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+html body .header-card { animation: fadeSlideIn 0.5s cubic-bezier(0.22,1,0.36,1); }
+html body .live-banner { animation: fadeSlideIn 0.45s cubic-bezier(0.22,1,0.36,1) 0.05s backwards; }
+html body .tabs { animation: fadeSlideIn 0.45s cubic-bezier(0.22,1,0.36,1) 0.08s backwards; }
+
+/* Виджеты — мягкое появление */
+html body .day-footer .df-item {
+  animation: slideInUp 0.4s cubic-bezier(0.22,1,0.36,1) backwards;
+}
+html body .day-footer .df-item:nth-child(1) { animation-delay: 0.1s; }
+html body .day-footer .df-item:nth-child(2) { animation-delay: 0.15s; }
+html body .day-footer .df-item:nth-child(3) { animation-delay: 0.2s; }
+html body .day-footer .df-item:nth-child(4) { animation-delay: 0.25s; }
+
+/* Ссылка на таблицу */
+html body .sheet-link { animation: slideInUp 0.4s cubic-bezier(0.22,1,0.36,1) 0.3s backwards; }
+
+/* Пустой день — плавно */
+html body .info-box { animation: slideInUp 0.4s cubic-bezier(0.22,1,0.36,1); }
+
+/* Мягкое «дыхание» точки онлайн */
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.6; transform: scale(0.85); }
+}
+html body .online-pill::before { animation: pulse 2s ease-in-out infinite !important; }
+
+/* Точка live — мягкий пульс */
+@keyframes livePulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-light); }
+  50%      { box-shadow: 0 0 0 6px transparent; }
+}
+html body .live-dot { animation: livePulse 2s ease-in-out infinite !important; }
+
+/* Прогресс-бар — светящаяся полоска */
+@keyframes progressGlow {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.25); }
+}
+html body .card.now .progress-fill { animation: progressGlow 2.5s ease-in-out infinite; }
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }
+
+/* Reduce motion — уважаем настройки ОС */
+@media (prefers-reduced-motion: reduce) {
+  html body *,
+  html body *::before,
+  html body *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Узкие экраны — теснее */
+@media (max-width: 380px) {
+  html body .container { padding-left: 12px !important; padding-right: 12px !important; }
+  html body .card { padding: 10px 12px !important; }
+  html body .num { width: 34px !important; height: 34px !important; min-width: 34px !important; }
+  html body .lesson { font-size: 0.95rem !important; }
 }
 
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-43';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-44';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
