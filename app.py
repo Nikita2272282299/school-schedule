@@ -239,7 +239,8 @@ def get_live_status(lessons):
         if ss <= cur < ee:
             prog = int((cur - ss) / max(ee - ss, 1) * 100)
             return {"type":"now","num":num,"lesson":lesson,"progress":prog,
-                    "left":ee-cur,"until":e,"end_unix":int(now.replace(hour=eh,minute=em,second=0,microsecond=0).timestamp())}
+                    "left":ee-cur,"until":e,"end_unix":int(now.replace(hour=eh,minute=em,second=0,microsecond=0).timestamp()),
+                    "start_unix":int(now.replace(hour=sh,minute=sm,second=0,microsecond=0).timestamp())}
         if cur < ss:
             return {"type":"before","num":num,"lesson":lesson,"wait":ss-cur,"start":s,
                     "start_unix":int(now.replace(hour=sh,minute=sm,second=0,microsecond=0).timestamp())}
@@ -534,6 +535,10 @@ html.corners-pill .tab { border-radius: 100px !important; }
 html.corners-pill .theme-btn { border-radius: 100px !important; }
 html.corners-sharp .card, html.corners-sharp .num, html.corners-sharp .theme-btn, html.corners-sharp .tab, html.corners-sharp .header-card { border-radius: 4px !important; }
 
+/* Anti-misclick: браузер сам не путает скролл и тап */
+.srow, .theme-btn, .size-btn, .open-sub, .emoji-opt, .ap-btn, .tab, .icon-btn, .subscreen-back, .subscreen, .admin-tab { touch-action: pan-y; }
+.acc-slider input[type="range"] { touch-action: none; }
+
 /* Переменные для новых слайдеров */
 .card { padding: var(--card-pad, 16px) !important; }
 .header-card { padding: var(--header-pad, 16px) 20px !important; border-radius: var(--header-radius, 22px) !important; }
@@ -634,7 +639,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-13';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-14';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -1449,10 +1454,13 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                         var txt = '\u0434\u043e ' + d.live.until + ' \u00b7 \u043e\u0441\u0442\u0430\u043b\u043e\u0441\u044c ' + Math.ceil(secLeft/60) + ' \u043c\u0438\u043d';
                         if (tEl.textContent !== txt) tEl.textContent = txt;
                     }
-                    var total = nEl.getAttribute('data-total-sec');
-                    if (!total) {
-                        var fill = nEl.querySelector('.progress-fill');
-                        if (fill) { var w = parseFloat(fill.style.width) || 0; }
+                    var fill = nEl.querySelector('.progress-fill');
+                    if (fill) {
+                        var stU = parseInt(nEl.getAttribute('data-start-unix'),10) || (d.live.end_unix - 2400);
+                        var totalSec = Math.max(1, d.live.end_unix - stU);
+                        var passed = Math.max(0, Math.min(totalSec, nowSec - stU));
+                        var pct = Math.round(passed / totalSec * 100);
+                        fill.style.width = pct + '%';
                     }
                 } else if (srvBefore) {
                     var bEl = document.querySelector('.live-banner.before');
@@ -1490,6 +1498,33 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
     setTimeout(pollLive, 500);
 })();
 </script>
+<script>
+/* ANTI-MISCLICK: если пользователь скроллит, не считать это тапом */
+(function(){
+    var sx = 0, sy = 0, moved = false, t0 = 0;
+    var TH = 10;
+    document.addEventListener('touchstart', function(e){
+        if (!e.touches || !e.touches[0]) return;
+        sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+        moved = false; t0 = Date.now();
+    }, {passive: true, capture: true});
+    document.addEventListener('touchmove', function(e){
+        if (!e.touches || !e.touches[0]) return;
+        if (Math.abs(e.touches[0].clientX - sx) > TH || Math.abs(e.touches[0].clientY - sy) > TH) moved = true;
+    }, {passive: true, capture: true});
+    document.addEventListener('click', function(e){
+        if (moved) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            moved = false;
+        }
+    }, true);
+    document.addEventListener('touchend', function(e){
+        setTimeout(function(){ moved = false; }, 50);
+    }, {passive: true, capture: true});
+})();
+</script>
 </body>
 </html>"""
 
@@ -1512,7 +1547,7 @@ def build_tabs(active, days):
 def build_live(st):
     if not st: return ""
     if st["type"] == "now":
-        return ('<div class="live-banner now" data-end-unix="' + str(st["end_unix"]) + '" data-until="' + st["until"] + '">'
+        return ('<div class="live-banner now" data-end-unix="' + str(st["end_unix"]) + '" data-start-unix="' + str(st.get("start_unix", st["end_unix"]-2400)) + '" data-until="' + st["until"] + '">'
             '<div class="live-dot"></div><div class="live-info">'
             '<div class="live-label">Сейчас идёт</div>'
             f'<div class="live-lesson">{st["lesson"]}</div>'
