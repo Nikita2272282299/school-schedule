@@ -360,15 +360,46 @@ body {
 
 .header-card { background: var(--card-bg); border:1px solid var(--border); border-radius:22px; padding:16px 20px; box-shadow: var(--shadow); margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; }
 h2 { margin:0; font-size:1.4rem; font-weight:800; display:flex; align-items:center; gap:10px; }
-h2 span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+h2 span:not(#adminTap):not(.brand-emoji) { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+#adminTap, #brandEmoji { background:none !important; -webkit-text-fill-color:initial !important; color:initial !important; font-size:1.4rem; }
+#adminTap.hidden { display:none !important; }
 #adminTap { cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent; }
 .header-right { display:flex; align-items:center; gap:8px; }
 .badge-class { background: var(--accent-light); color: var(--accent); padding:7px 14px; border-radius:12px; font-weight:800; font-size:1rem; }
 .icon-btn { background: var(--accent-light); color: var(--accent); border:none; width:40px; height:40px; border-radius:12px; font-size:1.15rem; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:inherit; }
 .icon-btn:active { transform:scale(0.92); }
 
-.settings-panel { background: var(--card-bg); border:1px solid var(--border); border-radius:16px; padding:0 18px; margin-bottom:0; box-shadow:none; max-height:0; overflow:hidden; opacity:0; transition: max-height 0.22s cubic-bezier(0.4,0,0.2,1), opacity 0.14s ease, padding 0.22s ease, margin-bottom 0.22s ease; }
-.settings-panel.open { max-height: 3000px; opacity:1; padding:16px 18px; margin-bottom:14px; box-shadow: var(--shadow); }
+.settings-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    background: var(--card-bg);
+    border: 0 solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 0;
+    box-shadow: none;
+    overflow: hidden;
+    transition: grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+                margin-bottom 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+                border-width 0.2s ease,
+                box-shadow 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.settings-panel.open {
+    grid-template-rows: 1fr;
+    margin-bottom: 14px;
+    border-width: 1px;
+    box-shadow: var(--shadow);
+}
+.settings-inner {
+    overflow: hidden;
+    min-height: 0;
+    padding: 0 18px;
+    opacity: 0;
+    transition: opacity 0.25s ease, padding 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.settings-panel.open .settings-inner {
+    padding: 16px 18px;
+    opacity: 1;
+}
 .settings-title { font-weight:800; font-size:0.9rem; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
 .settings-title:not(:first-child) { margin-top:18px; }
 .settings-title::before { content:""; width:4px; height:4px; border-radius:50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
@@ -497,6 +528,53 @@ html.no-weekday .brand-sub { display:none !important; }
 .admin-block { padding:14px 16px; margin-bottom:12px; border-radius:14px; background: var(--card-bg); border:1px solid var(--border); }
 .admin-block-title { font-weight:800; font-size:0.88rem; color: var(--text-main); margin-bottom:10px; }
 .admin-textarea { width:100%; box-sizing:border-box; padding:12px; border-radius:10px; border:1px solid var(--border); background: var(--bg); color: var(--text-main); font-family:inherit; font-size:0.9rem; min-height:80px; margin-bottom:10px; }
+
+.acc-emoji { display:flex; flex-wrap:wrap; gap:6px; padding:10px; border-radius:10px; background: var(--accent-light); margin-bottom:10px; }
+.emoji-opt { width:44px; height:44px; border-radius:10px; border:2px solid transparent; background: var(--card-bg); font-size:1.3rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.emoji-opt.active { border-color: var(--accent); background: var(--accent-light); }
+.emoji-opt:active { transform:scale(0.92); }
+
+html.hide-logo #adminTap { display:none !important; }
+html.hide-header .header-card { display:none !important; }
+html.hide-tabs .tabs { display:none !important; }
+html.hide-numbers .num { display:none !important; }
+html.hide-sheet-link .sheet-link { display:none !important; }
+html.hide-day-title .day-title { display:none !important; }
+html.mirror-on body { transform: scaleX(-1); }
+html.uppercase-on .lesson, html.uppercase-on .live-lesson { text-transform: uppercase; }
+html.bold-all .lesson, html.bold-all .live-lesson, html.bold-all .time, html.bold-all .day-title { font-weight: 900 !important; }
+html.italic-on .lesson, html.italic-on .live-lesson { font-style: italic; }
+html.underline-on .lesson, html.underline-on .live-lesson { text-decoration: underline; }
+html.colorblind-on body { filter: saturate(0) contrast(1.2); }
+html.no-radius-all .card, html.no-radius-all .num, html.no-radius-all .header-card, html.no-radius-all .tabs, html.no-radius-all .tab, html.no-radius-all .theme-btn, html.no-radius-all .live-banner { border-radius: 0 !important; }
+html.grayscale-all body { filter: grayscale(100%); }
+html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after { animation: none !important; transition: none !important; }
+
+html.corners-circle .num { border-radius:50% !important; }
+html.corners-circle .theme-btn { border-radius:50% !important; aspect-ratio:1; }
+html.corners-pill .card { border-radius: 100px !important; }
+html.corners-pill .tab { border-radius: 100px !important; }
+html.corners-pill .theme-btn { border-radius: 100px !important; }
+html.corners-sharp .card, html.corners-sharp .num, html.corners-sharp .theme-btn, html.corners-sharp .tab, html.corners-sharp .header-card { border-radius: 4px !important; }
+
+/* Переменные для новых слайдеров */
+.card { padding: var(--card-pad, 16px) !important; }
+.header-card { padding: var(--header-pad, 16px) 20px !important; border-radius: var(--header-radius, 22px) !important; }
+.live-banner { padding: var(--live-pad, 14px) 16px !important; }
+.lesson { font-size: var(--lesson-size, 1.05rem) !important; }
+.time { font-size: var(--time-size, 0.8rem) !important; }
+.day-title { font-size: var(--dtitle-size, 1.12rem) !important; }
+.live-lesson { font-size: var(--live-size, 1.02rem) !important; }
+h2 { font-size: var(--header-size, 1.4rem) !important; }
+.num { min-width: var(--num-size, 40px) !important; height: var(--num-size, 40px) !important; }
+.icon-btn { width: var(--icon-size, 40px) !important; height: var(--icon-size, 40px) !important; }
+.tab { font-size: var(--tab-size, 0.85rem) !important; }
+.card { border-radius: var(--card-radius, 16px) !important; margin-bottom: var(--card-gap, 10px) !important; }
+.ap-btn, .theme-btn, .size-btn, .open-sub, .srow { border-radius: var(--btn-radius, 12px) !important; }
+.container { padding: 0 var(--page-pad, 14px) !important; max-width: var(--page-maxw, 500px) !important; }
+.card, .header-card, .tabs, .live-banner { border-width: var(--border-w, 1px) !important; }
+.card { box-shadow: 0 calc(var(--card-shadow, 4px) * 1px) calc(var(--card-shadow, 4px) * 4px) rgba(0,0,0,0.08) !important; }
+.card.now { box-shadow: 0 6px 24px var(--accent-light), 0 0 0 1.5px var(--accent) !important; }
 </style>
 </head>
 <body data-changed-at="{changed_at}">
@@ -510,7 +588,7 @@ html.no-weekday .brand-sub { display:none !important; }
     </div>
 </div>
 
-<div class="settings-panel" id="settingsPanel">
+<div class="settings-panel" id="settingsPanel"><div class="settings-inner">
     <div class="settings-title">🎨 Тема</div>
     <div class="theme-options">
         <button class="theme-btn" data-theme-btn="light" onclick="setTheme('light')"><span class="emoji">☀️</span>Светлая</button>
@@ -543,7 +621,7 @@ html.no-weekday .brand-sub { display:none !important; }
     <button class="open-sub" onclick="openSub('interface')"><span><span class="ico">🎨</span> Интерфейс</span><span class="srow-arrow">›</span></button>
     <button class="open-sub" onclick="openSub('advanced')"><span><span class="ico">🔧</span> Дополнительно</span><span class="srow-arrow">›</span></button>
     <button class="open-sub" onclick="openSub('app')"><span><span class="ico">📱</span> Приложение</span><span class="srow-arrow">›</span></button>
-</div>
+</div></div>
 
 {live_banner}
 {tabs}
@@ -566,6 +644,26 @@ html.no-weekday .brand-sub { display:none !important; }
         <div class="srow" onclick="toggleOpt('show_weekday')"><span class="srow-label" data-ico="📅">День недели в шапке</span><span class="srow-value" id="val-show_weekday">вкл</span></div>
         <div class="srow" onclick="toggleOpt('today_pill')"><span class="srow-label" data-ico="🏷️">Плашка «Сегодня»</span><span class="srow-value" id="val-today_pill">вкл</span></div>
         <div class="srow" onclick="toggleOpt('hide_weekend')"><span class="srow-label" data-ico="🚫">Скрыть субботу</span><span class="srow-value" id="val-hide_weekend">выкл</span></div>
+
+        <div class="acc-sub">📅 Иконка в шапке</div>
+        <div class="acc-emoji">
+            <button class="emoji-opt" data-em="📅" onclick="setEmoji('📅')">📅</button>
+            <button class="emoji-opt" data-em="📆" onclick="setEmoji('📆')">📆</button>
+            <button class="emoji-opt" data-em="🗓️" onclick="setEmoji('🗓️')">🗓️</button>
+            <button class="emoji-opt" data-em="⏰" onclick="setEmoji('⏰')">⏰</button>
+            <button class="emoji-opt" data-em="📚" onclick="setEmoji('📚')">📚</button>
+            <button class="emoji-opt" data-em="🎓" onclick="setEmoji('🎓')">🎓</button>
+            <button class="emoji-opt" data-em="🏫" onclick="setEmoji('🏫')">🏫</button>
+            <button class="emoji-opt" data-em="✏️" onclick="setEmoji('✏️')">✏️</button>
+            <button class="emoji-opt" data-em="⭐" onclick="setEmoji('⭐')">⭐</button>
+            <button class="emoji-opt" data-em="🔥" onclick="setEmoji('🔥')">🔥</button>
+            <button class="emoji-opt" data-em="💜" onclick="setEmoji('💜')">💜</button>
+            <button class="emoji-opt" data-em="⚡" onclick="setEmoji('⚡')">⚡</button>
+            <button class="emoji-opt" data-em="🌟" onclick="setEmoji('🌟')">🌟</button>
+            <button class="emoji-opt" data-em="🎒" onclick="setEmoji('🎒')">🎒</button>
+            <button class="emoji-opt" data-em="📝" onclick="setEmoji('📝')">📝</button>
+            <button class="emoji-opt" data-em="" onclick="setEmoji('')">❌ Скрыть</button>
+        </div>
     </div>
 </div>
 
@@ -582,8 +680,81 @@ html.no-weekday .brand-sub { display:none !important; }
         <div class="acc-slider"><label>Яркость <output id="o-brightness">100</output>%</label><input type="range" min="60" max="140" step="5" id="s-brightness" oninput="setFilter('brightness',this.value)"></div>
         <div class="acc-slider"><label>Оттенок <output id="o-hue">0</output>°</label><input type="range" min="-180" max="180" step="5" id="s-hue" oninput="setFilter('hue-rotate',this.value,'deg')"></div>
         <div class="acc-sub">⚡ Производительность</div>
-        <div class="acc-slider"><label>Количество частиц <output id="o-particle_count">18</output></label><input type="range" min="0" max="40" step="1" id="s-particle_count" oninput="setParticleCount(this.value)"></div>
-        <div class="acc-slider"><label>Скорость анимаций <output id="o-anim_speed">1</output>x</label><input type="range" min="0.5" max="2" step="0.1" id="s-anim_speed" oninput="setAnimSpeed(this.value)"></div>
+        <div class="acc-sub">📐 Размеры и шрифты</div>
+        <div class="acc-slider"><label>Шрифт урока <output id="o-lesson_size">1.05</output>rem</label><input type="range" min="0.7" max="1.6" step="0.05" id="s-lesson_size" oninput="setVar('lesson_size',this.value,'rem')"></div>
+        <div class="acc-slider"><label>Шрифт времени <output id="o-time_size">0.8</output>rem</label><input type="range" min="0.6" max="1.2" step="0.05" id="s-time_size" oninput="setVar('time_size',this.value,'rem')"></div>
+        <div class="acc-slider"><label>Шрифт дня <output id="o-dtitle_size">1.12</output>rem</label><input type="range" min="0.8" max="1.6" step="0.05" id="s-dtitle_size" oninput="setVar('dtitle_size',this.value,'rem')"></div>
+        <div class="acc-slider"><label>Шрифт баннера <output id="o-live_size">1.02</output>rem</label><input type="range" min="0.8" max="1.5" step="0.05" id="s-live_size" oninput="setVar('live_size',this.value,'rem')"></div>
+        <div class="acc-slider"><label>Шрифт шапки <output id="o-header_size">1.4</output>rem</label><input type="range" min="1" max="2" step="0.05" id="s-header_size" oninput="setVar('header_size',this.value,'rem')"></div>
+        <div class="acc-slider"><label>Размер номера <output id="o-num_size">40</output>px</label><input type="range" min="24" max="64" step="2" id="s-num_size" oninput="setVar('num_size',this.value,'px')"></div>
+        <div class="acc-slider"><label>Размер значков <output id="o-icon_size">40</output>px</label><input type="range" min="30" max="56" step="2" id="s-icon_size" oninput="setVar('icon_size',this.value,'px')"></div>
+        <div class="acc-slider"><label>Размер таба <output id="o-tab_size">0.85</output>rem</label><input type="range" min="0.7" max="1.2" step="0.05" id="s-tab_size" oninput="setVar('tab_size',this.value,'rem')"></div>
+        <div class="acc-slider"><label>Радиус карточек <output id="o-card_radius">16</output>px</label><input type="range" min="0" max="40" step="2" id="s-card_radius" oninput="setVar('card_radius',this.value,'px')"></div>
+        <div class="acc-slider"><label>Радиус кнопок <output id="o-btn_radius">12</output>px</label><input type="range" min="0" max="40" step="2" id="s-btn_radius" oninput="setVar('btn_radius',this.value,'px')"></div>
+        <div class="acc-slider"><label>Радиус шапки <output id="o-header_radius">22</output>px</label><input type="range" min="0" max="40" step="2" id="s-header_radius" oninput="setVar('header_radius',this.value,'px')"></div>
+        <div class="acc-slider"><label>Промежутки карточек <output id="o-card_gap">10</output>px</label><input type="range" min="0" max="30" step="2" id="s-card_gap" oninput="setVar('card_gap',this.value,'px')"></div>
+        <div class="acc-slider"><label>Отступ страницы <output id="o-page_pad">14</output>px</label><input type="range" min="0" max="40" step="2" id="s-page_pad" oninput="setVar('page_pad',this.value,'px')"></div>
+        <div class="acc-slider"><label>Толщина границ <output id="o-border_w">1</output>px</label><input type="range" min="0" max="4" step="1" id="s-border_w" oninput="setVar('border_w',this.value,'px')"></div>
+        <div class="acc-slider"><label>Мин. ширина страницы <output id="o-page_maxw">500</output>px</label><input type="range" min="300" max="800" step="10" id="s-page_maxw" oninput="setVar('page_maxw',this.value,'px')"></div>
+
+        <div class="acc-sub">🎨 Цвета и эффекты</div>
+        <div class="acc-slider"><label>Насыщенность <output id="o-saturate">100</output>%</label><input type="range" min="0" max="200" step="5" id="s-saturate" oninput="setFilter('saturate',this.value)"></div>
+        <div class="acc-slider"><label>Яркость <output id="o-brightness">100</output>%</label><input type="range" min="50" max="150" step="5" id="s-brightness" oninput="setFilter('brightness',this.value)"></div>
+        <div class="acc-slider"><label>Контраст <output id="o-contrast">100</output>%</label><input type="range" min="50" max="150" step="5" id="s-contrast" oninput="setFilter('contrast',this.value)"></div>
+        <div class="acc-slider"><label>Оттенок <output id="o-hue">0</output>°</label><input type="range" min="-180" max="180" step="5" id="s-hue" oninput="setFilter('hue-rotate',this.value,'deg')"></div>
+        <div class="acc-slider"><label>Сепия <output id="o-sepia">0</output>%</label><input type="range" min="0" max="100" step="5" id="s-sepia" oninput="setFilter('sepia',this.value)"></div>
+        <div class="acc-slider"><label>Инверсия <output id="o-invert">0</output>%</label><input type="range" min="0" max="100" step="5" id="s-invert" oninput="setFilter('invert',this.value)"></div>
+        <div class="acc-slider"><label>Оттенки серого <output id="o-grayscale">0</output>%</label><input type="range" min="0" max="100" step="5" id="s-grayscale" oninput="setFilter('grayscale',this.value)"></div>
+        <div class="acc-slider"><label>Прозрачность фона <output id="o-bg_opacity">100</output>%</label><input type="range" min="20" max="100" step="5" id="s-bg_opacity" oninput="setBgOpacity(this.value)"></div>
+        <div class="acc-slider"><label>Прозрачность карточек <output id="o-card_opacity">100</output>%</label><input type="range" min="30" max="100" step="5" id="s-card_opacity" oninput="setCardOpacity(this.value)"></div>
+        <div class="acc-slider"><label>Размытие карточек <output id="o-card_blur">0</output>px</label><input type="range" min="0" max="20" step="1" id="s-card_blur" oninput="setCardBlur(this.value)"></div>
+        <div class="acc-slider"><label>Тень карточек <output id="o-card_shadow">4</output></label><input type="range" min="0" max="30" step="1" id="s-card_shadow" oninput="setCardShadow(this.value)"></div>
+        <div class="acc-slider"><label>Свечение акцента <output id="o-glow_pow">4</output></label><input type="range" min="0" max="30" step="1" id="s-glow_pow" oninput="setGlowPow(this.value)"></div>
+
+        <div class="acc-sub">⚡ Анимации</div>
+        <div class="acc-slider"><label>Общая скорость <output id="o-anim_speed">1</output>x</label><input type="range" min="0" max="3" step="0.1" id="s-anim_speed" oninput="setAnimSpeed(this.value)"></div>
+        <div class="acc-slider"><label>Скорость переходов <output id="o-transition">0.15</output>с</label><input type="range" min="0" max="1" step="0.05" id="s-transition" oninput="setTransition(this.value)"></div>
+        <div class="acc-slider"><label>Скорость частиц <output id="o-particle_speed">1</output>x</label><input type="range" min="0.3" max="3" step="0.1" id="s-particle_speed" oninput="setParticleSpeed(this.value)"></div>
+
+        <div class="acc-sub">✨ Частицы</div>
+        <div class="acc-slider"><label>Количество <output id="o-particle_count">18</output></label><input type="range" min="0" max="60" step="1" id="s-particle_count" oninput="setParticleCount(this.value)"></div>
+        <div class="acc-slider"><label>Размер <output id="o-particle_size">1</output>x</label><input type="range" min="0.3" max="3" step="0.1" id="s-particle_size" oninput="setParticleSize(this.value)"></div>
+        <div class="acc-slider"><label>Прозрачность <output id="o-particle_opacity">85</output>%</label><input type="range" min="10" max="100" step="5" id="s-particle_opacity" oninput="setParticleOpacity(this.value)"></div>
+
+        <div class="acc-sub">📐 Отступы внутри</div>
+        <div class="acc-slider"><label>Padding карточки <output id="o-card_pad">16</output>px</label><input type="range" min="6" max="30" step="2" id="s-card_pad" oninput="setVar('card_pad',this.value,'px')"></div>
+        <div class="acc-slider"><label>Padding шапки <output id="o-header_pad">16</output>px</label><input type="range" min="8" max="30" step="2" id="s-header_pad" oninput="setVar('header_pad',this.value,'px')"></div>
+        <div class="acc-slider"><label>Отступ баннера <output id="o-live_pad">14</output>px</label><input type="range" min="6" max="26" step="2" id="s-live_pad" oninput="setVar('live_pad',this.value,'px')"></div>
+
+        <div class="acc-sub">🔲 Форма углов</div>
+        <div class="srow" onclick="setCorners('rounded')"><span class="srow-label" data-ico="⬜">Мягкие</span><span class="srow-value" id="val-c-round"></span></div>
+        <div class="srow" onclick="setCorners('sharp')"><span class="srow-label" data-ico="🔲">Острые</span><span class="srow-value" id="val-c-sharp"></span></div>
+        <div class="srow" onclick="setCorners('circle')"><span class="srow-label" data-ico="⚪">Круглые</span><span class="srow-value" id="val-c-circle"></span></div>
+        <div class="srow" onclick="setCorners('pill')"><span class="srow-label" data-ico="💊">Таблетки</span><span class="srow-value" id="val-c-pill"></span></div>
+
+        <div class="acc-sub">📱 Показ элементов</div>
+        <div class="srow" onclick="toggleOpt('show_logo')"><span class="srow-label" data-ico="📅">Иконка в шапке</span><span class="srow-value" id="val-show_logo">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('show_header')"><span class="srow-label" data-ico="📋">Шапка</span><span class="srow-value" id="val-show_header">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('show_tabs')"><span class="srow-label" data-ico="📑">Табы дней</span><span class="srow-value" id="val-show_tabs">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('show_numbers')"><span class="srow-label" data-ico="🔢">Номера уроков</span><span class="srow-value" id="val-show_numbers">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('show_classroom')"><span class="srow-label" data-ico="🚪">Показывать кабинет</span><span class="srow-value" id="val-show_classroom">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('show_sheet_link')"><span class="srow-label" data-ico="🔗">Ссылка на таблицу</span><span class="srow-value" id="val-show_sheet_link">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('show_day_title')"><span class="srow-label" data-ico="📆">Заголовок дня</span><span class="srow-value" id="val-show_day_title">вкл</span></div>
+
+        <div class="acc-sub">🎛 Прочее</div>
+        <div class="srow" onclick="toggleOpt('mirror')"><span class="srow-label" data-ico="🔁">Зеркалирование</span><span class="srow-value" id="val-mirror">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('uppercase')"><span class="srow-label" data-ico="🅰️">ВЕРХНИЙ РЕГИСТР</span><span class="srow-value" id="val-uppercase">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('bold_all')"><span class="srow-label" data-ico="🅱️">Жирный текст</span><span class="srow-value" id="val-bold_all">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('italic')"><span class="srow-label" data-ico="𝘐">Курсив</span><span class="srow-value" id="val-italic">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('underline')"><span class="srow-label" data-ico="〰️">Подчёркивание</span><span class="srow-value" id="val-underline">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('colorblind')"><span class="srow-label" data-ico="🎨">Дальтонизм-режим</span><span class="srow-value" id="val-colorblind">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('no_radius')"><span class="srow-label" data-ico="⬛">Прямые углы везде</span><span class="srow-value" id="val-no_radius">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('grayscale_all')"><span class="srow-label" data-ico="⚫">Ч/Б режим</span><span class="srow-value" id="val-grayscale_all">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('reduce_motion')"><span class="srow-label" data-ico="🛑">Уменьшить движение</span><span class="srow-value" id="val-reduce_motion">выкл</span></div>
+
+        <div class="acc-sub">🔬 Тонкая настройка (вставь свой CSS)</div>
+        <div class="acc-slider"><label>Свой CSS-код</label><textarea id="customCss" placeholder=".card { color: red; }" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text-main);font-family:monospace;font-size:0.8rem;min-height:80px;margin-top:6px;resize:vertical;" onchange="applyCustomCss(this.value)"></textarea></div>
+
         <button class="link-btn" style="width:100%;padding:14px;margin-top:14px;" onclick="resetAllOpts()">🔄 Сбросить все настройки</button>
     </div>
 </div>
@@ -618,7 +789,7 @@ var THEME_COLORS = {light:'#f0f4f8',dark:'#0f1115',cosmic:'#05021a',ocean:'#c7e8
 
 function _optIsOn(key){
     var cur = localStorage.getItem('rs_opt_' + key);
-    if (['particles','show_time','live_banner','progress_bar','glow','show_weekday','today_pill'].indexOf(key) >= 0) return cur !== '0';
+    if (['particles','show_time','live_banner','progress_bar','glow','show_weekday','today_pill','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title'].indexOf(key) >= 0) return cur !== '0';
     return cur === '1';
 }
 
@@ -635,6 +806,22 @@ function applyOpt(key, on){
     else if (key === 'glow') h.classList.toggle('no-glow', !on);
     else if (key === 'today_pill') h.classList.toggle('no-today-pill', !on);
     else if (key === 'show_weekday') h.classList.toggle('no-weekday', !on);
+    else if (key === 'show_logo') h.classList.toggle('hide-logo', !on);
+    else if (key === 'show_header') h.classList.toggle('hide-header', !on);
+    else if (key === 'show_tabs') h.classList.toggle('hide-tabs', !on);
+    else if (key === 'show_numbers') h.classList.toggle('hide-numbers', !on);
+    else if (key === 'show_sheet_link') h.classList.toggle('hide-sheet-link', !on);
+    else if (key === 'show_day_title') h.classList.toggle('hide-day-title', !on);
+    else if (key === 'mirror') h.classList.toggle('mirror-on', on);
+    else if (key === 'uppercase') h.classList.toggle('uppercase-on', on);
+    else if (key === 'bold_all') h.classList.toggle('bold-all', on);
+    else if (key === 'italic') h.classList.toggle('italic-on', on);
+    else if (key === 'underline') h.classList.toggle('underline-on', on);
+    else if (key === 'colorblind') h.classList.toggle('colorblind-on', on);
+    else if (key === 'no_radius') h.classList.toggle('no-radius-all', on);
+    else if (key === 'grayscale_all') h.classList.toggle('grayscale-all', on);
+    else if (key === 'reduce_motion') h.classList.toggle('reduce-motion', on);
+    else if (key === 'show_classroom') h.classList.toggle('hide-classroom', !on);
 }
 
 function toggleOpt(key){
@@ -1037,6 +1224,92 @@ document.addEventListener('visibilitychange', function(){
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){ navigator.serviceWorker.register('/sw.js').catch(function(){}); });
 }
+
+/* ===== 100+ настроек ===== */
+function setEmoji(em){
+    localStorage.setItem('rs_emoji', em);
+    var el = document.getElementById('adminTap');
+    if (el) el.textContent = em;
+    if (el) el.classList.toggle('hidden', em === '');
+    document.querySelectorAll('.emoji-opt').forEach(function(b){
+        b.classList.toggle('active', b.getAttribute('data-em') === em);
+    });
+    toggleOpt('show_logo', em !== '');
+}
+function setBgOpacity(v){ localStorage.setItem('rs_bg_opacity', v); var o=document.getElementById('o-bg_opacity'); if(o)o.textContent=v; applyBgOpacity(); }
+function applyBgOpacity(){
+    var v = localStorage.getItem('rs_bg_opacity');
+    if (!v) return;
+    var a = parseInt(v,10)/100;
+    document.body.style.opacity = a;
+}
+function setCardOpacity(v){ localStorage.setItem('rs_card_opacity', v); var o=document.getElementById('o-card_opacity'); if(o)o.textContent=v; applyCardOpacity(); }
+function applyCardOpacity(){
+    var v = localStorage.getItem('rs_card_opacity');
+    if (!v) return;
+    document.querySelectorAll('.card').forEach(function(c){ c.style.opacity = parseInt(v,10)/100; });
+}
+function setCardBlur(v){ localStorage.setItem('rs_card_blur', v); var o=document.getElementById('o-card_blur'); if(o)o.textContent=v; applyCardBlur(); }
+function applyCardBlur(){
+    var v = localStorage.getItem('rs_card_blur');
+    if (!v) return;
+    document.querySelectorAll('.card').forEach(function(c){ c.style.backdropFilter = 'blur('+v+'px)'; });
+}
+function setCardShadow(v){ localStorage.setItem('rs_card_shadow', v); var o=document.getElementById('o-card_shadow'); if(o)o.textContent=v; applyCardShadow(); }
+function applyCardShadow(){
+    var v = localStorage.getItem('rs_card_shadow');
+    if (!v) return;
+    document.querySelectorAll('.card').forEach(function(c){
+        c.style.boxShadow = '0 '+v+'px '+(v*4)+'px rgba(0,0,0,0.08)';
+    });
+}
+function setGlowPow(v){ localStorage.setItem('rs_glow_pow', v); var o=document.getElementById('o-glow_pow'); if(o)o.textContent=v; }
+function setParticleSpeed(v){ localStorage.setItem('rs_particle_speed', v); var o=document.getElementById('o-particle_speed'); if(o)o.textContent=v; spawnParticles(document.documentElement.getAttribute('data-theme')); }
+function setParticleSize(v){ localStorage.setItem('rs_particle_size', v); var o=document.getElementById('o-particle_size'); if(o)o.textContent=v; spawnParticles(document.documentElement.getAttribute('data-theme')); }
+function setParticleOpacity(v){ localStorage.setItem('rs_particle_opacity', v); var o=document.getElementById('o-particle_opacity'); if(o)o.textContent=v; spawnParticles(document.documentElement.getAttribute('data-theme')); }
+function applyCustomCss(css){
+    localStorage.setItem('rs_custom_css', css);
+    var el = document.getElementById('customStyleTag');
+    if (!el) {
+        el = document.createElement('style');
+        el.id = 'customStyleTag';
+        document.head.appendChild(el);
+    }
+    el.textContent = css || '';
+}
+function setCorners(t){
+    document.documentElement.classList.remove('corners-rounded','corners-sharp','corners-circle','corners-pill');
+    document.documentElement.classList.add('corners-' + t);
+    localStorage.setItem('rs_corners', t);
+    ['rounded','sharp','circle','pill'].forEach(function(x){
+        var e = document.getElementById('val-c-'+x); if(e) e.textContent = (x===t) ? '✓' : '';
+    });
+}
+function initEmoji(){
+    var em = localStorage.getItem('rs_emoji');
+    if (em === null) em = '📅';
+    setEmoji(em);
+}
+function initAllNew(){
+    initEmoji();
+    applyBgOpacity(); applyCardOpacity(); applyCardBlur(); applyCardShadow();
+    var v;
+    var sliders = ['lesson_size','time_size','dtitle_size','live_size','header_size','num_size','icon_size','tab_size','card_radius','btn_radius','header_radius','card_gap','page_pad','border_w','page_maxw','card_pad','header_pad','live_pad'];
+    sliders.forEach(function(k){ if((v=localStorage.getItem('rs_u_'+k))){ var i=document.getElementById('s-'+k); if(i)i.value=v; var o=document.getElementById('o-'+k); if(o)o.textContent=v; } });
+    ['saturate','brightness','contrast','hue-rotate','sepia','invert','grayscale'].forEach(function(k){ if((v=localStorage.getItem('rs_f_'+k))){ var i=document.getElementById('s-'+k.replace('hue-rotate','hue')); if(i)i.value=v; var o=document.getElementById('o-'+k.replace('-rotate','').replace('grayscale','grayscale')); if(o)o.textContent=v; } });
+    ['particle_count','particle_size','particle_opacity','particle_speed','anim_speed','transition'].forEach(function(k){ if((v=localStorage.getItem('rs_'+k))){ var i=document.getElementById('s-'+k); if(i)i.value=v; var o=document.getElementById('o-'+k); if(o)o.textContent=v; } });
+    if ((v=localStorage.getItem('rs_bg_opacity'))) { var i=document.getElementById('s-bg_opacity'); if(i)i.value=v; var o=document.getElementById('o-bg_opacity'); if(o)o.textContent=v; }
+    if ((v=localStorage.getItem('rs_card_opacity'))) { var i=document.getElementById('s-card_opacity'); if(i)i.value=v; var o=document.getElementById('o-card_opacity'); if(o)o.textContent=v; }
+    if ((v=localStorage.getItem('rs_card_blur'))) { var i=document.getElementById('s-card_blur'); if(i)i.value=v; var o=document.getElementById('o-card_blur'); if(o)o.textContent=v; }
+    if ((v=localStorage.getItem('rs_card_shadow'))) { var i=document.getElementById('s-card_shadow'); if(i)i.value=v; var o=document.getElementById('o-card_shadow'); if(o)o.textContent=v; }
+    if ((v=localStorage.getItem('rs_glow_pow'))) { var i=document.getElementById('s-glow_pow'); if(i)i.value=v; var o=document.getElementById('o-glow_pow'); if(o)o.textContent=v; }
+    if ((v=localStorage.getItem('rs_custom_css'))) { applyCustomCss(v); var t=document.getElementById('customCss'); if(t)t.value=v; }
+    if ((v=localStorage.getItem('rs_corners'))) setCorners(v);
+}
+
+
+/* Стартуем новые */
+if (document.readyState !== "loading") initAllNew(); else document.addEventListener("DOMContentLoaded", initAllNew);
 </script>
 </body>
 </html>"""
