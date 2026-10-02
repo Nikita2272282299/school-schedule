@@ -892,6 +892,64 @@ html.scanlines-on body::after { content:""; position:fixed; inset:0; pointer-eve
     margin-left: 4px;
 }
 .ap-rename:active { background: var(--accent-light); color: var(--accent); }
+
+/* ===== ПОДЭКРАНЫ (выезжают справа) ===== */
+.subscreen {
+    position: fixed; inset: 0;
+    background: var(--bg) !important;
+    background-image: none !important;
+    z-index: 99999 !important;
+    transform: translateX(100%);
+    transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    padding: 0 16px 40px;
+    overscroll-behavior: contain;
+    box-shadow: -10px 0 40px rgba(0,0,0,0.3);
+}
+.subscreen.open { transform: translateX(0); }
+[data-theme="light"] .subscreen { background: #f1f5fa !important; }
+[data-theme="dark"] .subscreen { background: #10131a !important; }
+[data-theme="cosmic"] .subscreen { background: #05021a !important; }
+[data-theme="ocean"] .subscreen { background: #c7e8f5 !important; }
+[data-theme="sunset"] .subscreen { background: #ffd9b0 !important; }
+[data-theme="forest"] .subscreen { background: #dff0d0 !important; }
+[data-theme="sakura"] .subscreen { background: #ffeaf0 !important; }
+[data-theme="custom"] .subscreen { background: var(--cu-bg, #eef2f7) !important; }
+
+.subscreen-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 0 14px;
+    position: sticky; top: 0;
+    background: inherit;
+    z-index: 10;
+    border-bottom: 1px solid var(--border);
+    margin: 0 -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+.subscreen-back {
+    background: var(--accent-light, rgba(99,102,241,0.12));
+    color: var(--accent);
+    border: none; width: 40px; height: 40px;
+    border-radius: 12px; font-size: 1.2rem; font-weight: 800;
+    cursor: pointer; flex-shrink: 0; font-family: inherit;
+}
+.subscreen-back:active { transform: scale(0.92); }
+.subscreen-title { font-size: 1.1rem; font-weight: 800; color: var(--text-main, var(--text)); }
+.subscreen-body { padding-top: 16px; }
+
+.srow {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 16px; margin-bottom: 8px;
+    border-radius: 14px;
+    background: var(--card-bg, var(--card)); border: 1px solid var(--border);
+    cursor: pointer;
+}
+.srow:active { background: var(--accent-light, rgba(99,102,241,0.1)); }
+.srow-label { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.9rem; color: var(--text-main, var(--text)); }
+.srow-label::before { content: attr(data-ico); font-size: 1.15rem; }
+.srow-value { color: var(--text-muted, var(--muted)); font-size: 0.82rem; font-weight: 800; }
+.srow-value.on { color: var(--accent); }
 </style>
 </head><body>
 <h1>🔐 Админ</h1>
@@ -3326,112 +3384,41 @@ body::-webkit-scrollbar {
     </div>
 
     <div class="settings-panel" id="settingsPanel">
-        <div class="settings-preview"></div>
-        <div class="settings-title">🎨 Тема</div>
-        <div class="theme-options">
-            <button class="theme-btn" data-theme-btn="light" onclick="setTheme('light')"><span class="emoji">☀️</span>Светлая</button>
-            <button class="theme-btn" data-theme-btn="dark" onclick="setTheme('dark')"><span class="emoji">🌙</span>Тёмная</button>
-            <button class="theme-btn" data-theme-btn="cosmic" onclick="setTheme('cosmic')"><span class="emoji">🌌</span>Космос</button>
-            <button class="theme-btn" data-theme-btn="ocean" onclick="setTheme('ocean')"><span class="emoji">🌊</span>Океан</button>
-            <button class="theme-btn" data-theme-btn="sunset" onclick="setTheme('sunset')"><span class="emoji">🌅</span>Закат</button>
-            <button class="theme-btn" data-theme-btn="forest" onclick="setTheme('forest')"><span class="emoji">🌿</span>Лес</button>
-            <button class="theme-btn" data-theme-btn="sakura" onclick="setTheme('sakura')"><span class="emoji">🌸</span>Сакура</button>
-            <button class="theme-btn" data-theme-btn="custom" onclick="setTheme('custom')"><span class="emoji">🎨</span>Кастом</button>
-        </div>
-        <div class="custom-picker">
-            <label>Основной <input type="color" id="cuAccent" value="#6366f1" onchange="applyCustom()"></label>
-            <label>Второй <input type="color" id="cuAccent2" value="#a855f7" onchange="applyCustom()"></label>
-            <label>Фон <input type="color" id="cuBg" value="#eef2f7" onchange="applyCustom()"></label>
-            <label>Карточки <input type="color" id="cuCard" value="#ffffff" onchange="applyCustom()"></label>
-            <label>Текст <input type="color" id="cuText" value="#0f172a" onchange="applyCustom()"></label>
-            <label>Доп. текст <input type="color" id="cuMuted" value="#64748b" onchange="applyCustom()"></label>
-            <button onclick="resetCustom()" class="link-btn" style="width:100%;margin-top:8px;">🔄 Сбросить</button>
-        </div>
-
-        <div class="settings-title">🔤 Размер текста</div>
-        <div class="size-options">
-            <button class="size-btn" data-size="small" onclick="setSize('small')">A</button>
-            <button class="size-btn" data-size="normal" onclick="setSize('normal')">A</button>
-            <button class="size-btn" data-size="large" onclick="setSize('large')">A</button>
-        </div>
-        
-        <div class="toggle-row">
-            <div class="toggle-label" data-ico="📏">Компактный режим</div>
-            <div class="toggle" id="tCompact" onclick="toggleCompact()"></div>
-        </div>
-        <div class="toggle-row">
-            <div class="toggle-label" data-ico="🔢">Круглые номера</div>
-            <div class="toggle" id="tRoundNums" onclick="toggleRoundNums()"></div>
-        </div>
-        <div class="toggle-row">
-            <div class="toggle-label" data-ico="✨">Частицы фона</div>
-            <div class="toggle" id="tParticles" onclick="toggleParticles()"></div>
-        </div>
-        <div class="settings-title">⚙️ Настройки</div>
-
-        <div class="acc-block">
-            <button class="acc-header" onclick="toggleAcc(this)"><span><span class="ico">🎨</span> Интерфейс</span><span class="acc-arrow">▾</span></button>
-            <div class="acc-body">
-                <div class="acc-row" onclick="toggleOpt('particles')"><span class="acc-lbl">✨ Частицы фона</span><span class="acc-val" id="val-particles">вкл</span></div>
-                <div class="acc-row" onclick="toggleOpt('round_nums')"><span class="acc-lbl">🔢 Круглые номера</span><span class="acc-val" id="val-round_nums">выкл</span></div>
-                <div class="acc-row" onclick="toggleOpt('compact')"><span class="acc-lbl">📏 Компактный режим</span><span class="acc-val" id="val-compact">выкл</span></div>
-                <div class="acc-row" onclick="toggleOpt('show_time')"><span class="acc-lbl">⏱️ Показывать время</span><span class="acc-val" id="val-show_time">вкл</span></div>
-                <div class="acc-row" onclick="toggleOpt('live_banner')"><span class="acc-lbl">📢 Баннер «Сейчас идёт»</span><span class="acc-val" id="val-live_banner">вкл</span></div>
-                <div class="acc-row" onclick="toggleOpt('progress_bar')"><span class="acc-lbl">📊 Прогресс-бар урока</span><span class="acc-val" id="val-progress_bar">вкл</span></div>
-                <div class="acc-row" onclick="toggleOpt('card_anim')"><span class="acc-lbl">✨ Анимация карточек</span><span class="acc-val" id="val-card_anim">вкл</span></div>
-                <div class="acc-row" onclick="toggleOpt('glow')"><span class="acc-lbl">💡 Свечение акцента</span><span class="acc-val" id="val-glow">вкл</span></div>
-                <div class="acc-row" onclick="toggleOpt('big_text')"><span class="acc-lbl">🔠 Крупный шрифт</span><span class="acc-val" id="val-big_text">выкл</span></div>
-                <div class="acc-row" onclick="toggleOpt('show_weekday')"><span class="acc-lbl">📅 День недели в шапке</span><span class="acc-val" id="val-show_weekday">вкл</span></div>
-                <div class="acc-row" onclick="toggleOpt('today_pill')"><span class="acc-lbl">🏷️ Плашка «Сегодня»</span><span class="acc-val" id="val-today_pill">вкл</span></div>
-                <div class="acc-row" onclick="toggleOpt('hide_weekend')"><span class="acc-lbl">🚫 Скрыть субботу</span><span class="acc-val" id="val-hide_weekend">выкл</span></div>
-            </div>
-        </div>
-
-        <div class="acc-block">
-            <button class="acc-header" onclick="toggleAcc(this)"><span><span class="ico">🔧</span> Дополнительно</span><span class="acc-arrow">▾</span></button>
-            <div class="acc-body">
-                <div class="acc-sub">📐 Размеры</div>
-                <div class="acc-slider"><label>Шрифт уроков <output id="o-lesson_size">1.05</output>rem</label><input type="range" min="0.85" max="1.35" step="0.05" id="s-lesson_size" oninput="setVar('lesson_size',this.value,'rem')"></div>
-                <div class="acc-slider"><label>Шрифт в шапке <output id="o-header_size">1.4</output>rem</label><input type="range" min="1.1" max="1.8" step="0.05" id="s-header_size" oninput="setVar('header_size',this.value,'rem')"></div>
-                <div class="acc-slider"><label>Размер номеров <output id="o-num_size">40</output>px</label><input type="range" min="30" max="56" step="2" id="s-num_size" oninput="setVar('num_size',this.value,'px')"></div>
-                <div class="acc-slider"><label>Радиус карточек <output id="o-card_radius">16</output>px</label><input type="range" min="0" max="30" step="2" id="s-card_radius" oninput="setVar('card_radius',this.value,'px')"></div>
-                <div class="acc-slider"><label>Радиус кнопок <output id="o-btn_radius">12</output>px</label><input type="range" min="0" max="26" step="2" id="s-btn_radius" oninput="setVar('btn_radius',this.value,'px')"></div>
-                <div class="acc-slider"><label>Промежутки карточек <output id="o-card_gap">10</output>px</label><input type="range" min="4" max="24" step="2" id="s-card_gap" oninput="setVar('card_gap',this.value,'px')"></div>
-                <div class="acc-slider"><label>Отступ страницы <output id="o-page_pad">14</output>px</label><input type="range" min="8" max="30" step="2" id="s-page_pad" oninput="setVar('page_pad',this.value,'px')"></div>
-
-                <div class="acc-sub">🎨 Цвета (точная настройка)</div>
-                <div class="acc-slider"><label>Насыщенность <output id="o-sat">100</output>%</label><input type="range" min="0" max="200" step="5" id="s-sat" oninput="setFilter('saturate',this.value)"></div>
-                <div class="acc-slider"><label>Яркость <output id="o-bright">100</output>%</label><input type="range" min="60" max="140" step="5" id="s-bright" oninput="setFilter('brightness',this.value)"></div>
-                <div class="acc-slider"><label>Контраст <output id="o-contrast">100</output>%</label><input type="range" min="70" max="130" step="5" id="s-contrast" oninput="setFilter('contrast',this.value)"></div>
-                <div class="acc-slider"><label>Оттенок <output id="o-hue">0</output>°</label><input type="range" min="-180" max="180" step="5" id="s-hue" oninput="setFilter('hue-rotate',this.value,'deg')"></div>
-
-                <div class="acc-sub">⚡ Производительность</div>
-                <div class="acc-slider"><label>Количество частиц <output id="o-particle_count">18</output></label><input type="range" min="0" max="40" step="1" id="s-particle_count" oninput="setParticleCount(this.value)"></div>
-                <div class="acc-slider"><label>Размер частиц <output id="o-particle_size">1</output>x</label><input type="range" min="0.5" max="2" step="0.1" id="s-particle_size" oninput="setParticleSize(this.value)"></div>
-                <div class="acc-slider"><label>Скорость анимаций <output id="o-anim_speed">1</output>x</label><input type="range" min="0.5" max="2" step="0.1" id="s-anim_speed" oninput="setAnimSpeed(this.value)"></div>
-                <div class="acc-slider"><label>Длительность перехода <output id="o-transition">0.15</output>с</label><input type="range" min="0" max="0.5" step="0.05" id="s-transition" oninput="setTransition(this.value)"></div>
-
-                <div class="acc-sub">🔮 Эффекты</div>
-                <div class="acc-row" onclick="toggleOpt('blur_bg')"><span class="acc-lbl">🌫️ Размытие фона</span><span class="acc-val" id="val-blur_bg">выкл</span></div>
-                <div class="acc-row" onclick="toggleOpt('noise')"><span class="acc-lbl">📺 Шум-текстура</span><span class="acc-val" id="val-noise">выкл</span></div>
-                <div class="acc-row" onclick="toggleOpt('vignette')"><span class="acc-lbl">🌑 Виньетка</span><span class="acc-val" id="val-vignette">выкл</span></div>
-                <div class="acc-row" onclick="toggleOpt('scanlines')"><span class="acc-lbl">📼 Сканлайны</span><span class="acc-val" id="val-scanlines">выкл</span></div>
-
-                <div class="acc-sub">🔘 Стиль кнопок</div>
-                <div class="acc-row" onclick="setStyle('btn','round')"><span class="acc-lbl">⬜ Круглые</span><span class="acc-val" id="val-btn-round"></span></div>
-                <div class="acc-row" onclick="setStyle('btn','sharp')"><span class="acc-lbl">🔲 Острые</span><span class="acc-val" id="val-btn-sharp"></span></div>
-                <div class="acc-row" onclick="setStyle('btn','soft')"><span class="acc-lbl">◻️ Мягкие</span><span class="acc-val" id="val-btn-soft"></span></div>
-
-                <div class="acc-sub">📱 Сброс</div>
-                <button class="link-btn" style="width:100%;padding:12px;margin-top:6px;" onclick="resetAllOpts()">🔄 Сбросить все настройки</button>
-            </div>
-        </div>
-
-        <button class="open-sub" id="adminBtn" onclick="openSub('admin')" style="display:none;"><span><span class="ico">👑</span> Админ-панель</span><span class="srow-arrow">›</span></button>
-
-        <div class="settings-title">📱 Приложение</div>
-        <div id="installSection"></div>
+    <div class="settings-preview"></div>
+    <div class="settings-title">🎨 Тема</div>
+    <div class="theme-options">
+        <button class="theme-btn" data-theme-btn="light" onclick="setTheme('light')"><span class="emoji">☀️</span>Светлая</button>
+        <button class="theme-btn" data-theme-btn="dark" onclick="setTheme('dark')"><span class="emoji">🌙</span>Тёмная</button>
+        <button class="theme-btn" data-theme-btn="cosmic" onclick="setTheme('cosmic')"><span class="emoji">🌌</span>Космос</button>
+        <button class="theme-btn" data-theme-btn="ocean" onclick="setTheme('ocean')"><span class="emoji">🌊</span>Океан</button>
+        <button class="theme-btn" data-theme-btn="sunset" onclick="setTheme('sunset')"><span class="emoji">🌅</span>Закат</button>
+        <button class="theme-btn" data-theme-btn="forest" onclick="setTheme('forest')"><span class="emoji">🌿</span>Лес</button>
+        <button class="theme-btn" data-theme-btn="sakura" onclick="setTheme('sakura')"><span class="emoji">🌸</span>Сакура</button>
+        <button class="theme-btn" data-theme-btn="custom" onclick="setTheme('custom')"><span class="emoji">🎨</span>Кастом</button>
     </div>
+
+    <div class="custom-picker">
+        <label>Основной <input type="color" id="cuAccent" value="#6366f1" onchange="applyCustom()"></label>
+        <label>Второй <input type="color" id="cuAccent2" value="#a855f7" onchange="applyCustom()"></label>
+        <label>Фон <input type="color" id="cuBg" value="#eef2f7" onchange="applyCustom()"></label>
+        <label>Карточки <input type="color" id="cuCard" value="#ffffff" onchange="applyCustom()"></label>
+        <label>Текст <input type="color" id="cuText" value="#0f172a" onchange="applyCustom()"></label>
+        <label>Доп. текст <input type="color" id="cuMuted" value="#64748b" onchange="applyCustom()"></label>
+        <button onclick="resetCustom()" class="link-btn" style="width:100%;margin-top:8px;">🔄 Сбросить</button>
+    </div>
+
+    <div class="settings-title">🔤 Размер текста</div>
+    <div class="size-options">
+        <button class="size-btn" data-size="small" onclick="setSize('small')">A</button>
+        <button class="size-btn" data-size="normal" onclick="setSize('normal')">A</button>
+        <button class="size-btn" data-size="large" onclick="setSize('large')">A</button>
+    </div>
+
+    <div class="settings-title">⚙️ Разделы</div>
+    <button class="open-sub" onclick="openSub('interface')"><span><span class="ico">🎨</span> Интерфейс</span><span class="srow-arrow">›</span></button>
+    <button class="open-sub" onclick="openSub('advanced')"><span><span class="ico">🔧</span> Дополнительно</span><span class="srow-arrow">›</span></button>
+    <button class="open-sub" onclick="openSub('app')"><span><span class="ico">📱</span> Приложение</span><span class="srow-arrow">›</span></button>
+    <button class="open-sub" id="adminBtn" onclick="openSub('admin')" style="display:none !important;"><span><span class="ico">👑</span> Админ-панель</span><span class="srow-arrow">›</span></button>
 </div>
 
 {live_banner}
@@ -4280,6 +4267,50 @@ function clearAllVisits(){
     if (!confirm('Точно сбросить всех посетителей? Это удалит и баны!')) return;
     alert('Функция очистки появится позже');
 }
+
+function openSub(name){
+    if (name === 'admin' && localStorage.getItem('rs_admin') !== '1') return;
+    document.querySelectorAll('.subscreen').forEach(function(s){
+        if (s.id !== 'sub-' + name) s.classList.remove('open');
+    });
+    var el = document.getElementById('sub-' + name);
+    if (!el) return;
+    void el.offsetWidth;
+    el.classList.add('open');
+    el.scrollTop = 0;
+    document.body.style.overflow = 'hidden';
+    if (name === 'admin') {
+        var pl = document.getElementById('apList');
+        if (pl) pl.innerHTML = 'Загрузка…';
+        if (typeof loadVisitors === 'function') setTimeout(loadVisitors, 100);
+    }
+    if (name === 'app') {
+        if (typeof renderInstallSection === 'function') setTimeout(renderInstallSection, 50);
+    }
+}
+function closeSub(name){
+    var el = document.getElementById('sub-' + name);
+    if (!el) return;
+    el.classList.remove('open');
+    document.body.style.overflow = '';
+}
+function checkAdminBtn(){
+    var b = document.getElementById('adminBtn');
+    if (!b) return;
+    if (localStorage.getItem('rs_admin') === '1') {
+        b.style.setProperty('display', 'flex', 'important');
+    } else {
+        b.style.setProperty('display', 'none', 'important');
+    }
+}
+// После пароля — обновляем кнопку
+var _origPrompt = window.prompt;
+window.prompt = function(msg){
+    var r = _origPrompt.apply(this, arguments);
+    setTimeout(checkAdminBtn, 200);
+    return r;
+};
+setTimeout(checkAdminBtn, 300);
 </script>
 
 
@@ -4288,6 +4319,102 @@ function clearAllVisits(){
 
 </div>
 
+
+
+<div class="subscreen" id="sub-interface">
+    <div class="subscreen-header">
+        <button class="subscreen-back" onclick="closeSub('interface')">←</button>
+        <div class="subscreen-title">🎨 Интерфейс</div>
+    </div>
+    <div class="subscreen-body">
+        <div class="srow" onclick="toggleOpt('particles')"><span class="srow-label" data-ico="✨">Частицы фона</span><span class="srow-value" id="val-particles">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('round_nums')"><span class="srow-label" data-ico="🔢">Круглые номера</span><span class="srow-value" id="val-round_nums">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('compact')"><span class="srow-label" data-ico="📏">Компактный режим</span><span class="srow-value" id="val-compact">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('show_time')"><span class="srow-label" data-ico="⏱️">Показывать время</span><span class="srow-value" id="val-show_time">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('live_banner')"><span class="srow-label" data-ico="📢">Баннер «Сейчас идёт»</span><span class="srow-value" id="val-live_banner">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('progress_bar')"><span class="srow-label" data-ico="📊">Прогресс-бар урока</span><span class="srow-value" id="val-progress_bar">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('card_anim')"><span class="srow-label" data-ico="✨">Анимация карточек</span><span class="srow-value" id="val-card_anim">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('glow')"><span class="srow-label" data-ico="💡">Свечение акцента</span><span class="srow-value" id="val-glow">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('big_text')"><span class="srow-label" data-ico="🔠">Крупный шрифт</span><span class="srow-value" id="val-big_text">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('show_weekday')"><span class="srow-label" data-ico="📅">День недели в шапке</span><span class="srow-value" id="val-show_weekday">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('today_pill')"><span class="srow-label" data-ico="🏷️">Плашка «Сегодня»</span><span class="srow-value" id="val-today_pill">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('hide_weekend')"><span class="srow-label" data-ico="🚫">Скрыть субботу</span><span class="srow-value" id="val-hide_weekend">выкл</span></div>
+    </div>
+</div>
+
+<div class="subscreen" id="sub-advanced">
+    <div class="subscreen-header">
+        <button class="subscreen-back" onclick="closeSub('advanced')">←</button>
+        <div class="subscreen-title">🔧 Дополнительно</div>
+    </div>
+    <div class="subscreen-body">
+        <div class="acc-sub">📐 Размеры</div>
+        <div class="acc-slider"><label>Шрифт уроков <output id="o-lesson_size">1.05</output>rem</label><input type="range" min="0.85" max="1.35" step="0.05" id="s-lesson_size" oninput="setVar('lesson_size',this.value,'rem')"></div>
+        <div class="acc-slider"><label>Шрифт в шапке <output id="o-header_size">1.4</output>rem</label><input type="range" min="1.1" max="1.8" step="0.05" id="s-header_size" oninput="setVar('header_size',this.value,'rem')"></div>
+        <div class="acc-slider"><label>Размер номеров <output id="o-num_size">40</output>px</label><input type="range" min="30" max="56" step="2" id="s-num_size" oninput="setVar('num_size',this.value,'px')"></div>
+        <div class="acc-slider"><label>Радиус карточек <output id="o-card_radius">16</output>px</label><input type="range" min="0" max="30" step="2" id="s-card_radius" oninput="setVar('card_radius',this.value,'px')"></div>
+        <div class="acc-slider"><label>Радиус кнопок <output id="o-btn_radius">12</output>px</label><input type="range" min="0" max="26" step="2" id="s-btn_radius" oninput="setVar('btn_radius',this.value,'px')"></div>
+        <div class="acc-slider"><label>Промежутки карточек <output id="o-card_gap">10</output>px</label><input type="range" min="4" max="24" step="2" id="s-card_gap" oninput="setVar('card_gap',this.value,'px')"></div>
+        <div class="acc-slider"><label>Отступ страницы <output id="o-page_pad">14</output>px</label><input type="range" min="8" max="30" step="2" id="s-page_pad" oninput="setVar('page_pad',this.value,'px')"></div>
+
+        <div class="acc-sub">🎨 Цвета</div>
+        <div class="acc-slider"><label>Насыщенность <output id="o-saturate">100</output>%</label><input type="range" min="0" max="200" step="5" id="s-saturate" oninput="setFilter('saturate',this.value)"></div>
+        <div class="acc-slider"><label>Яркость <output id="o-brightness">100</output>%</label><input type="range" min="60" max="140" step="5" id="s-brightness" oninput="setFilter('brightness',this.value)"></div>
+        <div class="acc-slider"><label>Контраст <output id="o-contrast">100</output>%</label><input type="range" min="70" max="130" step="5" id="s-contrast" oninput="setFilter('contrast',this.value)"></div>
+        <div class="acc-slider"><label>Оттенок <output id="o-hue">0</output>°</label><input type="range" min="-180" max="180" step="5" id="s-hue" oninput="setFilter('hue-rotate',this.value,'deg')"></div>
+
+        <div class="acc-sub">⚡ Производительность</div>
+        <div class="acc-slider"><label>Количество частиц <output id="o-particle_count">18</output></label><input type="range" min="0" max="40" step="1" id="s-particle_count" oninput="setParticleCount(this.value)"></div>
+        <div class="acc-slider"><label>Размер частиц <output id="o-particle_size">1</output>x</label><input type="range" min="0.5" max="2" step="0.1" id="s-particle_size" oninput="setParticleSize(this.value)"></div>
+        <div class="acc-slider"><label>Скорость анимаций <output id="o-anim_speed">1</output>x</label><input type="range" min="0.5" max="2" step="0.1" id="s-anim_speed" oninput="setAnimSpeed(this.value)"></div>
+        <div class="acc-slider"><label>Длительность перехода <output id="o-transition">0.15</output>с</label><input type="range" min="0" max="0.5" step="0.05" id="s-transition" oninput="setTransition(this.value)"></div>
+
+        <div class="acc-sub">🔮 Эффекты</div>
+        <div class="srow" onclick="toggleOpt('blur_bg')"><span class="srow-label" data-ico="🌫️">Размытие фона</span><span class="srow-value" id="val-blur_bg">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('noise')"><span class="srow-label" data-ico="📺">Шум-текстура</span><span class="srow-value" id="val-noise">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('vignette')"><span class="srow-label" data-ico="🌑">Виньетка</span><span class="srow-value" id="val-vignette">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('scanlines')"><span class="srow-label" data-ico="📼">Сканлайны</span><span class="srow-value" id="val-scanlines">выкл</span></div>
+
+        <div class="acc-sub">🔘 Стиль</div>
+        <div class="srow" onclick="setStyle('btn','round')"><span class="srow-label" data-ico="⬜">Круглые</span><span class="srow-value" id="val-btn-round"></span></div>
+        <div class="srow" onclick="setStyle('btn','sharp')"><span class="srow-label" data-ico="🔲">Острые</span><span class="srow-value" id="val-btn-sharp"></span></div>
+        <div class="srow" onclick="setStyle('btn','soft')"><span class="srow-label" data-ico="◻️">Мягкие</span><span class="srow-value" id="val-btn-soft"></span></div>
+
+        <button class="link-btn" style="width:100%;padding:14px;margin-top:14px;" onclick="resetAllOpts()">🔄 Сбросить все настройки</button>
+    </div>
+</div>
+
+<div class="subscreen" id="sub-app">
+    <div class="subscreen-header">
+        <button class="subscreen-back" onclick="closeSub('app')">←</button>
+        <div class="subscreen-title">📱 Приложение</div>
+    </div>
+    <div class="subscreen-body">
+        <div id="installSection"></div>
+    </div>
+</div>
+
+<div class="subscreen" id="sub-admin">
+    <div class="subscreen-header">
+        <button class="subscreen-back" onclick="closeSub('admin')">←</button>
+        <div class="subscreen-title">👑 Админ-панель</div>
+    </div>
+    <div class="subscreen-body">
+        <div class="admin-tabs">
+            <button class="admin-tab active" data-atab="visitors" onclick="switchAdminTab('visitors')">👥</button>
+            <button class="admin-tab" data-atab="broadcast" onclick="switchAdminTab('broadcast')">📢</button>
+            <button class="admin-tab" data-atab="blocked" onclick="switchAdminTab('blocked')">🚫</button>
+        </div>
+        <div class="admin-pane active" id="atab-visitors"><div id="apList">Загрузка…</div></div>
+        <div class="admin-pane" id="atab-broadcast">
+            <div class="admin-block">
+                <textarea class="admin-textarea" id="broadcastText" placeholder="Текст сообщения..."></textarea>
+                <button class="ap-btn" onclick="sendBroadcast()">📢 Отправить всем</button>
+            </div>
+        </div>
+        <div class="admin-pane" id="atab-blocked"><div id="blockedList">Загрузка…</div></div>
+    </div>
+</div>
 
 </body>
 </html>"""
