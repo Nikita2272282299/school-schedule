@@ -51,7 +51,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v28';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v28').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v29';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v29').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -797,7 +797,7 @@ html body .subscreen {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-41';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-42';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -991,7 +991,6 @@ html body .subscreen {
         <div class="acc-sub">🌤 Виджеты и фишки</div>
         <div class="srow" onclick="toggleOpt('widget_online')"><span class="srow-label" data-ico="🟢">Счётчик онлайн</span><span class="srow-value" id="val-widget_online">вкл</span></div>
         <div class="srow" onclick="toggleOpt('widget_weather')"><span class="srow-label" data-ico="🌤">Погода</span><span class="srow-value" id="val-widget_weather">вкл</span></div>
-        <div class="srow" onclick="toggleOpt('widget_cloth')"><span class="srow-label" data-ico="👕">В чём выходить</span><span class="srow-value" id="val-widget_cloth">вкл</span></div>
         <div class="srow" onclick="toggleOpt('widget_workload')"><span class="srow-label" data-ico="💪">Загруженность дня</span><span class="srow-value" id="val-widget_workload">вкл</span></div>
         <div class="srow" onclick="toggleOpt('widget_endday')"><span class="srow-label" data-ico="🏁">До конца дня</span><span class="srow-value" id="val-widget_endday">вкл</span></div>
         <div class="srow" onclick="toggleOpt('auto_accent')"><span class="srow-label" data-ico="🎨">Авто-акцент по времени</span><span class="srow-value" id="val-auto_accent">выкл</span></div>
@@ -1070,7 +1069,7 @@ var THEME_COLORS = {light:'#f0f4f8',dark:'#0f1115',cosmic:'#05021a',ocean:'#c7e8
 
 function _optIsOn(key){
     var cur = localStorage.getItem('rs_opt_' + key);
-    if (['particles','show_time','live_banner','progress_bar','glow','show_weekday','today_pill','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title','widget_online','widget_weather','widget_workload','widget_endday','widget_cloth','anim_days','notif_before5','badge_count'].indexOf(key) >= 0) return cur !== '0';
+    if (['particles','show_time','live_banner','progress_bar','glow','show_weekday','today_pill','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title','widget_online','widget_weather','widget_workload','widget_endday','anim_days','notif_before5','badge_count'].indexOf(key) >= 0) return cur !== '0';
     return cur === '1';
 }
 
@@ -1108,7 +1107,7 @@ function applyOpt(key, on){
     else if (key === 'anim_days') h.classList.toggle('anim-days', on);
     else if (key === 'auto_accent') { if (typeof window.__autoAccent === 'function') window.__autoAccent(); }
     else if (key === 'widget_weather') { if (typeof window.__loadWeather === 'function') window.__loadWeather(); }
-    else if (key === 'widget_online' || key === 'widget_workload' || key === 'widget_endday' || key === 'widget_cloth') { if (typeof window.__buildFooter === 'function') setTimeout(window.__buildFooter, 50); }
+    else if (key === 'widget_online' || key === 'widget_workload' || key === 'widget_endday') { if (typeof window.__buildFooter === 'function') setTimeout(window.__buildFooter, 50); }
 }
 
 function toggleOpt(key){
@@ -1514,7 +1513,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
     if (size === 'small') document.documentElement.classList.add('font-small');
     if (size === 'large') document.documentElement.classList.add('font-large');
     document.querySelectorAll('[data-size]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-size')===size); });
-    ['particles','round_nums','compact','show_time','live_banner','progress_bar','glow','big_text','show_weekday','today_pill','hide_weekend','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title','mirror','uppercase','bold_all','italic','underline','colorblind','no_radius','grayscale_all','reduce_motion','anim_smooth','anim_wobble','widget_online','widget_weather','widget_workload','widget_endday','widget_cloth','anim_days','auto_accent','notif_before5','badge_count'].forEach(function(k){ applyOpt(k, _optIsOn(k)); });
+    ['particles','round_nums','compact','show_time','live_banner','progress_bar','glow','big_text','show_weekday','today_pill','hide_weekend','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title','mirror','uppercase','bold_all','italic','underline','colorblind','no_radius','grayscale_all','reduce_motion','anim_smooth','anim_wobble','widget_online','widget_weather','widget_workload','widget_endday','anim_days','auto_accent','notif_before5','badge_count'].forEach(function(k){ applyOpt(k, _optIsOn(k)); });
     updateOptUI();
     initCustom();
     applyVars();
@@ -1767,23 +1766,6 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
 
     function wmoShort(code){ return (wmoText(code)||'').split(' ')[0] || ''; }
 
-    function clothAdvice(day){
-        if (!day || day.tmax === null || day.tmax === undefined) return '';
-        var t = day.tmax;
-        var code = day.code || 0;
-        var isRain = (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || (code >= 95 && code <= 99);
-        var isSnow = (code >= 71 && code <= 77) || (code >= 85 && code <= 86);
-        var tips = [];
-        if (isSnow) tips.push('❄️ \u0448\u0430\u043f\u043a\u0430');
-        else if (isRain) tips.push('☔ \u0437\u043e\u043d\u0442');
-        if (t >= 25) tips.push('👕 \u0444\u0443\u0442\u0431\u043e\u043b\u043a\u0430');
-        else if (t >= 18) tips.push('👔 \u043b\u0435\u0433\u043a\u043e');
-        else if (t >= 12) tips.push('🧥 \u043a\u0443\u0440\u0442\u043a\u0430');
-        else if (t >= 5) tips.push('🧥 \u0442\u0435\u043f\u043b\u043e');
-        else if (t >= -5) tips.push('🧣 \u043f\u0443\u0445\u043e\u0432\u0438\u043a');
-        else tips.push('🧣 \u0437\u0438\u043c\u043d\u044f\u044f');
-        return tips.join(' \u00b7 ');
-    }
 
     function loadWeatherWeek(){
         var city = localStorage.getItem('rs_city') || '\u041f\u0435\u0440\u043c\u044c';
@@ -1830,12 +1812,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
             var t = Math.round(w.tmax);
             el.textContent = t + '\u00b0C ' + wmoShort(w.code);
         }
-        // Одежда
-        var clEl = document.querySelector('[data-widget="cloth"] .df-val');
-        if (clEl) {
-            var cl = clothAdvice(w);
-            clEl.textContent = cl || '\u2014';
-        }
+
     }
 
     loadWeatherWeek();
@@ -1900,9 +1877,6 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         if (_optIsOn('widget_weather')) {
             var wn = isPast ? '\u0411\u044b\u043b\u043e' : (isFuture ? '\u0411\u0443\u0434\u0435\u0442' : '\u041f\u043e\u0433\u043e\u0434\u0430');
             html += '<div class="df-item" data-widget="weather"><span class="df-ico">🌤</span><span class="df-text"><span class="df-name">'+wn+'</span><span class="df-val">\u2014</span></span></div>';
-        }
-        if (_optIsOn('widget_cloth')) {
-            html += '<div class="df-item" data-widget="cloth"><span class="df-ico">👕</span><span class="df-text"><span class="df-name">\u041e\u0434\u0435\u0436\u0434\u0430</span><span class="df-val">\u2014</span></span></div>';
         }
         f.innerHTML = html;
         if (sheet && sheet.parentNode) sheet.parentNode.insertBefore(f, sheet);
