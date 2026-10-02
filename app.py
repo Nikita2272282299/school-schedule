@@ -3398,7 +3398,7 @@ body::-webkit-scrollbar {
 <div id="changeBanner"><span class="bn-icon">🔔</span><span>Расписание изменено в <span class="bn-time">--:--</span></span></div>
 
 <div class="header-card">
-    <h2>📅 <span>Расписание</span></h2>
+    <h2><span id="adminTap" style="cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;">📅</span> <span>Расписание</span></h2>
     <div class="header-right">
         <div class="badge-class">8Г</div>
         <button class="icon-btn" onclick="toggleSettings(event)" title="Настройки">⚙️</button>
@@ -3439,7 +3439,6 @@ body::-webkit-scrollbar {
     <button class="open-sub" onclick="openSub('interface')"><span><span class="ico">🎨</span> Интерфейс</span><span class="srow-arrow">›</span></button>
     <button class="open-sub" onclick="openSub('advanced')"><span><span class="ico">🔧</span> Дополнительно</span><span class="srow-arrow">›</span></button>
     <button class="open-sub" onclick="openSub('app')"><span><span class="ico">📱</span> Приложение</span><span class="srow-arrow">›</span></button>
-    <button class="open-sub" id="adminBtn" onclick="openSub('admin')" style="display:none !important;"><span><span class="ico">👑</span> Админ-панель</span><span class="srow-arrow">›</span></button>
 </div>
 
 {live_banner}
@@ -4315,23 +4314,47 @@ function closeSub(name){
     el.classList.remove('open');
     document.body.style.overflow = '';
 }
-function checkAdminBtn(){
-    var b = document.getElementById('adminBtn');
-    if (!b) return;
-    if (localStorage.getItem('rs_admin') === '1') {
-        b.style.setProperty('display', 'flex', 'important');
-    } else {
-        b.style.setProperty('display', 'none', 'important');
-    }
-}
 // После пароля — обновляем кнопку
-var _origPrompt = window.prompt;
-window.prompt = function(msg){
-    var r = _origPrompt.apply(this, arguments);
-    setTimeout(checkAdminBtn, 200);
-    return r;
-};
-setTimeout(checkAdminBtn, 300);
+
+
+/* ===== АДМИН: тап по календарику ===== */
+(function(){
+    var ADMIN_PWD = 'SixSeveeen';
+    var isAdmin = localStorage.getItem('rs_admin') === '1';
+    var taps = parseInt(localStorage.getItem('rs_taps') || '0', 10);
+    var tapEl = document.getElementById('adminTap');
+    if (!tapEl) return;
+
+    tapEl.addEventListener('click', function(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (isAdmin) {
+            openSub('admin');
+            return;
+        }
+        taps++;
+        localStorage.setItem('rs_taps', String(taps));
+        if (taps >= 50) {
+            var pwd = prompt('Пароль:');
+            if (pwd === ADMIN_PWD) {
+                localStorage.setItem('rs_admin', '1');
+                localStorage.setItem('rs_taps', '0');
+                isAdmin = true;
+                taps = 0;
+                tapEl.style.filter = 'drop-shadow(0 0 8px #fbbf24)';
+                openSub('admin');
+            } else {
+                localStorage.setItem('rs_taps', '0');
+                taps = 0;
+            }
+        }
+    });
+
+    // Подсветка для админа
+    if (isAdmin) {
+        tapEl.style.filter = 'drop-shadow(0 0 8px #fbbf24)';
+    }
+})();
 </script>
 
 
