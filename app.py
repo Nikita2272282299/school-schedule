@@ -393,6 +393,323 @@ ADMIN_PAGE = """<!DOCTYPE html>
 
 .ap-visitor.is-me{border-color:var(--accent) !important;background:linear-gradient(135deg,var(--accent-light),transparent) !important;box-shadow:0 4px 16px var(--accent-light);}
 .ap-badge{display:inline-block;background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent)));color:#fff;font-size:0.65rem;font-weight:800;letter-spacing:0.08em;padding:3px 8px;border-radius:8px;margin-bottom:8px;text-transform:uppercase;}
+
+[data-theme="custom"] {
+    --bg: var(--cu-bg, #eef2f7);
+    --card-bg: var(--cu-card, #ffffff);
+    --card: var(--cu-card, #ffffff);
+    --text-main: var(--cu-text, #0f172a);
+    --text: var(--cu-text, #0f172a);
+    --text-muted: var(--cu-muted, #64748b);
+    --muted: var(--cu-muted, #64748b);
+    --accent: var(--cu-accent, #6366f1);
+    --accent2: var(--cu-accent2, #a855f7);
+    --accent-light: var(--cu-accent-light, rgba(99,102,241,0.12));
+    --border: rgba(127,127,127,0.15);
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --num-bg: var(--cu-accent, #6366f1);
+    --num-color: #fff;
+    --num-shadow: 0 3px 10px var(--cu-accent-light, rgba(99,102,241,0.3));
+}
+[data-theme="custom"] body { background: var(--cu-bg, #eef2f7) !important; background-image: none !important; }
+.custom-picker { display: none; margin: 10px 0; padding: 12px; border-radius: 14px; background: linear-gradient(180deg, rgba(255,255,255,0.4), transparent); border: 1px solid var(--border); }
+[data-theme="custom"] .custom-picker { display: block; }
+.custom-picker label { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-weight: 700; font-size: 0.85rem; color: var(--text-main); }
+.custom-picker input[type="color"] { width: 48px; height: 34px; padding: 2px; border: 2px solid var(--border); border-radius: 8px; background: transparent; cursor: pointer; }
+
+.subscreen {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    z-index: 8000;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    padding: 0 16px 40px;
+    overscroll-behavior: contain;
+}
+.subscreen.open { transform: translateX(0); }
+.subscreen-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 0;
+    position: sticky; top: 0;
+    background: var(--bg);
+    z-index: 10;
+    border-bottom: 1px solid var(--border);
+    margin: 0 -16px;
+    padding: 16px 16px 14px;
+}
+.subscreen-back {
+    background: var(--accent-light); color: var(--accent);
+    border: none; width: 40px; height: 40px;
+    border-radius: 12px; font-size: 1.2rem; font-weight: 800;
+    cursor: pointer; flex-shrink: 0; font-family: inherit;
+}
+.subscreen-back:active { transform: scale(0.92); }
+.subscreen-title { font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
+.subscreen-body { padding-top: 16px; }
+
+.srow {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 16px; margin-bottom: 8px;
+    border-radius: 14px;
+    background: var(--card-bg); border: 1px solid var(--border);
+    cursor: pointer;
+}
+.srow:active { background: var(--accent-light); }
+.srow-label { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.9rem; color: var(--text-main); }
+.srow-label::before { content: attr(data-ico); font-size: 1.15rem; }
+.srow-arrow { color: var(--text-muted); font-size: 1.2rem; font-weight: 800; }
+.srow-value { color: var(--text-muted); font-size: 0.85rem; font-weight: 700; }
+.srow-value.on { color: var(--accent); }
+
+.open-sub {
+    display: flex; justify-content: space-between; align-items: center;
+    width: 100%; padding: 14px 16px; margin-bottom: 8px;
+    border-radius: 14px;
+    background: var(--card-bg); border: 1px solid var(--border);
+    color: var(--text-main); font-weight: 800; font-size: 0.9rem;
+    cursor: pointer; font-family: inherit; text-align: left;
+}
+.open-sub:active { background: var(--accent-light); }
+.open-sub > span:first-child { display: flex; align-items: center; gap: 10px; }
+.open-sub .ico { font-size: 1.15rem; }
+html.hide-weekend .tab[data-day="Сб"] { display: none; }
+
+/* ========== АБСОЛЮТНО ВСЁ ПОД ТЕМУ (override) ========== */
+
+/* Заголовок "Расписание" — цвет темы */
+h2 span, .brand-title {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+
+/* Логотип — градиент акцента */
+.brand-logo {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+    box-shadow: 0 6px 20px var(--accent-light, rgba(99,102,241,0.25)) !important;
+    border: none !important;
+}
+.brand-logo::before {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+    filter: blur(3px) !important;
+    opacity: 0.6 !important;
+}
+
+/* Бейдж 8Г */
+.badge-class {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 3px 10px var(--accent-light, rgba(99,102,241,0.3)) !important;
+}
+
+/* Кнопка ⚙️ */
+.icon-btn {
+    background: linear-gradient(135deg, var(--accent-light, rgba(99,102,241,0.15)), var(--card-bg, var(--card))) !important;
+    color: var(--accent) !important;
+    border: 1.5px solid var(--accent) !important;
+    box-shadow: 0 3px 10px var(--accent-light, rgba(99,102,241,0.2)) !important;
+}
+
+/* Шапка */
+.header-card {
+    background: var(--card-bg, var(--card)) !important;
+    border-color: var(--border) !important;
+}
+
+/* Панель настроек */
+.settings-panel {
+    background: var(--card-bg, var(--card)) !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* Табы */
+.tabs {
+    background: var(--card-bg, var(--card)) !important;
+    border-color: var(--border) !important;
+}
+.tab:not(.active) { color: var(--text-muted, var(--muted)) !important; }
+.tab.active { color: #fff !important; }
+.tab.today:not(.active)::after { background: var(--accent) !important; }
+
+/* Карточки */
+.card {
+    background: var(--card-bg, var(--card)) !important;
+    border-color: var(--border) !important;
+}
+.time { color: var(--text-muted, var(--muted)) !important; }
+.lesson { color: var(--text-main, var(--text)) !important; }
+.day-title { color: var(--text-muted, var(--muted)) !important; }
+.day-title.today { color: var(--text-main, var(--text)) !important; }
+
+/* Номера */
+.num {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+    color: #fff !important;
+    box-shadow: 0 3px 10px var(--accent-light, rgba(99,102,241,0.3)) !important;
+}
+
+/* Таблетка "Сегодня" */
+.today-pill {
+    background: var(--accent-light, rgba(99,102,241,0.12)) !important;
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+
+/* Баннеры */
+.live-banner {
+    background: var(--card-bg, var(--card)) !important;
+    border-color: var(--border) !important;
+}
+.live-banner.now, .live-banner.before {
+    background: linear-gradient(135deg, var(--accent-light, rgba(99,102,241,0.15)), var(--card-bg, var(--card))) !important;
+}
+.live-banner .live-label { color: var(--accent) !important; }
+.live-banner .live-dot { background: var(--accent) !important; }
+.live-banner .live-timer { color: var(--accent) !important; }
+.live-banner .progress-fill {
+    background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent))) !important;
+}
+
+/* Кнопки выбора тем */
+.theme-btn {
+    background: linear-gradient(180deg, var(--accent-light, rgba(99,102,241,0.1)), transparent) !important;
+    border-color: var(--border) !important;
+    color: var(--text-main, var(--text)) !important;
+}
+.theme-btn.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+    color: #fff !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent), 0 6px 16px var(--accent-light) !important;
+}
+
+/* Размер текста */
+.size-btn {
+    background: linear-gradient(180deg, var(--accent-light, rgba(99,102,241,0.1)), transparent) !important;
+    border-color: var(--border) !important;
+    color: var(--text-main, var(--text)) !important;
+}
+.size-btn.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+    color: #fff !important;
+    border-color: var(--accent) !important;
+}
+
+/* Тумблеры */
+.toggle {
+    background: rgba(127,127,127,0.2) !important;
+}
+.toggle.on {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+}
+
+/* Кнопки разделов и строки */
+.open-sub, .srow {
+    background: linear-gradient(180deg, var(--accent-light, rgba(99,102,241,0.08)), var(--card-bg, var(--card))) !important;
+    border-color: var(--border) !important;
+    color: var(--text-main, var(--text)) !important;
+}
+.open-sub .ico { filter: drop-shadow(0 2px 3px var(--accent-light, rgba(0,0,0,0.15))); }
+
+/* Заголовки в настройках */
+.settings-title {
+    background: linear-gradient(90deg, var(--text-main, var(--text)), var(--accent)) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+.settings-title::before { background: var(--accent) !important; box-shadow: 0 0 8px var(--accent) !important; }
+
+/* Превью-полоска */
+.settings-preview {
+    background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent)), var(--accent)) !important;
+    box-shadow: 0 3px 12px var(--accent-light, rgba(99,102,241,0.3)) !important;
+}
+
+/* Ссылка на таблицу */
+.sheet-link {
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+    background: linear-gradient(135deg, var(--accent-light, rgba(99,102,241,0.1)), var(--card-bg, var(--card))) !important;
+}
+
+/* Кнопка установки */
+.install-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+    box-shadow: 0 6px 18px var(--accent-light, rgba(99,102,241,0.3)) !important;
+}
+
+/* Подэкраны — заголовки */
+.subscreen { background: var(--bg) !important; }
+.subscreen-title {
+    background: linear-gradient(90deg, var(--text-main, var(--text)), var(--accent)) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+.subscreen-back {
+    background: var(--accent-light, rgba(99,102,241,0.12)) !important;
+    color: var(--accent) !important;
+}
+
+/* Custom picker */
+.custom-picker {
+    background: linear-gradient(180deg, var(--accent-light, rgba(99,102,241,0.1)), transparent) !important;
+    border-color: var(--border) !important;
+}
+.custom-picker label { color: var(--text-main, var(--text)) !important; }
+.custom-picker input[type="color"] { border-color: var(--accent) !important; }
+
+/* Админка */
+.ap-inner {
+    background: var(--card-bg, var(--card)) !important;
+    border: 1.5px solid var(--accent) !important;
+}
+.ap-header { color: var(--text-main, var(--text)) !important; }
+.ap-close {
+    background: var(--accent-light, rgba(99,102,241,0.12)) !important;
+    color: var(--accent) !important;
+}
+.ap-visitor {
+    background: linear-gradient(180deg, var(--accent-light, rgba(99,102,241,0.08)), transparent) !important;
+    border-color: var(--border) !important;
+}
+.ap-vid { color: var(--accent) !important; }
+.ap-input {
+    background: var(--bg) !important;
+    color: var(--text-main, var(--text)) !important;
+    border-color: var(--border) !important;
+}
+.ap-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent))) !important;
+}
+
+/* Скроллбар панели */
+.settings-panel::-webkit-scrollbar-thumb {
+    background: var(--accent) !important;
+}
+
+/* Фокус на любом input */
+input:focus, button:focus {
+    outline: 2px solid var(--accent) !important;
+    outline-offset: 2px !important;
+}
+
+/* Убираем тяжёлые анимации */
+* {
+    animation-duration: 0.25s !important;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.card, .theme-btn, .size-btn, .toggle, .tab, .open-sub, .srow, .icon-btn {
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease !important;
+}
+
+/* Оставляем анимацию "сейчас идёт" пульс */
+.live-dot { animation-duration: 1.6s !important; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 var(--accent); } 70% { box-shadow: 0 0 0 10px transparent; } }
 </style>
 </head><body>
 <h1>🔐 Админ</h1>
@@ -616,10 +933,10 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
 .toggle.on::after { transform:translateX(20px); }
 .install-btn {
     width:100%; padding:11px; border-radius:10px; border:none;
-    background:linear-gradient(135deg,var(--accent),#7950f2); color:white;
+    background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent))); color:white;
     font-weight:800; font-size:0.88rem; cursor:pointer; font-family:inherit;
 }
-[data-theme="cosmic"] .install-btn { background:linear-gradient(135deg,#b794f6,#7cf5c0); color:#1a1030; }
+[data-theme="cosmic"] .install-btn { background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent))); color:#1a1030; }
 .link-btn {
     background:none; border:none; color:var(--text-muted); font-weight:600;
     font-size:0.8rem; cursor:pointer; padding:6px 4px; text-decoration:underline;
@@ -644,8 +961,8 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
     transition:background 0.15s ease, color 0.15s ease;
 }
 .tab .tab-day { font-size:0.65rem; font-weight:700; opacity:0.7; }
-.tab.active { background:linear-gradient(135deg,var(--accent),#7950f2); color:white; }
-[data-theme="cosmic"] .tab.active { background:linear-gradient(135deg,#b794f6,#7cf5c0); color:#1a1030; }
+.tab.active { background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent))); color:white; }
+[data-theme="cosmic"] .tab.active { background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent))); color:#1a1030; }
 .tab.active .tab-day { opacity:0.9; }
 .tab.today:not(.active)::after {
     content:""; position:absolute; bottom:3px; left:50%; transform:translateX(-50%);
@@ -677,7 +994,7 @@ h2 span { background:linear-gradient(135deg,#4c6ef5,#7950f2); -webkit-background
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .live-time { font-size:0.76rem; color:var(--text-muted); font-weight:700; margin-top:2px; }
 .progress-bar { height:4px; border-radius:2px; background:var(--border); overflow:hidden; margin-top:7px; }
-.progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent)); border-radius:2px; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2,var(--accent))); border-radius:2px; }
 
 /* === DAY / CARDS === */
 .day-block { display:none; }
@@ -777,8 +1094,6 @@ html.font-large .day-title { font-size:1.28rem; }
 html.compact .card { padding:11px 14px; margin-bottom:7px; }
 html.compact .num { min-width:34px; height:34px; font-size:0.9rem; }
 html.compact .header-card { padding:14px 18px; }
-html.hide-time .time { display:none; }
-
 /* ========== ТЕМАТИЧЕСКИЕ НАСТРОЙКИ ========== */
 
 /* ОБЩЕЕ — базовое скругление для кнопок-тем */
@@ -1873,7 +2188,6 @@ h2 span {
 }
 .theme-btn .emoji { font-size:1.5rem !important; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); }
 
-html.hide-past .card.past { display:none; }
 html.round-nums .num { border-radius: 50% !important; }
 html.round-nums .card.now .num { border-radius: 50% !important; }
 
@@ -2840,7 +3154,18 @@ body::-webkit-scrollbar {
             <button class="theme-btn" data-theme-btn="sunset" onclick="setTheme('sunset')"><span class="emoji">🌅</span>Закат</button>
             <button class="theme-btn" data-theme-btn="forest" onclick="setTheme('forest')"><span class="emoji">🌿</span>Лес</button>
             <button class="theme-btn" data-theme-btn="sakura" onclick="setTheme('sakura')"><span class="emoji">🌸</span>Сакура</button>
+            <button class="theme-btn" data-theme-btn="custom" onclick="setTheme('custom')"><span class="emoji">🎨</span>Кастом</button>
         </div>
+        <div class="custom-picker">
+            <label>Основной <input type="color" id="cuAccent" value="#6366f1" onchange="applyCustom()"></label>
+            <label>Второй <input type="color" id="cuAccent2" value="#a855f7" onchange="applyCustom()"></label>
+            <label>Фон <input type="color" id="cuBg" value="#eef2f7" onchange="applyCustom()"></label>
+            <label>Карточки <input type="color" id="cuCard" value="#ffffff" onchange="applyCustom()"></label>
+            <label>Текст <input type="color" id="cuText" value="#0f172a" onchange="applyCustom()"></label>
+            <label>Доп. текст <input type="color" id="cuMuted" value="#64748b" onchange="applyCustom()"></label>
+            <button onclick="resetCustom()" class="link-btn" style="width:100%;margin-top:8px;">🔄 Сбросить</button>
+        </div>
+
         <div class="settings-title">🔤 Размер текста</div>
         <div class="size-options">
             <button class="size-btn" data-size="small" onclick="setSize('small')">A</button>
@@ -2853,14 +3178,6 @@ body::-webkit-scrollbar {
             <div class="toggle" id="tCompact" onclick="toggleCompact()"></div>
         </div>
         <div class="toggle-row">
-            <div class="toggle-label" data-ico="⏱️">Скрыть время уроков</div>
-            <div class="toggle" id="tHideTime" onclick="toggleHideTime()"></div>
-        </div>
-        <div class="toggle-row">
-            <div class="toggle-label" data-ico="✂️">Скрывать прошедшие</div>
-            <div class="toggle" id="tHidePast" onclick="toggleHidePast()"></div>
-        </div>
-        <div class="toggle-row">
             <div class="toggle-label" data-ico="🔢">Круглые номера</div>
             <div class="toggle" id="tRoundNums" onclick="toggleRoundNums()"></div>
         </div>
@@ -2868,6 +3185,11 @@ body::-webkit-scrollbar {
             <div class="toggle-label" data-ico="✨">Частицы фона</div>
             <div class="toggle" id="tParticles" onclick="toggleParticles()"></div>
         </div>
+        <div class="settings-title">⚙️ Разделы</div>
+        <button class="open-sub" onclick="openSub('interface')"><span><span class="ico">🎨</span> Интерфейс</span><span class="srow-arrow">›</span></button>
+        <button class="open-sub" onclick="openSub('advanced')"><span><span class="ico">🔧</span> Дополнительно</span><span class="srow-arrow">›</span></button>
+        <button class="open-sub" id="adminBtn" onclick="openSub('admin')" style="display:none;"><span><span class="ico">👑</span> Админ-панель</span><span class="srow-arrow">›</span></button>
+
         <div class="settings-title">📱 Приложение</div>
         <div id="installSection"></div>
     </div>
@@ -2899,17 +3221,13 @@ var icons = {light:'☀️', dark:'🌙', cosmic:'🌌', ocean:'🌊', sunset:'�
         if (b.getAttribute('data-size') === size) b.classList.add('active');
     });
     if (localStorage.getItem('rs_compact') === '1') document.documentElement.classList.add('compact');
-    if (localStorage.getItem('rs_hide_time') === '1') document.documentElement.classList.add('hide-time');
-    if (localStorage.getItem('rs_hide_past') === '1') document.documentElement.classList.add('hide-past');
     if (localStorage.getItem('rs_round_nums') === '1') document.documentElement.classList.add('round-nums');
     document.getElementById('tCompact').classList.toggle('on', localStorage.getItem('rs_compact') === '1');
     document.getElementById('tHideTime').classList.toggle('on', localStorage.getItem('rs_hide_time') === '1');
-    var _t3=document.getElementById('tHidePast'); if(_t3) _t3.classList.toggle('on', localStorage.getItem('rs_hide_past')==='1');
     var _t4=document.getElementById('tRoundNums'); if(_t4) _t4.classList.toggle('on', localStorage.getItem('rs_round_nums')==='1');
     var _t5=document.getElementById('tParticles'); if(_t5) _t5.classList.toggle('on', localStorage.getItem('rs_particles')!=='0');
 })();
 
-function toggleHidePast(){var on=document.documentElement.classList.toggle('hide-past');localStorage.setItem('rs_hide_past',on?'1':'0');var e=document.getElementById('tHidePast');if(e)e.classList.toggle('on',on);}
 function toggleRoundNums(){var on=document.documentElement.classList.toggle('round-nums');localStorage.setItem('rs_round_nums',on?'1':'0');var e=document.getElementById('tRoundNums');if(e)e.classList.toggle('on',on);}
 function toggleParticles(){var on=localStorage.getItem('rs_particles')!=='0';on=!on;localStorage.setItem('rs_particles',on?'1':'0');var e=document.getElementById('tParticles');if(e)e.classList.toggle('on',on);if(on){spawnParticles(document.documentElement.getAttribute('data-theme'));}else{var c=document.getElementById('particles');if(c)c.innerHTML='';}}
 
@@ -2938,11 +3256,6 @@ function toggleCompact() {
     var on = document.documentElement.classList.toggle('compact');
     localStorage.setItem('rs_compact', on ? '1' : '0');
     document.getElementById('tCompact').classList.toggle('on', on);
-}
-function toggleHideTime() {
-    var on = document.documentElement.classList.toggle('hide-time');
-    localStorage.setItem('rs_hide_time', on ? '1' : '0');
-    document.getElementById('tHideTime').classList.toggle('on', on);
 }
 function toggleSettings(e) {
     if (e) e.stopPropagation();
@@ -3394,7 +3707,178 @@ if ('serviceWorker' in navigator) {
     setInterval(poll, 5000);
     setTimeout(poll, 1500);
 })();
+
+/* ===== ПОДЭКРАНЫ ===== */
+function openSub(name){
+    var el = document.getElementById('sub-' + name);
+    if (!el) return;
+    el.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    if (name === 'admin') {
+        var c = document.getElementById('adminSectionContent');
+        if (c) {
+            c.innerHTML = '<div id="apList">Загрузка…</div>';
+            if (typeof loadVisitors === 'function') setTimeout(loadVisitors, 100);
+        }
+    }
+}
+function closeSub(name){
+    var el = document.getElementById('sub-' + name);
+    if (!el) return;
+    el.classList.remove('open');
+    document.body.style.overflow = '';
+}
+function toggleOpt(key){
+    var cur = localStorage.getItem('rs_opt_' + key);
+    var isOn;
+    if (key === 'particles' || key === 'show_time') isOn = cur !== '0';
+    else isOn = cur === '1';
+    var newOn = !isOn;
+    localStorage.setItem('rs_opt_' + key, newOn ? '1' : '0');
+    applyOpt(key, newOn);
+    updateOptUI();
+}
+function applyOpt(key, on){
+    var h = document.documentElement;
+    if (key === 'particles') {
+        var c = document.getElementById('particles');
+        if (c) {
+            if (on) spawnParticles(h.getAttribute('data-theme'));
+            else c.innerHTML = '';
+        }
+    } else if (key === 'round_nums') h.classList.toggle('round-nums', on);
+    else if (key === 'compact') h.classList.toggle('compact', on);
+    else if (key === 'big_text') h.classList.toggle('font-large', on);
+    else if (key === 'hide_weekend') h.classList.toggle('hide-weekend', on);
+    else if (key === 'show_time') h.classList.toggle('hide-time', !on);
+}
+function updateOptUI(){
+    var keys = ['particles','round_nums','compact','show_time','big_text','hide_weekend'];
+    keys.forEach(function(k){
+        var el = document.getElementById('val-' + k);
+        if (!el) return;
+        var cur = localStorage.getItem('rs_opt_' + k);
+        var isOn;
+        if (k === 'particles' || k === 'show_time') isOn = cur !== '0';
+        else isOn = cur === '1';
+        el.textContent = isOn ? 'вкл' : 'выкл';
+        el.className = 'srow-value' + (isOn ? ' on' : '');
+    });
+}
+function initOpts(){
+    var keys = ['particles','round_nums','compact','show_time','big_text','hide_weekend'];
+    keys.forEach(function(k){
+        var cur = localStorage.getItem('rs_opt_' + k);
+        var isOn;
+        if (k === 'particles' || k === 'show_time') isOn = cur !== '0';
+        else isOn = cur === '1';
+        applyOpt(k, isOn);
+    });
+    updateOptUI();
+}
+
+/* ===== КАСТОМ ===== */
+function hex2rgb(h){
+    h = h.replace('#','');
+    if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    return parseInt(h.substr(0,2),16)+','+parseInt(h.substr(2,2),16)+','+parseInt(h.substr(4,2),16);
+}
+function applyCustom(){
+    var map = {cuAccent:'rs_cu_accent',cuAccent2:'rs_cu_accent2',cuBg:'rs_cu_bg',cuCard:'rs_cu_card',cuText:'rs_cu_text',cuMuted:'rs_cu_muted'};
+    var h = document.documentElement;
+    for (var elId in map) {
+        var el = document.getElementById(elId);
+        if (!el) continue;
+        localStorage.setItem(map[elId], el.value);
+    }
+    var c1 = localStorage.getItem('rs_cu_accent') || '#6366f1';
+    var c2 = localStorage.getItem('rs_cu_accent2') || '#a855f7';
+    var bg = localStorage.getItem('rs_cu_bg') || '#eef2f7';
+    var card = localStorage.getItem('rs_cu_card') || '#ffffff';
+    var txt = localStorage.getItem('rs_cu_text') || '#0f172a';
+    var muted = localStorage.getItem('rs_cu_muted') || '#64748b';
+    h.style.setProperty('--cu-accent', c1);
+    h.style.setProperty('--cu-accent2', c2);
+    h.style.setProperty('--cu-bg', bg);
+    h.style.setProperty('--cu-card', card);
+    h.style.setProperty('--cu-text', txt);
+    h.style.setProperty('--cu-muted', muted);
+    h.style.setProperty('--cu-accent-light', 'rgba(' + hex2rgb(c1) + ', 0.12)');
+}
+function resetCustom(){
+    var def = {cuAccent:'#6366f1',cuAccent2:'#a855f7',cuBg:'#eef2f7',cuCard:'#ffffff',cuText:'#0f172a',cuMuted:'#64748b'};
+    for (var k in def) {
+        var el = document.getElementById(k);
+        if (el) el.value = def[k];
+    }
+    applyCustom();
+}
+function initCustom(){
+    var map = {cuAccent:'rs_cu_accent',cuAccent2:'rs_cu_accent2',cuBg:'rs_cu_bg',cuCard:'rs_cu_card',cuText:'rs_cu_text',cuMuted:'rs_cu_muted'};
+    for (var elId in map) {
+        var v = localStorage.getItem(map[elId]);
+        var el = document.getElementById(elId);
+        if (el && v) el.value = v;
+    }
+    if (localStorage.getItem('rs_cu_accent')) applyCustom();
+}
+
+/* Показ админ-кнопки только админу */
+(function(){
+    function checkAdmin(){
+        var btn = document.getElementById('adminBtn');
+        if (!btn) return;
+        if (localStorage.getItem('rs_admin') === '1') {
+            btn.style.display = 'flex';
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+    checkAdmin();
+    window.addEventListener('storage', checkAdmin);
+    // После успешного входа — перезагружаем
+    var _origPrompt = window.prompt;
+    window.prompt = function(msg){
+        var r = _origPrompt.apply(this, arguments);
+        setTimeout(checkAdmin, 100);
+        return r;
+    };
+})();
 </script>
+
+<div class="subscreen" id="sub-interface">
+    <div class="subscreen-header">
+        <button class="subscreen-back" onclick="closeSub('interface')">←</button>
+        <div class="subscreen-title">🎨 Интерфейс</div>
+    </div>
+    <div class="subscreen-body">
+        <div class="srow" onclick="toggleOpt('particles')"><div class="srow-label" data-ico="✨">Частицы фона</div><div class="srow-value" id="val-particles">вкл</div></div>
+        <div class="srow" onclick="toggleOpt('round_nums')"><div class="srow-label" data-ico="🔢">Круглые номера</div><div class="srow-value" id="val-round_nums">выкл</div></div>
+        <div class="srow" onclick="toggleOpt('compact')"><div class="srow-label" data-ico="📏">Компактный режим</div><div class="srow-value" id="val-compact">выкл</div></div>
+        <div class="srow" onclick="toggleOpt('show_time')"><div class="srow-label" data-ico="⏱️">Показывать время</div><div class="srow-value" id="val-show_time">вкл</div></div>
+    </div>
+</div>
+
+<div class="subscreen" id="sub-advanced">
+    <div class="subscreen-header">
+        <button class="subscreen-back" onclick="closeSub('advanced')">←</button>
+        <div class="subscreen-title">🔧 Дополнительно</div>
+    </div>
+    <div class="subscreen-body">
+        <div class="srow" onclick="toggleOpt('big_text')"><div class="srow-label" data-ico="🔠">Крупный шрифт</div><div class="srow-value" id="val-big_text">выкл</div></div>
+        <div class="srow" onclick="toggleOpt('hide_weekend')"><div class="srow-label" data-ico="🚫">Скрыть субботу</div><div class="srow-value" id="val-hide_weekend">выкл</div></div>
+    </div>
+</div>
+
+<div class="subscreen" id="sub-admin">
+    <div class="subscreen-header">
+        <button class="subscreen-back" onclick="closeSub('admin')">←</button>
+        <div class="subscreen-title">👑 Админ-панель</div>
+    </div>
+    <div class="subscreen-body">
+        <div id="adminSectionContent" style="color:var(--text-muted);text-align:center;padding:20px;">Загрузка…</div>
+    </div>
+</div>
 </body>
 </html>"""
 
