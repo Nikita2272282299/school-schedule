@@ -551,22 +551,58 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
 
 
 /* ===== ПАНЕЛЬ НАСТРОЕК — мгновенно ===== */
+
+
+
+
+/* ===== ПАНЕЛЬ НАСТРОЕК — струйка из центра ===== */
 .settings-panel {
-    display: none !important;
+    display: block !important;
     background: var(--card-bg) !important;
     border: 1px solid var(--border) !important;
     border-radius: 16px !important;
     margin-bottom: 0 !important;
-    padding: 16px 18px !important;
-    box-shadow: var(--shadow) !important;
-    transition: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    max-height: 0 !important;
+    opacity: 0 !important;
+    transform-origin: top center !important;
+    transition:
+        max-height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.22s ease,
+        margin-bottom 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+        padding 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.3s ease !important;
 }
 .settings-panel.open {
-    display: block !important;
+    max-height: 2000px !important;
+    opacity: 1 !important;
     margin-bottom: 14px !important;
+    padding: 16px 18px !important;
+    box-shadow: var(--shadow) !important;
 }
 .settings-inner {
     display: contents !important;
+}
+/* Тонкая струйка сверху */
+.settings-panel::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 0 !important;
+    height: 2px !important;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent) !important;
+    transition: width 0.42s cubic-bezier(0.22, 1, 0.36, 1) !important;
+    pointer-events: none !important;
+}
+.settings-panel.open::before {
+    width: 100% !important;
+}
+.settings-panel {
+    position: relative !important;
 }
 </style>
 </head>
@@ -575,7 +611,7 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
 <div class="container">
 <div class="header-card">
     <h2><span id="adminTap">📅</span> <span>Расписание</span></h2>
-<script>(function(){var e=localStorage.getItem('rs_emoji');if(e!==null){var t=document.getElementById('adminTap');if(t){t.textContent=e;t.classList.toggle('hidden',e==='');}}})();</script>
+<script>(function(){var e=localStorage.getItem('rs_emoji');if(e){var t=document.getElementById('adminTap');if(t)t.textContent=e;}})();</script>
     <div class="header-right">
         <div class="badge-class">8Г</div>
         <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
@@ -655,7 +691,6 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
             <button class="emoji-opt" data-em="🌟" onclick="setEmoji('🌟')">🌟</button>
             <button class="emoji-opt" data-em="🎒" onclick="setEmoji('🎒')">🎒</button>
             <button class="emoji-opt" data-em="📝" onclick="setEmoji('📝')">📝</button>
-            <button class="emoji-opt" data-em="" onclick="setEmoji('')">❌ Скрыть</button>
         </div>
     </div>
 </div>
@@ -1220,14 +1255,13 @@ if ('serviceWorker' in navigator) {
 
 /* ===== 100+ настроек ===== */
 function setEmoji(em){
+    if (!em) em = '📅';
     localStorage.setItem('rs_emoji', em);
     var el = document.getElementById('adminTap');
     if (el) el.textContent = em;
-    if (el) el.classList.toggle('hidden', em === '');
     document.querySelectorAll('.emoji-opt').forEach(function(b){
         b.classList.toggle('active', b.getAttribute('data-em') === em);
     });
-    toggleOpt('show_logo', em !== '');
 }
 function setBgOpacity(v){ localStorage.setItem('rs_bg_opacity', v); var o=document.getElementById('o-bg_opacity'); if(o)o.textContent=v; applyBgOpacity(); }
 function applyBgOpacity(){
@@ -1279,9 +1313,13 @@ function setCorners(t){
     });
 }
 function initEmoji(){
-    var em = localStorage.getItem('rs_emoji');
-    if (em === null) em = '📅';
-    setEmoji(em);
+    var em = localStorage.getItem('rs_emoji') || '📅';
+    if (!em) em = '📅';
+    var el = document.getElementById('adminTap');
+    if (el) el.textContent = em;
+    document.querySelectorAll('.emoji-opt').forEach(function(b){
+        b.classList.toggle('active', b.getAttribute('data-em') === em);
+    });
 }
 function initAllNew(){
     initEmoji();
