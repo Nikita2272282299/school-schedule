@@ -33,7 +33,7 @@ MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/
 
 ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#7950f2"/></linearGradient></defs><rect width="512" height="512" rx="110" fill="url(#g)"/><text x="256" y="360" font-family="Arial,sans-serif" font-size="230" font-weight="900" fill="#fff" text-anchor="middle">8Г</text></svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v8';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v8').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v9';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v9').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -474,7 +474,7 @@ html.scroll-guard .srow:active, html.scroll-guard .theme-btn:active, html.scroll
 .live-time { font-size:0.76rem; color: var(--text-muted); font-weight:700; margin-top:2px; }
 .live-timer { color: var(--accent); font-weight:800; }
 .progress-bar { height:4px; border-radius:2px; background: var(--border); overflow:hidden; margin-top:7px; }
-.progress-fill { height:100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius:2px; }
+.progress-fill { height:100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius:2px; transition: width 0.5s linear; will-change: width; }
 
 .day-block { display:none; }
 .day-block.active-day { display:block; }
@@ -676,7 +676,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-19';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-20';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -1667,7 +1667,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
             }).catch(function(){});
     }
     pollOnline();
-    setInterval(pollOnline, 15000);
+    setInterval(pollOnline, 5000);
 })();
 </script>
 <script>
@@ -1867,6 +1867,16 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                 if (d.ts && d.ts !== lastTs) { location.reload(); return; }
 
                 var nowSec = Math.floor(Date.now()/1000);
+
+                // Универсальный апдейт прогресс-бара (работает и для now, и когда данные приходят без live)
+                var anyFill = document.querySelector('.live-banner .progress-fill');
+                if (anyFill && d.live && d.live.type === 'now' && d.live.start_unix && d.live.end_unix) {
+                    var _stU = d.live.start_unix;
+                    var _tt = Math.max(1, d.live.end_unix - _stU);
+                    var _passed = Math.max(0, Math.min(_tt, nowSec - _stU));
+                    var _pct = Math.round(_passed / _tt * 100);
+                    anyFill.style.width = _pct + '%';
+                }
                 var hasNow = !!document.querySelector('.live-banner.now');
                 var hasBefore = !!document.querySelector('.live-banner.before');
                 var hasBreak = !!document.querySelector('.live-banner.break');
@@ -1885,7 +1895,17 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                 var _ti = new Date().getDay() - 1; if (_ti < 0) _ti = 5; if (_ti > 5) _ti = 5;
                 var _activeTab = document.querySelector('.tab.active');
                 var _activeDay = _activeTab ? _activeTab.getAttribute('data-day') : _daysRu[_ti];
-                if (_activeDay && _activeDay !== _daysRu[_ti]) return;
+                var _onOtherDay = _activeDay && _activeDay !== _daysRu[_ti];
+                // Если не сегодня — всё равно обновляем прогресс-бар, но не перезагружаем
+                if (_onOtherDay) {
+                    if (anyFill && d.live && d.live.type === 'now' && d.live.start_unix && d.live.end_unix) {
+                        var _stU2 = d.live.start_unix;
+                        var _tt2 = Math.max(1, d.live.end_unix - _stU2);
+                        var _pass2 = Math.max(0, Math.min(_tt2, nowSec - _stU2));
+                        anyFill.style.width = Math.round(_pass2/_tt2*100) + '%';
+                    }
+                    return;
+                }
 
                 if (srvNow) {
                     var nEl = document.querySelector('.live-banner.now');
@@ -2057,7 +2077,7 @@ def build_live(st):
 def build_content(days, active, err, st):
     if err and not days: return f"<div class='error'>{err}</div>"
     today_idx = datetime.now(PERM_TZ).weekday()
-    today_full = DAY_FULL[today_idx] if today_idx < 6 else ""
+    today_full = DAY_FULL[today_idx] if today_idx < 5 else ""
     html = ""
     for full in DAY_FULL:
         lessons = days.get(full, [])
@@ -2165,7 +2185,7 @@ class H(BaseHTTPRequestHandler):
                 days_l, _ = get_schedule()
                 now_l = datetime.now(PERM_TZ)
                 wi_l = now_l.weekday()
-                cur_day_l = DAY_FULL[wi_l] if wi_l < 6 else "\u0421\u0443\u0431\u0431\u043e\u0442\u0430"
+                cur_day_l = DAY_FULL[wi_l] if wi_l < 5 else "\u0421\u0443\u0431\u0431\u043e\u0442\u0430"
                 is_weekend_l = wi_l >= 5
                 today_lessons_l = days_l.get(cur_day_l, [])
                 st_l = get_live_status(today_lessons_l) if not is_weekend_l else None
@@ -2183,7 +2203,7 @@ class H(BaseHTTPRequestHandler):
             now = datetime.now(PERM_TZ)
             hour, minute = now.hour, now.minute
             wi = now.weekday()
-            cur_day = DAY_FULL[wi] if wi < 6 else "Суббота"
+            cur_day = DAY_FULL[wi] if wi < 5 else "Суббота"
             is_weekend = wi >= 5
             days, err = get_schedule()
             today_lessons = days.get(cur_day, [])
@@ -2213,8 +2233,12 @@ class H(BaseHTTPRequestHandler):
             self._send("text/html; charset=utf-8", html.encode('utf-8'))
         except Exception as e:
             try:
+                import traceback as _tb
+                tb_txt = _tb.format_exc()
+                print("[500]", _pt if '_pt' in dir() else '?', "|", e)
+                print(tb_txt)
                 self.send_response(500); self.end_headers()
-                self.wfile.write(f"Error: {e}".encode())
+                self.wfile.write(("Error: " + str(e) + "\n\n" + tb_txt).encode('utf-8', 'replace'))
             except Exception: pass
 
 def keep_alive():
