@@ -9,7 +9,7 @@ SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit"
 SELF_URL = "https://school-schedule-4ldw.onrender.com/"
 PERM_TZ = timezone(timedelta(hours=5))
 CLASS_CODE = "8г"
-ADMIN_KEY = "nikita_admin_2026"
+ADMIN_KEY = "admin_k9x7m3_nikita_2026"
 
 TIME_TO_NUM = {"8:00-8:40":1,"8:50-9:30":2,"9:45-10:25":3,"10:40-11:20":4,
     "11:35-12:15":5,"12:25-13:05":6,"13:15-13:55":7,"14:00-14:40":8}
@@ -626,7 +626,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-4';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-5';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -1097,7 +1097,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
 
 /* Админка */
 (function(){
-    var ADMIN_PWD = 'SixSeveeen';
+    var ADMIN_PWD = 'Nikita#Admin2026';
     var isAdmin = localStorage.getItem('rs_admin') === '1';
     var taps = parseInt(localStorage.getItem('rs_taps') || '0', 10);
     var tapEl = document.getElementById('adminTap');
@@ -1162,13 +1162,13 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
                 for (var sid in saved) { var s=document.getElementById(sid); if(s && !s.value) s.value = saved[sid]; }
             }).catch(function(){});
     };
-    var ADMIN_KEY_URL = 'nikita_admin_2026';
+    var ADMIN_KEY_URL = 'admin_k9x7m3_nikita_2026';
     document.addEventListener('click', function(e){
         var b = e.target.closest && e.target.closest('[data-act]');
         if (!b) return;
         var act = b.getAttribute('data-act');
         var vid = b.getAttribute('data-vid');
-        var key = 'nikita_admin_2026';
+        var key = 'admin_k9x7m3_nikita_2026';
         if (act === 'send') {
             var inp = document.getElementById('msg_' + vid);
             if (!inp || !inp.value) return;
@@ -1192,7 +1192,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
     window.sendBroadcast = function(){
         var t = document.getElementById('broadcastText');
         if (!t || !t.value) return;
-        fetch('/api/admin/send?admin=nikita_admin_2026&to=__all__&text='+encodeURIComponent(t.value)).then(function(){ t.value=''; alert('✅ Отправлено'); });
+        fetch('/api/admin/send?admin=admin_k9x7m3_nikita_2026&to=__all__&text='+encodeURIComponent(t.value)).then(function(){ t.value=''; alert('✅ Отправлено'); });
     };
 
     /* Пул сообщений */
@@ -1499,7 +1499,12 @@ class H(BaseHTTPRequestHandler):
                 block_v(q.get("to",[""])[0]); self._json({"ok": True}); return
             if _pt == "/api/admin/unblock":
                 if _admin != ADMIN_KEY: self._json({"error":"forbidden"}, 403); return
-                unblock_v(q.get("to",[""])[0]); self._json({"ok": True}); return
+                _to = q.get("to",[""])[0]
+                if _to == "__all__":
+                    with _lock: _sv(BLOCKED_FILE, {})
+                else:
+                    unblock_v(_to)
+                self._json({"ok": True}); return
             if _pt == "/api/admin/rename":
                 if _admin != ADMIN_KEY: self._json({"error":"forbidden"}, 403); return
                 rename_v(q.get("to",[""])[0], q.get("name",[""])[0]); self._json({"ok": True}); return
