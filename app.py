@@ -683,7 +683,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-25';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-26';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -1604,7 +1604,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         var cards = active.querySelectorAll('.card .time');
         if (!cards.length) return '—';
         var lastTime = cards[cards.length-1].textContent.trim();
-        var m = lastTime.match(/(\d+):(\d+)-(\d+):(\d+)/);
+        var m = lastTime.match(/([0-9]+):([0-9]+)-([0-9]+):([0-9]+)/);
         if (!m) return '—';
         var endH = parseInt(m[3],10), endM = parseInt(m[4],10);
         var now = new Date();
@@ -1742,7 +1742,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         for (var i=0; i<cards.length; i++){
             var tEl = cards[i].querySelector('.time');
             if (!tEl) { left++; continue; }
-            var m = tEl.textContent.match(/(\d+):(\d+)-(\d+):(\d+)/);
+            var m = tEl.textContent.match(/([0-9]+):([0-9]+)-([0-9]+):([0-9]+)/);
             if (!m) { left++; continue; }
             var endMin = parseInt(m[3],10)*60 + parseInt(m[4],10);
             if (endMin > nowMin) left++;
