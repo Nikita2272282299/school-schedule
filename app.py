@@ -230,6 +230,8 @@ def get_live_status(lessons):
     now = datetime.now(PERM_TZ)
     cur = now.hour * 60 + now.minute
     if cur < 6*60 + 30: return None
+    prev_end = None
+    prev_end_str = None
     for tv, num, lesson in lessons:
         try:
             s, e = tv.split("-")
@@ -242,8 +244,14 @@ def get_live_status(lessons):
                     "left":ee-cur,"until":e,"end_unix":int(now.replace(hour=eh,minute=em,second=0,microsecond=0).timestamp()),
                     "start_unix":int(now.replace(hour=sh,minute=sm,second=0,microsecond=0).timestamp())}
         if cur < ss:
+            st_unix = int(now.replace(hour=sh,minute=sm,second=0,microsecond=0).timestamp())
+            if prev_end is not None:
+                return {"type":"break","num":num,"lesson":lesson,"wait":ss-cur,"start":s,
+                        "start_unix":st_unix,"prev_end_str":prev_end_str}
             return {"type":"before","num":num,"lesson":lesson,"wait":ss-cur,"start":s,
-                    "start_unix":int(now.replace(hour=sh,minute=sm,second=0,microsecond=0).timestamp())}
+                    "start_unix":st_unix}
+        prev_end = ee
+        prev_end_str = e
     return None
 
 # ============ HTML ============
@@ -479,6 +487,17 @@ html.hide-time .time { display:none; }
 html.round-nums .num { border-radius:50% !important; }
 html.hide-weekend .tab[data-day="Суббота"] { display:none; }
 html.no-live .live-banner { display:none !important; }
+.live-banner.break { background: linear-gradient(135deg, var(--green-soft), var(--card-bg)); border:1.5px solid var(--green); }
+.live-banner.break .live-label { color: var(--green); }
+.live-banner.break .live-dot { background: var(--green); }
+html.anim-days .day-block { animation: dayFadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes dayFadeIn { 0%{opacity:0; transform: translateY(8px)} 100%{opacity:1; transform:none} }
+.day-footer { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+.day-footer .df-item { flex:1; min-width:120px; padding:10px 12px; border-radius:12px; background: var(--accent-light); border:1px solid var(--border); display:flex; align-items:center; gap:8px; font-weight:700; font-size:0.82rem; color: var(--text-main); }
+.day-footer .df-item .df-ico { font-size:1.2rem; }
+.day-footer .df-item .df-val { color: var(--accent); font-weight:800; margin-left:auto; }
+.online-pill { background: var(--green-soft); color: var(--green); padding:5px 10px; border-radius:12px; font-weight:800; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px; }
+.online-pill::before { content:""; width:6px; height:6px; border-radius:50%; background: var(--green); animation: pulseDot 1.6s infinite; }
 html.no-progress .progress-bar { display:none !important; }
 html.no-glow .card.now { box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important; }
 html.no-today-pill .today-pill { display:none !important; }
@@ -640,13 +659,14 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-15';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-16';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
     <h2><span id="adminTap">📅</span> <span>Расписание</span></h2>
 <script>(function(){var e=localStorage.getItem('rs_emoji');if(e&&e.indexOf('\uFFFD')===-1){var t=document.getElementById('adminTap');if(t)t.textContent=e;}})();</script>
     <div class="header-right">
+        <span class="online-pill" id="onlinePill" style="display:none;"><span id="onlineCount">0</span></span>
         <div class="badge-class">8Г</div>
         <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
     </div>
@@ -820,6 +840,29 @@ html.anim-wobble .settings-panel.open {
         <div class="srow" onclick="toggleOpt('grayscale_all')"><span class="srow-label" data-ico="⚫">Ч/Б режим</span><span class="srow-value" id="val-grayscale_all">выкл</span></div>
         <div class="srow" onclick="toggleOpt('reduce_motion')"><span class="srow-label" data-ico="🛑">Уменьшить движение</span><span class="srow-value" id="val-reduce_motion">выкл</span></div>
 
+        <div class="acc-sub">🌤 Виджеты и фишки</div>
+        <div class="srow" onclick="toggleOpt('widget_online')"><span class="srow-label" data-ico="🟢">Счётчик онлайн</span><span class="srow-value" id="val-widget_online">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('widget_weather')"><span class="srow-label" data-ico="🌤">Погода</span><span class="srow-value" id="val-widget_weather">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('widget_workload')"><span class="srow-label" data-ico="💪">Загруженность дня</span><span class="srow-value" id="val-widget_workload">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('widget_endday')"><span class="srow-label" data-ico="🏁">До конца дня</span><span class="srow-value" id="val-widget_endday">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('auto_accent')"><span class="srow-label" data-ico="🎨">Авто-акцент по времени</span><span class="srow-value" id="val-auto_accent">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('anim_days')"><span class="srow-label" data-ico="✨">Анимация смены дня</span><span class="srow-value" id="val-anim_days">вкл</span></div>
+        <div class="acc-slider"><label>Город для погоды <output id="o-city_out"></output></label>
+          <input type="text" id="cityInput" placeholder="Пермь" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text-main);font-family:inherit;" onchange="setCity(this.value)">
+        </div>
+        <div class="acc-slider"><label>Шрифт</label>
+          <select id="fontSelect" onchange="setFont(this.value)" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text-main);font-family:inherit;">
+            <option value="default">По умолчанию</option>
+            <option value="Inter">Inter</option>
+            <option value="Rubik">Rubik</option>
+            <option value="Montserrat">Montserrat</option>
+            <option value="Comfortaa">Comfortaa</option>
+            <option value="Jost">Jost</option>
+            <option value="Georgia">Georgia (серif)</option>
+            <option value="monospace">Monospace</option>
+          </select>
+        </div>
+
         <div class="acc-sub">🔬 Тонкая настройка (вставь свой CSS)</div>
         <div class="acc-slider"><label>Свой CSS-код</label><textarea id="customCss" placeholder=".card { color: red; }" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text-main);font-family:monospace;font-size:0.8rem;min-height:80px;margin-top:6px;resize:vertical;" onchange="applyCustomCss(this.value)"></textarea></div>
 
@@ -857,7 +900,7 @@ var THEME_COLORS = {light:'#f0f4f8',dark:'#0f1115',cosmic:'#05021a',ocean:'#c7e8
 
 function _optIsOn(key){
     var cur = localStorage.getItem('rs_opt_' + key);
-    if (['particles','show_time','live_banner','progress_bar','glow','show_weekday','today_pill','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title'].indexOf(key) >= 0) return cur !== '0';
+    if (['particles','show_time','live_banner','progress_bar','glow','show_weekday','today_pill','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title','widget_online','widget_weather','widget_workload','widget_endday','anim_days'].indexOf(key) >= 0) return cur !== '0';
     return cur === '1';
 }
 
@@ -892,6 +935,10 @@ function applyOpt(key, on){
     else if (key === 'show_classroom') h.classList.toggle('hide-classroom', !on);
     else if (key === 'anim_smooth') h.classList.toggle('anim-smooth', on);
     else if (key === 'anim_wobble') h.classList.toggle('anim-wobble', on);
+    else if (key === 'anim_days') h.classList.toggle('anim-days', on);
+    else if (key === 'auto_accent') { if (typeof window.__autoAccent === 'function') window.__autoAccent(); }
+    else if (key === 'widget_weather') { if (typeof window.__loadWeather === 'function') window.__loadWeather(); }
+    else if (key === 'widget_online' || key === 'widget_workload' || key === 'widget_endday') { if (typeof window.__buildFooter === 'function') setTimeout(window.__buildFooter, 50); }
 }
 
 function toggleOpt(key){
@@ -1003,6 +1050,7 @@ function showDay(day){
     var t = document.getElementById('block-' + day);
     if (t) t.classList.add('active-day');
     document.querySelectorAll('.tab').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-day')===day); });
+    if (typeof window.__buildFooter === 'function') setTimeout(window.__buildFooter, 50);
 }
 function openSub(name){
     if (name === 'admin' && localStorage.getItem('rs_admin') !== '1') return;
@@ -1294,7 +1342,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
     if (size === 'small') document.documentElement.classList.add('font-small');
     if (size === 'large') document.documentElement.classList.add('font-large');
     document.querySelectorAll('[data-size]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-size')===size); });
-    ['particles','round_nums','compact','show_time','live_banner','progress_bar','glow','big_text','show_weekday','today_pill','hide_weekend','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title','mirror','uppercase','bold_all','italic','underline','colorblind','no_radius','grayscale_all','reduce_motion','anim_smooth','anim_wobble'].forEach(function(k){ applyOpt(k, _optIsOn(k)); });
+    ['particles','round_nums','compact','show_time','live_banner','progress_bar','glow','big_text','show_weekday','today_pill','hide_weekend','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title','mirror','uppercase','bold_all','italic','underline','colorblind','no_radius','grayscale_all','reduce_motion','anim_smooth','anim_wobble','widget_online','widget_weather','widget_workload','widget_endday','anim_days','auto_accent'].forEach(function(k){ applyOpt(k, _optIsOn(k)); });
     updateOptUI();
     initCustom();
     applyVars();
@@ -1411,6 +1459,160 @@ function initAllNew(){
 if (document.readyState !== "loading") initAllNew(); else document.addEventListener("DOMContentLoaded", initAllNew);
 </script>
 <script>
+/* WIDGETS-V16 */
+(function(){
+    // ── Авто-акцент по времени ──
+    function autoAccent(){
+        if (!_optIsOn('auto_accent')) return;
+        var h = new Date().getHours();
+        var c1, c2;
+        if (h >= 6 && h < 12) { c1 = '#f59e0b'; c2 = '#ef4444'; }
+        else if (h >= 12 && h < 17) { c1 = '#3b82f6'; c2 = '#06b6d4'; }
+        else if (h >= 17 && h < 21) { c1 = '#a855f7'; c2 = '#ec4899'; }
+        else { c1 = '#4c1d95'; c2 = '#1e3a8a'; }
+        var r = document.documentElement;
+        r.style.setProperty('--accent', c1);
+        r.style.setProperty('--accent2', c2);
+        r.style.setProperty('--accent-light', 'rgba('+hex2rgb(c1)+', 0.15)');
+    }
+    window.__autoAccent = autoAccent;
+    autoAccent();
+    setInterval(autoAccent, 60000);
+
+    // ── Город ──
+    window.setCity = function(v){ v = (v||'Пермь').trim(); localStorage.setItem('rs_city', v); var o=document.getElementById('o-city_out'); if(o) o.textContent = v; loadWeather(); };
+    function initCity(){ var c = localStorage.getItem('rs_city') || 'Пермь'; var i=document.getElementById('cityInput'); if(i) i.value = c; var o=document.getElementById('o-city_out'); if(o) o.textContent = c; }
+    initCity();
+
+    // ── Шрифт ──
+    window.setFont = function(name){
+        localStorage.setItem('rs_font', name);
+        applyFont(name);
+    };
+    function applyFont(name){
+        var link = document.getElementById('gFontLink');
+        if (link) link.remove();
+        var map = {Inter:'Inter:wght@400;600;800',Rubik:'Rubik:wght@400;600;800',Montserrat:'Montserrat:wght@400;600;800',Comfortaa:'Comfortaa:wght@400;700',Jost:'Jost:wght@400;600;800'};
+        if (map[name]) {
+            var l = document.createElement('link');
+            l.id = 'gFontLink'; l.rel = 'stylesheet';
+            l.href = 'https://fonts.googleapis.com/css2?family='+map[name]+'&display=swap';
+            document.head.appendChild(l);
+            document.body.style.fontFamily = "'"+name+"', -apple-system, sans-serif";
+        } else if (name === 'Georgia') {
+            document.body.style.fontFamily = 'Georgia, serif';
+        } else if (name === 'monospace') {
+            document.body.style.fontFamily = 'ui-monospace, monospace';
+        } else {
+            document.body.style.fontFamily = '';
+        }
+    }
+    var savedFont = localStorage.getItem('rs_font');
+    if (savedFont) { var s=document.getElementById('fontSelect'); if(s)s.value=savedFont; applyFont(savedFont); }
+
+    // ── Погода ──
+    var WMO = {0:'☀️ ясно',1:'🌤 малооблачно',2:'⛅ облачно',3:'☁️ пасмурно',45:'🌫 туман',48:'🌫 изморозь',51:'🌦 слабая морось',53:'🌦 морось',55:'🌦 сильная морось',61:'🌧 слабый дождь',63:'🌧 дождь',65:'🌧 сильный дождь',71:'🌨 слабый снег',73:'🌨 снег',75:'❄️ сильный снег',77:'🌨 снежные зёрна',80:'🌦 ливень',81:'🌧 сильный ливень',82:'⛈ сильнейший ливень',85:'🌨 снегопад',86:'❄️ сильный снегопад',95:'⛈ гроза',96:'⛈ гроза с градом',99:'⛈ сильнейшая гроза'};
+    function wmoText(code){ return WMO[code] || ('код '+code); }
+    function loadWeather(){
+        var city = localStorage.getItem('rs_city') || 'Пермь';
+        fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=1&language=ru')
+            .then(function(r){ return r.json(); })
+            .then(function(g){
+                if (!g.results || !g.results.length) return;
+                var lat = g.results[0].latitude, lon = g.results[0].longitude;
+                return fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,weather_code&timezone=auto')
+                    .then(function(r){ return r.json(); })
+                    .then(function(w){
+                        if (!w.current) return;
+                        localStorage.setItem('rs_weather', JSON.stringify({t:w.current.temperature_2m, c:w.current.weather_code, ts:Date.now()}));
+                        renderWeather();
+                    });
+            }).catch(function(){});
+    }
+    window.__loadWeather = loadWeather;
+    function renderWeather(){
+        var el = document.querySelector('[data-widget="weather"] .df-val');
+        if (!el) return;
+        var w = null;
+        try { w = JSON.parse(localStorage.getItem('rs_weather')||'null'); } catch(e){}
+        if (!w) { el.textContent = '—'; return; }
+        el.textContent = Math.round(w.t)+'°C · '+wmoText(w.c);
+    }
+    loadWeather();
+    setInterval(loadWeather, 1800000);
+
+    // ── Загруженность дня ──
+    function calcWorkload(){
+        var active = document.querySelector('.day-block.active-day');
+        if (!active) return '—';
+        var n = active.querySelectorAll('.card').length;
+        if (n === 0) return 'свободно';
+        if (n <= 3) return 'легко ('+n+')';
+        if (n <= 5) return 'средне ('+n+')';
+        if (n <= 7) return 'тяжело ('+n+')';
+        return 'ого-го ('+n+')';
+    }
+
+    // ── До конца дня ──
+    function calcEndOfDay(){
+        var active = document.querySelector('.day-block.active-day');
+        if (!active) return '—';
+        var cards = active.querySelectorAll('.card .time');
+        if (!cards.length) return '—';
+        var lastTime = cards[cards.length-1].textContent.trim();
+        var m = lastTime.match(/(\d+):(\d+)-(\d+):(\d+)/);
+        if (!m) return '—';
+        var endH = parseInt(m[3],10), endM = parseInt(m[4],10);
+        var now = new Date();
+        var end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endH, endM);
+        var diff = Math.round((end - now)/60000);
+        if (diff <= 0) return 'закончен';
+        if (diff < 60) return diff+' мин';
+        var hh = Math.floor(diff/60), mm = diff%60;
+        return hh+' ч '+(mm?mm+' мин':'');
+    }
+
+    // ── Собираем day-footer под {content} ──
+    function buildFooter(){
+        var old = document.getElementById('dayFooter');
+        if (old) old.remove();
+        var cont = document.querySelector('.container');
+        if (!cont) return;
+        var sheet = cont.querySelector('.sheet-link');
+        var f = document.createElement('div');
+        f.id = 'dayFooter'; f.className = 'day-footer';
+        var html = '';
+        if (_optIsOn('widget_endday')) html += '<div class="df-item" data-widget="endday"><span class="df-ico">🏁</span><span>До конца дня</span><span class="df-val">'+calcEndOfDay()+'</span></div>';
+        if (_optIsOn('widget_workload')) html += '<div class="df-item" data-widget="workload"><span class="df-ico">💪</span><span>Загруженность</span><span class="df-val">'+calcWorkload()+'</span></div>';
+        if (_optIsOn('widget_weather')) html += '<div class="df-item" data-widget="weather"><span class="df-ico">🌤</span><span>Погода</span><span class="df-val">—</span></div>';
+        f.innerHTML = html;
+        if (sheet && sheet.parentNode) sheet.parentNode.insertBefore(f, sheet);
+        else cont.appendChild(f);
+        renderWeather();
+    }
+    window.__buildFooter = buildFooter;
+    buildFooter();
+    setInterval(function(){ buildFooter(); }, 30000);
+
+    // ── Счётчик онлайн ──
+    function pollOnline(){
+        if (!_optIsOn('widget_online')) return;
+        fetch('/api/online', {cache:'no-store'})
+            .then(function(r){ return r.json(); })
+            .then(function(d){
+                var pill = document.getElementById('onlinePill');
+                var cnt = document.getElementById('onlineCount');
+                if (pill && cnt && d && typeof d.count === 'number') {
+                    cnt.textContent = d.count;
+                    pill.style.display = 'inline-flex';
+                }
+            }).catch(function(){});
+    }
+    pollOnline();
+    setInterval(pollOnline, 15000);
+})();
+</script>
+<script>
 /* AUTO-REFRESH-V7: проверка расписания, времени урока и админки — каждую секунду */
 (function(){
     var lastTs = parseInt(document.body.getAttribute('data-changed-at') || '0', 10);
@@ -1436,11 +1638,13 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                 var nowSec = Math.floor(Date.now()/1000);
                 var hasNow = !!document.querySelector('.live-banner.now');
                 var hasBefore = !!document.querySelector('.live-banner.before');
+                var hasBreak = !!document.querySelector('.live-banner.break');
                 var srvNow = !!(d.live && d.live.type === 'now');
                 var srvBefore = !!(d.live && d.live.type === 'before');
+                var srvBreak = !!(d.live && d.live.type === 'break');
 
-                if ((hasNow && !srvNow) || (hasBefore && !srvBefore) ||
-                    (!hasNow && !hasBefore && (srvNow || srvBefore))) {
+                if ((hasNow && !srvNow) || (hasBefore && !srvBefore) || (hasBreak && !srvBreak) ||
+                    (!hasNow && !hasBefore && !hasBreak && (srvNow || srvBefore || srvBreak))) {
                     location.reload(); return;
                 }
                 if (!d.live || !d.live.type) return;
@@ -1462,6 +1666,17 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                         var passed = Math.max(0, Math.min(totalSec, nowSec - stU));
                         var pct = Math.round(passed / totalSec * 100);
                         fill.style.width = pct + '%';
+                    }
+                } else if (srvBreak) {
+                    var brEl = document.querySelector('.live-banner.break');
+                    if (!brEl) return;
+                    var brT = brEl.querySelector('.live-timer');
+                    var secWaitB = Math.max(0, d.live.start_unix - nowSec);
+                    if (secWaitB <= 0) { location.reload(); return; }
+                    var waitB = Math.ceil(secWaitB/60);
+                    if (brT) {
+                        var txtB = waitB + ' \u043c\u0438\u043d';
+                        if (brT.textContent !== txtB) brT.textContent = txtB;
                     }
                 } else if (srvBefore) {
                     var bEl = document.querySelector('.live-banner.before');
@@ -1591,6 +1806,14 @@ def build_live(st):
             f'<div class="live-lesson">{st["lesson"]}</div>'
             f'<div class="live-time">\u0432 {st["start"]}{timer_html}</div>'
             '</div></div>')
+    if st["type"] == "break":
+        wait = st.get("wait", 0)
+        return ('<div class="live-banner break" data-start-unix="' + str(st["start_unix"]) + '" data-start="' + st["start"] + '">'
+            '<div class="live-dot"></div><div class="live-info">'
+            '<div class="live-label">\u23f8 \u041f\u0435\u0440\u0435\u043c\u0435\u043d\u0430</div>'
+            f'<div class="live-lesson">\u0421\u043b\u0435\u0434\u0443\u044e\u0449\u0438\u0439: {st["lesson"]}</div>'
+            f'<div class="live-time">\u0432 {st["start"]} \u00b7 \u0447\u0435\u0440\u0435\u0437 <span class="live-timer">' + str(wait) + ' \u043c\u0438\u043d</span></div>'
+            '</div></div>')
     return ""
 
 def build_content(days, active, err, st):
@@ -1693,6 +1916,12 @@ class H(BaseHTTPRequestHandler):
             if _pt == "/api/admin/rename":
                 if _admin != ADMIN_KEY: self._json({"error":"forbidden"}, 403); return
                 rename_v(q.get("to",[""])[0], q.get("name",[""])[0]); self._json({"ok": True}); return
+
+            if _pt == "/api/online":
+                d_on = _ld(VISITORS_FILE, {})
+                now_on = int(time.time())
+                cnt = sum(1 for v in d_on.values() if (now_on - int(v.get("last",0))) < 90)
+                self._json({"count": cnt, "total": len(d_on)}); return
 
             if _pt == "/api/live":
                 days_l, _ = get_schedule()
