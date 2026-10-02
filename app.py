@@ -51,7 +51,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v31';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v31').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v32';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v32').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -303,9 +303,9 @@ PAGE = """<!DOCTYPE html>
 <style>
 :root {
   /* === Единая дизайн-система === */
-  --gap: 10px;           /* отступ между блоками */
-  --gap-sm: 8px;         /* маленький отступ */
-  --pad-x: 14px;         /* padding по горизонтали */
+  --gap: 12px;           /* отступ между блоками */
+  --gap-sm: 9px;         /* маленький отступ */
+  --pad-x: 16px;         /* padding по горизонтали */
   --pad-y: 14px;         /* padding по вертикали */
   --radius-block: 16px;  /* радиус основных блоков */
   --radius-pill: 12px;   /* радиус мелких элементов */
@@ -643,7 +643,6 @@ html.corners-sharp .card, html.corners-sharp .num, html.corners-sharp .theme-btn
 .time { font-size: var(--time-size, 0.8rem) !important; }
 .day-title { font-size: var(--dtitle-size, 1.12rem) !important; }
 .live-lesson { font-size: var(--live-size, 1.02rem) !important; }
-h2 { font-size: var(--header-size, 1.4rem) !important; }
 .num { min-width: var(--num-size, 40px) !important; height: var(--num-size, 40px) !important; }
 .icon-btn { width: var(--icon-size, 40px) !important; height: var(--icon-size, 40px) !important; }
 .tab { font-size: var(--tab-size, 0.85rem) !important; }
@@ -754,48 +753,6 @@ html.anim-wobble .settings-panel.open {
     80%  { transform: scaleY(1.004) scaleX(1); }
     100% { transform: scaleY(1) scaleX(1); }
 }
-/* ===== FINAL CONTAINER (last-wins, high specificity) ===== */
-html body {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-html body .container {
-  width: auto !important;
-  max-width: 400px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-  padding-left: 20px !important;
-  padding-right: 20px !important;
-  box-sizing: border-box !important;
-}
-html body .tabs {
-  padding: 4px !important;
-  gap: 4px !important;
-  box-sizing: border-box !important;
-  width: 100% !important;
-}
-html body .tab {
-  min-width: 0 !important;
-  flex: 1 1 0 !important;
-  padding: 8px 2px !important;
-  box-sizing: border-box !important;
-}
-html body .header-card,
-html body .live-banner,
-html body .card,
-html body .day-title,
-html body .day-footer,
-html body .sheet-link,
-html body .info-box {
-  box-sizing: border-box !important;
-}
-html body .subscreen {
-  padding-left: 20px !important;
-  padding-right: 20px !important;
-  box-sizing: border-box !important;
-}
-
-
 /* ============================================ */
 /* ===== ELEGANT — воздух, лёгкость, анимации == */
 /* ============================================ */
@@ -1252,10 +1209,218 @@ html { scroll-behavior: smooth; }
   html body .lesson { font-size: 0.95rem !important; }
 }
 
+
+
+/* ============================================ */
+/* ===== LUXE — финальный слой красоты ======== */
+/* ============================================ */
+
+/* --- Aurora background: медленно плавающие градиенты --- */
+@keyframes auroraA {
+  0%,100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%     { transform: translate3d(4%, -3%, 0) scale(1.08); }
+}
+@keyframes auroraB {
+  0%,100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%     { transform: translate3d(-3%, 4%, 0) scale(1.1); }
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: -15%;
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+  background:
+    radial-gradient(circle at 22% 18%, var(--accent-light), transparent 45%),
+    radial-gradient(circle at 78% 72%, var(--accent-light), transparent 50%);
+  animation: auroraA 24s ease-in-out infinite,
+             auroraB 30s ease-in-out infinite;
+  opacity: 0.55;
+}
+[data-theme="cosmic"] body::before {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(183, 148, 246, 0.30), transparent 45%),
+    radial-gradient(circle at 80% 70%, rgba(124, 245, 192, 0.16), transparent 50%),
+    radial-gradient(circle at 60% 92%, rgba(140, 80, 255, 0.20), transparent 55%);
+  opacity: 1;
+}
+[data-theme="dark"] body::before,
+[data-theme="ocean"] body::before { opacity: 0.4; }
+
+/* Узкий зигзаг поверх — очень тонкая зернистость (только на широких экранах) */
+@media (min-width: 480px) {
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.02;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+}
+
+/* Контейнер выше aurora */
+html body .container { position: relative; z-index: 2; }
+html body #particles { z-index: 1 !important; }
+
+/* --- Стеклянная шапка --- */
+html body .header-card {
+  backdrop-filter: blur(14px) saturate(1.15);
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  background: var(--card-bg) !important;
+  opacity: 0.98;
+}
+
+/* --- Карточка «сейчас идёт» — пульсирующее свечение --- */
+@keyframes nowGlow {
+  0%, 100% {
+    box-shadow: 0 4px 22px var(--accent-light),
+                0 0 0 1.5px var(--accent) inset;
+  }
+  50% {
+    box-shadow: 0 8px 30px var(--accent-light),
+                0 0 0 1.5px var(--accent) inset,
+                0 0 24px -4px var(--accent);
+  }
+}
+html body .card.now {
+  animation: nowGlow 2.8s ease-in-out infinite;
+}
+
+/* --- Пилюля «сейчас» — мягкий пульс --- */
+@keyframes nowPillPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.05); }
+}
+html body .now-pill {
+  animation: nowPillPulse 2.2s ease-in-out infinite;
+}
+
+/* --- Плашка «Сегодня» — пробегающий блик --- */
+html body .today-pill {
+  position: relative;
+  overflow: hidden;
+}
+html body .today-pill::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -60%;
+  width: 55%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: todayShimmer 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes todayShimmer {
+  0%   { left: -60%; }
+  55%  { left: 120%; }
+  100% { left: 120%; }
+}
+
+/* --- Прогресс-бар — пробегающий блик --- */
+html body .progress-fill {
+  position: relative;
+  overflow: hidden;
+}
+html body .progress-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+  animation: progShimmer 2.6s linear infinite;
+}
+@keyframes progShimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* --- Таб active — тонкий sheen сверху --- */
+html body .tab.active {
+  position: relative;
+  overflow: hidden;
+}
+html body .tab.active::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 45%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.16), transparent);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* --- Активная иконка темы — свечение --- */
+html body .theme-btn.active .emoji {
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 55%, transparent));
+  transform: scale(1.08);
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter 0.28s ease;
+}
+
+/* --- Номер урока — тонкий цветной градиент (не яркий) --- */
+html body .num {
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--accent) 16%, var(--card-bg)) 0%,
+    color-mix(in srgb, var(--accent2) 10%, var(--card-bg)) 100%) !important;
+  color: var(--accent) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08) !important;
+}
+html body .card.now .num {
+  background: linear-gradient(145deg, var(--accent), var(--accent2)) !important;
+  color: var(--on-accent) !important;
+  box-shadow: 0 4px 14px var(--accent-light),
+              inset 0 1px 0 rgba(255,255,255,0.22) !important;
+}
+
+/* --- Кнопка ⚙️ — при hover плавно акцентная --- */
+html body .icon-btn {
+  background: color-mix(in srgb, var(--accent) 12%, var(--card-bg)) !important;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent) !important;
+}
+
+/* --- Мягкое появление контейнера --- */
+@keyframes containerIn {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+html body .container {
+  animation: containerIn 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* --- Кастомный скроллбар на десктопе --- */
+@media (min-width: 720px) {
+  html body ::-webkit-scrollbar { width: 10px; height: 10px; }
+  html body ::-webkit-scrollbar-track { background: transparent; }
+  html body ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 5px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  html body ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--accent) 75%, transparent);
+    background-clip: padding-box;
+    border: 2px solid transparent;
+  }
+}
+
+/* --- Уважаем reduce-motion --- */
+@media (prefers-reduced-motion: reduce) {
+  body::before { animation: none !important; }
+  html body .container { animation: none !important; }
+  html body .card.now { animation: none !important; }
+  html body .now-pill { animation: none !important; }
+  html body .today-pill::after { animation: none !important; }
+  html body .progress-fill::after { animation: none !important; }
+}
+
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-44';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-45';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
