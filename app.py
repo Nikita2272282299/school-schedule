@@ -604,6 +604,15 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
 .settings-panel {
     position: relative !important;
 }
+
+/* ===== WOBBLY WINDOWS ===== */
+.settings-panel {
+    filter: url(#wobbly);
+}
+@keyframes wobblyJiggle {
+    0%   { filter: url(#wobbly) blur(0px); }
+    100% { filter: url(#wobbly) blur(0px); }
+}
 </style>
 </head>
 <body data-changed-at="{changed_at}">
@@ -950,7 +959,12 @@ function setSize(s){
     localStorage.setItem('rs_size', s);
     document.querySelectorAll('[data-size]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-size')===s); });
 }
-function toggleSettings(){ document.getElementById('settingsPanel').classList.toggle('open'); }
+function toggleSettings(){
+    var p = document.getElementById('settingsPanel');
+    var wasOpen = p.classList.contains('open');
+    p.classList.toggle('open');
+    if (!wasOpen && window.__wobble) window.__wobble();
+}
 function showDay(day){
     document.querySelectorAll('.day-block').forEach(function(el){ el.classList.remove('active-day'); });
     var t = document.getElementById('block-' + day);
@@ -1342,6 +1356,15 @@ function initAllNew(){
 /* Стартуем новые */
 if (document.readyState !== "loading") initAllNew(); else document.addEventListener("DOMContentLoaded", initAllNew);
 </script>
+
+<svg width="0" height="0" style="position:absolute;">
+  <defs>
+    <filter id="wobbly" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence id="wobblyTurb" type="fractalNoise" baseFrequency="0.015 0.05" numOctaves="1" seed="3" result="noise"/>
+      <feDisplacementMap id="wobblyDisp" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
 </body>
 </html>"""
 
