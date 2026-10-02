@@ -626,7 +626,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-1';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-2';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -930,7 +930,7 @@ function applyFilters(){
     var b = localStorage.getItem('rs_f_brightness') || '100';
     var hu = localStorage.getItem('rs_f_hue-rotate') || '0';
     h.style.setProperty('--global-filter', 'saturate('+s+'%) brightness('+b+'%) hue-rotate('+hu+'deg)');
-    document.querySelectorAll('.card, .num, .lesson, .header-card').forEach(function(el){
+    document.querySelectorAll('.card, .header-card').forEach(function(el){
         el.style.filter = 'saturate('+s+'%) brightness('+b+'%) hue-rotate('+hu+'deg)';
     });
 }
