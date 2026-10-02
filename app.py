@@ -33,7 +33,7 @@ MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/
 
 ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#7950f2"/></linearGradient></defs><rect width="512" height="512" rx="110" fill="url(#g)"/><text x="256" y="360" font-family="Arial,sans-serif" font-size="230" font-weight="900" fill="#fff" text-anchor="middle">8Г</text></svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v7';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v7').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v8';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v8').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -506,17 +506,13 @@ html.no-live .live-banner { display:none !important; }
 .live-banner.break .live-dot { background: var(--green); }
 html.anim-days .day-block { animation: dayFadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
 @keyframes dayFadeIn { 0%{opacity:0; transform: translateY(8px)} 100%{opacity:1; transform:none} }
-.day-footer { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:8px; margin-top:14px; }
-.day-footer .df-item { min-width:0; padding:10px 12px; border-radius:12px; background: var(--accent-light); border:1px solid var(--border); display:flex; align-items:center; gap:6px; font-weight:700; font-size:0.8rem; color: var(--text-main); overflow:hidden; }
-.day-footer .df-item .df-name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.day-footer .df-item .df-val { color: var(--accent); font-weight:800; margin-left:auto; white-space:nowrap; flex-shrink:0; }
-@media (max-width: 400px) {
-  .day-footer { grid-template-columns: 1fr 1fr; }
-  .day-footer .df-item { padding:8px 10px; font-size:0.72rem; }
-  .day-footer .df-item .df-ico { font-size:1rem; }
-}
-.day-footer .df-item .df-ico { font-size:1.2rem; }
-.day-footer .df-item .df-val { color: var(--accent); font-weight:800; margin-left:auto; }
+.day-footer { display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:14px; }
+.day-footer .df-item:only-child { grid-column: span 2; }
+.day-footer .df-item { display:flex; align-items:center; gap:8px; min-width:0; padding:8px 10px; border-radius:12px; background: var(--accent-light); border:1px solid var(--border); }
+.day-footer .df-item .df-ico { font-size:1.4rem; flex-shrink:0; line-height:1; }
+.day-footer .df-item .df-text { display:flex; flex-direction:column; min-width:0; flex:1; gap:1px; }
+.day-footer .df-item .df-name { font-size:0.66rem; font-weight:700; opacity:0.7; text-transform:uppercase; letter-spacing:0.03em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.day-footer .df-item .df-val { font-size:0.95rem; font-weight:800; color: var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .online-pill { background: var(--green-soft); color: var(--green); padding:5px 10px; border-radius:12px; font-weight:800; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px; }
 .online-pill::before { content:""; width:6px; height:6px; border-radius:50%; background: var(--green); animation: pulseDot 1.6s infinite; }
 html.no-progress .progress-bar { display:none !important; }
@@ -680,7 +676,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-18';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-19';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -1598,7 +1594,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         var w = null;
         try { w = JSON.parse(localStorage.getItem('rs_weather')||'null'); } catch(e){}
         if (!w) { el.textContent = '—'; return; }
-        el.textContent = Math.round(w.t)+'°C · '+wmoText(w.c);
+        el.textContent = Math.round(w.t)+'°C '+wmoText(w.c).split(' ')[0];
     }
     loadWeather();
     setInterval(loadWeather, 1800000);
@@ -1608,10 +1604,10 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         var active = document.querySelector('.day-block.active-day');
         if (!active) return '—';
         var n = active.querySelectorAll('.card').length;
-        if (n === 0) return 'нет';
+        if (n === 0) return 'свободно';
         if (n <= 3) return 'легко · '+n;
         if (n <= 5) return 'средне · '+n;
-        if (n <= 7) return 'тяжело · '+n;
+        if (n <= 7) return 'тяжко · '+n;
         return 'макс · '+n;
     }
 
@@ -1644,9 +1640,9 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         var f = document.createElement('div');
         f.id = 'dayFooter'; f.className = 'day-footer';
         var html = '';
-        if (_optIsOn('widget_endday')) html += '<div class="df-item" data-widget="endday"><span class="df-ico">🏁</span><span class="df-name">До конца дня</span><span class="df-val">'+calcEndOfDay()+'</span></div>';
-        if (_optIsOn('widget_workload')) html += '<div class="df-item" data-widget="workload"><span class="df-ico">💪</span><span class="df-name">Загруженность</span><span class="df-val">'+calcWorkload()+'</span></div>';
-        if (_optIsOn('widget_weather')) html += '<div class="df-item" data-widget="weather"><span class="df-ico">🌤</span><span class="df-name">Погода</span><span class="df-val">—</span></div>';
+        if (_optIsOn('widget_endday')) html += '<div class="df-item" data-widget="endday"><span class="df-ico">🏁</span><span class="df-text"><span class="df-name">До конца дня</span><span class="df-val">'+calcEndOfDay()+'</span></span></div>';
+        if (_optIsOn('widget_workload')) html += '<div class="df-item" data-widget="workload"><span class="df-ico">💪</span><span class="df-text"><span class="df-name">Загруженность</span><span class="df-val">'+calcWorkload()+'</span></span></div>';
+        if (_optIsOn('widget_weather')) html += '<div class="df-item" data-widget="weather"><span class="df-ico">🌤</span><span class="df-text"><span class="df-name">Погода</span><span class="df-val">—</span></span></div>';
         f.innerHTML = html;
         if (sheet && sheet.parentNode) sheet.parentNode.insertBefore(f, sheet);
         else cont.appendChild(f);
