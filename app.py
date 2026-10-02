@@ -556,8 +556,18 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
 
 
 /* ===== ПАНЕЛЬ НАСТРОЕК — струйка из центра ===== */
+
+
+
+/* Тонкая струйка сверху */
+
+
+
+
+/* ===== ПАНЕЛЬ: по умолчанию МГНОВЕННО ===== */
 .settings-panel {
     display: block !important;
+    position: relative !important;
     background: var(--card-bg) !important;
     border: 1px solid var(--border) !important;
     border-radius: 16px !important;
@@ -567,42 +577,51 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
     overflow: hidden !important;
     max-height: 0 !important;
     opacity: 0 !important;
+    transition: none !important;
     transform-origin: top center !important;
-    transition:
-        max-height 0.14s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 0.1s ease,
-        margin-bottom 0.14s cubic-bezier(0.22, 1, 0.36, 1),
-        padding 0.14s cubic-bezier(0.22, 1, 0.36, 1),
-        box-shadow 0.14s ease !important;
 }
 .settings-panel.open {
-    max-height: 2000px !important;
+    max-height: 3000px !important;
     opacity: 1 !important;
     margin-bottom: 14px !important;
     padding: 16px 18px !important;
     box-shadow: var(--shadow) !important;
 }
-.settings-inner {
-    display: contents !important;
+.settings-inner { display: contents !important; }
+
+/* ===== ПЛАВНОЕ ОТКРЫТИЕ (по опции) ===== */
+html.anim-smooth .settings-panel {
+    transition:
+        max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.2s ease,
+        margin-bottom 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        padding 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.3s ease !important;
 }
-/* Тонкая струйка сверху */
-.settings-panel::before {
+html.anim-smooth .settings-panel::before {
     content: "" !important;
     position: absolute !important;
-    top: 0 !important;
-    left: 50% !important;
+    top: 0 !important; left: 50% !important;
     transform: translateX(-50%) !important;
-    width: 0 !important;
-    height: 2px !important;
+    width: 0 !important; height: 2px !important;
     background: linear-gradient(90deg, transparent, var(--accent), transparent) !important;
-    transition: width 0.14s cubic-bezier(0.22, 1, 0.36, 1) !important;
+    transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1) !important;
     pointer-events: none !important;
 }
-.settings-panel.open::before {
-    width: 100% !important;
+html.anim-smooth .settings-panel.open::before { width: 100% !important; }
+
+/* ===== WOBBLE (по опции) ===== */
+html.anim-wobble .settings-panel.open {
+    animation: wobblyOpen 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
-.settings-panel {
-    position: relative !important;
+@keyframes wobblyOpen {
+    0%   { transform: scaleY(0.6) scaleX(0.94); opacity: 0; }
+    15%  { transform: scaleY(1.03) scaleX(1.02); opacity: 1; }
+    30%  { transform: scaleY(0.97) scaleX(0.99); }
+    45%  { transform: scaleY(1.015) scaleX(1.005); }
+    60%  { transform: scaleY(0.992) scaleX(0.998); }
+    80%  { transform: scaleY(1.004) scaleX(1); }
+    100% { transform: scaleY(1) scaleX(1); }
 }
 </style>
 </head>
@@ -739,7 +758,11 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
         <div class="acc-slider"><label>Тень карточек <output id="o-card_shadow">4</output></label><input type="range" min="0" max="30" step="1" id="s-card_shadow" oninput="setCardShadow(this.value)"></div>
         <div class="acc-slider"><label>Свечение акцента <output id="o-glow_pow">4</output></label><input type="range" min="0" max="30" step="1" id="s-glow_pow" oninput="setGlowPow(this.value)"></div>
 
-        <div class="acc-sub">⚡ Анимации</div>
+        <div class="acc-sub">⚡ Анимации панели</div>
+        <div class="srow" onclick="toggleOpt('anim_smooth')"><span class="srow-label" data-ico="🌊">Плавное открытие</span><span class="srow-value" id="val-anim_smooth">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('anim_wobble')"><span class="srow-label" data-ico="🪼">Wobble (как желе)</span><span class="srow-value" id="val-anim_wobble">выкл</span></div>
+
+        <div class="acc-sub">⚡ Анимации
         <div class="acc-slider"><label>Общая скорость <output id="o-anim_speed">1</output>x</label><input type="range" min="0" max="3" step="0.1" id="s-anim_speed" oninput="setAnimSpeed(this.value)"></div>
         <div class="acc-slider"><label>Скорость переходов <output id="o-transition">0.15</output>с</label><input type="range" min="0" max="1" step="0.05" id="s-transition" oninput="setTransition(this.value)"></div>
         <div class="acc-slider"><label>Скорость частиц <output id="o-particle_speed">1</output>x</label><input type="range" min="0.3" max="3" step="0.1" id="s-particle_speed" oninput="setParticleSpeed(this.value)"></div>
@@ -850,6 +873,8 @@ function applyOpt(key, on){
     else if (key === 'grayscale_all') h.classList.toggle('grayscale-all', on);
     else if (key === 'reduce_motion') h.classList.toggle('reduce-motion', on);
     else if (key === 'show_classroom') h.classList.toggle('hide-classroom', !on);
+    else if (key === 'anim_smooth') h.classList.toggle('anim-smooth', on);
+    else if (key === 'anim_wobble') h.classList.toggle('anim-wobble', on);
 }
 
 function toggleOpt(key){
@@ -1226,7 +1251,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
     if (size === 'small') document.documentElement.classList.add('font-small');
     if (size === 'large') document.documentElement.classList.add('font-large');
     document.querySelectorAll('[data-size]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-size')===size); });
-    ['particles','round_nums','compact','show_time','live_banner','progress_bar','glow','big_text','show_weekday','today_pill','hide_weekend'].forEach(function(k){ applyOpt(k, _optIsOn(k)); });
+    ['particles','round_nums','compact','show_time','live_banner','progress_bar','glow','big_text','show_weekday','today_pill','hide_weekend','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title','mirror','uppercase','bold_all','italic','underline','colorblind','no_radius','grayscale_all','reduce_motion','anim_smooth','anim_wobble'].forEach(function(k){ applyOpt(k, _optIsOn(k)); });
     updateOptUI();
     initCustom();
     applyVars();
