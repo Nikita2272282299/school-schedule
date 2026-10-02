@@ -369,37 +369,6 @@ h2 span:not(#adminTap):not(.brand-emoji) { background: linear-gradient(135deg, v
 .icon-btn { background: var(--accent-light); color: var(--accent); border:none; width:40px; height:40px; border-radius:12px; font-size:1.15rem; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:inherit; }
 .icon-btn:active { transform:scale(0.92); }
 
-.settings-panel {
-    display: grid;
-    grid-template-rows: 0fr;
-    background: var(--card-bg);
-    border: 0 solid var(--border);
-    border-radius: 16px;
-    margin-bottom: 0;
-    box-shadow: none;
-    overflow: hidden;
-    transition: grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1),
-                margin-bottom 0.32s cubic-bezier(0.4, 0, 0.2, 1),
-                border-width 0.2s ease,
-                box-shadow 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.settings-panel.open {
-    grid-template-rows: 1fr;
-    margin-bottom: 14px;
-    border-width: 1px;
-    box-shadow: var(--shadow);
-}
-.settings-inner {
-    overflow: hidden;
-    min-height: 0;
-    padding: 0 18px;
-    opacity: 0;
-    transition: opacity 0.25s ease, padding 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.settings-panel.open .settings-inner {
-    padding: 16px 18px;
-    opacity: 1;
-}
 .settings-title { font-weight:800; font-size:0.9rem; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
 .settings-title:not(:first-child) { margin-top:18px; }
 .settings-title::before { content:""; width:4px; height:4px; border-radius:50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
@@ -575,6 +544,33 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
 .card, .header-card, .tabs, .live-banner { border-width: var(--border-w, 1px) !important; }
 .card { box-shadow: 0 calc(var(--card-shadow, 4px) * 1px) calc(var(--card-shadow, 4px) * 4px) rgba(0,0,0,0.08) !important; }
 .card.now { box-shadow: 0 6px 24px var(--accent-light), 0 0 0 1.5px var(--accent) !important; }
+
+/* ===== ПАНЕЛЬ НАСТРОЕК — вытекает плавно ===== */
+.settings-panel {
+    display: grid !important;
+    grid-template-rows: 0fr !important;
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 16px !important;
+    margin-bottom: 0 !important;
+    overflow: hidden !important;
+    box-shadow: none !important;
+    will-change: grid-template-rows !important;
+    transition:
+        grid-template-rows 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+        margin-bottom 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.3s ease !important;
+}
+.settings-panel.open {
+    grid-template-rows: 1fr !important;
+    margin-bottom: 14px !important;
+    box-shadow: var(--shadow) !important;
+}
+.settings-inner {
+    overflow: hidden !important;
+    min-height: 0 !important;
+    padding: 16px 18px !important;
+}
 </style>
 </head>
 <body data-changed-at="{changed_at}">
@@ -582,6 +578,7 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
 <div class="container">
 <div class="header-card">
     <h2><span id="adminTap">📅</span> <span>Расписание</span></h2>
+<script>(function(){var e=localStorage.getItem('rs_emoji');if(e!==null){var t=document.getElementById('adminTap');if(t){t.textContent=e;t.classList.toggle('hidden',e==='');}}})();</script>
     <div class="header-right">
         <div class="badge-class">8Г</div>
         <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
