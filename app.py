@@ -812,7 +812,7 @@ html.style-round .card, html.style-round .theme-btn { border-radius: 28px !impor
 html.style-round .num { border-radius: 50% !important; }
 html.style-round .tab { border-radius: 24px !important; }
 
-body { filter: var(--global-filter, none); transition: filter 0.3s ease; }
+.container { filter: var(--global-filter, none); transition: filter 0.3s ease; }
 .card { border-radius: var(--card-radius, 16px) !important; margin-bottom: var(--card-gap, 10px) !important; }
 .num { width: var(--num-size, 40px) !important; height: var(--num-size, 40px) !important; }
 .lesson { font-size: var(--lesson-size, 1.05rem) !important; }
