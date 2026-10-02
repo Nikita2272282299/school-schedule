@@ -569,11 +569,11 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
     opacity: 0 !important;
     transform-origin: top center !important;
     transition:
-        max-height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 0.22s ease,
-        margin-bottom 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-        padding 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-        box-shadow 0.3s ease !important;
+        max-height 0.14s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.1s ease,
+        margin-bottom 0.14s cubic-bezier(0.22, 1, 0.36, 1),
+        padding 0.14s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.14s ease !important;
 }
 .settings-panel.open {
     max-height: 2000px !important;
@@ -595,7 +595,7 @@ h2 { font-size: var(--header-size, 1.4rem) !important; }
     width: 0 !important;
     height: 2px !important;
     background: linear-gradient(90deg, transparent, var(--accent), transparent) !important;
-    transition: width 0.42s cubic-bezier(0.22, 1, 0.36, 1) !important;
+    transition: width 0.14s cubic-bezier(0.22, 1, 0.36, 1) !important;
     pointer-events: none !important;
 }
 .settings-panel.open::before {
