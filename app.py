@@ -51,7 +51,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v34';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v34').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v35';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v35').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -632,7 +632,7 @@ html.corners-pill .theme-btn { border-radius: 100px !important; }
 html.corners-sharp .card, html.corners-sharp .num, html.corners-sharp .theme-btn, html.corners-sharp .tab, html.corners-sharp .header-card { border-radius: 4px !important; }
 
 /* Anti-misclick: браузер сам не путает скролл и тап */
-.srow, .theme-btn, .size-btn, .open-sub, .emoji-opt, .ap-btn, .tab, .icon-btn, .subscreen-back, .subscreen, .admin-tab, .admin-block, .acc-slider, .acc-emoji { touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.srow, .theme-btn, .size-btn, .open-sub, .emoji-opt, .ap-btn, .tab, .icon-btn, .subscreen-back, .subscreen, .admin-tab, .admin-block, .acc-slider, .acc-emoji, .day-footer .df-item, .sheet-link, .header-card { touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .acc-slider input[type="range"] { touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
 
 /* Переменные для новых слайдеров */
@@ -1467,7 +1467,7 @@ html body .container {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-47';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-48';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -3198,122 +3198,92 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
     setTimeout(pollLive, 500);
 })();
 </script>
+
 <script>
-/* SLIDER-GUARD: не даём менять значение ползунков при скролле */
+/* SMART-TAP v3: 
+   - клик по кнопке/строке проходит если палец НЕ сдвинулся >12px
+   - скролл не переключает ничего
+   - слайдеры не реагируют на скролл
+   - работает по-разному: тап → click, скролл → отмена
+*/
 (function(){
-    var scrollTs = 0;
-    var touchingSlider = null;
-    var startY = 0, startX = 0, moved = false;
+    var TH = 12;                    // порог «это скролл, а не тап»
+    var sx = 0, sy = 0;
+    var touchedEl = null;
+    var movedDuringTouch = false;
+    var isSlider = false;
+    var sliderSaved = null;
 
-    function isRange(el){
-        return el && el.tagName === 'INPUT' && el.type === 'range';
-    }
+    function isRange(el){ return el && el.tagName === 'INPUT' && el.type === 'range'; }
 
-    // Запоминаем начальные значения
-    function saveInit(el){
-        if (el && el.dataset.savedValue === undefined) {
-            el.dataset.savedValue = el.value;
+    // --- начало касания ---
+    function onStart(e){
+        var t = e.touches && e.touches[0];
+        if (!t) return;
+        sx = t.clientX; sy = t.clientY;
+        movedDuringTouch = false;
+        touchedEl = e.target;
+        isSlider = isRange(touchedEl);
+        if (isSlider) {
+            if (sliderSaved === null) sliderSaved = touchedEl.value;
+            else if (touchedEl.value !== sliderSaved) sliderSaved = touchedEl.value;
         }
     }
-    document.querySelectorAll('input[type=range]').forEach(saveInit);
 
-    // Начало касания
-    document.addEventListener('touchstart', function(e){
-        if (!e.touches || !e.touches[0]) return;
-        var t = e.target;
-        if (isRange(t)) {
-            touchingSlider = t;
-            startY = e.touches[0].clientY;
-            startX = e.touches[0].clientX;
-            moved = false;
-            saveInit(t);
+    // --- движение ---
+    function onMove(e){
+        var t = e.touches && e.touches[0];
+        if (!t) return;
+        if (Math.abs(t.clientX - sx) > TH || Math.abs(t.clientY - sy) > TH) {
+            movedDuringTouch = true;
         }
-    }, {passive: true, capture: true});
+    }
 
-    // Движение пальца
-    document.addEventListener('touchmove', function(e){
-        if (!e.touches || !e.touches[0]) return;
-        scrollTs = Date.now();
-        var y = e.touches[0].clientY;
-        var x = e.touches[0].clientX;
-        // Отмечаем любой сдвиг > 8px как скролл
-        if (touchingSlider && (Math.abs(y - startY) > 8 || Math.abs(x - startX) > 8)) {
-            moved = true;
+    document.addEventListener('touchstart', onStart, {passive: true, capture: true});
+    document.addEventListener('touchmove', onMove, {passive: true, capture: true});
+
+    // --- блокировка click если палец сдвинулся во время ЭТОГО касания ---
+    document.addEventListener('click', function(e){
+        if (movedDuringTouch) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            // сбрасываем флаг через тик — чтобы следующий тап работал сразу
+            setTimeout(function(){ movedDuringTouch = false; }, 0);
+            return false;
         }
-    }, {passive: true, capture: true});
+    }, true);
 
-    // Блокируем input, если был скролл
+    // --- слайдер: если был скролл — откатить значение ---
     document.addEventListener('input', function(e){
-        var t = e.target;
-        if (!isRange(t)) return;
-        // Если был скролл в последние 250 мс — откатываем значение
-        if (moved || (scrollTs && Date.now() - scrollTs < 250)) {
-            if (t.dataset.savedValue !== undefined && t.value !== t.dataset.savedValue) {
-                t.value = t.dataset.savedValue;
+        if (!isRange(e.target)) return;
+        if (movedDuringTouch) {
+            // во время этого касания палец сдвинулся — считаем скроллом
+            if (sliderSaved !== null && e.target.value !== sliderSaved) {
+                e.target.value = sliderSaved;
             }
             e.stopImmediatePropagation();
             return;
         }
-        // Записываем новое значение после успешного ввода
-        t.dataset.savedValue = t.value;
+        // чистый ввод — сохраняем
+        sliderSaved = e.target.value;
     }, true);
 
-    // Конец касания
+    // --- сброс после touchend ---
     document.addEventListener('touchend', function(){
+        // короткая задержка чтобы click успел отфильтроваться
         setTimeout(function(){
-            moved = false;
-            touchingSlider = null;
+            movedDuringTouch = false;
+            touchedEl = null;
+            isSlider = false;
         }, 50);
     }, {passive: true, capture: true});
-})();
-</script>
-<script>
-/* ANTI-MISCLICK v2: блокируем click если был скролл (окно 350мс) */
-(function(){
-    var TH = 8;
-    var sx = 0, sy = 0, moved = false, lastMove = 0;
-    function onStart(x,y){ sx = x; sy = y; moved = false; }
-    function onMove(x,y){
-        if (Math.abs(x-sx) > TH || Math.abs(y-sy) > TH) {
-            moved = true;
-            lastMove = Date.now();
-        }
-    }
-    document.addEventListener('touchstart', function(e){
-        if (e.touches && e.touches[0]) onStart(e.touches[0].clientX, e.touches[0].clientY);
-    }, {passive:true, capture:true});
-    document.addEventListener('touchmove', function(e){
-        if (e.touches && e.touches[0]) onMove(e.touches[0].clientX, e.touches[0].clientY);
-    }, {passive:true, capture:true});
-    document.addEventListener('pointerdown', function(e){
-        if (e.pointerType === 'mouse') return;
-        onStart(e.clientX, e.clientY);
-    }, true);
-    document.addEventListener('pointermove', function(e){
-        if (e.pointerType === 'mouse') return;
-        onMove(e.clientX, e.clientY);
-    }, true);
-    document.addEventListener('click', function(e){
-        if (moved || (lastMove && Date.now() - lastMove < 350)) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            return false;
-        }
-    }, true);
-    document.addEventListener('touchmove', function(){
-        document.documentElement.classList.add('scroll-guard');
-        clearTimeout(window.__sgTimer);
-        window.__sgTimer = setTimeout(function(){
-            document.documentElement.classList.remove('scroll-guard');
-        }, 250);
-    }, {passive:true, capture:true});
-    document.addEventListener('touchend', function(){
-        setTimeout(function(){ moved = false; lastMove = 0; }, 400);
-    }, {passive:true, capture:true});
+
     document.addEventListener('touchcancel', function(){
-        moved = false; lastMove = 0;
-    }, {passive:true, capture:true});
+        movedDuringTouch = false;
+        touchedEl = null;
+        isSlider = false;
+    }, {passive: true, capture: true});
 })();
 </script>
 </body>
