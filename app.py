@@ -626,7 +626,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-10';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-11';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -1154,7 +1154,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
                     html += '<div class="ap-info">IP '+esc(v.ip)+' · визитов '+v.count+'</div>';
                     var isOnline = v.ago < 90;
                     html += isOnline
-                        ? '<div class="ap-ago" style="color:#10b981;">\ud83d\udfe2 \u0412 \u0441\u0435\u0442\u0438</div>'
+                        ? '<div class="ap-ago" style="color:#10b981;">● \u0412 \u0441\u0435\u0442\u0438</div>'
                         : '<div class="ap-ago" style="color:var(--text-muted);">\u26aa \u041d\u0435 \u0432 \u0441\u0435\u0442\u0438 \u00b7 \u0431\u044b\u043b ' + agoStr(v.ago) + ' \u043d\u0430\u0437\u0430\u0434</div>';
                     html += '<div class="ap-actions">';
                     html += '<input class="ap-input" id="msg_'+v.vid+'" placeholder="Сообщение">';
