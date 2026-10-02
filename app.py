@@ -33,7 +33,7 @@ MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/
 
 ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#7950f2"/></linearGradient></defs><rect width="512" height="512" rx="110" fill="url(#g)"/><text x="256" y="360" font-family="Arial,sans-serif" font-size="230" font-weight="900" fill="#fff" text-anchor="middle">8Г</text></svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>self.clients.claim());self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v5').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>self.clients.claim());self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v6').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -630,7 +630,7 @@ html.anim-wobble .settings-panel.open {
 <div class="container">
 <div class="header-card">
     <h2><span id="adminTap">📅</span> <span>Расписание</span></h2>
-<script>(function(){var e=localStorage.getItem('rs_emoji');if(e){var t=document.getElementById('adminTap');if(t)t.textContent=e;}})();</script>
+<script>(function(){var e=localStorage.getItem('rs_emoji');if(e&&e.indexOf('\uFFFD')===-1){var t=document.getElementById('adminTap');if(t)t.textContent=e;}})();</script>
     <div class="header-right">
         <div class="badge-class">8Г</div>
         <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
@@ -762,7 +762,7 @@ html.anim-wobble .settings-panel.open {
         <div class="srow" onclick="toggleOpt('anim_smooth')"><span class="srow-label" data-ico="🌊">Плавное открытие</span><span class="srow-value" id="val-anim_smooth">выкл</span></div>
         <div class="srow" onclick="toggleOpt('anim_wobble')"><span class="srow-label" data-ico="🪼">Wobble (как желе)</span><span class="srow-value" id="val-anim_wobble">выкл</span></div>
 
-        <div class="acc-sub">⚡ Анимации
+        <div class="acc-sub">⚡ Анимации</div>
         <div class="acc-slider"><label>Общая скорость <output id="o-anim_speed">1</output>x</label><input type="range" min="0" max="3" step="0.1" id="s-anim_speed" oninput="setAnimSpeed(this.value)"></div>
         <div class="acc-slider"><label>Скорость переходов <output id="o-transition">0.15</output>с</label><input type="range" min="0" max="1" step="0.05" id="s-transition" oninput="setTransition(this.value)"></div>
         <div class="acc-slider"><label>Скорость частиц <output id="o-particle_speed">1</output>x</label><input type="range" min="0.3" max="3" step="0.1" id="s-particle_speed" oninput="setParticleSpeed(this.value)"></div>
@@ -1280,7 +1280,7 @@ if ('serviceWorker' in navigator) {
 
 /* ===== 100+ настроек ===== */
 function setEmoji(em){
-    if (!em) em = '📅';
+    if (!em || em.indexOf('\uFFFD') !== -1) em = '📅';
     localStorage.setItem('rs_emoji', em);
     var el = document.getElementById('adminTap');
     if (el) el.textContent = em;
@@ -1339,7 +1339,7 @@ function setCorners(t){
 }
 function initEmoji(){
     var em = localStorage.getItem('rs_emoji') || '📅';
-    if (!em) em = '📅';
+    if (!em || em.indexOf('\uFFFD') !== -1) em = '📅';
     var el = document.getElementById('adminTap');
     if (el) el.textContent = em;
     document.querySelectorAll('.emoji-opt').forEach(function(b){
