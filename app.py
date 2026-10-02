@@ -33,7 +33,7 @@ MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/
 
 ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#7950f2"/></linearGradient></defs><rect width="512" height="512" rx="110" fill="url(#g)"/><text x="256" y="360" font-family="Arial,sans-serif" font-size="230" font-weight="900" fill="#fff" text-anchor="middle">8Г</text></svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v12';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v12').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v13';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v13').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -389,15 +389,15 @@ body {
 .particle { position:absolute; top:-40px; user-select:none; animation-name:fall; animation-timing-function:linear; animation-iteration-count:infinite; }
 @keyframes fall { 0%{transform:translate3d(0,-40px,0) rotate(0);opacity:0} 10%{opacity:.85} 90%{opacity:.85} 100%{transform:translate3d(30px,110vh,0) rotate(360deg);opacity:0} }
 
-.header-card { background: var(--card-bg); border:1px solid var(--border); border-radius:22px; padding:16px 20px; box-shadow: var(--shadow); margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; }
-h2 { margin:0; font-size:1.4rem; font-weight:800; display:flex; align-items:center; gap:10px; }
+.header-card { background: var(--card-bg); border:1px solid var(--border); border-radius:22px; padding:14px 16px; box-shadow: var(--shadow); margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:8px; position:relative; min-width:0; overflow:hidden; }
+h2 { margin:0; font-size:1.4rem; font-weight:800; display:flex; align-items:center; gap:8px; min-width:0; flex-shrink:1; overflow:hidden; }
 h2 span:not(#adminTap):not(.brand-emoji) { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
 #adminTap, #brandEmoji { background:none !important; -webkit-text-fill-color:initial !important; color:initial !important; font-size:1.4rem; }
 #adminTap.hidden { display:none !important; }
 #adminTap { cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent; }
-.header-right { display:flex; align-items:center; gap:8px; }
-.badge-class { background: var(--accent-light); color: var(--accent); padding:7px 14px; border-radius:12px; font-weight:800; font-size:1rem; }
-.icon-btn { background: var(--accent-light); color: var(--accent); border:none; width:40px; height:40px; border-radius:12px; font-size:1.15rem; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:inherit; }
+.header-right { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.badge-class { background: var(--accent-light); color: var(--accent); padding:6px 10px; border-radius:11px; font-weight:800; font-size:0.9rem; flex-shrink:0; }
+.icon-btn { background: var(--accent-light); color: var(--accent); border:none; width:38px; height:38px; border-radius:11px; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:inherit; flex-shrink:0; }
 .icon-btn:active { transform:scale(0.92); }
 
 .settings-title { font-weight:800; font-size:0.9rem; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
@@ -507,13 +507,20 @@ html.no-live .live-banner { display:none !important; }
 html.anim-days .day-block { animation: dayFadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
 @keyframes dayFadeIn { 0%{opacity:0; transform: translateY(8px)} 100%{opacity:1; transform:none} }
 .day-footer { display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:14px; }
+@media (max-width: 360px) {
+  .day-footer { grid-template-columns: 1fr; }
+  .online-pill { font-size:0.65rem; padding:3px 6px; }
+  .badge-class { padding:5px 8px; font-size:0.82rem; }
+  h2 { font-size:1.15rem; }
+  .icon-btn { width:34px; height:34px; }
+}
 .day-footer .df-item:only-child { grid-column: span 2; }
 .day-footer .df-item { display:flex; align-items:center; gap:8px; min-width:0; padding:8px 10px; border-radius:12px; background: var(--accent-light); border:1px solid var(--border); }
 .day-footer .df-item .df-ico { font-size:1.4rem; flex-shrink:0; line-height:1; }
 .day-footer .df-item .df-text { display:flex; flex-direction:column; min-width:0; flex:1; gap:1px; }
-.day-footer .df-item .df-name { font-size:0.66rem; font-weight:700; opacity:0.7; text-transform:uppercase; letter-spacing:0.03em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.day-footer .df-item .df-val { font-size:0.95rem; font-weight:800; color: var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.online-pill { background: var(--green-soft); color: var(--green); padding:5px 10px; border-radius:12px; font-weight:800; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px; }
+.day-footer .df-item .df-name { font-size:0.62rem; font-weight:700; opacity:0.75; text-transform:uppercase; letter-spacing:0.02em; line-height:1.15; }
+.day-footer .df-item .df-val { font-size:0.92rem; font-weight:800; color: var(--accent); line-height:1.15; }
+.online-pill { background: var(--green-soft); color: var(--green); padding:4px 8px; border-radius:11px; font-weight:800; font-size:0.72rem; display:inline-flex; align-items:center; gap:4px; flex-shrink:0; }
 .online-pill::before { content:""; width:6px; height:6px; border-radius:50%; background: var(--green); animation: pulseDot 1.6s infinite; }
 html.no-progress .progress-bar { display:none !important; }
 html.no-glow .card.now { box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important; }
@@ -676,7 +683,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-24';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-25';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -1619,8 +1626,8 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         var f = document.createElement('div');
         f.id = 'dayFooter'; f.className = 'day-footer';
         var html = '';
-        if (_optIsOn('widget_endday')) html += '<div class="df-item" data-widget="endday"><span class="df-ico">🏁</span><span class="df-text"><span class="df-name">До конца дня</span><span class="df-val">'+calcEndOfDay()+'</span></span></div>';
-        if (_optIsOn('widget_workload')) html += '<div class="df-item" data-widget="workload"><span class="df-ico">💪</span><span class="df-text"><span class="df-name">Загруженность</span><span class="df-val">'+calcWorkload()+'</span></span></div>';
+        if (_optIsOn('widget_endday')) html += '<div class="df-item" data-widget="endday"><span class="df-ico">🏁</span><span class="df-text"><span class="df-name">До конца</span><span class="df-val">'+calcEndOfDay()+'</span></span></div>';
+        if (_optIsOn('widget_workload')) html += '<div class="df-item" data-widget="workload"><span class="df-ico">💪</span><span class="df-text"><span class="df-name">Загрузка</span><span class="df-val">'+calcWorkload()+'</span></span></div>';
         if (_optIsOn('widget_weather')) html += '<div class="df-item" data-widget="weather"><span class="df-ico">🌤</span><span class="df-text"><span class="df-name">Погода</span><span class="df-val">—</span></span></div>';
         f.innerHTML = html;
         if (sheet && sheet.parentNode) sheet.parentNode.insertBefore(f, sheet);
