@@ -33,7 +33,7 @@ MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/
 
 ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#7950f2"/></linearGradient></defs><rect width="512" height="512" rx="110" fill="url(#g)"/><text x="256" y="360" font-family="Arial,sans-serif" font-size="230" font-weight="900" fill="#fff" text-anchor="middle">8Г</text></svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v11';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v11').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v12';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v12').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -676,7 +676,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-23';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-24';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -1674,6 +1674,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
     updateNotifUI();
 
     var _lastNotifKey = '';
+    var _lastNotifTime = 0;
     function checkLessonNotif(){
         if (typeof _optIsOn === 'function' && !_optIsOn('notif_before5')) return;
         if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
@@ -1682,18 +1683,41 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         var st = parseInt(bEl.getAttribute('data-start-unix'),10);
         if (!st) return;
         var secWait = st - Math.floor(Date.now()/1000);
-        if (secWait <= 0 || secWait > 300) return;
+        // Уведомление за 5 минут (±30 сек окно)
+        if (secWait <= 0 || secWait > 330) return;
         var lessonEl = bEl.querySelector('.live-lesson');
         var lessonName = lessonEl ? lessonEl.textContent : 'Урок';
         var key = (bEl.getAttribute('data-start')||'') + '|' + lessonName;
-        if (_lastNotifKey === key) return;
+        // Не дублируем в течение 5 минут
+        var nowMs = Date.now();
+        if (_lastNotifKey === key && (nowMs - _lastNotifTime) < 300000) return;
         _lastNotifKey = key;
+        _lastNotifTime = nowMs;
+        var _title = 'Скоро урок';
+        var _body = lessonName + ' в ' + (bEl.getAttribute('data-start')||'');
         try {
-            new Notification('Скоро урок', {body: lessonName + ' в ' + (bEl.getAttribute('data-start')||''), tag: key});
-        } catch(e){}
+            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    type: 'showNotification',
+                    title: _title,
+                    body: _body,
+                    tag: key
+                });
+            } else {
+                new Notification(_title, {body: _body, tag: key, icon: '/icon.svg'});
+            }
+        } catch(e){
+            try { new Notification(_title, {body: _body, tag: key}); } catch(_){}
+        }
     }
-    setInterval(checkLessonNotif, 30000);
-    setTimeout(checkLessonNotif, 5000);
+    // Уведомления дёргаются из pollLive каждую секунду, но оставляем fallback
+    setInterval(checkLessonNotif, 5000);
+    setTimeout(checkLessonNotif, 1000);
+    // И сразу при возврате вкладки
+    document.addEventListener('visibilitychange', function(){
+        if (!document.hidden) setTimeout(checkLessonNotif, 200);
+    });
+    window.__checkLessonNotif = checkLessonNotif;
 
     // ─── Badge ───
     function updateBadge(){
@@ -1964,6 +1988,11 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                 busy = false;
                 if (!d) return;
                 var nowSec = Math.floor(Date.now()/1000);
+
+                // Уведомления — каждую секунду (без задержки)
+                if (typeof window.__checkLessonNotif === 'function') {
+                    try { window.__checkLessonNotif(); } catch(e){}
+                }
 
                 // Онлайн — каждую секунду
                 if (typeof d.online === 'number') {
