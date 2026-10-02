@@ -51,7 +51,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v35';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v35').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v36';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v36').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -505,7 +505,7 @@ html.scroll-guard .srow:active, html.scroll-guard .theme-btn:active, html.scroll
 .acc-slider { padding:10px 12px; margin-bottom:6px; border-radius:10px; background: var(--accent-light); touch-action: pan-y; }
 .acc-slider label { display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:0.82rem; color: var(--text-main); margin-bottom:6px; }
 .acc-slider output { color: var(--accent); font-weight:800; }
-.acc-slider input[type="range"] { touch-action: pan-y; -webkit-tap-highlight-color: transparent; width:100%; height:5px; background: var(--border); border-radius:3px; outline:none; -webkit-appearance:none; }
+.acc-slider input[type="range"] { touch-action: auto; -webkit-tap-highlight-color: transparent; width:100%; height:5px; background: var(--border); border-radius:3px; outline:none; -webkit-appearance:none; }
 .acc-slider input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius:50%; cursor:pointer; box-shadow: 0 2px 6px var(--accent-light); }
 
 .tabs { display:flex; gap:6px; margin-bottom:14px; overflow-x:auto; padding:4px; scrollbar-width:none; background: var(--card-bg); border-radius:16px; border:1px solid var(--border); box-shadow: var(--shadow); }
@@ -1058,7 +1058,7 @@ html body .srow-value.on {
 
 /* --- Слайдеры — тонкие --- */
 html body .acc-slider {
-  padding: 10px 12px !important;
+  padding: 14px 12px !important;
   border-radius: 11px !important;
   background: var(--card-bg) !important;
   border: 1px solid var(--border) !important;
@@ -1068,13 +1068,14 @@ html body .acc-slider {
 html body .acc-slider:hover { border-color: var(--accent) !important; }
 html body .acc-slider label { font-size: 0.78rem !important; }
 html body .acc-slider input[type="range"] {
-  height: 4px !important;
+  height: 5px !important;
   border-radius: 3px !important;
   background: var(--border) !important;
+  touch-action: auto !important;
 }
 html body .acc-slider input[type="range"]::-webkit-slider-thumb {
-  width: 18px !important;
-  height: 18px !important;
+  width: 22px !important;
+  height: 22px !important;
   background: var(--accent) !important;
   box-shadow: 0 2px 6px var(--accent-light), 0 0 0 2px var(--card-bg) !important;
   transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1),
@@ -1467,7 +1468,7 @@ html body .container {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-48';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-49';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -3243,31 +3244,19 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
     document.addEventListener('touchmove', onMove, {passive: true, capture: true});
 
     // --- блокировка click если палец сдвинулся во время ЭТОГО касания ---
+    // НО: слайдеры (input[type=range]) не блокируем — им нужны все события
     document.addEventListener('click', function(e){
+        if (isRange(e.target)) return;            // слайдер пропускаем
+        if (e.target.closest && e.target.closest('.acc-slider input[type=range]')) return;
         if (movedDuringTouch) {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            // сбрасываем флаг через тик — чтобы следующий тап работал сразу
             setTimeout(function(){ movedDuringTouch = false; }, 0);
             return false;
         }
     }, true);
 
-    // --- слайдер: если был скролл — откатить значение ---
-    document.addEventListener('input', function(e){
-        if (!isRange(e.target)) return;
-        if (movedDuringTouch) {
-            // во время этого касания палец сдвинулся — считаем скроллом
-            if (sliderSaved !== null && e.target.value !== sliderSaved) {
-                e.target.value = sliderSaved;
-            }
-            e.stopImmediatePropagation();
-            return;
-        }
-        // чистый ввод — сохраняем
-        sliderSaved = e.target.value;
-    }, true);
 
     // --- сброс после touchend ---
     document.addEventListener('touchend', function(){
