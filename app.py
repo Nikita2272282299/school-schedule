@@ -51,7 +51,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v29';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v29').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v30';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v30').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -794,10 +794,348 @@ html body .subscreen {
   padding-right: 20px !important;
   box-sizing: border-box !important;
 }
+
+/* ================================================= */
+/* ===== PREMIUM POLISH — красивые кнопки и UI ===== */
+/* ================================================= */
+html body {
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.04);
+  --shadow-md: 0 2px 6px rgba(0,0,0,0.05), 0 8px 22px rgba(0,0,0,0.07);
+  --shadow-lg: 0 4px 14px rgba(0,0,0,0.08), 0 18px 44px rgba(0,0,0,0.12);
+}
+
+/* --- Мягкие многослойные тени у карточек --- */
+html body .card,
+html body .header-card,
+html body .live-banner,
+html body .tabs,
+html body .day-footer .df-item,
+html body .sheet-link,
+html body .info-box,
+html body .srow,
+html body .open-sub {
+  box-shadow: var(--shadow-sm) !important;
+  transition: transform 0.18s ease, box-shadow 0.22s ease,
+              border-color 0.18s ease, background 0.2s ease !important;
+}
+
+html body .card:active { transform: scale(0.985); }
+
+/* --- Карточка активного урока — премиум-свечение --- */
+html body .card.now {
+  box-shadow:
+    0 6px 20px var(--accent-light),
+    0 0 0 1.5px var(--accent) inset,
+    0 0 28px -6px var(--accent) !important;
+}
+
+/* --- Номер урока — глянцевый --- */
+html body .num {
+  background: linear-gradient(145deg, var(--accent), var(--accent2)) !important;
+  color: var(--on-accent) !important;
+  box-shadow:
+    0 4px 12px var(--accent-light),
+    0 1px 2px rgba(0,0,0,0.10),
+    inset 0 1px 0 rgba(255,255,255,0.18) !important;
+}
+
+/* --- Кнопки — пружинка, тень, глянец --- */
+html body .icon-btn,
+html body .subscreen-back,
+html body .ap-btn,
+html body .theme-btn,
+html body .size-btn,
+html body .admin-tab,
+html body .install-banner .install-btn {
+  transition: transform 0.16s cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 0.22s ease,
+              background 0.2s ease,
+              filter 0.15s ease !important;
+}
+html body .icon-btn:active,
+html body .subscreen-back:active,
+html body .ap-btn:active,
+html body .theme-btn:active,
+html body .size-btn:active,
+html body .admin-tab:active,
+html body .install-banner .install-btn:active {
+  transform: scale(0.93);
+}
+
+/* --- Иконка настроек/гамбургер --- */
+html body .icon-btn,
+html body .subscreen-back {
+  background: linear-gradient(145deg, var(--accent-light), transparent) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow:
+    0 3px 10px var(--accent-light),
+    inset 0 1px 0 rgba(255,255,255,0.15) !important;
+}
+
+/* --- Кнопки тем — карточки, глянец, активная с подсветкой --- */
+html body .theme-btn {
+  padding: 12px 6px !important;
+  border-radius: 14px !important;
+  background: var(--card-bg) !important;
+  border: 1.5px solid var(--border) !important;
+  gap: 6px !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
+}
+html body .theme-btn .emoji { font-size: 1.5rem !important; line-height: 1; }
+html body .theme-btn.active {
+  background: linear-gradient(145deg, var(--accent-light), transparent) !important;
+  border-color: var(--accent) !important;
+  box-shadow:
+    0 4px 14px var(--accent-light),
+    0 0 0 3px var(--accent-light) !important;
+}
+
+/* --- Размеры A / A / A --- */
+html body .size-btn {
+  background: var(--card-bg) !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: 12px !important;
+  transition: transform 0.15s ease, border-color 0.2s ease,
+              background 0.2s ease, box-shadow 0.2s ease !important;
+}
+html body .size-btn.active {
+  background: linear-gradient(145deg, var(--accent-light), transparent) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 4px 14px var(--accent-light) !important;
+}
+
+/* --- Разделы (Интерфейс/Дополнительно/Приложение) --- */
+html body .open-sub {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border) !important;
+  padding: 16px 18px !important;
+}
+html body .open-sub:hover { border-color: var(--accent) !important; }
+html body .open-sub .srow-arrow {
+  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+}
+html body .open-sub:active .srow-arrow {
+  transform: translateX(5px);
+}
+
+/* --- Строки настроек — hover-подсветка --- */
+html body .srow {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border) !important;
+}
+html body .srow:hover {
+  border-color: var(--accent) !important;
+}
+html body .srow:active {
+  background: var(--accent-light) !important;
+  transform: scale(0.985);
+}
+
+/* --- Значение "вкл/выкл" — пилюлька --- */
+html body .srow-value {
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  padding: 4px 11px !important;
+  border-radius: 20px !important;
+  background: var(--border) !important;
+  color: var(--text-muted) !important;
+  letter-spacing: 0.02em;
+  transition: background 0.22s ease, color 0.22s ease !important;
+  flex-shrink: 0;
+}
+html body .srow-value.on {
+  background: var(--accent-light) !important;
+  color: var(--accent) !important;
+  box-shadow: inset 0 0 0 1px var(--accent) !important;
+}
+
+/* --- Табы дней --- */
+html body .tab {
+  transition: transform 0.16s ease, background 0.22s ease,
+              color 0.22s ease, box-shadow 0.22s ease !important;
+}
+html body .tab.active {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%) !important;
+  box-shadow:
+    0 4px 14px var(--accent-light),
+    0 1px 2px rgba(0,0,0,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.18) !important;
+}
+html body .tab:not(.active):hover {
+  background: var(--accent-light) !important;
+}
+html body .tab:active { transform: scale(0.95); }
+
+/* --- Слайдеры — карточки с премиум-бегунком --- */
+html body .acc-slider {
+  padding: 12px 14px !important;
+  border-radius: 12px !important;
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+}
+html body .acc-slider input[type="range"] {
+  height: 6px !important;
+  background: var(--border) !important;
+  border-radius: 3px !important;
+}
+html body .acc-slider input[type="range"]::-webkit-slider-thumb {
+  width: 22px !important;
+  height: 22px !important;
+  background: linear-gradient(135deg, var(--accent), var(--accent2)) !important;
+  box-shadow:
+    0 2px 8px var(--accent-light),
+    0 0 0 3px var(--card-bg),
+    0 0 0 4px var(--border) !important;
+  transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 0.2s ease !important;
+}
+html body .acc-slider input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.15);
+  box-shadow:
+    0 4px 14px var(--accent-light),
+    0 0 0 3px var(--card-bg),
+    0 0 0 5px var(--accent) !important;
+}
+
+/* --- Эмодзи-пикер — крупнее, с пружинкой --- */
+html body .emoji-opt {
+  border-radius: 12px !important;
+  font-size: 1.5rem !important;
+  width: 48px !important;
+  height: 48px !important;
+  transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 0.2s ease, border-color 0.18s ease !important;
+}
+html body .emoji-opt:active { transform: scale(0.85) !important; }
+html body .emoji-opt.active {
+  border-color: var(--accent) !important;
+  box-shadow:
+    0 0 0 3px var(--accent-light),
+    0 4px 12px var(--accent-light) !important;
+  transform: scale(1.06);
+}
+
+/* --- Шапка — акцентная полоска сверху --- */
+html body .header-card { position: relative; overflow: hidden; }
+html body .header-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* --- Ссылка на таблицу — блик --- */
+html body .sheet-link {
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  position: relative;
+  overflow: hidden;
+}
+html body .sheet-link::before {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, var(--accent-light), transparent);
+  transition: left 0.55s ease;
+  pointer-events: none;
+}
+html body .sheet-link:hover::before,
+html body .sheet-link:active::before { left: 120%; }
+
+/* --- Кнопка «Назад» — премиум --- */
+html body #backToday {
+  background: linear-gradient(145deg, var(--accent-light), var(--card-bg)) !important;
+  border: 1.5px solid var(--accent) !important;
+  color: var(--accent) !important;
+  box-shadow: 0 3px 12px var(--accent-light) !important;
+  transition: transform 0.16s ease, box-shadow 0.22s ease !important;
+}
+html body #backToday:active {
+  transform: scale(0.97);
+  box-shadow: 0 5px 16px var(--accent-light) !important;
+}
+
+/* --- Живой баннер — премиум-градиент --- */
+html body .live-banner.now,
+html body .live-banner.before {
+  background: linear-gradient(135deg, var(--accent-light) 0%, var(--card-bg) 70%) !important;
+  border: 1.5px solid var(--accent) !important;
+  box-shadow:
+    0 4px 20px var(--accent-light),
+    0 1px 2px rgba(0,0,0,0.05) !important;
+}
+
+/* --- Пилюли — глянцевые --- */
+html body .now-pill,
+html body .today-pill {
+  background: linear-gradient(135deg, var(--accent), var(--accent2)) !important;
+  color: var(--on-accent) !important;
+  box-shadow: 0 2px 8px var(--accent-light) !important;
+}
+html body .today-pill {
+  background: var(--accent-light) !important;
+  color: var(--accent) !important;
+  border: 1px solid var(--accent) !important;
+}
+html body .today-pill span,
+html body .today-pill { color: var(--accent) !important; }
+
+/* --- Заголовки подразделов — аккуратный вид --- */
+html body .acc-sub {
+  font-size: 0.7rem !important;
+  letter-spacing: 0.1em !important;
+  margin: 18px 0 10px !important;
+}
+
+/* --- Subscreens — стеклянный sticky-bar --- */
+html body .subscreen-header {
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  background: color-mix(in srgb, var(--bg) 80%, transparent) !important;
+  box-shadow: 0 1px 0 var(--border);
+}
+
+/* --- Баннер установки — стекло + премиум-кнопка --- */
+html body .install-banner {
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  background: color-mix(in srgb, var(--card-bg) 85%, transparent) !important;
+  border-top: 1px solid var(--border) !important;
+  box-shadow: 0 -8px 34px rgba(0,0,0,0.10) !important;
+}
+html body .install-banner .install-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent2)) !important;
+  box-shadow: 0 4px 16px var(--accent-light) !important;
+  border-radius: 12px !important;
+}
+
+/* --- Панель настроек — глубокий shadow --- */
+html body .settings-panel.open {
+  box-shadow: var(--shadow-lg) !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* --- Мягкая анимация переключения подразделов --- */
+html body .subscreen {
+  transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+/* --- Тактильный hover только на десктопе --- */
+@media (hover: hover) {
+  html body .card:hover { transform: translateY(-1px); }
+  html body .theme-btn:hover { border-color: var(--accent) !important; }
+  html body .emoji-opt:hover { transform: translateY(-2px); }
+}
+
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-42';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-43';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
