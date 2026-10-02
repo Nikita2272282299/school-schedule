@@ -420,6 +420,7 @@ h2 span:not(#adminTap):not(.brand-emoji) { background: linear-gradient(135deg, v
 
 .srow { display:flex; justify-content:space-between; align-items:center; padding:14px 16px; margin-bottom:8px; border-radius:14px; background: var(--card-bg); border:1px solid var(--border); cursor:pointer; }
 .srow:active { background: var(--accent-light); }
+html.scroll-guard .srow:active, html.scroll-guard .theme-btn:active, html.scroll-guard .tab:active, html.scroll-guard .emoji-opt:active, html.scroll-guard .open-sub:active { background: inherit !important; }
 .srow-label { display:flex; align-items:center; gap:10px; font-weight:800; font-size:0.9rem; color: var(--text-main); }
 .srow-label::before { content: attr(data-ico); font-size:1.15rem; }
 .srow-value { color: var(--text-muted); font-size:0.82rem; font-weight:800; }
@@ -536,7 +537,7 @@ html.corners-pill .theme-btn { border-radius: 100px !important; }
 html.corners-sharp .card, html.corners-sharp .num, html.corners-sharp .theme-btn, html.corners-sharp .tab, html.corners-sharp .header-card { border-radius: 4px !important; }
 
 /* Anti-misclick: браузер сам не путает скролл и тап */
-.srow, .theme-btn, .size-btn, .open-sub, .emoji-opt, .ap-btn, .tab, .icon-btn, .subscreen-back, .subscreen, .admin-tab { touch-action: pan-y; }
+.srow, .theme-btn, .size-btn, .open-sub, .emoji-opt, .ap-btn, .tab, .icon-btn, .subscreen-back, .subscreen, .admin-tab, .admin-block, .acc-slider, .acc-emoji { touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .acc-slider input[type="range"] { touch-action: none; }
 
 /* Переменные для новых слайдеров */
@@ -639,7 +640,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-14';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-15';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -1499,30 +1500,52 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
 })();
 </script>
 <script>
-/* ANTI-MISCLICK: если пользователь скроллит, не считать это тапом */
+/* ANTI-MISCLICK v2: блокируем click если был скролл (окно 350мс) */
 (function(){
-    var sx = 0, sy = 0, moved = false, t0 = 0;
-    var TH = 10;
+    var TH = 8;
+    var sx = 0, sy = 0, moved = false, lastMove = 0;
+    function onStart(x,y){ sx = x; sy = y; moved = false; }
+    function onMove(x,y){
+        if (Math.abs(x-sx) > TH || Math.abs(y-sy) > TH) {
+            moved = true;
+            lastMove = Date.now();
+        }
+    }
     document.addEventListener('touchstart', function(e){
-        if (!e.touches || !e.touches[0]) return;
-        sx = e.touches[0].clientX; sy = e.touches[0].clientY;
-        moved = false; t0 = Date.now();
-    }, {passive: true, capture: true});
+        if (e.touches && e.touches[0]) onStart(e.touches[0].clientX, e.touches[0].clientY);
+    }, {passive:true, capture:true});
     document.addEventListener('touchmove', function(e){
-        if (!e.touches || !e.touches[0]) return;
-        if (Math.abs(e.touches[0].clientX - sx) > TH || Math.abs(e.touches[0].clientY - sy) > TH) moved = true;
-    }, {passive: true, capture: true});
+        if (e.touches && e.touches[0]) onMove(e.touches[0].clientX, e.touches[0].clientY);
+    }, {passive:true, capture:true});
+    document.addEventListener('pointerdown', function(e){
+        if (e.pointerType === 'mouse') return;
+        onStart(e.clientX, e.clientY);
+    }, true);
+    document.addEventListener('pointermove', function(e){
+        if (e.pointerType === 'mouse') return;
+        onMove(e.clientX, e.clientY);
+    }, true);
     document.addEventListener('click', function(e){
-        if (moved) {
+        if (moved || (lastMove && Date.now() - lastMove < 350)) {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            moved = false;
+            return false;
         }
     }, true);
-    document.addEventListener('touchend', function(e){
-        setTimeout(function(){ moved = false; }, 50);
-    }, {passive: true, capture: true});
+    document.addEventListener('touchmove', function(){
+        document.documentElement.classList.add('scroll-guard');
+        clearTimeout(window.__sgTimer);
+        window.__sgTimer = setTimeout(function(){
+            document.documentElement.classList.remove('scroll-guard');
+        }, 250);
+    }, {passive:true, capture:true});
+    document.addEventListener('touchend', function(){
+        setTimeout(function(){ moved = false; lastMove = 0; }, 400);
+    }, {passive:true, capture:true});
+    document.addEventListener('touchcancel', function(){
+        moved = false; lastMove = 0;
+    }, {passive:true, capture:true});
 })();
 </script>
 </body>
