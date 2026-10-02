@@ -626,7 +626,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-9';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-10';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -1152,7 +1152,10 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
                     html += '<div class="ap-vid">'+esc(v.name||v.vid)+(v.blocked?' 🚫':'')+'</div>';
                     if (v.name) html += '<div class="ap-info" style="font-size:0.7rem;opacity:0.6;">'+esc(v.vid)+'</div>';
                     html += '<div class="ap-info">IP '+esc(v.ip)+' · визитов '+v.count+'</div>';
-                    html += '<div class="ap-ago">'+agoStr(v.ago)+'</div>';
+                    var isOnline = v.ago < 90;
+                    html += isOnline
+                        ? '<div class="ap-ago" style="color:#10b981;">\ud83d\udfe2 \u0412 \u0441\u0435\u0442\u0438</div>'
+                        : '<div class="ap-ago" style="color:var(--text-muted);">\u26aa \u041d\u0435 \u0432 \u0441\u0435\u0442\u0438 \u00b7 \u0431\u044b\u043b ' + agoStr(v.ago) + ' \u043d\u0430\u0437\u0430\u0434</div>';
                     html += '<div class="ap-actions">';
                     html += '<input class="ap-input" id="msg_'+v.vid+'" placeholder="Сообщение">';
                     html += '<button class="ap-btn" data-act="send" data-vid="'+v.vid+'">📩</button>';
@@ -1241,6 +1244,17 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
         lastId = null;
     };
     setInterval(poll, 2000);
+    /* HEARTBEAT-V10 */
+    setInterval(function(){
+        var v = localStorage.getItem('rs_vid');
+        if (!v) return;
+        fetch('/api/visit?vid=' + encodeURIComponent(v) + '&t=' + Date.now(), {cache:'no-store'}).catch(function(){});
+    }, 30000);
+    setTimeout(function(){
+        var v = localStorage.getItem('rs_vid');
+        if (!v) return;
+        fetch('/api/visit?vid=' + encodeURIComponent(v), {cache:'no-store'}).catch(function(){});
+    }, 2000);
     setTimeout(poll, 1500);
 })();
 
@@ -1376,7 +1390,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
     var lastTs = parseInt(document.body.getAttribute('data-changed-at') || '0', 10);
     var busy = false;
     function pollLive(){
-        if (document.hidden || busy) return;
+        if (busy) return;
         busy = true;
         var vid = '';
         try { vid = localStorage.getItem('rs_vid') || ''; } catch(e){}
