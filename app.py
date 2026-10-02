@@ -33,7 +33,7 @@ MANIFEST = '{"name":"Расписание 8Г","short_name":"8Г","start_url":"/
 
 ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#7950f2"/></linearGradient></defs><rect width="512" height="512" rx="110" fill="url(#g)"/><text x="256" y="360" font-family="Arial,sans-serif" font-size="230" font-weight="900" fill="#fff" text-anchor="middle">8Г</text></svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>self.clients.claim());self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v6').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v7';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v7').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -626,6 +626,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
+<script>(function(){var B='2026-10-02-1';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
