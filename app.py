@@ -175,12 +175,22 @@ def get_schedule():
         req = urllib.request.urlopen(CSV_URL, timeout=6)
         data = req.read().decode("utf-8")
         reader = list(csv.reader(io.StringIO(data)))
+        def _norm(s):
+            s = (s or "").lower()
+            return "".join(ch for ch in s if ch.isalnum())
+        target = _norm(CLASS_CODE)
         col = -1
         for row in reader:
             for i, c in enumerate(row):
-                if c.replace(" ", "").lower() == CLASS_CODE:
+                if _norm(c) == target:
                     col = i; break
             if col != -1: break
+        if col == -1:
+            for row in reader:
+                for i, c in enumerate(row):
+                    if CLASS_CODE in c.lower():
+                        col = i; break
+                if col != -1: break
         if col != -1:
             cur_day = ""
             days_list = ["понедельник","вторник","среда","четверг","пятница","суббота"]
@@ -188,8 +198,12 @@ def get_schedule():
                 if not row: continue
                 text = " ".join(row).lower()
                 found = None
+                day_alias = {"понедельник":["понедельник","пон","пн"],"вторник":["вторник","втор","вт"],"среда":["среда","сред","ср"],"четверг":["четверг","четв","чт"],"пятница":["пятница","пятн","пт"],"суббота":["суббота","субб","сб"]}
                 for d in days_list:
-                    if d in text: found = d.capitalize(); break
+                    aliases = day_alias.get(d, [d])
+                    for a in aliases:
+                        if a in text: found = d.capitalize(); break
+                    if found: break
                 if found:
                     cur_day = found; days.setdefault(cur_day, []); continue
                 if not cur_day: continue
@@ -659,7 +673,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-16';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-17';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
@@ -863,6 +877,24 @@ html.anim-wobble .settings-panel.open {
           </select>
         </div>
 
+        <div class="acc-sub">🔔 Уведомления</div>
+        <div class="srow" onclick="requestNotifications()"><span class="srow-label" data-ico="🔔">Разрешить уведомления</span><span class="srow-value" id="val-notif">выкл</span></div>
+        <div class="srow" onclick="toggleOpt('notif_before5')"><span class="srow-label" data-ico="⏰">Напоминать за 5 минут</span><span class="srow-value" id="val-notif_before5">вкл</span></div>
+        <div class="srow" onclick="toggleOpt('badge_count')"><span class="srow-label" data-ico="🔢">Цифра на иконке приложения</span><span class="srow-value" id="val-badge_count">вкл</span></div>
+
+        <div class="acc-sub">🖼 Иконка и обои</div>
+        <div class="acc-slider"><label>Своя иконка <output id="o-icon_out"></output></label>
+          <input type="file" id="iconFile" accept="image/*" onchange="setCustomIcon(this)" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text-main);font-family:inherit;">
+        </div>
+        <button class="link-btn" style="width:100%;margin-bottom:6px;" onclick="resetIcon()">🔄 Сбросить иконку</button>
+        <div class="acc-slider"><label>Обои <output id="o-wall_out"></output></label>
+          <input type="file" id="wallFile" accept="image/*" onchange="setWallpaper(this)" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text-main);font-family:inherit;">
+        </div>
+        <div class="acc-slider"><label>Затемнение обоев <output id="o-wall_dim">50</output>%</label>
+          <input type="range" min="0" max="90" step="5" id="s-wall_dim" value="50" oninput="setWallDim(this.value)">
+        </div>
+        <button class="link-btn" style="width:100%;margin-bottom:6px;" onclick="resetWallpaper()">🔄 Сбросить обои</button>
+
         <div class="acc-sub">🔬 Тонкая настройка (вставь свой CSS)</div>
         <div class="acc-slider"><label>Свой CSS-код</label><textarea id="customCss" placeholder=".card { color: red; }" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text-main);font-family:monospace;font-size:0.8rem;min-height:80px;margin-top:6px;resize:vertical;" onchange="applyCustomCss(this.value)"></textarea></div>
 
@@ -900,7 +932,7 @@ var THEME_COLORS = {light:'#f0f4f8',dark:'#0f1115',cosmic:'#05021a',ocean:'#c7e8
 
 function _optIsOn(key){
     var cur = localStorage.getItem('rs_opt_' + key);
-    if (['particles','show_time','live_banner','progress_bar','glow','show_weekday','today_pill','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title','widget_online','widget_weather','widget_workload','widget_endday','anim_days'].indexOf(key) >= 0) return cur !== '0';
+    if (['particles','show_time','live_banner','progress_bar','glow','show_weekday','today_pill','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title','widget_online','widget_weather','widget_workload','widget_endday','anim_days','notif_before5','badge_count'].indexOf(key) >= 0) return cur !== '0';
     return cur === '1';
 }
 
@@ -1342,7 +1374,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
     if (size === 'small') document.documentElement.classList.add('font-small');
     if (size === 'large') document.documentElement.classList.add('font-large');
     document.querySelectorAll('[data-size]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-size')===size); });
-    ['particles','round_nums','compact','show_time','live_banner','progress_bar','glow','big_text','show_weekday','today_pill','hide_weekend','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title','mirror','uppercase','bold_all','italic','underline','colorblind','no_radius','grayscale_all','reduce_motion','anim_smooth','anim_wobble','widget_online','widget_weather','widget_workload','widget_endday','anim_days','auto_accent'].forEach(function(k){ applyOpt(k, _optIsOn(k)); });
+    ['particles','round_nums','compact','show_time','live_banner','progress_bar','glow','big_text','show_weekday','today_pill','hide_weekend','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title','mirror','uppercase','bold_all','italic','underline','colorblind','no_radius','grayscale_all','reduce_motion','anim_smooth','anim_wobble','widget_online','widget_weather','widget_workload','widget_endday','anim_days','auto_accent','notif_before5','badge_count'].forEach(function(k){ applyOpt(k, _optIsOn(k)); });
     updateOptUI();
     initCustom();
     applyVars();
@@ -1610,6 +1642,179 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
     }
     pollOnline();
     setInterval(pollOnline, 15000);
+})();
+</script>
+<script>
+/* NOTIF-ICON-BADGE-V17 */
+(function(){
+    // ─── Уведомления ───
+    window.requestNotifications = function(){
+        if (!('Notification' in window)) { alert('Уведомления не поддерживаются'); return; }
+        Notification.requestPermission().then(function(p){
+            try { localStorage.setItem('rs_notif_perm', p); } catch(e){}
+            updateNotifUI();
+            if (p === 'granted') {
+                try { new Notification('Уведомления включены', {body: 'Будем напоминать за 5 минут до урока'}); } catch(e){}
+            }
+        });
+    };
+    function updateNotifUI(){
+        var el = document.getElementById('val-notif');
+        if (!el) return;
+        var p = 'default';
+        try { p = localStorage.getItem('rs_notif_perm') || (typeof Notification !== 'undefined' ? Notification.permission : 'default'); } catch(e){}
+        el.textContent = (p === 'granted') ? 'вкл' : 'выкл';
+        el.className = 'srow-value' + (p === 'granted' ? ' on' : '');
+    }
+    updateNotifUI();
+
+    var _lastNotifKey = '';
+    function checkLessonNotif(){
+        if (typeof _optIsOn === 'function' && !_optIsOn('notif_before5')) return;
+        if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+        var bEl = document.querySelector('.live-banner.before');
+        if (!bEl) return;
+        var st = parseInt(bEl.getAttribute('data-start-unix'),10);
+        if (!st) return;
+        var secWait = st - Math.floor(Date.now()/1000);
+        if (secWait <= 0 || secWait > 300) return;
+        var lessonEl = bEl.querySelector('.live-lesson');
+        var lessonName = lessonEl ? lessonEl.textContent : 'Урок';
+        var key = (bEl.getAttribute('data-start')||'') + '|' + lessonName;
+        if (_lastNotifKey === key) return;
+        _lastNotifKey = key;
+        try {
+            new Notification('Скоро урок', {body: lessonName + ' в ' + (bEl.getAttribute('data-start')||''), tag: key});
+        } catch(e){}
+    }
+    setInterval(checkLessonNotif, 30000);
+    setTimeout(checkLessonNotif, 5000);
+
+    // ─── Badge ───
+    function updateBadge(){
+        if (!navigator.setAppBadge) return;
+        if (typeof _optIsOn === 'function' && !_optIsOn('badge_count')) {
+            try { navigator.clearAppBadge(); } catch(e){}
+            return;
+        }
+        var active = document.querySelector('.day-block.active-day');
+        if (!active) { try { navigator.clearAppBadge(); } catch(e){} return; }
+        var now = new Date();
+        var nowMin = now.getHours()*60 + now.getMinutes();
+        var cards = active.querySelectorAll('.card');
+        var left = 0;
+        for (var i=0; i<cards.length; i++){
+            var tEl = cards[i].querySelector('.time');
+            if (!tEl) { left++; continue; }
+            var m = tEl.textContent.match(/(\d+):(\d+)-(\d+):(\d+)/);
+            if (!m) { left++; continue; }
+            var endMin = parseInt(m[3],10)*60 + parseInt(m[4],10);
+            if (endMin > nowMin) left++;
+        }
+        try {
+            if (left > 0) navigator.setAppBadge(left);
+            else navigator.clearAppBadge();
+        } catch(e){}
+    }
+    setInterval(updateBadge, 60000);
+    setTimeout(updateBadge, 3000);
+
+    // ─── Своя иконка ───
+    window.setCustomIcon = function(input){
+        if (!input.files || !input.files[0]) return;
+        var file = input.files[0];
+        if (file.size > 1024*1024) { alert('Файл слишком большой (макс 1 МБ)'); return; }
+        var reader = new FileReader();
+        reader.onload = function(e){
+            try {
+                localStorage.setItem('rs_custom_icon', e.target.result);
+                applyIcon();
+                var o = document.getElementById('o-icon_out'); if (o) o.textContent = 'загружено';
+            } catch(err){ alert('Не влезло в память. Возьми файл поменьше.'); }
+        };
+        reader.readAsDataURL(file);
+    };
+    window.resetIcon = function(){
+        try { localStorage.removeItem('rs_custom_icon'); } catch(e){}
+        applyIcon();
+        var o = document.getElementById('o-icon_out'); if (o) o.textContent = '';
+        var i = document.getElementById('iconFile'); if (i) i.value = '';
+    };
+    function applyIcon(){
+        var data = null;
+        try { data = localStorage.getItem('rs_custom_icon'); } catch(e){}
+        var links = document.querySelectorAll("link[rel*='icon']");
+        links.forEach(function(l){ l.remove(); });
+        var l = document.createElement('link');
+        l.rel = 'icon';
+        l.type = (data && data.indexOf('data:image/') === 0) ? 'image/png' : 'image/svg+xml';
+        l.href = data || '/icon.svg';
+        document.head.appendChild(l);
+        var apple = document.createElement('link');
+        apple.rel = 'apple-touch-icon';
+        apple.href = data || '/icon.svg';
+        document.head.appendChild(apple);
+        var o = document.getElementById('o-icon_out'); if (o && data) o.textContent = 'загружено';
+    }
+    applyIcon();
+
+    // ─── Обои ───
+    window.setWallpaper = function(input){
+        if (!input.files || !input.files[0]) return;
+        var file = input.files[0];
+        if (file.size > 2*1024*1024) { alert('Файл слишком большой (макс 2 МБ)'); return; }
+        var reader = new FileReader();
+        reader.onload = function(e){
+            try {
+                localStorage.setItem('rs_wall', e.target.result);
+                applyWall();
+                var o = document.getElementById('o-wall_out'); if (o) o.textContent = 'загружено';
+            } catch(err){ alert('Не влезло в память. Возьми картинку поменьше.'); }
+        };
+        reader.readAsDataURL(file);
+    };
+    window.resetWallpaper = function(){
+        try { localStorage.removeItem('rs_wall'); } catch(e){}
+        applyWall();
+        var o = document.getElementById('o-wall_out'); if (o) o.textContent = '';
+        var i = document.getElementById('wallFile'); if (i) i.value = '';
+    };
+    window.setWallDim = function(v){
+        try { localStorage.setItem('rs_wall_dim', v); } catch(e){}
+        var o = document.getElementById('o-wall_dim'); if (o) o.textContent = v;
+        applyWall();
+    };
+    function applyWall(){
+        var data = null, dim = 50;
+        try {
+            data = localStorage.getItem('rs_wall');
+            dim = parseInt(localStorage.getItem('rs_wall_dim') || '50', 10);
+        } catch(e){}
+        var el = document.getElementById('wallBg');
+        if (!data) {
+            if (el) el.remove();
+            document.body.style.backgroundImage = '';
+            return;
+        }
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'wallBg';
+            el.style.cssText = 'position:fixed;inset:0;z-index:-1;background-size:cover;background-position:center;pointer-events:none;';
+            document.body.insertBefore(el, document.body.firstChild);
+        }
+        var a = Math.max(0, Math.min(90, dim)) / 100;
+        el.style.backgroundImage = 'linear-gradient(rgba(0,0,0,'+a+'),rgba(0,0,0,'+a+')), url('+data+')';
+        document.body.style.backgroundImage = 'none';
+    }
+    (function initWall(){
+        var v = null;
+        try { v = localStorage.getItem('rs_wall_dim'); } catch(e){}
+        if (v) {
+            var i = document.getElementById('s-wall_dim'); if (i) i.value = v;
+            var o = document.getElementById('o-wall_dim'); if (o) o.textContent = v;
+        }
+        applyWall();
+    })();
 })();
 </script>
 <script>
