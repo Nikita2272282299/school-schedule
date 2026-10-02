@@ -710,6 +710,188 @@ input:focus, button:focus {
 /* Оставляем анимацию "сейчас идёт" пульс */
 .live-dot { animation-duration: 1.6s !important; }
 @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 var(--accent); } 70% { box-shadow: 0 0 0 10px transparent; } }
+
+/* ===== АККОРДЕОН ВНУТРИ ПАНЕЛИ ===== */
+.acc-block {
+    margin-bottom: 8px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, var(--accent-light, rgba(99,102,241,0.08)), transparent);
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+.acc-header {
+    display: flex; justify-content: space-between; align-items: center;
+    width: 100%; padding: 14px 16px;
+    background: transparent; border: none;
+    color: var(--text-main, var(--text));
+    font-weight: 800; font-size: 0.9rem;
+    cursor: pointer; font-family: inherit; text-align: left;
+}
+.acc-header:active { background: var(--accent-light, rgba(99,102,241,0.1)); }
+.acc-header > span:first-child { display: flex; align-items: center; gap: 10px; }
+.acc-header .ico { font-size: 1.15rem; }
+.acc-arrow {
+    color: var(--accent);
+    font-size: 1rem; font-weight: 800;
+    transition: transform 0.2s ease;
+}
+.acc-block.open .acc-arrow { transform: rotate(180deg); }
+.acc-body {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0 14px;
+}
+.acc-block.open .acc-body { max-height: 3000px; padding-bottom: 14px; }
+.acc-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 11px 12px; margin-bottom: 4px;
+    border-radius: 10px;
+    cursor: pointer;
+    background: rgba(255,255,255,0.3);
+    border: 1px solid transparent;
+}
+[data-theme="dark"] .acc-row,
+[data-theme="cosmic"] .acc-row { background: rgba(255,255,255,0.04); }
+.acc-row:active { background: var(--accent-light, rgba(99,102,241,0.12)); border-color: var(--accent); }
+.acc-lbl { font-weight: 700; font-size: 0.85rem; color: var(--text-main, var(--text)); }
+.acc-val { font-weight: 800; font-size: 0.8rem; color: var(--text-muted, var(--muted)); }
+.acc-val.on { color: var(--accent); }
+.acc-sub {
+    font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em;
+    color: var(--text-muted, var(--muted));
+    text-transform: uppercase;
+    margin: 14px 0 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed var(--border);
+}
+.acc-slider {
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.3);
+}
+[data-theme="dark"] .acc-slider,
+[data-theme="cosmic"] .acc-slider { background: rgba(255,255,255,0.04); }
+.acc-slider label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 700; font-size: 0.82rem;
+    color: var(--text-main, var(--text));
+    margin-bottom: 6px;
+}
+.acc-slider output {
+    color: var(--accent);
+    font-weight: 800;
+}
+.acc-slider input[type="range"] {
+    width: 100%; height: 5px;
+    background: var(--accent-light, rgba(99,102,241,0.15));
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+}
+.acc-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)));
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 6px var(--accent-light, rgba(99,102,241,0.4));
+}
+html.no-glow .card.now { box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
+html.no-progress .progress-bar { display: none !important; }
+html.no-live .live-banner { display: none !important; }
+html.no-today-pill .today-pill { display: none !important; }
+html.no-weekday .brand-sub { display: none !important; }
+html.no-card-anim .card { animation: none !important; }
+html.no-blur-bg .card { backdrop-filter: none !important; }
+html.no-round-nums .num { border-radius: 11px !important; }
+html.style-sharp .card, html.style-sharp .theme-btn, html.style-sharp .btn-round { border-radius: 0 !important; }
+html.style-sharp .num { border-radius: 0 !important; }
+html.style-sharp .tab { border-radius: 0 !important; }
+html.style-round .card, html.style-round .theme-btn { border-radius: 28px !important; }
+html.style-round .num { border-radius: 50% !important; }
+html.style-round .tab { border-radius: 24px !important; }
+
+body { filter: var(--global-filter, none); transition: filter 0.3s ease; }
+.card { border-radius: var(--card-radius, 16px) !important; margin-bottom: var(--card-gap, 10px) !important; }
+.num { width: var(--num-size, 40px) !important; height: var(--num-size, 40px) !important; }
+.lesson { font-size: var(--lesson-size, 1.05rem) !important; }
+h2 { font-size: var(--header-size, 1.4rem) !important; }
+.container { padding: var(--page-pad, 14px) !important; }
+.card, .theme-btn, .btn-round, .tab { transition-duration: var(--trans, 0.15s) !important; }
+html.noise-on body::after { content:""; position:fixed; inset:0; pointer-events:none; z-index:1; opacity:0.04; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence baseFrequency='0.9'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+html.vignette-on body::after { content:""; position:fixed; inset:0; pointer-events:none; z-index:1; background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%); }
+html.scanlines-on body::after { content:""; position:fixed; inset:0; pointer-events:none; z-index:1; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.08) 0 1px, transparent 1px 3px); }
+
+/* ===== АДМИН ПАНЕЛЬ 2.0 ===== */
+.admin-tabs {
+    display: flex; gap: 4px; margin-bottom: 14px;
+    overflow-x: auto; padding: 4px;
+    background: var(--accent-light, rgba(99,102,241,0.08));
+    border-radius: 12px;
+}
+.admin-tab {
+    flex: 1; min-width: 90px; padding: 10px 8px;
+    background: transparent; border: none;
+    color: var(--text-muted, var(--muted));
+    font-weight: 800; font-size: 0.82rem;
+    cursor: pointer; font-family: inherit;
+    border-radius: 9px;
+    white-space: nowrap;
+}
+.admin-tab.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)));
+    color: #fff;
+    box-shadow: 0 3px 10px var(--accent-light, rgba(99,102,241,0.3));
+}
+.admin-pane { display: none; }
+.admin-pane.active { display: block; }
+.admin-block {
+    padding: 14px 16px; margin-bottom: 12px;
+    border-radius: 14px;
+    background: var(--card-bg, var(--card));
+    border: 1px solid var(--border);
+}
+.admin-block-title {
+    font-weight: 800; font-size: 0.88rem;
+    color: var(--text-main, var(--text));
+    margin-bottom: 10px;
+}
+.admin-textarea {
+    width: 100%; box-sizing: border-box;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-main, var(--text));
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+    min-height: 80px;
+    margin-bottom: 10px;
+}
+.admin-kv {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+}
+.admin-kv:last-child { border-bottom: none; }
+.admin-kv b { color: var(--accent); font-weight: 800; word-break: break-all; margin-left: 10px; text-align: right; }
+.ap-visitor-name {
+    display: inline-block;
+    padding: 2px 8px; border-radius: 8px;
+    background: var(--accent-light, rgba(99,102,241,0.12));
+    color: var(--accent);
+    font-weight: 800; font-size: 0.75rem;
+    margin-left: 6px;
+}
+.ap-rename {
+    background: transparent; border: 1px solid var(--border);
+    width: 32px; height: 32px; border-radius: 8px;
+    font-size: 0.9rem; cursor: pointer; color: var(--text-muted, var(--muted));
+    margin-left: 4px;
+}
+.ap-rename:active { background: var(--accent-light); color: var(--accent); }
 </style>
 </head><body>
 <h1>🔐 Админ</h1>
@@ -3185,9 +3367,66 @@ body::-webkit-scrollbar {
             <div class="toggle-label" data-ico="✨">Частицы фона</div>
             <div class="toggle" id="tParticles" onclick="toggleParticles()"></div>
         </div>
-        <div class="settings-title">⚙️ Разделы</div>
-        <button class="open-sub" onclick="openSub('interface')"><span><span class="ico">🎨</span> Интерфейс</span><span class="srow-arrow">›</span></button>
-        <button class="open-sub" onclick="openSub('advanced')"><span><span class="ico">🔧</span> Дополнительно</span><span class="srow-arrow">›</span></button>
+        <div class="settings-title">⚙️ Настройки</div>
+
+        <div class="acc-block">
+            <button class="acc-header" onclick="toggleAcc(this)"><span><span class="ico">🎨</span> Интерфейс</span><span class="acc-arrow">▾</span></button>
+            <div class="acc-body">
+                <div class="acc-row" onclick="toggleOpt('particles')"><span class="acc-lbl">✨ Частицы фона</span><span class="acc-val" id="val-particles">вкл</span></div>
+                <div class="acc-row" onclick="toggleOpt('round_nums')"><span class="acc-lbl">🔢 Круглые номера</span><span class="acc-val" id="val-round_nums">выкл</span></div>
+                <div class="acc-row" onclick="toggleOpt('compact')"><span class="acc-lbl">📏 Компактный режим</span><span class="acc-val" id="val-compact">выкл</span></div>
+                <div class="acc-row" onclick="toggleOpt('show_time')"><span class="acc-lbl">⏱️ Показывать время</span><span class="acc-val" id="val-show_time">вкл</span></div>
+                <div class="acc-row" onclick="toggleOpt('live_banner')"><span class="acc-lbl">📢 Баннер «Сейчас идёт»</span><span class="acc-val" id="val-live_banner">вкл</span></div>
+                <div class="acc-row" onclick="toggleOpt('progress_bar')"><span class="acc-lbl">📊 Прогресс-бар урока</span><span class="acc-val" id="val-progress_bar">вкл</span></div>
+                <div class="acc-row" onclick="toggleOpt('card_anim')"><span class="acc-lbl">✨ Анимация карточек</span><span class="acc-val" id="val-card_anim">вкл</span></div>
+                <div class="acc-row" onclick="toggleOpt('glow')"><span class="acc-lbl">💡 Свечение акцента</span><span class="acc-val" id="val-glow">вкл</span></div>
+                <div class="acc-row" onclick="toggleOpt('big_text')"><span class="acc-lbl">🔠 Крупный шрифт</span><span class="acc-val" id="val-big_text">выкл</span></div>
+                <div class="acc-row" onclick="toggleOpt('show_weekday')"><span class="acc-lbl">📅 День недели в шапке</span><span class="acc-val" id="val-show_weekday">вкл</span></div>
+                <div class="acc-row" onclick="toggleOpt('today_pill')"><span class="acc-lbl">🏷️ Плашка «Сегодня»</span><span class="acc-val" id="val-today_pill">вкл</span></div>
+                <div class="acc-row" onclick="toggleOpt('hide_weekend')"><span class="acc-lbl">🚫 Скрыть субботу</span><span class="acc-val" id="val-hide_weekend">выкл</span></div>
+            </div>
+        </div>
+
+        <div class="acc-block">
+            <button class="acc-header" onclick="toggleAcc(this)"><span><span class="ico">🔧</span> Дополнительно</span><span class="acc-arrow">▾</span></button>
+            <div class="acc-body">
+                <div class="acc-sub">📐 Размеры</div>
+                <div class="acc-slider"><label>Шрифт уроков <output id="o-lesson_size">1.05</output>rem</label><input type="range" min="0.85" max="1.35" step="0.05" id="s-lesson_size" oninput="setVar('lesson_size',this.value,'rem')"></div>
+                <div class="acc-slider"><label>Шрифт в шапке <output id="o-header_size">1.4</output>rem</label><input type="range" min="1.1" max="1.8" step="0.05" id="s-header_size" oninput="setVar('header_size',this.value,'rem')"></div>
+                <div class="acc-slider"><label>Размер номеров <output id="o-num_size">40</output>px</label><input type="range" min="30" max="56" step="2" id="s-num_size" oninput="setVar('num_size',this.value,'px')"></div>
+                <div class="acc-slider"><label>Радиус карточек <output id="o-card_radius">16</output>px</label><input type="range" min="0" max="30" step="2" id="s-card_radius" oninput="setVar('card_radius',this.value,'px')"></div>
+                <div class="acc-slider"><label>Радиус кнопок <output id="o-btn_radius">12</output>px</label><input type="range" min="0" max="26" step="2" id="s-btn_radius" oninput="setVar('btn_radius',this.value,'px')"></div>
+                <div class="acc-slider"><label>Промежутки карточек <output id="o-card_gap">10</output>px</label><input type="range" min="4" max="24" step="2" id="s-card_gap" oninput="setVar('card_gap',this.value,'px')"></div>
+                <div class="acc-slider"><label>Отступ страницы <output id="o-page_pad">14</output>px</label><input type="range" min="8" max="30" step="2" id="s-page_pad" oninput="setVar('page_pad',this.value,'px')"></div>
+
+                <div class="acc-sub">🎨 Цвета (точная настройка)</div>
+                <div class="acc-slider"><label>Насыщенность <output id="o-sat">100</output>%</label><input type="range" min="0" max="200" step="5" id="s-sat" oninput="setFilter('saturate',this.value)"></div>
+                <div class="acc-slider"><label>Яркость <output id="o-bright">100</output>%</label><input type="range" min="60" max="140" step="5" id="s-bright" oninput="setFilter('brightness',this.value)"></div>
+                <div class="acc-slider"><label>Контраст <output id="o-contrast">100</output>%</label><input type="range" min="70" max="130" step="5" id="s-contrast" oninput="setFilter('contrast',this.value)"></div>
+                <div class="acc-slider"><label>Оттенок <output id="o-hue">0</output>°</label><input type="range" min="-180" max="180" step="5" id="s-hue" oninput="setFilter('hue-rotate',this.value,'deg')"></div>
+
+                <div class="acc-sub">⚡ Производительность</div>
+                <div class="acc-slider"><label>Количество частиц <output id="o-particle_count">18</output></label><input type="range" min="0" max="40" step="1" id="s-particle_count" oninput="setParticleCount(this.value)"></div>
+                <div class="acc-slider"><label>Размер частиц <output id="o-particle_size">1</output>x</label><input type="range" min="0.5" max="2" step="0.1" id="s-particle_size" oninput="setParticleSize(this.value)"></div>
+                <div class="acc-slider"><label>Скорость анимаций <output id="o-anim_speed">1</output>x</label><input type="range" min="0.5" max="2" step="0.1" id="s-anim_speed" oninput="setAnimSpeed(this.value)"></div>
+                <div class="acc-slider"><label>Длительность перехода <output id="o-transition">0.15</output>с</label><input type="range" min="0" max="0.5" step="0.05" id="s-transition" oninput="setTransition(this.value)"></div>
+
+                <div class="acc-sub">🔮 Эффекты</div>
+                <div class="acc-row" onclick="toggleOpt('blur_bg')"><span class="acc-lbl">🌫️ Размытие фона</span><span class="acc-val" id="val-blur_bg">выкл</span></div>
+                <div class="acc-row" onclick="toggleOpt('noise')"><span class="acc-lbl">📺 Шум-текстура</span><span class="acc-val" id="val-noise">выкл</span></div>
+                <div class="acc-row" onclick="toggleOpt('vignette')"><span class="acc-lbl">🌑 Виньетка</span><span class="acc-val" id="val-vignette">выкл</span></div>
+                <div class="acc-row" onclick="toggleOpt('scanlines')"><span class="acc-lbl">📼 Сканлайны</span><span class="acc-val" id="val-scanlines">выкл</span></div>
+
+                <div class="acc-sub">🔘 Стиль кнопок</div>
+                <div class="acc-row" onclick="setStyle('btn','round')"><span class="acc-lbl">⬜ Круглые</span><span class="acc-val" id="val-btn-round"></span></div>
+                <div class="acc-row" onclick="setStyle('btn','sharp')"><span class="acc-lbl">🔲 Острые</span><span class="acc-val" id="val-btn-sharp"></span></div>
+                <div class="acc-row" onclick="setStyle('btn','soft')"><span class="acc-lbl">◻️ Мягкие</span><span class="acc-val" id="val-btn-soft"></span></div>
+
+                <div class="acc-sub">📱 Сброс</div>
+                <button class="link-btn" style="width:100%;padding:12px;margin-top:6px;" onclick="resetAllOpts()">🔄 Сбросить все настройки</button>
+            </div>
+        </div>
+
         <button class="open-sub" id="adminBtn" onclick="openSub('admin')" style="display:none;"><span><span class="ico">👑</span> Админ-панель</span><span class="srow-arrow">›</span></button>
 
         <div class="settings-title">📱 Приложение</div>
@@ -3533,7 +3772,6 @@ if ('serviceWorker' in navigator) {
     }
     function esc(x){var d=document.createElement('div');d.textContent=x;return d.innerHTML;}
     window.loadVisitors = function(){
-        // Сохраняем что уже введено в полях
         var savedInputs = {};
         document.querySelectorAll('.ap-input').forEach(function(inp){
             if (inp.id && inp.id.indexOf('msg_') === 0 && inp.value) {
@@ -3545,37 +3783,64 @@ if ('serviceWorker' in navigator) {
             .then(function(list){
                 var el = document.getElementById('apList');
                 if (!el) return;
+                var myVid = localStorage.getItem('rs_vid') || '';
+                var mv = document.getElementById('myVid');
+                if (mv) mv.textContent = myVid;
                 if (!Array.isArray(list) || !list.length) {
                     el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">Пока никого</div>';
                     return;
                 }
-                var myVid = localStorage.getItem('rs_vid') || '';
+                // Разделяем: я, остальные
+                var me = list.filter(function(v){ return v.vid === myVid; });
+                var others = list.filter(function(v){ return v.vid !== myVid; });
+                var sorted = me.concat(others);
+                // Список забаненных
+                var bl = document.getElementById('blockedList');
+                var banned = list.filter(function(v){ return v.blocked; });
+                if (bl) {
+                    if (!banned.length) bl.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">Никто не забанен</div>';
+                    else {
+                        var bh = '';
+                        for (var bi = 0; bi < banned.length; bi++) {
+                            var bv = banned[bi];
+                            bh += '<div class="ap-visitor blocked">';
+                            bh += '<div class="ap-vid">' + esc(bv.name || bv.vid) + ' 🚫</div>';
+                            bh += '<div class="ap-info">IP ' + esc(bv.ip) + ' · визитов ' + bv.count + '</div>';
+                            bh += '<div class="ap-actions">';
+                            bh += '<button class="ap-btn success" data-act="unblock" data-vid="' + bv.vid + '">🔓 Разблокировать</button>';
+                            bh += '</div></div>';
+                        }
+                        bl.innerHTML = bh;
+                    }
+                }
+                // Основной список
                 var html = '';
-                for (var i = 0; i < list.length; i++) {
-                    var v = list[i];
+                for (var i = 0; i < sorted.length; i++) {
+                    var v = sorted[i];
                     var isMe = (v.vid === myVid);
                     var cls = 'ap-visitor';
                     if (v.blocked) cls += ' blocked';
                     if (isMe) cls += ' is-me';
                     html += '<div class="' + cls + '">';
                     if (isMe) html += '<div class="ap-badge">👤 МОЙ АКК</div>';
-                    html += '<div class="ap-vid">' + esc(v.vid) + (v.blocked ? ' 🚫' : '') + '</div>';
+                    html += '<div class="ap-vid">' + esc(v.name || v.vid) + (v.blocked ? ' 🚫' : '') + '</div>';
+                    if (v.name) html += '<div class="ap-info" style="font-size:0.7rem;opacity:0.6;">' + esc(v.vid) + '</div>';
                     html += '<div class="ap-info">IP ' + esc(v.ip) + ' · визитов ' + v.count + '</div>';
                     html += '<div class="ap-ago">' + agoStr(v.ago) + '</div>';
                     html += '<div class="ap-actions">';
                     html += '<input class="ap-input" id="msg_' + v.vid + '" placeholder="Сообщение">';
                     html += '<button class="ap-btn" data-act="send" data-vid="' + v.vid + '">📩</button>';
-                    if (isMe) {
-                        html += '<span style="color:var(--muted);font-size:0.75rem;font-weight:700;">это ты</span>';
-                    } else if (v.blocked) {
-                        html += '<button class="ap-btn success" data-act="unblock" data-vid="' + v.vid + '">🔓</button>';
-                    } else {
-                        html += '<button class="ap-btn danger" data-act="block" data-vid="' + v.vid + '">🚫</button>';
+                    html += '<button class="ap-rename" data-act="rename" data-vid="' + v.vid + '" title="Переименовать">✏️</button>';
+                    if (!isMe) {
+                        if (v.blocked) {
+                            html += '<button class="ap-btn success" data-act="unblock" data-vid="' + v.vid + '">🔓</button>';
+                        } else {
+                            html += '<button class="ap-btn danger" data-act="block" data-vid="' + v.vid + '">🚫</button>';
+                        }
                     }
                     html += '</div></div>';
                 }
                 el.innerHTML = html;
-                // Восстанавливаем значения input'ов
                 for (var sid in savedInputs) {
                     var sInp = document.getElementById(sid);
                     if (sInp && !sInp.value) sInp.value = savedInputs[sid];
@@ -3592,6 +3857,11 @@ if ('serviceWorker' in navigator) {
             var inp = document.getElementById('msg_' + vid);
             if (!inp || !inp.value) return;
             fetch('/api/admin/send?admin=' + key + '&to=' + encodeURIComponent(vid) + '&text=' + encodeURIComponent(inp.value)).then(function(){ inp.value = ''; });
+        } else if (act === 'rename') {
+            var current = b.closest('.ap-visitor').querySelector('.ap-vid').textContent.replace(' 🚫','');
+            var newName = prompt('Новое имя:', current);
+            if (newName === null) return;
+            fetch('/api/admin/rename?admin=' + key + '&to=' + encodeURIComponent(vid) + '&name=' + encodeURIComponent(newName)).then(function(){ loadVisitors(); });
         } else if (act === 'block') {
             if (!confirm('Заблокировать ' + vid + '?')) return;
             fetch('/api/admin/block?admin=' + key + '&to=' + encodeURIComponent(vid)).then(function(){ loadVisitors(); });
@@ -3844,41 +4114,181 @@ function initCustom(){
         return r;
     };
 })();
+
+/* ===== АККОРДЕОН + МНОГО НАСТРОЕК ===== */
+function toggleAcc(btn){
+    var block = btn.closest('.acc-block');
+    if (!block) return;
+    block.classList.toggle('open');
+}
+function _optIsOn(key){
+    var cur = localStorage.getItem('rs_opt_' + key);
+    if (['particles','show_time','live_banner','progress_bar','card_anim','glow','show_weekday','today_pill'].indexOf(key) >= 0) return cur !== '0';
+    return cur === '1';
+}
+function applyOpt(key, on){
+    var h = document.documentElement;
+    var cls = {
+        glow: 'no-glow',
+        progress_bar: 'no-progress',
+        live_banner: 'no-live',
+        today_pill: 'no-today-pill',
+        show_weekday: 'no-weekday',
+        card_anim: 'no-card-anim',
+        blur_bg: 'no-blur-bg',
+        round_nums: 'round-nums',
+        compact: 'compact',
+        big_text: 'font-large',
+        hide_weekend: 'hide-weekend',
+        noise: 'noise-on',
+        vignette: 'vignette-on',
+        scanlines: 'scanlines-on'
+    };
+    var invert = ['glow','progress_bar','live_banner','today_pill','show_weekday','card_anim','blur_bg','show_time'];
+    if (invert.indexOf(key) >= 0) h.classList.toggle(cls[key], !on);
+    else h.classList.toggle(cls[key], on);
+
+    if (key === 'particles') {
+        var c = document.getElementById('particles');
+        if (c) { if (on) spawnParticles(h.getAttribute('data-theme')); else c.innerHTML = ''; }
+    }
+    if (key === 'show_time') h.classList.toggle('hide-time', !on);
+}
+function updateOptUI(){
+    document.querySelectorAll('.acc-val').forEach(function(el){
+        var key = el.id.replace('val-','');
+        var on = _optIsOn(key);
+        el.textContent = on ? 'вкл' : 'выкл';
+        el.className = 'acc-val' + (on ? ' on' : '');
+    });
+    document.querySelectorAll('html').forEach(function(){}); // stub
+}
+function setVar(name, val, unit){
+    document.documentElement.style.setProperty('--u-' + name, val + (unit||''));
+    document.getElementById('o-' + name).textContent = val;
+    localStorage.setItem('rs_u_' + name, val);
+    applyVars();
+}
+function applyVars(){
+    var h = document.documentElement;
+    var v;
+    if ((v = localStorage.getItem('rs_u_lesson_size'))) h.style.setProperty('--lesson-size', v + 'rem');
+    if ((v = localStorage.getItem('rs_u_header_size'))) h.style.setProperty('--header-size', v + 'rem');
+    if ((v = localStorage.getItem('rs_u_num_size'))) h.style.setProperty('--num-size', v + 'px');
+    if ((v = localStorage.getItem('rs_u_card_radius'))) h.style.setProperty('--card-radius', v + 'px');
+    if ((v = localStorage.getItem('rs_u_btn_radius'))) h.style.setProperty('--btn-radius', v + 'px');
+    if ((v = localStorage.getItem('rs_u_card_gap'))) h.style.setProperty('--card-gap', v + 'px');
+    if ((v = localStorage.getItem('rs_u_page_pad'))) h.style.setProperty('--page-pad', v + 'px');
+}
+function initVars(){
+    ['lesson_size','header_size','num_size','card_radius','btn_radius','card_gap','page_pad'].forEach(function(k){
+        var v = localStorage.getItem('rs_u_' + k);
+        if (!v) return;
+        var inp = document.getElementById('s-' + k);
+        var out = document.getElementById('o-' + k);
+        if (inp) inp.value = v;
+        if (out) out.textContent = v;
+    });
+    applyVars();
+}
+function setFilter(name, val, unit){
+    document.documentElement.style.setProperty('--u-' + name, val + (unit||'%'));
+    document.getElementById('o-' + name.replace('-rotate','')).textContent = val;
+    localStorage.setItem('rs_f_' + name, val);
+    applyFilters();
+}
+function applyFilters(){
+    var h = document.documentElement;
+    var s = localStorage.getItem('rs_f_saturate') || '100';
+    var b = localStorage.getItem('rs_f_brightness') || '100';
+    var c = localStorage.getItem('rs_f_contrast') || '100';
+    var hu = localStorage.getItem('rs_f_hue-rotate') || '0';
+    h.style.setProperty('--global-filter', 'saturate('+s+'%) brightness('+b+'%) contrast('+c+'%) hue-rotate('+hu+'deg)');
+}
+function initFilters(){
+    ['saturate','brightness','contrast','hue-rotate'].forEach(function(k){
+        var v = localStorage.getItem('rs_f_' + k);
+        if (!v) return;
+        var inp = document.getElementById('s-' + k.replace('hue-rotate','hue'));
+        if (inp) inp.value = v;
+    });
+    applyFilters();
+}
+function setParticleCount(v){ localStorage.setItem('rs_particle_count', v); document.getElementById('o-particle_count').textContent = v; }
+function setParticleSize(v){ localStorage.setItem('rs_particle_size', v); document.getElementById('o-particle_size').textContent = v; }
+function setAnimSpeed(v){ localStorage.setItem('rs_anim_speed', v); document.getElementById('o-anim_speed').textContent = v; document.documentElement.style.setProperty('--anim-speed', v); }
+function setTransition(v){ localStorage.setItem('rs_transition', v); document.getElementById('o-transition').textContent = v; document.documentElement.style.setProperty('--trans', v + 's'); }
+function setStyle(type, val){
+    document.documentElement.className = document.documentElement.className.replace(/style-[a-z]+/g, '').trim();
+    document.documentElement.classList.add('style-' + val);
+    localStorage.setItem('rs_style_' + type, val);
+    ['round','sharp','soft'].forEach(function(x){
+        var el = document.getElementById('val-btn-' + x);
+        if (el) el.textContent = (x === val) ? '✓' : '';
+    });
+}
+function resetAllOpts(){
+    if (!confirm('Сбросить все настройки?')) return;
+    Object.keys(localStorage).forEach(function(k){
+        if (k.indexOf('rs_opt_') === 0 || k.indexOf('rs_u_') === 0 || k.indexOf('rs_f_') === 0) localStorage.removeItem(k);
+    });
+    localStorage.removeItem('rs_particle_count');
+    localStorage.removeItem('rs_particle_size');
+    localStorage.removeItem('rs_anim_speed');
+    localStorage.removeItem('rs_transition');
+    location.reload();
+}
+function initAll(){
+    // opts
+    ['particles','round_nums','compact','show_time','live_banner','progress_bar','card_anim','glow','big_text','show_weekday','today_pill','hide_weekend','blur_bg','noise','vignette','scanlines'].forEach(function(k){
+        applyOpt(k, _optIsOn(k));
+    });
+    updateOptUI();
+    initVars();
+    initFilters();
+    var v;
+    if ((v = localStorage.getItem('rs_particle_count'))) { var e = document.getElementById('s-particle_count'); if (e) e.value = v; var o = document.getElementById('o-particle_count'); if (o) o.textContent = v; }
+    if ((v = localStorage.getItem('rs_particle_size'))) { var e = document.getElementById('s-particle_size'); if (e) e.value = v; var o = document.getElementById('o-particle_size'); if (o) o.textContent = v; }
+    if ((v = localStorage.getItem('rs_anim_speed'))) { var e = document.getElementById('s-anim_speed'); if (e) e.value = v; var o = document.getElementById('o-anim_speed'); if (o) o.textContent = v; document.documentElement.style.setProperty('--anim-speed', v); }
+    if ((v = localStorage.getItem('rs_transition'))) { var e = document.getElementById('s-transition'); if (e) e.value = v; var o = document.getElementById('o-transition'); if (o) o.textContent = v; document.documentElement.style.setProperty('--trans', v + 's'); }
+    var st = localStorage.getItem('rs_style_btn');
+    if (st) setStyle('btn', st);
+}
+
+function switchAdminTab(name){
+    document.querySelectorAll('.admin-tab').forEach(function(t){
+        t.classList.toggle('active', t.getAttribute('data-atab') === name);
+    });
+    document.querySelectorAll('.admin-pane').forEach(function(p){
+        p.classList.toggle('active', p.id === 'atab-' + name);
+    });
+    if (name === 'visitors' || name === 'blocked') loadVisitors();
+}
+function sendBroadcast(){
+    var t = document.getElementById('broadcastText');
+    if (!t || !t.value) return;
+    fetch('/api/admin/send?admin=nikita_admin_2026&to=__all__&text=' + encodeURIComponent(t.value)).then(function(){
+        t.value = '';
+        alert('✅ Отправлено всем');
+    });
+}
+function clearMyMsgHistory(){
+    if (!confirm('Очистить историю?')) return;
+    alert('Скоро');
+}
+function clearAllVisits(){
+    if (!confirm('Точно сбросить всех посетителей? Это удалит и баны!')) return;
+    alert('Функция очистки появится позже');
+}
 </script>
 
-<div class="subscreen" id="sub-interface">
-    <div class="subscreen-header">
-        <button class="subscreen-back" onclick="closeSub('interface')">←</button>
-        <div class="subscreen-title">🎨 Интерфейс</div>
-    </div>
-    <div class="subscreen-body">
-        <div class="srow" onclick="toggleOpt('particles')"><div class="srow-label" data-ico="✨">Частицы фона</div><div class="srow-value" id="val-particles">вкл</div></div>
-        <div class="srow" onclick="toggleOpt('round_nums')"><div class="srow-label" data-ico="🔢">Круглые номера</div><div class="srow-value" id="val-round_nums">выкл</div></div>
-        <div class="srow" onclick="toggleOpt('compact')"><div class="srow-label" data-ico="📏">Компактный режим</div><div class="srow-value" id="val-compact">выкл</div></div>
-        <div class="srow" onclick="toggleOpt('show_time')"><div class="srow-label" data-ico="⏱️">Показывать время</div><div class="srow-value" id="val-show_time">вкл</div></div>
-    </div>
+
 </div>
 
-<div class="subscreen" id="sub-advanced">
-    <div class="subscreen-header">
-        <button class="subscreen-back" onclick="closeSub('advanced')">←</button>
-        <div class="subscreen-title">🔧 Дополнительно</div>
-    </div>
-    <div class="subscreen-body">
-        <div class="srow" onclick="toggleOpt('big_text')"><div class="srow-label" data-ico="🔠">Крупный шрифт</div><div class="srow-value" id="val-big_text">выкл</div></div>
-        <div class="srow" onclick="toggleOpt('hide_weekend')"><div class="srow-label" data-ico="🚫">Скрыть субботу</div><div class="srow-value" id="val-hide_weekend">выкл</div></div>
-    </div>
+
 </div>
 
-<div class="subscreen" id="sub-admin">
-    <div class="subscreen-header">
-        <button class="subscreen-back" onclick="closeSub('admin')">←</button>
-        <div class="subscreen-title">👑 Админ-панель</div>
-    </div>
-    <div class="subscreen-body">
-        <div id="adminSectionContent" style="color:var(--text-muted);text-align:center;padding:20px;">Загрузка…</div>
-    </div>
-</div>
+
 </body>
 </html>"""
 
@@ -4007,7 +4417,8 @@ class SimpleHandler(BaseHTTPRequestHandler):
                                       "last": v.get("last",0), "count": v.get("count",0),
                                       "ua": v.get("ua","")[:70],
                                       "ago": now - v.get("last",0),
-                                      "blocked": bool(blocked.get(k))})
+                                      "blocked": bool(blocked.get(k)),
+                                      "name": v.get("name", "")})
                     items.sort(key=lambda x: -x["last"])
                     self._json(items); return
                 if _pt == "/api/admin/send":
@@ -4016,6 +4427,9 @@ class SimpleHandler(BaseHTTPRequestHandler):
                     if _to == "__all__": _send_all(_txt)
                     else: _send_msg(_to, _txt)
                     self._json({"ok": True}); return
+                if _pt == "/api/admin/rename":
+                    if _admin != ADMIN_KEY: self._json({"error": "forbidden"}, 403); return
+                    _rename_visitor(_q.get("to", [""])[0], _q.get("name", [""])[0]); self._json({"ok": True}); return
                 if _pt == "/api/admin/block":
                     if _admin != ADMIN_KEY: self._json({"error": "forbidden"}, 403); return
                     _block(_q.get("to", [""])[0]); self._json({"ok": True}); return
