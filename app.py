@@ -335,7 +335,7 @@ PAGE = """<!DOCTYPE html>
     --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.12);
     --num-bg:var(--accent); --num-color:#fff; --num-shadow:0 3px 10px var(--accent-light);
 }
-html { min-height:100%; background: var(--bg); }
+html { min-height:100%; background: var(--bg); overflow-x:hidden; max-width:100vw; }
 * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 body {
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -393,7 +393,7 @@ h2 span:not(#adminTap):not(.brand-emoji) { background: linear-gradient(135deg, v
 .open-sub .ico { font-size:1.15rem; }
 .open-sub .srow-arrow { color: var(--text-muted); font-size:1.3rem; font-weight:800; }
 
-.subscreen { position:fixed; inset:0; background: var(--bg); z-index:9999; transform:translateX(100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); overflow-y:auto; padding:0 16px 40px; overscroll-behavior:contain; }
+.subscreen { position:fixed; inset:0; background: var(--bg); z-index:9999; transform:translateX(100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding:0 16px 40px; overscroll-behavior:contain; }
 .subscreen.open { transform:translateX(0); }
 [data-theme="light"] .subscreen { background:#f1f5fa; }
 [data-theme="dark"] .subscreen { background:#10131a; }
@@ -509,7 +509,7 @@ html.hide-tabs .tabs { display:none !important; }
 html.hide-numbers .num { display:none !important; }
 html.hide-sheet-link .sheet-link { display:none !important; }
 html.hide-day-title .day-title { display:none !important; }
-html.mirror-on .container, html.mirror-on .subscreen { transform: scaleX(-1); }
+html.mirror-on .container { transform: scaleX(-1); }
 html.uppercase-on .lesson, html.uppercase-on .live-lesson { text-transform: uppercase; }
 html.bold-all .lesson, html.bold-all .live-lesson, html.bold-all .time, html.bold-all .day-title { font-weight: 900 !important; }
 html.italic-on .lesson, html.italic-on .live-lesson { font-style: italic; }
@@ -626,7 +626,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-3';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-4';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
