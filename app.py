@@ -509,14 +509,14 @@ html.hide-tabs .tabs { display:none !important; }
 html.hide-numbers .num { display:none !important; }
 html.hide-sheet-link .sheet-link { display:none !important; }
 html.hide-day-title .day-title { display:none !important; }
-html.mirror-on body { transform: scaleX(-1); }
+html.mirror-on .container, html.mirror-on .subscreen { transform: scaleX(-1); }
 html.uppercase-on .lesson, html.uppercase-on .live-lesson { text-transform: uppercase; }
 html.bold-all .lesson, html.bold-all .live-lesson, html.bold-all .time, html.bold-all .day-title { font-weight: 900 !important; }
 html.italic-on .lesson, html.italic-on .live-lesson { font-style: italic; }
 html.underline-on .lesson, html.underline-on .live-lesson { text-decoration: underline; }
-html.colorblind-on body { filter: saturate(0) contrast(1.2); }
+html.colorblind-on .container, html.colorblind-on .subscreen, html.colorblind-on #particles { filter: saturate(0) contrast(1.2); }
 html.no-radius-all .card, html.no-radius-all .num, html.no-radius-all .header-card, html.no-radius-all .tabs, html.no-radius-all .tab, html.no-radius-all .theme-btn, html.no-radius-all .live-banner { border-radius: 0 !important; }
-html.grayscale-all body { filter: grayscale(100%); }
+html.grayscale-all .container, html.grayscale-all .subscreen, html.grayscale-all #particles { filter: grayscale(100%); }
 html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after { animation: none !important; transition: none !important; }
 
 html.corners-circle .num { border-radius:50% !important; }
@@ -626,7 +626,7 @@ html.anim-wobble .settings-panel.open {
 </style>
 </head>
 <body data-changed-at="{changed_at}">
-<script>(function(){var B='2026-10-02-2';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-02-3';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div class="container">
 <div class="header-card">
