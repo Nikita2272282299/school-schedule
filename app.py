@@ -10,7 +10,8 @@ SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit"
 SELF_URL = "https://school-schedule-4ldw.onrender.com/"
 PERM_TZ = timezone(timedelta(hours=5))
 CLASS_CODE = "8г"
-ADMIN_KEY = os.environ.get("ADMIN_KEY") or uuid.uuid4().hex
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
+ADMIN_KEY = os.environ.get("ADMIN_KEY") or (hashlib.sha256(("sk|" + ADMIN_PASSWORD).encode()).hexdigest() if ADMIN_PASSWORD else uuid.uuid4().hex)
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
 _VID_OK = re.compile(r"^[A-Za-z0-9_-]{1,40}$")
 _login_fails = {}
@@ -1574,6 +1575,10 @@ html[data-theme] body .day-title{color:var(--text-main)!important;border-left:4p
 .room{display:inline-block;margin-left:8px;padding:1px 9px;border-radius:9px;font-size:.72em;font-weight:800;vertical-align:middle;background:var(--accent-light);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent)}
 html.hide-classroom .room{display:none}
 .install-banner{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))!important}
+
+/* ===== v6 ===== */
+html[data-theme] body #particles{opacity:.5}
+html[data-theme] body .card,html[data-theme] body .live-banner,html[data-theme] body .day-footer .df-item,html[data-theme] body .sheet-link{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
@@ -2142,6 +2147,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
         document.querySelectorAll('.ap-input').forEach(function(inp){ if(inp.id && inp.id.indexOf('msg_')===0 && inp.value) saved[inp.id]=inp.value; });
         fetch('/api/admin/list?admin=' + ADMIN_KEY_URL + '&t=' + Date.now())
             .then(function(r){
+                if (r.status === 403 && !window.__rl) { window.__rl = 1; setTimeout(function(){ window.__rl = 0; }, 60000); var __p = prompt('Сессия админа устарела. Введи пароль:'); if (__p && __adminLogin(__p)) { setTimeout(window.loadVisitors, 50); return []; } }
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();
             })
