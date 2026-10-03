@@ -2001,7 +2001,7 @@ function showDay(day){
         var tabs = cont && cont.querySelector('.tabs');
         if (tabs && tabs.parentNode) tabs.parentNode.insertBefore(back, tabs.nextSibling);
     }
-    back.style.display = isToday ? 'none' : 'block';
+    back.style.display = (isToday || !todayName) ? 'none' : 'block';
     if (typeof window.__buildFooter === 'function') setTimeout(window.__buildFooter, 50);
 }
 function openSub(name){
@@ -3590,7 +3590,7 @@ class H(BaseHTTPRequestHandler):
                         active_l = cur_day_l
                 else:
                     active_l = cur_day_l
-                if active_l not in DAY_FULL: active_l = cur_day_l
+                if active_l not in DAY_FULL: active_l = "Понедельник" if days_l.get("Понедельник") else next((d for d in DAY_FULL if days_l.get(d)), "Понедельник")
                 if not days_l.get(active_l) and days_l.get(cur_day_l): active_l = cur_day_l
                 st_l = get_live_status(today_lessons_l) if not is_weekend_l else None
                 html_live = build_live(st_l)
@@ -3627,7 +3627,7 @@ class H(BaseHTTPRequestHandler):
                     active = tmr if days.get(tmr) else cur_day
                 else: active = cur_day
             else: active = cur_day
-            if active not in DAY_FULL: active = cur_day
+            if active not in DAY_FULL: active = "Понедельник" if days.get("Понедельник") else next((d for d in DAY_FULL if days.get(d)), "Понедельник")
             if not days.get(active) and days.get(cur_day): active = cur_day
 
             st = get_live_status(today_lessons) if not is_weekend else None
