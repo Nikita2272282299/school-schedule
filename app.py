@@ -1,5 +1,6 @@
-import threading, urllib.request, csv, io, time, os, json, uuid, hashlib
-from http.server import HTTPServer, BaseHTTPRequestHandler
+import re, hmac, threading, urllib.request, csv, io, time, os, json, uuid, hashlib
+from http.server import HTTPServer, ThreadingHTTPServer, BaseHTTPRequestHandler
+from html import escape as _esc
 from datetime import datetime, timezone, timedelta
 
 # ============ CONFIG ============
@@ -10,6 +11,10 @@ SELF_URL = "https://school-schedule-4ldw.onrender.com/"
 PERM_TZ = timezone(timedelta(hours=5))
 CLASS_CODE = "8г"
 ADMIN_KEY = os.environ.get("ADMIN_KEY") or uuid.uuid4().hex
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
+_VID_OK = re.compile(r"^[A-Za-z0-9_-]{1,40}$")
+_login_fails = {}
+_sched_lock = threading.Lock()
 
 TIME_TO_NUM = {"8:00-8:40":1,"8:50-9:30":2,"9:45-10:25":3,"10:40-11:20":4,
     "11:35-12:15":5,"12:25-13:05":6,"13:15-13:55":7,"14:00-14:40":8}
@@ -51,7 +56,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v36';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(caches.open('school-v36').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v36';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v36').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -62,6 +67,15 @@ def _ld(path, default):
         return default
 
 def _sv(path, data):
+    try:
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+        os.replace(tmp, path)
+    except Exception:
+        pass
+
+def _sv_old(path, data):
     try:
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False)
@@ -184,7 +198,7 @@ def rename_v(vid, name):
             _sv(VISITORS_FILE, d)
 
 # ============ SCHEDULE ============
-def get_schedule():
+def _get_schedule_impl():
     now = time.time()
     if cache["days_schedule"] and (now - cache["last_update"] < CACHE_TTL):
         return cache["days_schedule"], cache["error_msg"]
@@ -214,7 +228,7 @@ def get_schedule():
             days_list = ["понедельник","вторник","среда","четверг","пятница","суббота"]
             for row in reader:
                 if not row: continue
-                text = " ".join(row).lower()
+                text = [w.strip(".,:;()") for w in " ".join(row).lower().split()]
                 found = None
                 day_alias = {"понедельник":["понедельник","пон","пн"],"вторник":["вторник","втор","вт"],"среда":["среда","сред","ср"],"четверг":["четверг","четв","чт"],"пятница":["пятница","пятн","пт"],"суббота":["суббота","субб","сб"]}
                 for d in days_list:
@@ -249,6 +263,7 @@ def get_schedule():
         else:
             err = f"Класс {CLASS_CODE.upper()} не найден."; cache["error_msg"] = err
     except Exception:
+        cache["last_update"] = now - CACHE_TTL + 30
         if cache["days_schedule"]: return cache["days_schedule"], ""
         disk = load_disk_cache()
         if disk:
@@ -256,6 +271,14 @@ def get_schedule():
             return disk, ""
         cache["error_msg"] = "Офлайн-режим"
     return cache["days_schedule"], cache["error_msg"]
+
+def get_schedule():
+    if not _sched_lock.acquire(blocking=False):
+        return cache["days_schedule"], cache["error_msg"]
+    try:
+        return _get_schedule_impl()
+    finally:
+        _sched_lock.release()
 
 def get_live_status(lessons):
     if not lessons: return None
@@ -1465,6 +1488,31 @@ html body .container {
   html body .progress-fill::after { animation: none !important; }
 }
 
+
+/* ===== CLEAN v3 ===== */
+html[data-theme] body::before{animation:none!important;opacity:.55}
+html[data-theme] body::after{display:none!important}
+html[data-theme] body .card.now,html[data-theme] body .now-pill,html[data-theme] body .progress-fill::after,html[data-theme] body .today-pill::after,html[data-theme] body .card.now .progress-fill{animation:none!important}
+html[data-theme] body{padding-top:var(--page-pad,12px)!important}
+html[data-theme] body .container{max-width:var(--page-maxw,440px)!important;padding:0 16px!important}
+html[data-theme] body .header-card{padding:var(--header-pad,12px) 16px!important;border-radius:var(--header-radius,20px)!important;min-height:60px!important}
+html[data-theme] body h2{font-size:var(--header-size,1.2rem)!important}
+html[data-theme] body .tabs{position:sticky;top:8px;z-index:20;padding:5px!important;gap:4px!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+html[data-theme] body .tab{min-height:46px!important;font-size:var(--tab-size,.9rem)!important;border-radius:12px!important}
+html[data-theme] body .day-title{font-size:var(--dtitle-size,1.1rem)!important;margin:6px 4px 10px!important}
+html[data-theme] body .card{padding:var(--card-pad,12px) 14px!important;margin-bottom:var(--card-gap,8px)!important;min-height:64px!important;gap:14px!important;border-radius:var(--card-radius,18px)!important;border-width:var(--border-w,1px)!important}
+html[data-theme] body .num{width:var(--num-size,42px)!important;height:var(--num-size,42px)!important;min-width:var(--num-size,42px)!important;border-radius:14px!important;font-size:1.1rem!important}
+html[data-theme] body .lesson{font-size:var(--lesson-size,1.05rem)!important;font-weight:700!important}
+html[data-theme] body .time{font-size:var(--time-size,.8rem)!important;font-variant-numeric:tabular-nums;opacity:.75!important}
+html[data-theme] body .live-banner{padding:var(--live-pad,14px) 16px!important;border-radius:var(--card-radius,18px)!important}
+html[data-theme] body .live-lesson{font-size:var(--live-size,1.05rem)!important}
+html[data-theme] body .icon-btn{width:var(--icon-size,42px)!important;height:var(--icon-size,42px)!important}
+html[data-theme] body .ap-btn,html[data-theme] body .theme-btn,html[data-theme] body .size-btn,html[data-theme] body .open-sub,html[data-theme] body .srow{border-radius:var(--btn-radius,12px)!important}
+html[data-theme] body .subscreen-header{margin:0 -20px!important;padding-left:20px!important;padding-right:20px!important}
+html.corners-sharp[data-theme] body .card,html.corners-sharp[data-theme] body .tab,html.corners-sharp[data-theme] body .num{border-radius:4px!important}
+html.corners-pill[data-theme] body .card,html.corners-pill[data-theme] body .tab{border-radius:100px!important}
+html.corners-circle[data-theme] body .num,html.round-nums[data-theme] body .num{border-radius:50%!important}
+html.no-radius-all[data-theme] body .card,html.no-radius-all[data-theme] body .num,html.no-radius-all[data-theme] body .tab{border-radius:0!important}
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
@@ -1476,7 +1524,7 @@ html body .container {
         <div class="install-title">Установить приложение</div>
         <div class="install-sub">Быстрый доступ с домашнего экрана</div>
     </div>
-    <button class="install-btn" onclick="triggerInstall()">Установить</button>
+    <button class="install-btn" onclick="triggerInstall()">Установить</button><button class="install-btn" style="background:none;color:var(--text-muted);box-shadow:none;padding:10px" onclick="dismissInstall()">✕</button>
 </div>
 <div class="container">
 <div class="header-card">
@@ -1573,16 +1621,6 @@ html body .container {
 <div class="subscreen" id="sub-advanced">
     <div class="subscreen-header"><button class="subscreen-back" onclick="closeSub('advanced')">←</button><div class="subscreen-title">🔧 Дополнительно</div></div>
     <div class="subscreen-body">
-        <div class="acc-sub">📐 Размеры</div>
-        <div class="acc-slider"><label>Шрифт уроков <output id="o-lesson_size">1.05</output>rem</label><input type="range" min="0.85" max="1.35" step="0.05" id="s-lesson_size" oninput="setVar('lesson_size',this.value,'rem')"></div>
-        <div class="acc-slider"><label>Размер номеров <output id="o-num_size">40</output>px</label><input type="range" min="30" max="56" step="2" id="s-num_size" oninput="setVar('num_size',this.value,'px')"></div>
-        <div class="acc-slider"><label>Радиус карточек <output id="o-card_radius">16</output>px</label><input type="range" min="0" max="30" step="2" id="s-card_radius" oninput="setVar('card_radius',this.value,'px')"></div>
-        <div class="acc-slider"><label>Промежутки карточек <output id="o-card_gap">10</output>px</label><input type="range" min="4" max="24" step="2" id="s-card_gap" oninput="setVar('card_gap',this.value,'px')"></div>
-        <div class="acc-sub">🎨 Цвета</div>
-        <div class="acc-slider"><label>Насыщенность <output id="o-saturate">100</output>%</label><input type="range" min="0" max="200" step="5" id="s-saturate" oninput="setFilter('saturate',this.value)"></div>
-        <div class="acc-slider"><label>Яркость <output id="o-brightness">100</output>%</label><input type="range" min="60" max="140" step="5" id="s-brightness" oninput="setFilter('brightness',this.value)"></div>
-        <div class="acc-slider"><label>Оттенок <output id="o-hue">0</output>°</label><input type="range" min="-180" max="180" step="5" id="s-hue" oninput="setFilter('hue-rotate',this.value,'deg')"></div>
-        <div class="acc-sub">⚡ Производительность</div>
         <div class="acc-sub">📐 Размеры и шрифты</div>
         <div class="acc-slider"><label>Шрифт урока <output id="o-lesson_size">1.05</output>rem</label><input type="range" min="0.7" max="1.6" step="0.05" id="s-lesson_size" oninput="setVar('lesson_size',this.value,'rem')"></div>
         <div class="acc-slider"><label>Шрифт времени <output id="o-time_size">0.8</output>rem</label><input type="range" min="0.6" max="1.2" step="0.05" id="s-time_size" oninput="setVar('time_size',this.value,'rem')"></div>
@@ -1798,13 +1836,13 @@ function updateOptUI(){
 }
 
 function setVar(name, val, unit){
-    document.documentElement.style.setProperty('--u-' + name, val + (unit||''));
+    document.documentElement.style.setProperty('--' + name.replace(/_/g,'-'), val + (unit||''));
     var o = document.getElementById('o-' + name); if (o) o.textContent = val;
     localStorage.setItem('rs_u_' + name, val);
     applyVars();
 }
 function applyVars(){
-    var h = document.documentElement, v;
+    var h = document.documentElement, v; ['lesson_size:rem','time_size:rem','dtitle_size:rem','live_size:rem','header_size:rem','tab_size:rem','num_size:px','icon_size:px','card_radius:px','btn_radius:px','header_radius:px','card_gap:px','page_pad:px','border_w:px','card_pad:px','header_pad:px','live_pad:px','page_maxw:px'].forEach(function(p){var a=p.split(':'),x=localStorage.getItem('rs_u_'+a[0]); if(x) h.style.setProperty('--'+a[0].replace(/_/g,'-'), x+a[1]);});
     if ((v = localStorage.getItem('rs_u_lesson_size'))) h.style.setProperty('--lesson-size', v + 'rem');
     if ((v = localStorage.getItem('rs_u_num_size'))) h.style.setProperty('--num-size', v + 'px');
     if ((v = localStorage.getItem('rs_u_card_radius'))) h.style.setProperty('--card-radius', v + 'px');
@@ -1831,10 +1869,10 @@ function applyFilters(){
     var h = document.documentElement;
     var s = localStorage.getItem('rs_f_saturate') || '100';
     var b = localStorage.getItem('rs_f_brightness') || '100';
-    var hu = localStorage.getItem('rs_f_hue-rotate') || '0';
-    h.style.setProperty('--global-filter', 'saturate('+s+'%) brightness('+b+'%) hue-rotate('+hu+'deg)');
+    var hu = localStorage.getItem('rs_f_hue-rotate') || '0'; var ct=localStorage.getItem('rs_f_contrast')||'100', se=localStorage.getItem('rs_f_sepia')||'0', iv=localStorage.getItem('rs_f_invert')||'0', gs=localStorage.getItem('rs_f_grayscale')||'0'; window.__F = 'saturate('+s+'%) brightness('+b+'%) contrast('+ct+'%) hue-rotate('+hu+'deg) sepia('+se+'%) invert('+iv+'%) grayscale('+gs+'%)';
+    h.style.setProperty('--global-filter', window.__F);
     document.querySelectorAll('.card, .header-card').forEach(function(el){
-        el.style.filter = 'saturate('+s+'%) brightness('+b+'%) hue-rotate('+hu+'deg)';
+        el.style.filter = window.__F;
     });
 }
 function setParticleCount(v){ localStorage.setItem('rs_particle_count', v); var o=document.getElementById('o-particle_count'); if(o)o.textContent=v; spawnParticles(document.documentElement.getAttribute('data-theme')); }
@@ -2009,7 +2047,9 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
 
 /* Админка */
 (function(){
-    var ADMIN_PWD = 'Nikita#Admin2026';
+    var ADMIN_PWD = null;
+    if (localStorage.getItem('rs_admin') === '1' && !localStorage.getItem('rs_akey')) localStorage.removeItem('rs_admin');
+    function __adminLogin(p){ try{ var x=new XMLHttpRequest(); x.open('POST','/api/admin/login',false); x.setRequestHeader('Content-Type','application/json'); x.send(JSON.stringify({pwd:p})); if(x.status===200){ var k=JSON.parse(x.responseText).key; if(k){ localStorage.setItem('rs_akey',k); ADMIN_KEY_URL=k; return k; } } }catch(e){} return ''; }
     var isAdmin = localStorage.getItem('rs_admin') === '1';
     var taps = parseInt(localStorage.getItem('rs_taps') || '0', 10);
     var tapEl = document.getElementById('adminTap');
@@ -2021,8 +2061,8 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
             taps++;
             localStorage.setItem('rs_taps', String(taps));
             if (taps >= 50) {
-                var pwd = prompt('Пароль:');
-                if (pwd === ADMIN_PWD) {
+                var pwd = prompt('Пароль:'); var __k = pwd ? __adminLogin(pwd) : '';
+                if (__k) {
                     localStorage.setItem('rs_admin','1'); localStorage.setItem('rs_taps','0');
                     isAdmin = true; taps = 0;
                     tapEl.style.filter = 'drop-shadow(0 0 8px #fbbf24)';
@@ -2035,7 +2075,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
     function agoStr(s){ if(s<60)return s+' сек'; if(s<3600)return Math.floor(s/60)+' мин'; if(s<86400)return Math.floor(s/3600)+' ч'; return Math.floor(s/86400)+' дн'; }
     function esc(x){ var d=document.createElement('div'); d.textContent=x; return d.innerHTML; }
 
-    var ADMIN_KEY_URL = 'admin_k9x7m3_nikita_2026';
+    var ADMIN_KEY_URL = localStorage.getItem('rs_akey') || '';
     window.loadVisitors = function(){
         var saved = {};
         document.querySelectorAll('.ap-input').forEach(function(inp){ if(inp.id && inp.id.indexOf('msg_')===0 && inp.value) saved[inp.id]=inp.value; });
@@ -2089,7 +2129,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
         if (!b) return;
         var act = b.getAttribute('data-act');
         var vid = b.getAttribute('data-vid');
-        var key = 'admin_k9x7m3_nikita_2026';
+        var key = encodeURIComponent(localStorage.getItem('rs_akey') || '');
         if (act === 'send') {
             var inp = document.getElementById('msg_' + vid);
             if (!inp || !inp.value) return;
@@ -2113,7 +2153,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
     window.sendBroadcast = function(){
         var t = document.getElementById('broadcastText');
         if (!t || !t.value) return;
-        fetch('/api/admin/send?admin=admin_k9x7m3_nikita_2026&to=__all__&text='+encodeURIComponent(t.value)).then(function(){ t.value=''; alert('✅ Отправлено'); });
+        fetch('/api/admin/send?admin='+encodeURIComponent(localStorage.getItem('rs_akey')||'')+'&to=__all__&text='+encodeURIComponent(t.value)).then(function(){ t.value=''; alert('✅ Отправлено'); });
     };
 
     /* Пул сообщений */
@@ -2159,7 +2199,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
         if (window.__smsId) { fetch('/api/messages/read?vid=' + vid + '&id=' + window.__smsId).catch(function(){}); window.__smsId = null; }
         lastId = null;
     };
-    setInterval(poll, 2000);
+    setInterval(poll, 4000);
     /* HEARTBEAT-V10 */
     setInterval(function(){
         var v = localStorage.getItem('rs_vid');
@@ -3053,7 +3093,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
             if (lb) lb.style.display = (desiredDay === today) ? '' : 'none';
         }
 
-        // 5. Обновить footer и погоду
+        if (typeof applyVars==='function') applyVars(); if (typeof applyFilters==='function') applyFilters();
         if (typeof window.__buildFooter === 'function') setTimeout(window.__buildFooter, 30);
         if (typeof window.__loadWeather === 'function') setTimeout(window.__loadWeather, 30);
 
@@ -3118,7 +3158,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         var isAdm = false;
         try { isAdm = localStorage.getItem('rs_admin') === '1'; } catch(e){}
         var url = '/api/live?vid=' + encodeURIComponent(vid) + '&t=' + Date.now();
-        if (isAdm) url += '&admin=admin_k9x7m3_nikita_2026';
+        if (isAdm) url += '&admin=' + encodeURIComponent(localStorage.getItem('rs_akey') || '');
         fetch(url, {cache: 'no-store'})
             .then(function(r){ return r.json(); })
             .then(function(d){
@@ -3195,7 +3235,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
             })
             .catch(function(){ clearTimeout(_bt); busy = false; });
     }
-    setInterval(pollLive, 1000);
+    setInterval(pollLive, 3000);
     setTimeout(pollLive, 500);
 })();
 </script>
@@ -3300,7 +3340,7 @@ def build_live(st):
         return ('<div class="live-banner now" data-end-unix="' + str(st["end_unix"]) + '" data-start-unix="' + str(st.get("start_unix", st["end_unix"]-2400)) + '" data-until="' + st["until"] + '">'
             '<div class="live-dot"></div><div class="live-info">'
             '<div class="live-label">Сейчас идёт</div>'
-            f'<div class="live-lesson">{st["lesson"]}</div>'
+            f'<div class="live-lesson">{_esc(st["lesson"])}</div>'
             f'<div class="live-time"><span class="live-timer">до {st["until"]}</span></div>'
             f'<div class="progress-bar"><div class="progress-fill" style="width:{st["progress"]}%"></div></div>'
             '</div></div>')
@@ -3315,7 +3355,7 @@ def build_live(st):
         return ('<div class="live-banner before" data-start-unix="' + str(st["start_unix"]) + '" data-start="' + st["start"] + '">'
             '<div class="live-dot"></div><div class="live-info">'
             f'<div class="live-label">{label}</div>'
-            f'<div class="live-lesson">{st["lesson"]}</div>'
+            f'<div class="live-lesson">{_esc(st["lesson"])}</div>'
             f'<div class="live-time">\u0432 {st["start"]}{timer_html}</div>'
             '</div></div>')
     if st["type"] == "break":
@@ -3323,7 +3363,7 @@ def build_live(st):
         return ('<div class="live-banner break" data-start-unix="' + str(st["start_unix"]) + '" data-start="' + st["start"] + '">'
             '<div class="live-dot"></div><div class="live-info">'
             '<div class="live-label">\u23f8 \u041f\u0435\u0440\u0435\u043c\u0435\u043d\u0430</div>'
-            f'<div class="live-lesson">\u0421\u043b\u0435\u0434\u0443\u044e\u0449\u0438\u0439: {st["lesson"]}</div>'
+            f'<div class="live-lesson">\u0421\u043b\u0435\u0434\u0443\u044e\u0449\u0438\u0439: {_esc(st["lesson"])}</div>'
             f'<div class="live-time">\u0432 {st["start"]} \u00b7 \u0447\u0435\u0440\u0435\u0437 <span class="live-timer">' + str(wait) + ' \u043c\u0438\u043d</span></div>'
             '</div></div>')
     return ""
@@ -3352,7 +3392,7 @@ def build_content(days, active, err, st):
                     cc += " next-up"
                 html += f'<div class="{cc}"><div class="num">{num}</div>'
                 html += f'<div class="left-side"><div class="time">{tv}</div>'
-                html += f'<div class="lesson">{lesson}</div></div>{pill}</div>'
+                html += f'<div class="lesson">{_esc(lesson)}</div></div>{pill}</div>'
         html += '</div>'
     return html
 
@@ -3375,15 +3415,37 @@ class H(BaseHTTPRequestHandler):
             self.wfile.write(b)
         except Exception: pass
 
+    def do_POST(self):
+        try:
+            if self.path.split("?")[0] != "/api/admin/login":
+                self.send_response(404); self.end_headers(); return
+            ip = self.headers.get("X-Forwarded-For","").split(",")[0].strip() or self.client_address[0]
+            now = time.time()
+            c, t = _login_fails.get(ip, (0, now))
+            if now - t > 600: c, t = 0, now
+            if c >= 5:
+                self._json({"error": "slow"}, 429); return
+            n = min(int(self.headers.get("Content-Length") or 0), 1000)
+            body = json.loads(self.rfile.read(n) or b"{}")
+            pwd = str(body.get("pwd", ""))
+            if ADMIN_PASSWORD and hmac.compare_digest(pwd.encode(), ADMIN_PASSWORD.encode()):
+                _login_fails.pop(ip, None)
+                self._json({"key": ADMIN_KEY}); return
+            _login_fails[ip] = (c + 1, t)
+            self._json({"error": "forbidden"}, 403)
+        except Exception:
+            try: self.send_response(400); self.end_headers()
+            except Exception: pass
+
     def do_GET(self):
         try:
             from urllib.parse import urlparse, parse_qs
             parsed = urlparse(self.path)
             q = parse_qs(parsed.query)
             _pt = parsed.path
-            _vid = (q.get("vid",[""])[0] or "").strip()[:40]
+            _vid = re.sub(r"[^A-Za-z0-9_-]", "", (q.get("vid",[""])[0] or ""))[:40]
             _admin = q.get("admin",[""])[0] or ""
-            _ip = self.client_address[0] if self.client_address else "?"
+            _ip = (self.headers.get("X-Forwarded-For","").split(",")[0].strip() or (self.client_address[0] if self.client_address else "?"))[:45]
 
             # Static
             if _pt == "/manifest.json": self._send("application/manifest+json; charset=utf-8", MANIFEST.encode(), True); return
@@ -3405,7 +3467,7 @@ class H(BaseHTTPRequestHandler):
                 now = int(time.time())
                 items = [{"vid":k,"ip":v.get("ip",""),"last":v.get("last",0),"count":v.get("count",0),
                           "ua":v.get("ua","")[:70],"ago":now-v.get("last",0),
-                          "blocked":bool(blocked.get(k)),"name":v.get("name","")} for k,v in d.items()]
+                          "blocked":bool(blocked.get(k)),"name":v.get("name","")} for k,v in d.items() if _VID_OK.match(k)]
                 items.sort(key=lambda x: -x["last"])
                 self._json(items); return
             if _pt == "/api/admin/send":
@@ -3535,5 +3597,5 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"Сервер запущен на порту {port}")
     threading.Thread(target=keep_alive, daemon=True).start()
-    server = HTTPServer(('0.0.0.0', port), H)
+    server = ThreadingHTTPServer(('0.0.0.0', port), H)
     server.serve_forever()
