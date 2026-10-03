@@ -1560,13 +1560,18 @@ html.corners-pill[data-theme] body .card,html.corners-pill[data-theme] body .tab
 html.corners-circle[data-theme] body .num,html.round-nums[data-theme] body .num{border-radius:50%!important}
 html.no-radius-all[data-theme] body .card,html.no-radius-all[data-theme] body .num,html.no-radius-all[data-theme] body .tab{border-radius:0!important}
 
-/* ===== v4 ===== */
+/* ===== v5 ===== */
+html[data-theme] body #adminTap{filter:none!important;background:none!important;box-shadow:none!important;text-shadow:none!important;-webkit-background-clip:border-box!important;background-clip:border-box!important}
+html[data-theme] body h2{overflow:visible!important}
 html[data-theme] body .container{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))!important}
-html[data-theme] body .card{--h:215;border-left:4px solid hsl(var(--h) 70% 58%)!important}
-html[data-theme] body .card:not(.now) .num{background:hsl(var(--h) 90% 93%)!important;color:hsl(var(--h) 55% 36%)!important}
-html[data-theme="dark"] body .card:not(.now) .num,html[data-theme="cosmic"] body .card:not(.now) .num{background:hsl(var(--h) 40% 24%)!important;color:hsl(var(--h) 85% 82%)!important}
-html[data-theme] body .card.now{border-left-color:var(--accent)!important}
-.room{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:8px;font-size:.72em;font-weight:800;vertical-align:middle;background:var(--accent-light);color:var(--accent)}
+html[data-theme] body .header-card{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 14%,var(--card-bg)),var(--card-bg))!important;border:1px solid color-mix(in srgb,var(--accent) 22%,var(--border))!important}
+html[data-theme] body .card{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 7%,var(--card-bg)),var(--card-bg) 70%)!important;border:1px solid color-mix(in srgb,var(--accent) 16%,var(--border))!important}
+html[data-theme] body .card:not(.now) .num{background:var(--accent-light)!important;color:var(--accent)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 25%,transparent)!important}
+html[data-theme] body .card.now .num{background:linear-gradient(145deg,var(--accent),var(--accent2))!important;color:var(--on-accent)!important;box-shadow:0 6px 16px var(--accent-light)!important}
+html[data-theme] body .card.now{border-color:var(--accent)!important}
+html[data-theme] body .card.next-up{box-shadow:0 0 0 1.5px var(--accent2)!important}
+html[data-theme] body .day-title{color:var(--text-main)!important;border-left:4px solid var(--accent);border-radius:2px;padding-left:10px!important;letter-spacing:.02em}
+.room{display:inline-block;margin-left:8px;padding:1px 9px;border-radius:9px;font-size:.72em;font-weight:800;vertical-align:middle;background:var(--accent-light);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent)}
 html.hide-classroom .room{display:none}
 .install-banner{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))!important}
 </style>
