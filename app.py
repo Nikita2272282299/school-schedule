@@ -1,4 +1,4 @@
-import re, hmac, threading, urllib.request, csv, io, time, os, json, uuid, hashlib
+import copy, signal, re, hmac, threading, urllib.request, csv, io, time, os, json, uuid, hashlib
 from http.server import HTTPServer, ThreadingHTTPServer, BaseHTTPRequestHandler
 from html import escape as _esc
 from datetime import datetime, timezone, timedelta
@@ -56,7 +56,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v36';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v36').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v37';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v37').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -141,7 +141,7 @@ def log_visit(vid, ip, ua):
             d[vid]["last"] = now
             d[vid]["count"] = d[vid].get("count", 0) + 1
             d[vid]["ip"] = ip
-        else:
+        elif len(d) < 5000:
             d[vid] = {"ip": ip, "ua": (ua or "")[:200], "first": now, "last": now, "count": 1, "name": ""}
         _sv(VISITORS_FILE, d)
 
@@ -196,6 +196,52 @@ def rename_v(vid, name):
         if vid in d:
             d[vid]["name"] = (name or "")[:30]
             _sv(VISITORS_FILE, d)
+
+UP_URL=os.environ.get("UPSTASH_REDIS_REST_URL","").rstrip("/")
+UP_TOK=os.environ.get("UPSTASH_REDIS_REST_TOKEN","")
+_mem={}; _dirty=set(); _mlock=threading.RLock()
+def _up(cmd):
+    try:
+        rq=urllib.request.Request(UP_URL,data=json.dumps(cmd).encode(),headers={"Authorization":"Bearer "+UP_TOK,"Content-Type":"application/json"})
+        return json.loads(urllib.request.urlopen(rq,timeout=5).read()).get("result")
+    except Exception:
+        return None
+_REMOTE=bool(UP_URL and UP_TOK) and _up(["PING"])=="PONG"
+def _ld(path,default):
+    with _mlock:
+        if path not in _mem:
+            try:
+                with open(path,"r",encoding="utf-8") as f: _mem[path]=json.load(f)
+            except Exception:
+                return default
+        return copy.deepcopy(_mem[path])
+def _sv(path,data):
+    with _mlock:
+        _mem[path]=copy.deepcopy(data); _dirty.add(path)
+def _flush():
+    with _mlock:
+        items=[(p,json.dumps(_mem[p],ensure_ascii=False)) for p in list(_dirty) if p in _mem]
+        _dirty.clear()
+    for p,v in items:
+        try:
+            with open(p+".tmp","w",encoding="utf-8") as f: f.write(v)
+            os.replace(p+".tmp",p)
+        except Exception: pass
+        if _REMOTE: _up(["SET","school:"+p,v])
+if _REMOTE:
+    for _p in (VISITORS_FILE,MESSAGES_FILE,BLOCKED_FILE,CHANGE_FILE,FILLED_FILE):
+        _v=_up(["GET","school:"+_p]) or _up(["GET","school:"+_p])
+        if _v:
+            try: _mem[_p]=json.loads(_v)
+            except Exception: pass
+def _bg():
+    while True:
+        time.sleep(30); _flush()
+threading.Thread(target=_bg,daemon=True).start()
+def _term(*a):
+    _flush(); os._exit(0)
+try: signal.signal(signal.SIGTERM,_term)
+except Exception: pass
 
 # ============ SCHEDULE ============
 def _get_schedule_impl():
@@ -273,7 +319,7 @@ def _get_schedule_impl():
     return cache["days_schedule"], cache["error_msg"]
 
 def get_schedule():
-    if not _sched_lock.acquire(blocking=False):
+    if not _sched_lock.acquire(blocking=not cache["days_schedule"]):
         return cache["days_schedule"], cache["error_msg"]
     try:
         return _get_schedule_impl()
@@ -315,7 +361,7 @@ PAGE = """<!DOCTYPE html>
 <html lang="ru" data-theme="light">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f0f4f8" id="tcMeta">
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1513,6 +1559,16 @@ html.corners-sharp[data-theme] body .card,html.corners-sharp[data-theme] body .t
 html.corners-pill[data-theme] body .card,html.corners-pill[data-theme] body .tab{border-radius:100px!important}
 html.corners-circle[data-theme] body .num,html.round-nums[data-theme] body .num{border-radius:50%!important}
 html.no-radius-all[data-theme] body .card,html.no-radius-all[data-theme] body .num,html.no-radius-all[data-theme] body .tab{border-radius:0!important}
+
+/* ===== v4 ===== */
+html[data-theme] body .container{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))!important}
+html[data-theme] body .card{--h:215;border-left:4px solid hsl(var(--h) 70% 58%)!important}
+html[data-theme] body .card:not(.now) .num{background:hsl(var(--h) 90% 93%)!important;color:hsl(var(--h) 55% 36%)!important}
+html[data-theme="dark"] body .card:not(.now) .num,html[data-theme="cosmic"] body .card:not(.now) .num{background:hsl(var(--h) 40% 24%)!important;color:hsl(var(--h) 85% 82%)!important}
+html[data-theme] body .card.now{border-left-color:var(--accent)!important}
+.room{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:8px;font-size:.72em;font-weight:800;vertical-align:middle;background:var(--accent-light);color:var(--accent)}
+html.hide-classroom .room{display:none}
+.install-banner{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))!important}
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
@@ -2216,7 +2272,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
 
 /* Init */
 (function(){
-    var s = localStorage.getItem('rs_theme') || 'light';
+    var s = localStorage.getItem('rs_theme') || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     document.documentElement.setAttribute('data-theme', s);
     var meta = document.getElementById('tcMeta'); if (meta) meta.setAttribute('content', THEME_COLORS[s] || '#f0f4f8');
     document.querySelectorAll('[data-theme-btn]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-theme-btn')===s); });
@@ -3315,6 +3371,23 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
     }, {passive: true, capture: true});
 })();
 </script>
+<script>
+(function(){
+function hue(s){var h=7;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%360;return h}
+function paint(){
+ document.querySelectorAll('.card:not([data-c])').forEach(function(c){
+  var l=c.querySelector('.lesson');if(!l)return;
+  var t=l.textContent,m=t.match(/\s*\((.*)\)\s*$/),n=t.replace(/\s*\((.*)\)\s*$/,'').trim();
+  c.style.setProperty('--h',hue(n.toLowerCase()));
+  if(m){l.textContent=n;var r=document.createElement('span');r.className='room';r.textContent=m[1];l.appendChild(r);}
+  c.setAttribute('data-c','1');});
+}
+var q;function sch(){cancelAnimationFrame(q);q=requestAnimationFrame(paint)}
+paint();
+var C=document.querySelector('.container');
+if(C)new MutationObserver(sch).observe(C,{childList:true,subtree:true});
+})();
+</script>
 </body>
 </html>"""
 
@@ -3596,6 +3669,7 @@ load_change()
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"Сервер запущен на порту {port}")
+    threading.Thread(target=get_schedule, daemon=True).start()
     threading.Thread(target=keep_alive, daemon=True).start()
     server = ThreadingHTTPServer(('0.0.0.0', port), H)
     server.serve_forever()
