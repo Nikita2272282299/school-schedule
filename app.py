@@ -1579,6 +1579,14 @@ html.hide-classroom .room{display:none}
 /* ===== v6 ===== */
 html[data-theme] body #particles{opacity:.5}
 html[data-theme] body .card,html[data-theme] body .live-banner,html[data-theme] body .day-footer .df-item,html[data-theme] body .sheet-link{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+
+/* ===== v7: быстрее ===== */
+html[data-theme] body *,html[data-theme] body *::before,html[data-theme] body *::after{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html[data-theme] body .tabs{position:static!important}
+html[data-theme] body::before{will-change:auto!important;animation:none!important}
+html[data-theme] body .live-dot,html[data-theme] body .online-pill::before,html[data-theme] body .now-pill,html[data-theme] body .card.now,html[data-theme] body .today-pill::after,html[data-theme] body .progress-fill::after{animation:none!important}
+html[data-theme] body .container{animation:none!important}
+html[data-theme] body .card,html[data-theme] body .tab,html[data-theme] body .day-footer .df-item{transition:none!important}
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
@@ -1938,7 +1946,7 @@ function applyFilters(){
     var hu = localStorage.getItem('rs_f_hue-rotate') || '0'; var ct=localStorage.getItem('rs_f_contrast')||'100', se=localStorage.getItem('rs_f_sepia')||'0', iv=localStorage.getItem('rs_f_invert')||'0', gs=localStorage.getItem('rs_f_grayscale')||'0'; window.__F = 'saturate('+s+'%) brightness('+b+'%) contrast('+ct+'%) hue-rotate('+hu+'deg) sepia('+se+'%) invert('+iv+'%) grayscale('+gs+'%)';
     h.style.setProperty('--global-filter', window.__F);
     document.querySelectorAll('.card, .header-card').forEach(function(el){
-        el.style.filter = window.__F;
+        el.style.filter = (window.__F === 'saturate(100%) brightness(100%) contrast(100%) hue-rotate(0deg) sepia(0%) invert(0%) grayscale(0%)') ? '' : window.__F;
     });
 }
 function setParticleCount(v){ localStorage.setItem('rs_particle_count', v); var o=document.getElementById('o-particle_count'); if(o)o.textContent=v; spawnParticles(document.documentElement.getAttribute('data-theme')); }
@@ -2040,7 +2048,7 @@ function spawnParticles(theme){
     if (window.innerWidth < 320) return;
     var base = { cosmic:{chars:['✦','✧','·','+'],colors:['#fff','#b794f6','#7cf5c0','#e0d4ff'],dur:[15,28]}, sakura:{chars:['🌸','🌸','❀','✿'],colors:['#ec4899','#f9a8d4','#fbcfe8'],dur:[11,20]}, forest:{chars:['🍃','🌿'],colors:['#059669','#16a34a','#84cc16'],dur:[13,24]}, ocean:{chars:['●','○','·'],colors:['rgba(34,211,238,0.75)','rgba(8,145,178,0.65)'],dur:[11,20]}, sunset:{chars:['✨','·','✦'],colors:['#f97316','#ec4899','#fbbf24'],dur:[13,22]} }[theme];
     if (!base) return;
-    var n = parseInt(localStorage.getItem('rs_particle_count') || '18', 10);
+    var n = parseInt(localStorage.getItem('rs_particle_count') || '8', 10);
     if (window.innerWidth < 820) n = Math.max(4, Math.round(n * 0.6));
     var frag = document.createDocumentFragment();
     for (var i=0;i<n;i++){
