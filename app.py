@@ -10,7 +10,8 @@ SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit"
 SELF_URL = "https://school-schedule-4ldw.onrender.com/"
 PERM_TZ = timezone(timedelta(hours=5))
 CLASS_CODE = "8г"
-ADMIN_KEY = os.environ.get("ADMIN_KEY") or uuid.uuid4().hex
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
+ADMIN_KEY = hashlib.sha256(("sk|" + ADMIN_PASSWORD).encode()).hexdigest() if ADMIN_PASSWORD else (os.environ.get("ADMIN_KEY") or uuid.uuid4().hex)
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
 _VID_OK = re.compile(r"^[A-Za-z0-9_-]{1,40}$")
 _login_fails = {}
@@ -56,7 +57,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v36';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v36').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v38';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v38').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -1959,7 +1960,7 @@ function showDay(day){
         var tabs = cont && cont.querySelector('.tabs');
         if (tabs && tabs.parentNode) tabs.parentNode.insertBefore(back, tabs.nextSibling);
     }
-    back.style.display = isToday ? 'none' : 'block';
+    back.style.display = (isToday || !todayName) ? 'none' : 'block';
     if (typeof window.__buildFooter === 'function') setTimeout(window.__buildFooter, 50);
 }
 function openSub(name){
@@ -3329,6 +3330,31 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
     }, {passive: true, capture: true});
 })();
 </script>
+<script>
+/* ADMIN-RELOGIN */
+(function(){
+ function key(){try{return localStorage.getItem('rs_akey')||''}catch(e){return ''}}
+ var F=window.fetch;
+ window.fetch=function(u,o){
+  var isA=typeof u==='string'&&u.indexOf('/api/admin/login')!==0&&(u.indexOf('/api/admin/')===0||(u.indexOf('/api/live')===0&&u.indexOf('admin=')>-1));
+  if(isA)u=u.replace(/([?&])admin=[^&]*/,'$1admin='+encodeURIComponent(key()));
+  var p=F.call(this,u,o);
+  if(isA&&u.indexOf('/api/admin/')===0)p.then(function(r){if(r.status===403)setTimeout(show,150)}).catch(function(){});
+  return p;
+ };
+ function show(){
+  var el=document.getElementById('apList');if(!el)return;
+  el.innerHTML='<div style="text-align:center;padding:20px"><div style="color:var(--danger);font-weight:800;margin-bottom:12px">Сессия админа устарела</div><button class="ap-btn" onclick="__adminRelogin()">🔑 Войти заново</button></div>';
+ }
+ window.__adminRelogin=function(){
+  var p=prompt('Пароль админа:');if(!p)return;
+  fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:p})})
+  .then(function(r){return r.json()})
+  .then(function(d){if(d&&d.key){localStorage.setItem('rs_akey',d.key);localStorage.setItem('rs_admin','1');if(window.loadVisitors)window.loadVisitors();}else alert('Неверный пароль')})
+  .catch(function(){alert('Ошибка сети')});
+ };
+})();
+</script>
 </body>
 </html>"""
 
@@ -3411,6 +3437,23 @@ def build_content(days, active, err, st):
     return html
 
 # ============ HANDLER ============
+BUILD = "2026-10-04-b"
+def _pick(days, active):
+    if active in DAY_FULL and days.get(active): return active
+    wi = datetime.now(PERM_TZ).weekday()
+    order = (DAY_FULL[wi:] + DAY_FULL[:wi]) if wi < 5 else DAY_FULL
+    for d in order:
+        if days.get(d): return d
+    return active if active in DAY_FULL else DAY_FULL[0]
+
+def _after_last(lessons, now):
+    try:
+        e = lessons[-1][0].split("-")[1]
+        h, m = map(int, e.split(":"))
+        return now.hour * 60 + now.minute >= h * 60 + m
+    except Exception:
+        return now.hour > 14 or (now.hour == 14 and now.minute >= 40)
+
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a): pass
     def _send(self, ct, body, cache=False):
@@ -3463,7 +3506,7 @@ class H(BaseHTTPRequestHandler):
 
             # Static
             if _pt == "/manifest.json": self._send("application/manifest+json; charset=utf-8", MANIFEST.encode(), True); return
-            if _pt == "/sw.js": self._send("application/javascript; charset=utf-8", SW_JS.encode(), True); return
+            if _pt == "/sw.js": self._send("application/javascript; charset=utf-8", SW_JS.encode(), False); return
             if _pt == "/icon.svg": self._send("image/svg+xml; charset=utf-8", ICON_SVG.encode(), True); return
 
             # API
@@ -3521,7 +3564,7 @@ class H(BaseHTTPRequestHandler):
                 today_lessons_l = days_l.get(cur_day_l, [])
                 # Определяем активный день (та же логика, что в do_GET)
                 hour_l, min_l = now_l.hour, now_l.minute
-                school_over_l = (hour_l > 14 or (hour_l == 14 and min_l >= 40) or is_weekend_l or not today_lessons_l)
+                school_over_l = (_after_last(today_lessons_l, now_l) or is_weekend_l or not today_lessons_l)
                 if school_over_l and wi_l < 5:
                     ni_l = wi_l + 1
                     if ni_l < 5:
@@ -3534,10 +3577,11 @@ class H(BaseHTTPRequestHandler):
                 if active_l not in DAY_FULL: active_l = cur_day_l
                 if not days_l.get(active_l) and days_l.get(cur_day_l): active_l = cur_day_l
                 st_l = get_live_status(today_lessons_l) if not is_weekend_l else None
+                active_l = _pick(days_l, active_l)
                 html_live = build_live(st_l)
                 html_tabs = build_tabs(active_l, days_l)
                 html_content = build_content(days_l, active_l, err_l, st_l)
-                resp = {"ts": change_tracker.get("ts", 0), "live": st_l,
+                resp = {"build": BUILD, "ts": change_tracker.get("ts", 0), "live": st_l,
                         "html_live": html_live, "html_tabs": html_tabs, "html_content": html_content,
                         "day_today": today_full_l, "day_active": active_l}
                 if _vid:
@@ -3560,7 +3604,7 @@ class H(BaseHTTPRequestHandler):
             is_weekend = wi >= 5
             days, err = get_schedule()
             today_lessons = days.get(cur_day, [])
-            school_over = (hour > 14 or (hour == 14 and minute >= 40) or is_weekend or not today_lessons)
+            school_over = (_after_last(today_lessons, now) or is_weekend or not today_lessons)
             if school_over and wi < 5:
                 ni = wi + 1
                 if ni < 5:
@@ -3571,6 +3615,7 @@ class H(BaseHTTPRequestHandler):
             if active not in DAY_FULL: active = cur_day
             if not days.get(active) and days.get(cur_day): active = cur_day
 
+            active = _pick(days, active)
             st = get_live_status(today_lessons) if not is_weekend else None
             live = build_live(st)
             tabs = build_tabs(active, days)
