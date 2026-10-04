@@ -198,6 +198,20 @@ def rename_v(vid, name):
             _sv(VISITORS_FILE, d)
 
 # ============ SCHEDULE ============
+_TIME_RE = re.compile(r"^\d{1,2}[:.]\d{2}\s*[-–—]\s*\d{1,2}[:.]\d{2}$")
+def _norm_t(t):
+    t = t.replace("–","-").replace("—","-").replace(" ","").replace(".",":")
+    a, b = t.split("-")
+    f = lambda x: str(int(x.split(":")[0])) + ":" + x.split(":")[1]
+    return f(a) + "-" + f(b)
+def _num_for(tv, row):
+    n = TIME_TO_NUM.get(tv)
+    if n: return n
+    for c in row[:4]:
+        c = c.strip()
+        if c.isdigit() and 1 <= int(c) <= 12: return int(c)
+    return 0
+
 def _get_schedule_impl():
     now = time.time()
     if cache["days_schedule"] and (now - cache["last_update"] < CACHE_TTL):
@@ -242,13 +256,13 @@ def _get_schedule_impl():
                 tv = ""
                 for c in row:
                     cc = c.strip()
-                    if cc in TIME_TO_NUM: tv = cc; break
+                    if _TIME_RE.match(cc): tv = _norm_t(cc); break
                 if not tv: continue
                 if len(row) > col:
                     lv = row[col].strip()
                     if not lv or len(lv) < 2 or ":" in lv: continue
                     if lv.lower() in ["урок","-","—",""]: continue
-                    n = TIME_TO_NUM[tv]
+                    n = _num_for(tv, row) or (len(days[cur_day]) + 1)
                     if n not in [x[1] for x in days[cur_day]]:
                         days[cur_day].append((tv, n, lv))
             for d in days: days[d].sort(key=lambda x: x[1])
