@@ -64,7 +64,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v38';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v38').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v41';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v41').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -1536,10 +1536,29 @@ html.corners-sharp[data-theme] body .card,html.corners-sharp[data-theme] body .t
 html.corners-pill[data-theme] body .card,html.corners-pill[data-theme] body .tab{border-radius:100px!important}
 html.corners-circle[data-theme] body .num,html.round-nums[data-theme] body .num{border-radius:50%!important}
 html.no-radius-all[data-theme] body .card,html.no-radius-all[data-theme] body .num,html.no-radius-all[data-theme] body .tab{border-radius:0!important}
+
+/* Погода — крупный виджет */
+html body .day-footer .df-item[data-widget="weather"] {
+  grid-column: span 2 !important;
+  min-height: 58px !important;
+  padding: 12px 14px !important;
+}
+html body .day-footer .df-item[data-widget="weather"] .df-ico {
+  font-size: 1.6rem !important;
+}
+html body .day-footer .df-item[data-widget="weather"] .df-name {
+  font-size: 0.62rem !important;
+  letter-spacing: 0.06em !important;
+}
+html body .day-footer .df-item[data-widget="weather"] .df-val {
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em;
+}
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-03-50';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-08-54';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -1723,8 +1742,7 @@ html.no-radius-all[data-theme] body .card,html.no-radius-all[data-theme] body .n
         <div class="acc-sub">🌤 Виджеты и фишки</div>
         <div class="srow" onclick="toggleOpt('widget_online')"><span class="srow-label" data-ico="🟢">Счётчик онлайн</span><span class="srow-value" id="val-widget_online">вкл</span></div>
         <div class="srow" onclick="toggleOpt('widget_weather')"><span class="srow-label" data-ico="🌤">Погода</span><span class="srow-value" id="val-widget_weather">вкл</span></div>
-        <div class="srow" onclick="toggleOpt('widget_workload')"><span class="srow-label" data-ico="💪">Загруженность дня</span><span class="srow-value" id="val-widget_workload">вкл</span></div>
-        <div class="srow" onclick="toggleOpt('widget_endday')"><span class="srow-label" data-ico="🏁">До конца дня</span><span class="srow-value" id="val-widget_endday">вкл</span></div>
+                <div class="srow" onclick="toggleOpt('widget_endday')"><span class="srow-label" data-ico="🏁">До конца дня</span><span class="srow-value" id="val-widget_endday">вкл</span></div>
         <div class="srow" onclick="toggleOpt('auto_accent')"><span class="srow-label" data-ico="🎨">Авто-акцент по времени</span><span class="srow-value" id="val-auto_accent">выкл</span></div>
         <div class="srow" onclick="toggleOpt('anim_days')"><span class="srow-label" data-ico="✨">Анимация смены дня</span><span class="srow-value" id="val-anim_days">вкл</span></div>
         <div class="acc-slider"><label>Город для погоды <output id="o-city_out"></output></label>
@@ -2510,19 +2528,30 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                 var lat = g.results[0].latitude, lon = g.results[0].longitude;
                 var url = 'https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon
                     + '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max'
+                    + '&hourly=temperature_2m,weather_code'
                     + '&timezone=auto&past_days=7&forecast_days=7';
                 return fetch(url).then(function(r){ return r.json(); }).then(function(w){
-                    if (!w.daily || !w.daily.time) return;
                     var days = {};
-                    for (var i = 0; i < w.daily.time.length; i++) {
-                        days[w.daily.time[i]] = {
-                            tmax: w.daily.temperature_2m_max[i],
-                            tmin: w.daily.temperature_2m_min[i],
-                            code: w.daily.weather_code[i],
-                            precip: w.daily.precipitation_probability_max ? w.daily.precipitation_probability_max[i] : null
-                        };
+                    var hourly = {};
+                    if (w.daily && w.daily.time) {
+                        for (var i = 0; i < w.daily.time.length; i++) {
+                            days[w.daily.time[i]] = {
+                                tmax: w.daily.temperature_2m_max[i],
+                                tmin: w.daily.temperature_2m_min[i],
+                                code: w.daily.weather_code[i],
+                                precip: w.daily.precipitation_probability_max ? w.daily.precipitation_probability_max[i] : null
+                            };
+                        }
                     }
-                    try { localStorage.setItem('rs_weather_week', JSON.stringify({days:days, ts:Date.now()})); } catch(e){}
+                    if (w.hourly && w.hourly.time) {
+                        for (var j = 0; j < w.hourly.time.length; j++) {
+                            hourly[w.hourly.time[j]] = {
+                                t: w.hourly.temperature_2m[j],
+                                c: w.hourly.weather_code[j]
+                            };
+                        }
+                    }
+                    try { localStorage.setItem('rs_weather_week', JSON.stringify({days:days, hourly:hourly, ts:Date.now()})); } catch(e){}
                     renderWeather();
                     if (typeof window.__buildFooter === 'function') window.__buildFooter();
                 });
@@ -2530,23 +2559,85 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
     }
     window.__loadWeather = loadWeatherWeek;
 
-    function renderWeather(){
-        var nameEl = document.querySelector('[data-widget="weather"] .df-name');
-        var el = document.querySelector('[data-widget="weather"] .df-val');
-        if (!el) return;
+    function getHourlyWeather(dateKey, hour) {
+        var cache = null;
+        try { cache = JSON.parse(localStorage.getItem('rs_weather_week')||'null'); } catch(e){}
+        if (!cache || !cache.hourly) return null;
+        var hh = String(hour); if (hh.length < 2) hh = '0' + hh;
+        return cache.hourly[dateKey + 'T' + hh + ':00'] || null;
+    }
+    function getDayHours() {
+        var block = document.querySelector('.day-block.active-day');
+        if (!block) return null;
+        var times = block.querySelectorAll('.card .time');
+        if (!times.length) return null;
+        var first = times[0].textContent.trim();
+        var last = times[times.length-1].textContent.trim();
+        var m1 = first.match(/([0-9]+):([0-9]+)-([0-9]+):([0-9]+)/);
+        var m2 = last.match(/([0-9]+):([0-9]+)-([0-9]+):([0-9]+)/);
+        if (!m1 || !m2) return null;
+        var startH = parseInt(m1[1],10), startM = parseInt(m1[2],10);
+        var endH = parseInt(m2[3],10), endM = parseInt(m2[4],10);
+        var toMin = startH*60 + startM - 30; if (toMin < 0) toMin = 0;
+        var fromMin = endH*60 + endM + 5;
+        var toH = Math.floor(toMin/60);
+        var fromH = Math.min(23, Math.ceil(fromMin/60));
+        return { toH: toH, fromH: fromH };
+    }
+    function showWeatherDetails() {
         var name = getActiveDayName();
-        var w = getWeatherForDay(name);
-        if (nameEl) {
-            if (isPastDayName(name)) nameEl.textContent = '\u0411\u044b\u043b\u043e';
-            else if (isFutureDayName(name)) nameEl.textContent = '\u0411\u0443\u0434\u0435\u0442';
-            else nameEl.textContent = '\u041f\u043e\u0433\u043e\u0434\u0430';
-        }
-        if (!w || w.tmax === null || w.tmax === undefined) { el.textContent = '\u2014'; }
-        else {
-            var t = Math.round(w.tmax);
-            el.textContent = t + '\u00b0C ' + wmoShort(w.code);
-        }
+        var dk = getDayKey(name);
+        var h = getDayHours();
+        if (!dk) { alert('Нет данных'); return; }
+        if (!h) { alert('Нет уроков в этот день'); return; }
+        var wTo = getHourlyWeather(dk, h.toH);
+        var wFrom = getHourlyWeather(dk, h.fromH);
+        var m = '';
+        m += '🎒 В школу (~' + String(h.toH).padStart(2,'0') + ':00): ';
+        m += wTo ? Math.round(wTo.t) + '\u00b0C, ' + wmoText(wTo.c) : 'нет данных';
+        m += '\n';
+        m += '🏠 Из школы (~' + String(h.fromH).padStart(2,'0') + ':00): ';
+        m += wFrom ? Math.round(wFrom.t) + '\u00b0C, ' + wmoText(wFrom.c) : 'нет данных';
+        alert(m);
+    }
+    window.showWeatherDetails = showWeatherDetails;
 
+    function renderWeather(){
+        try {
+            var nameEl = document.querySelector('[data-widget="weather"] .df-name');
+            var el = document.querySelector('[data-widget="weather"] .df-val');
+            if (!el) return;
+            var name = getActiveDayName();
+            var dk = getDayKey(name);
+            var isPast = isPastDayName(name);
+            var isFuture = isFutureDayName(name);
+            if (nameEl) {
+                if (isPast) nameEl.textContent = '\u0411\u044b\u043b\u043e';
+                else if (isFuture) nameEl.textContent = '\u0411\u0443\u0434\u0435\u0442';
+                else nameEl.textContent = '\u0412 \u0448\u043a\u043e\u043b\u0443 \u2192 \u0434\u043e\u043c\u043e\u0439';
+            }
+            if (!dk) { el.textContent = '\u2014'; return; }
+            var h = getDayHours();
+            var wTo = null, wFrom = null;
+            if (h) {
+                wTo = getHourlyWeather(dk, h.toH);
+                wFrom = getHourlyWeather(dk, h.fromH);
+            }
+            if (!wTo && !wFrom) {
+                var w = getWeatherForDay(name);
+                if (!w || w.tmax === null || w.tmax === undefined) { el.textContent = '\u2014'; return; }
+                el.textContent = Math.round(w.tmin) + '\u00b0\u2192' + Math.round(w.tmax) + '\u00b0C ' + wmoShort(w.code);
+                return;
+            }
+            var t1 = wTo ? Math.round(wTo.t) : '?';
+            var t2 = wFrom ? Math.round(wFrom.t) : '?';
+            var icon = wTo ? wmoShort(wTo.c) : (wFrom ? wmoShort(wFrom.c) : '');
+            el.textContent = t1 + '\u00b0 \u2192 ' + t2 + '\u00b0 ' + icon;
+        } catch(e) {
+            console.warn('renderWeather err:', e);
+            var el2 = document.querySelector('[data-widget="weather"] .df-val');
+            if (el2) el2.textContent = '\u2014';
+        }
     }
 
     loadWeatherWeek();
