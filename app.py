@@ -64,7 +64,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v40';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v40').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v39';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v39').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -1539,7 +1539,7 @@ html.no-radius-all[data-theme] body .card,html.no-radius-all[data-theme] body .n
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-08-53';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-08-52';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -2607,53 +2607,48 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
     };
 
     function renderWeather(){
-        try {
-            var nameEl = document.querySelector('[data-widget="weather"] .df-name');
-            var el = document.querySelector('[data-widget="weather"] .df-val');
-            if (!el) return;
-            var name = getActiveDayName();
-            var dayKey = getDayKey(name);
-            var isPast = isPastDayName(name);
-            var isFuture = isFutureDayName(name);
+        var nameEl = document.querySelector('[data-widget="weather"] .df-name');
+        var el = document.querySelector('[data-widget="weather"] .df-val');
+        if (!el) return;
+        var name = getActiveDayName();
+        var dayKey = getDayKey(name);
+        var isPast = isPastDayName(name);
+        var isFuture = isFutureDayName(name);
 
-            if (nameEl) {
-                if (isPast) nameEl.textContent = '\u0411\u044b\u043b\u043e';
-                else if (isFuture) nameEl.textContent = '\u0411\u0443\u0434\u0435\u0442';
-                else nameEl.textContent = '\u0423\u0442\u0440\u043e \u2192 \u0432\u0435\u0447\u0435\u0440';
-            }
-            if (!dayKey) { el.textContent = '\u2014'; return; }
+        if (nameEl) {
+            if (isPast) nameEl.textContent = '\u0411\u044b\u043b\u043e';
+            else if (isFuture) nameEl.textContent = '\u0411\u0443\u0434\u0435\u0442';
+            else nameEl.textContent = '\u0423\u0442\u0440\u043e \u2192 \u0432\u0435\u0447\u0435\u0440';
+        }
+        if (!dayKey) { el.textContent = '\u2014'; return; }
 
-            var hours = (typeof getDayHours === 'function') ? getDayHours() : null;
-            var wTo = null, wFrom = null;
-            if (hours && typeof getHourlyWeather === 'function') {
-                wTo = getHourlyWeather(dayKey, hours.toH);
-                wFrom = getHourlyWeather(dayKey, hours.fromH);
-            }
+        var hours = getDayHours();
+        var wTo = null, wFrom = null;
+        if (hours) {
+            wTo = getHourlyWeather(dayKey, hours.toH);
+            wFrom = getHourlyWeather(dayKey, hours.fromH);
+        }
 
-            if (!wTo && !wFrom) {
-                var w = getWeatherForDay(name);
-                if (!w || w.tmax === null || w.tmax === undefined) { el.textContent = '\u2014'; return; }
-                el.textContent = Math.round(w.tmax) + '\u00b0C ' + wmoShort(w.code);
-                return;
-            }
+        // Fallback на tmax, если нет уроков/данных
+        if (!wTo && !wFrom) {
+            var w = getWeatherForDay(name);
+            if (!w || w.tmax === null || w.tmax === undefined) { el.textContent = '\u2014'; return; }
+            el.textContent = Math.round(w.tmax) + '\u00b0C ' + wmoShort(w.code);
+            return;
+        }
 
-            var t1 = wTo ? Math.round(wTo.t) : null;
-            var t2 = wFrom ? Math.round(wFrom.t) : null;
-            var icon = wTo ? wmoShort(wTo.c) : (wFrom ? wmoShort(wFrom.c) : '');
+        var t1 = wTo ? Math.round(wTo.t) : null;
+        var t2 = wFrom ? Math.round(wFrom.t) : null;
+        var icon = wTo ? wmoShort(wTo.c) : (wFrom ? wmoShort(wFrom.c) : '');
 
-            if (t1 !== null && t2 !== null && t1 !== t2) {
-                el.textContent = t1 + '\u00b0\u2192' + t2 + '\u00b0 ' + icon;
-            } else if (t1 !== null) {
-                el.textContent = t1 + '\u00b0C ' + icon;
-            } else if (t2 !== null) {
-                el.textContent = t2 + '\u00b0C ' + icon;
-            } else {
-                el.textContent = '\u2014';
-            }
-        } catch(e) {
-            console.warn('renderWeather error:', e);
-            var el2 = document.querySelector('[data-widget="weather"] .df-val');
-            if (el2) el2.textContent = '\u2014';
+        if (t1 !== null && t2 !== null && t1 !== t2) {
+            el.textContent = t1 + '\u00b0\u2192' + t2 + '\u00b0 ' + icon;
+        } else if (t1 !== null) {
+            el.textContent = t1 + '\u00b0C ' + icon;
+        } else if (t2 !== null) {
+            el.textContent = t2 + '\u00b0C ' + icon;
+        } else {
+            el.textContent = '\u2014';
         }
     }
 
@@ -2697,7 +2692,6 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
 
     // ── Собираем day-footer под {content} ──
     function buildFooter(){
-        try {
         var old = document.getElementById('dayFooter');
         if (old) old.remove();
         var cont = document.querySelector('.container');
@@ -2725,7 +2719,6 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         if (sheet && sheet.parentNode) sheet.parentNode.insertBefore(f, sheet);
         else cont.appendChild(f);
         renderWeather();
-            } catch(e) { console.error("buildFooter error:", e); }
     }
     window.__buildFooter = buildFooter;
     buildFooter();
