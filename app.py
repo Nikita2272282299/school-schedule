@@ -1539,7 +1539,7 @@ html.no-radius-all[data-theme] body .card,html.no-radius-all[data-theme] body .n
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-03-50';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-08-51';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -2510,19 +2510,30 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                 var lat = g.results[0].latitude, lon = g.results[0].longitude;
                 var url = 'https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon
                     + '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max'
+                    + '&hourly=temperature_2m,weather_code'
                     + '&timezone=auto&past_days=7&forecast_days=7';
                 return fetch(url).then(function(r){ return r.json(); }).then(function(w){
-                    if (!w.daily || !w.daily.time) return;
                     var days = {};
-                    for (var i = 0; i < w.daily.time.length; i++) {
-                        days[w.daily.time[i]] = {
-                            tmax: w.daily.temperature_2m_max[i],
-                            tmin: w.daily.temperature_2m_min[i],
-                            code: w.daily.weather_code[i],
-                            precip: w.daily.precipitation_probability_max ? w.daily.precipitation_probability_max[i] : null
-                        };
+                    var hourly = {};
+                    if (w.daily && w.daily.time) {
+                        for (var i = 0; i < w.daily.time.length; i++) {
+                            days[w.daily.time[i]] = {
+                                tmax: w.daily.temperature_2m_max[i],
+                                tmin: w.daily.temperature_2m_min[i],
+                                code: w.daily.weather_code[i],
+                                precip: w.daily.precipitation_probability_max ? w.daily.precipitation_probability_max[i] : null
+                            };
+                        }
                     }
-                    try { localStorage.setItem('rs_weather_week', JSON.stringify({days:days, ts:Date.now()})); } catch(e){}
+                    if (w.hourly && w.hourly.time) {
+                        for (var j = 0; j < w.hourly.time.length; j++) {
+                            hourly[w.hourly.time[j]] = {
+                                t: w.hourly.temperature_2m[j],
+                                c: w.hourly.weather_code[j]
+                            };
+                        }
+                    }
+                    try { localStorage.setItem('rs_weather_week', JSON.stringify({days:days, hourly:hourly, ts:Date.now()})); } catch(e){}
                     renderWeather();
                     if (typeof window.__buildFooter === 'function') window.__buildFooter();
                 });
@@ -2530,23 +2541,115 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
     }
     window.__loadWeather = loadWeatherWeek;
 
+    function getHourlyWeather(dateKey, hour) {
+        var cache = null;
+        try { cache = JSON.parse(localStorage.getItem('rs_weather_week')||'null'); } catch(e){}
+        if (!cache || !cache.hourly) return null;
+        var key = dateKey + 'T' + String(hour).padStart(2,'0') + ':00';
+        return cache.hourly[key] || null;
+    }
+    window.__getHourlyWeather = getHourlyWeather;
+
+    // Первый/последний урок активного дня -> во сколько идти в школу и из школы
+    function getDayHours() {
+        var block = document.querySelector('.day-block.active-day');
+        if (!block) return null;
+        var times = block.querySelectorAll('.card .time');
+        if (!times.length) return null;
+        var first = times[0].textContent.trim();
+        var last = times[times.length-1].textContent.trim();
+        var m1 = first.match(/([0-9]+):([0-9]+)-([0-9]+):([0-9]+)/);
+        var m2 = last.match(/([0-9]+):([0-9]+)-([0-9]+):([0-9]+)/);
+        if (!m1 || !m2) return null;
+        var startH = parseInt(m1[1],10), startM = parseInt(m1[2],10);
+        var endH = parseInt(m2[3],10), endM = parseInt(m2[4],10);
+        // "идти в школу" — за 30 мин до первого урока
+        var toMin = startH*60 + startM - 30;
+        if (toMin < 0) toMin = 0;
+        // "идти из школы" — сразу после конца последнего (округление вверх до часа)
+        var fromMin = endH*60 + endM + 5;
+        var toH = Math.floor(toMin/60);
+        var fromH = Math.min(23, Math.ceil(fromMin/60));
+        return {
+            toH: toH, fromH: fromH,
+            startStr: m1[1] + ':' + m1[2],
+            endStr: m2[3] + ':' + m2[4]
+        };
+    }
+    window.__getDayHours = getDayHours;
+
+    // Подробности по тапу на виджет погоды
+    window.showWeatherDetails = function(){
+        var name = getActiveDayName();
+        var dayKey = getDayKey(name);
+        var hours = getDayHours();
+        if (!dayKey) { alert('Нет данных'); return; }
+        if (!hours) {
+            var w = getWeatherForDay(name);
+            if (w && w.tmax !== null) {
+                alert('Весь день: ' + Math.round(w.tmin) + '\u00b0 \u2013 ' + Math.round(w.tmax) + '\u00b0C');
+            } else {
+                alert('Нет уроков в этот день');
+            }
+            return;
+        }
+        var wTo = getHourlyWeather(dayKey, hours.toH);
+        var wFrom = getHourlyWeather(dayKey, hours.fromH);
+        var msg = '';
+        msg += '\ud83c\udf92 \u0412 \u0448\u043a\u043e\u043b\u0443 (~' + String(hours.toH).padStart(2,'0') + ':00): ';
+        if (wTo) msg += Math.round(wTo.t) + '\u00b0C, ' + wmoText(wTo.c);
+        else msg += 'нет данных';
+        msg += '\n';
+        msg += '\ud83c\udfe0 \u0418\u0437 \u0448\u043a\u043e\u043b\u044b (~' + String(hours.fromH).padStart(2,'0') + ':00): ';
+        if (wFrom) msg += Math.round(wFrom.t) + '\u00b0C, ' + wmoText(wFrom.c);
+        else msg += 'нет данных';
+        alert(msg);
+    };
+
     function renderWeather(){
         var nameEl = document.querySelector('[data-widget="weather"] .df-name');
         var el = document.querySelector('[data-widget="weather"] .df-val');
         if (!el) return;
         var name = getActiveDayName();
-        var w = getWeatherForDay(name);
+        var dayKey = getDayKey(name);
+        var isPast = isPastDayName(name);
+        var isFuture = isFutureDayName(name);
+
         if (nameEl) {
-            if (isPastDayName(name)) nameEl.textContent = '\u0411\u044b\u043b\u043e';
-            else if (isFutureDayName(name)) nameEl.textContent = '\u0411\u0443\u0434\u0435\u0442';
-            else nameEl.textContent = '\u041f\u043e\u0433\u043e\u0434\u0430';
+            if (isPast) nameEl.textContent = '\u0411\u044b\u043b\u043e';
+            else if (isFuture) nameEl.textContent = '\u0411\u0443\u0434\u0435\u0442';
+            else nameEl.textContent = '\u0423\u0442\u0440\u043e \u2192 \u0432\u0435\u0447\u0435\u0440';
         }
-        if (!w || w.tmax === null || w.tmax === undefined) { el.textContent = '\u2014'; }
-        else {
-            var t = Math.round(w.tmax);
-            el.textContent = t + '\u00b0C ' + wmoShort(w.code);
+        if (!dayKey) { el.textContent = '\u2014'; return; }
+
+        var hours = getDayHours();
+        var wTo = null, wFrom = null;
+        if (hours) {
+            wTo = getHourlyWeather(dayKey, hours.toH);
+            wFrom = getHourlyWeather(dayKey, hours.fromH);
         }
 
+        // Fallback на tmax, если нет уроков/данных
+        if (!wTo && !wFrom) {
+            var w = getWeatherForDay(name);
+            if (!w || w.tmax === null || w.tmax === undefined) { el.textContent = '\u2014'; return; }
+            el.textContent = Math.round(w.tmax) + '\u00b0C ' + wmoShort(w.code);
+            return;
+        }
+
+        var t1 = wTo ? Math.round(wTo.t) : null;
+        var t2 = wFrom ? Math.round(wFrom.t) : null;
+        var icon = wTo ? wmoShort(wTo.c) : (wFrom ? wmoShort(wFrom.c) : '');
+
+        if (t1 !== null && t2 !== null && t1 !== t2) {
+            el.textContent = t1 + '\u00b0\u2192' + t2 + '\u00b0 ' + icon;
+        } else if (t1 !== null) {
+            el.textContent = t1 + '\u00b0C ' + icon;
+        } else if (t2 !== null) {
+            el.textContent = t2 + '\u00b0C ' + icon;
+        } else {
+            el.textContent = '\u2014';
+        }
     }
 
     loadWeatherWeek();
