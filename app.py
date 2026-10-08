@@ -17,8 +17,15 @@ _VID_OK = re.compile(r"^[A-Za-z0-9_-]{1,40}$")
 _login_fails = {}
 _sched_lock = threading.Lock()
 
-TIME_TO_NUM = {"8:00-8:40":1,"8:50-9:30":2,"9:45-10:25":3,"10:40-11:20":4,
-    "11:35-12:15":5,"12:25-13:05":6,"13:15-13:55":7,"14:00-14:40":8}
+TIME_TO_NUM = {
+    # Первая смена
+    "8:00-8:40":1,"8:50-9:30":2,"9:45-10:25":3,"10:40-11:20":4,
+    "11:35-12:15":5,"12:25-13:05":6,
+    # Вторая смена
+    "13:15-13:55":7,"14:00-14:40":8,"14:55-15:35":9,
+    "15:50-16:30":10,"16:45-17:25":11,
+    "17:35-18:15":12,"18:20-19:00":13
+}
 DAY_SHORT = {"Понедельник":"Пн","Вторник":"Вт","Среда":"Ср","Четверг":"Чт","Пятница":"Пт",}
 DAY_FULL = ["Понедельник","Вторник","Среда","Четверг","Пятница"]
 
@@ -300,6 +307,7 @@ def get_live_status(lessons):
     now = datetime.now(PERM_TZ)
     cur = now.hour * 60 + now.minute
     if cur < 6*60 + 30: return None
+    if cur > 20*60: return None
     prev_end = None
     prev_end_str = None
     for tv, num, lesson in lessons:
@@ -1531,7 +1539,7 @@ html.no-radius-all[data-theme] body .card,html.no-radius-all[data-theme] body .n
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-02-49';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-03-50';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
