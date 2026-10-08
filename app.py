@@ -64,7 +64,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v41';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v41').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v42';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v42').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -1558,7 +1558,7 @@ html body .day-footer .df-item[data-widget="weather"] .df-val {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-08-54';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-08-55';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -1819,7 +1819,7 @@ var THEME_COLORS = {light:'#f0f4f8',dark:'#0f1115',cosmic:'#05021a',ocean:'#c7e8
 
 function _optIsOn(key){
     var cur = localStorage.getItem('rs_opt_' + key);
-    if (['particles','show_time','live_banner','progress_bar','glow','show_weekday','today_pill','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title','widget_online','widget_weather','widget_workload','widget_endday','anim_days','notif_before5','badge_count'].indexOf(key) >= 0) return cur !== '0';
+    if (['particles','show_time','live_banner','progress_bar','glow','show_weekday','today_pill','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title','widget_online','widget_weather','widget_endday','anim_days','notif_before5','badge_count'].indexOf(key) >= 0) return cur !== '0';
     return cur === '1';
 }
 
@@ -1857,7 +1857,7 @@ function applyOpt(key, on){
     else if (key === 'anim_days') h.classList.toggle('anim-days', on);
     else if (key === 'auto_accent') { if (typeof window.__autoAccent === 'function') window.__autoAccent(); }
     else if (key === 'widget_weather') { if (typeof window.__loadWeather === 'function') window.__loadWeather(); }
-    else if (key === 'widget_online' || key === 'widget_workload' || key === 'widget_endday') { if (typeof window.__buildFooter === 'function') setTimeout(window.__buildFooter, 50); }
+    else if (key === 'widget_online' || key === 'widget_endday') { if (typeof window.__buildFooter === 'function') setTimeout(window.__buildFooter, 50); }
 }
 
 function toggleOpt(key){
@@ -2265,7 +2265,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
     if (size === 'small') document.documentElement.classList.add('font-small');
     if (size === 'large') document.documentElement.classList.add('font-large');
     document.querySelectorAll('[data-size]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-size')===size); });
-    ['particles','round_nums','compact','show_time','live_banner','progress_bar','glow','big_text','show_weekday','today_pill','hide_weekend','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title','mirror','uppercase','bold_all','italic','underline','colorblind','no_radius','grayscale_all','reduce_motion','anim_smooth','anim_wobble','widget_online','widget_weather','widget_workload','widget_endday','anim_days','auto_accent','notif_before5','badge_count'].forEach(function(k){ applyOpt(k, _optIsOn(k)); });
+    ['particles','round_nums','compact','show_time','live_banner','progress_bar','glow','big_text','show_weekday','today_pill','hide_weekend','show_logo','show_header','show_tabs','show_numbers','show_classroom','show_sheet_link','show_day_title','mirror','uppercase','bold_all','italic','underline','colorblind','no_radius','grayscale_all','reduce_motion','anim_smooth','anim_wobble','widget_online','widget_weather','widget_endday','anim_days','auto_accent','notif_before5','badge_count'].forEach(function(k){ applyOpt(k, _optIsOn(k)); });
     updateOptUI();
     initCustom();
     applyVars();
@@ -2451,15 +2451,14 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         if (i < 0) return null;
         var today = new Date();
         var todayIdx = getTodayIdx();
-        var noSchoolToday = (todayIdx < 0) || (todayIdx === 4 && today.getHours() >= 15);
         var d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        if (noSchoolToday) {
+        if (todayIdx < 0) {
+            // Сегодня выходной — ищем ближайший будний день
             var dow = today.getDay();
             var daysToMon;
             if (dow === 5) daysToMon = 3;
             else if (dow === 6) daysToMon = 2;
-            else if (dow === 0) daysToMon = 1;
-            else daysToMon = 7 - dow + 1;
+            else daysToMon = 1;
             d.setDate(d.getDate() + daysToMon + i);
             return d;
         }
@@ -2626,7 +2625,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
             if (!wTo && !wFrom) {
                 var w = getWeatherForDay(name);
                 if (!w || w.tmax === null || w.tmax === undefined) { el.textContent = '\u2014'; return; }
-                el.textContent = Math.round(w.tmin) + '\u00b0\u2192' + Math.round(w.tmax) + '\u00b0C ' + wmoShort(w.code);
+                el.textContent = Math.round(w.tmin) + '\u00b0 \u2192 ' + Math.round(w.tmax) + '\u00b0 ' + wmoShort(w.code);
                 return;
             }
             var t1 = wTo ? Math.round(wTo.t) : '?';
@@ -2695,11 +2694,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         // "До конца" — только для сегодняшнего дня
         if (_optIsOn('widget_endday') && isToday) {
             html += '<div class="df-item" data-widget="endday"><span class="df-ico">🏁</span><span class="df-text"><span class="df-name">\u0414\u043e \u043a\u043e\u043d\u0446\u0430</span><span class="df-val">'+calcEndOfDay()+'</span></span></div>';
-        }
-        if (_optIsOn('widget_workload')) {
-            html += '<div class="df-item" data-widget="workload"><span class="df-ico">💪</span><span class="df-text"><span class="df-name">\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430</span><span class="df-val">'+calcWorkload()+'</span></span></div>';
-        }
-        if (_optIsOn('widget_weather')) {
+        }if (_optIsOn('widget_weather')) {
             var wn = isPast ? '\u0411\u044b\u043b\u043e' : (isFuture ? '\u0411\u0443\u0434\u0435\u0442' : '\u041f\u043e\u0433\u043e\u0434\u0430');
             html += '<div class="df-item" data-widget="weather"><span class="df-ico">🌤</span><span class="df-text"><span class="df-name">'+wn+'</span><span class="df-val">\u2014</span></span></div>';
         }
