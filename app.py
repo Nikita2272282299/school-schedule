@@ -64,7 +64,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v49';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v49').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v50';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v50').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -1623,7 +1623,7 @@ html.first-render .sheet-link {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-12-61';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-12-62';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -1926,6 +1926,10 @@ function applyOpt(key, on){
     else if (key === 'auto_accent') { if (typeof window.__autoAccent === 'function') window.__autoAccent(); }
     else if (key === 'widget_weather') { if (typeof window.__loadWeather === 'function') window.__loadWeather(); }
     else if (key === 'widget_online' || key === 'widget_endday') { if (typeof window.__buildFooter === 'function') setTimeout(window.__buildFooter, 50); }
+    else if (key === 'notif_before5' || key === 'badge_count') {
+        // Эти опции применяются в своих функциях — просто обновим UI
+        updateOptUI();
+    }
 }
 
 function toggleOpt(key){
@@ -2315,7 +2319,31 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
         if (act === 'send') {
             var inp = document.getElementById('msg_' + vid);
             if (!inp || !inp.value) return;
-            fetch('/api/admin/send?admin='+key+'&to='+encodeURIComponent(vid)+'&text='+encodeURIComponent(inp.value)).then(function(){ inp.value=''; });
+            var txt = inp.value;
+            var btn = b;
+            btn.disabled = true;
+            btn.textContent = '…';
+            fetch('/api/admin/send?to=' + encodeURIComponent(vid) + '&text=' + encodeURIComponent(txt))
+                .then(function(r){
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
+                .then(function(j){
+                    if (j && j.ok) {
+                        inp.value = '';
+                        btn.textContent = '✅';
+                        if (window.__toast) window.__toast('Отправлено');
+                        setTimeout(function(){ btn.textContent = '📩'; btn.disabled = false; }, 1200);
+                    } else {
+                        throw new Error('Сервер вернул ошибку');
+                    }
+                })
+                .catch(function(e){
+                    btn.textContent = '❌';
+                    btn.disabled = false;
+                    setTimeout(function(){ btn.textContent = '📩'; }, 1500);
+                    if (window.__toast) window.__toast('Ошибка: ' + (e && e.message || e), true);
+                });
         } else if (act === 'rename') {
             var newName = prompt('Новое имя:', '');
             if (newName === null) return;
@@ -2347,7 +2375,8 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
     var lastId = null;
     function poll(){
         if (document.hidden) return;
-        fetch('/api/messages?vid=' + vid + '&t=' + Date.now(), {cache:'no-store'})
+        if (!vid) return;
+        fetch('/api/messages?vid=' + encodeURIComponent(vid) + '&t=' + Date.now(), {cache:'no-store'})
             .then(function(r){ return r.json(); })
             .then(function(m){
                 if (m && m.blocked) { showBlockOverlay(); return; }
@@ -2357,8 +2386,8 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
                     if (!ov) {
                         ov = document.createElement('div');
                         ov.id = 'smsOverlay';
-                        ov.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:99999;align-items:center;justify-content:center;padding:20px;';
-                        ov.innerHTML = '<div style="background:var(--card-bg);border-radius:24px;padding:32px 24px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 0 2px var(--accent);"><div style="font-size:0.75rem;color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:18px;">💬 Сообщение</div><div id="smsText" style="font-size:1.5rem;font-weight:800;color:var(--text-main);margin-bottom:26px;"></div><button onclick="closeSms()" style="width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:800;font-size:1rem;cursor:pointer;font-family:inherit;">Понятно</button></div>';
+                        ov.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:99999;align-items:center;justify-content:center;padding:20px;pointer-events:auto;';
+                        ov.innerHTML = '<div style="background:var(--card-bg);border-radius:24px;padding:32px 24px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 0 2px var(--accent);"><div style="font-size:0.75rem;color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:18px;">💬 Сообщение</div><div id="smsText" style="font-size:1.5rem;font-weight:800;color:var(--text-main);margin-bottom:26px;"></div><button type="button" onclick="event.preventDefault();event.stopPropagation();window.closeSms();return false;" style="width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:800;font-size:1rem;cursor:pointer;font-family:inherit;pointer-events:auto;">Понятно</button></div>';
                         document.body.appendChild(ov);
                     }
                     var el = document.getElementById('smsText'); if (el) el.textContent = m.text;
@@ -2375,12 +2404,43 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
         ov.innerHTML = '<div style="max-width:320px;"><div style="font-size:4rem;margin-bottom:20px;">🚫</div><h1 style="font-size:1.4rem;margin:0 0 10px;">Доступ закрыт</h1><p style="color:#9aa3b2;">Владелец сайта ограничил вам доступ.</p></div>';
         document.body.appendChild(ov);
     }
-    window.closeSms = function(){
+    // Мини-тост для отладки (можно удалить позже)
+    window.__toast = function(txt, isErr){
+        var el = document.getElementById('miniToast');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'miniToast';
+            el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:999999;background:'+(isErr?'#ef4444':'#10b981')+';color:#fff;padding:10px 18px;border-radius:14px;font-weight:800;font-size:0.9rem;box-shadow:0 6px 20px rgba(0,0,0,0.3);pointer-events:none;opacity:0;transition:opacity 0.2s;';
+            document.body.appendChild(el);
+        }
+        el.textContent = txt;
+        el.style.background = isErr ? '#ef4444' : '#10b981';
+        el.style.opacity = '1';
+        clearTimeout(window.__toastTimer);
+        window.__toastTimer = setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+    };
+
+    window.closeSms = function(ev){
+        if (ev && ev.stopPropagation) ev.stopPropagation();
         var ov = document.getElementById('smsOverlay');
-        if (ov) ov.style.display = 'none';
-        if (window.__smsId) { fetch('/api/messages/read?vid=' + vid + '&id=' + window.__smsId).catch(function(){}); window.__smsId = null; }
+        if (ov) {
+            ov.style.display = 'none';
+            ov.style.pointerEvents = 'none';
+        }
+        try {
+            if (window.__smsId) {
+                fetch('/api/messages/read?vid=' + encodeURIComponent(vid) + '&id=' + encodeURIComponent(window.__smsId)).catch(function(){});
+                window.__smsId = null;
+            }
+        } catch(e){}
         lastId = null;
     };
+    // Клик по фону тоже закрывает
+    document.addEventListener('click', function(e){
+        var ov = document.getElementById('smsOverlay');
+        if (!ov || ov.style.display !== 'flex') return;
+        if (e.target === ov) window.closeSms();
+    });
     setInterval(poll, 4000);
     /* HEARTBEAT-V10 */
     setInterval(function(){
@@ -3600,6 +3660,9 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
     document.addEventListener('click', function(e){
         if (isRange(e.target)) return;            // слайдер пропускаем
         if (e.target.closest && e.target.closest('.acc-slider input[type=range]')) return;
+        // Попап сообщения — не трогаем
+        if (e.target.closest && e.target.closest('#smsOverlay')) return;
+        if (e.target.closest && e.target.closest('#blockedOverlay')) return;
         if (movedDuringTouch) {
             e.preventDefault();
             e.stopPropagation();
