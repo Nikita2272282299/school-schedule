@@ -1557,7 +1557,7 @@ html body .day-footer .df-item[data-widget="weather"] .df-val {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-09-56';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-12-67';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -2091,7 +2091,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
     if (localStorage.getItem('rs_admin') === '1' && !localStorage.getItem('rs_akey')) localStorage.removeItem('rs_admin');
     function __adminLogin(p){ try{ var x=new XMLHttpRequest(); x.open('POST','/api/admin/login',false); x.setRequestHeader('Content-Type','application/json'); x.send(JSON.stringify({pwd:p})); if(x.status===200){ var k=JSON.parse(x.responseText).key; if(k){ localStorage.setItem('rs_akey',k); ADMIN_KEY_URL=k; return k; } } }catch(e){} return ''; }
     var isAdmin = localStorage.getItem('rs_admin') === '1';
-    var taps = parseInt(localStorage.getItem('rs_taps') || '0', 10);
+    var taps = 0; var _tapTimer = null;
     var tapEl = document.getElementById('adminTap');
     if (tapEl) {
         if (isAdmin) tapEl.style.filter = 'drop-shadow(0 0 8px #fbbf24)';
@@ -2099,15 +2099,26 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
             ev.preventDefault(); ev.stopPropagation();
             if (isAdmin) { openSub('admin'); return; }
             taps++;
-            localStorage.setItem('rs_taps', String(taps));
+            clearTimeout(_tapTimer);
+            _tapTimer = setTimeout(function(){ taps = 0; }, 1500);
             if (taps >= 50) {
-                var pwd = prompt('Пароль:'); var __k = pwd ? __adminLogin(pwd) : '';
-                if (__k) {
-                    localStorage.setItem('rs_admin','1'); localStorage.setItem('rs_taps','0');
-                    isAdmin = true; taps = 0;
-                    tapEl.style.filter = 'drop-shadow(0 0 8px #fbbf24)';
-                    openSub('admin');
-                } else { localStorage.setItem('rs_taps','0'); taps = 0; }
+                taps = 0;
+                var pwd = prompt('Пароль:');
+                if (!pwd) return;
+                if (typeof window.__adminLogin !== 'function') { alert('Ошибка'); return; }
+                window.__adminLogin(pwd).then(function(d){
+                    if (d && d.key) {
+                        try {
+                            localStorage.setItem('rs_akey', d.key);
+                            localStorage.setItem('rs_admin', '1');
+                        } catch(e){}
+                        tapEl.style.filter = 'drop-shadow(0 0 8px #fbbf24)';
+                        openSub('admin');
+                        if (typeof window.loadVisitors === 'function') setTimeout(window.loadVisitors, 150);
+                    } else {
+                        alert('Неверный пароль');
+                    }
+                }).catch(function(){ alert('Ошибка'); });
             }
         });
     }
@@ -3440,7 +3451,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
   el.innerHTML='<div style="text-align:center;padding:20px"><div style="color:var(--danger);font-weight:800;margin-bottom:12px">Сессия админа устарела</div><button class="ap-btn" onclick="__adminRelogin()">🔑 Войти заново</button></div>';
  }
  window.__adminRelogin=function(){
-  var p=prompt('Пароль админа:');if(!p)return;
+  var p=prompt('Пароль:');if(!p)return;
   fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:p})})
   .then(function(r){return r.json()})
   .then(function(d){if(d&&d.key){localStorage.setItem('rs_akey',d.key);localStorage.setItem('rs_admin','1');if(window.loadVisitors)window.loadVisitors();}else alert('Неверный пароль')})
