@@ -10,7 +10,8 @@ SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit"
 SELF_URL = "https://school-schedule-4ldw.onrender.com/"
 PERM_TZ = timezone(timedelta(hours=5))
 CLASS_CODE = "8г"
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Nikita#Admin2026")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD") or "Nikita#Admin2026"
+print(f"[boot] ADMIN_PASSWORD set: {bool(ADMIN_PASSWORD)}, length: {len(ADMIN_PASSWORD)}")
 ADMIN_KEY = hashlib.sha256(("sk|" + ADMIN_PASSWORD).encode()).hexdigest()
 _VID_OK = re.compile(r"^[A-Za-z0-9_-]{1,40}$")
 _login_fails = {}
@@ -63,7 +64,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v45';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v45').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v46';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v46').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -1588,7 +1589,7 @@ html body .day-footer .df-item[data-widget="weather"] .df-val {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-12-58';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-12-59';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -1832,7 +1833,9 @@ html body .day-footer .df-item[data-widget="weather"] .df-val {
             <button class="admin-tab" data-atab="broadcast" onclick="switchAdminTab('broadcast')">📢</button>
             <button class="admin-tab" data-atab="blocked" onclick="switchAdminTab('blocked')">🚫</button>
         </div>
-        <div class="admin-pane active" id="atab-visitors"><div id="apList">Загрузка…</div></div>
+        <div class="admin-pane active" id="atab-visitors"><div id="apList">Загрузка…</div>
+            <button class="link-btn" style="width:100%;margin-top:14px;padding:10px;background:var(--accent-light);color:var(--danger);border-radius:10px;font-weight:800;" onclick="if(confirm('Выйти из админки?')){window.__adminLogout();closeSub('admin');}">🚪 Выйти из админки</button>
+        </div>
         <div class="admin-pane" id="atab-broadcast">
             <div class="admin-block">
                 <div class="admin-block-title">📢 Отправить всем</div>
@@ -2118,9 +2121,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
 
 /* Админка */
 (function(){
-    var ADMIN_PWD = null;
     if (localStorage.getItem('rs_admin') === '1' && !localStorage.getItem('rs_akey')) localStorage.removeItem('rs_admin');
-    function __adminLogin(p){ try{ var x=new XMLHttpRequest(); x.open('POST','/api/admin/login',false); x.setRequestHeader('Content-Type','application/json'); x.send(JSON.stringify({pwd:p})); if(x.status===200){ var k=JSON.parse(x.responseText).key; if(k){ localStorage.setItem('rs_akey',k); ADMIN_KEY_URL=k; return k; } } }catch(e){} return ''; }
     var isAdmin = localStorage.getItem('rs_admin') === '1';
     var taps = parseInt(localStorage.getItem('rs_taps') || '0', 10);
     var tapEl = document.getElementById('adminTap');
@@ -2132,13 +2133,29 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
             taps++;
             localStorage.setItem('rs_taps', String(taps));
             if (taps >= 50) {
-                var pwd = prompt('Пароль:'); var __k = pwd ? __adminLogin(pwd) : '';
-                if (__k) {
-                    localStorage.setItem('rs_admin','1'); localStorage.setItem('rs_taps','0');
-                    isAdmin = true; taps = 0;
-                    tapEl.style.filter = 'drop-shadow(0 0 8px #fbbf24)';
-                    openSub('admin');
-                } else { localStorage.setItem('rs_taps','0'); taps = 0; }
+                var pwd = prompt('Пароль:');
+                if (!pwd) { localStorage.setItem('rs_taps','0'); taps = 0; return; }
+                window.__adminLogin(pwd).then(function(d){
+                    if (d && d.key) {
+                        try {
+                            localStorage.setItem('rs_akey', d.key);
+                            localStorage.setItem('rs_admin', '1');
+                            localStorage.setItem('rs_taps', '0');
+                        } catch(e){}
+                        tapEl.style.filter = 'drop-shadow(0 0 8px #fbbf24)';
+                        openSub('admin');
+                        setTimeout(function(){ if (window.loadVisitors) window.loadVisitors(); }, 100);
+                    } else if (d && d.error === 'no_password_configured') {
+                        alert('Пароль не настроен на сервере.');
+                    } else if (d && d.error === 'slow') {
+                        alert('Слишком много попыток. Подожди 10 минут.');
+                    } else if (d && d.left !== undefined) {
+                        alert('Неверный пароль. Осталось попыток: ' + d.left);
+                    } else {
+                        alert('Неверный пароль');
+                    }
+                    localStorage.setItem('rs_taps', '0'); taps = 0;
+                }).catch(function(){ localStorage.setItem('rs_taps','0'); taps = 0; alert('Ошибка сети'); });
             }
         });
     }
@@ -2146,11 +2163,11 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
     function agoStr(s){ if(s<60)return s+' сек'; if(s<3600)return Math.floor(s/60)+' мин'; if(s<86400)return Math.floor(s/3600)+' ч'; return Math.floor(s/86400)+' дн'; }
     function esc(x){ var d=document.createElement('div'); d.textContent=x; return d.innerHTML; }
 
-    var ADMIN_KEY_URL = localStorage.getItem('rs_akey') || '';
+    // ADMIN_KEY_URL убран — используем window.__getAKey()
     window.loadVisitors = function(){
         var saved = {};
         document.querySelectorAll('.ap-input').forEach(function(inp){ if(inp.id && inp.id.indexOf('msg_')===0 && inp.value) saved[inp.id]=inp.value; });
-        fetch('/api/admin/list?admin=' + ADMIN_KEY_URL + '&t=' + Date.now())
+        fetch('/api/admin/list?admin=' + window.__getAKey() + '&t=' + Date.now())
             .then(function(r){
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();
@@ -3485,27 +3502,74 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
 })();
 </script>
 <script>
-/* ADMIN-RELOGIN */
+/* ADMIN-AUTH v2 — перехватываем 403, показываем форму входа */
 (function(){
- function key(){try{return localStorage.getItem('rs_akey')||''}catch(e){return ''}}
- var F=window.fetch;
- window.fetch=function(u,o){
-  var isA=typeof u==='string'&&u.indexOf('/api/admin/login')!==0&&(u.indexOf('/api/admin/')===0||(u.indexOf('/api/live')===0&&u.indexOf('admin=')>-1));
-  if(isA)u=u.replace(/([?&])admin=[^&]*/,'$1admin='+encodeURIComponent(key()));
-  var p=F.call(this,u,o);
-  if(isA&&u.indexOf('/api/admin/')===0)p.then(function(r){if(r.status===403)setTimeout(show,150)}).catch(function(){});
+ window.__getAKey = function(){
+  try { return localStorage.getItem('rs_akey') || ''; } catch(e) { return ''; }
+ };
+
+ // Обёртка fetch: подставляет актуальный ключ, при 403 показывает форму входа
+ var _origFetch = window.fetch;
+ window.fetch = function(u, o) {
+  var isAdminCall = typeof u === 'string' &&
+                    u.indexOf('/api/admin/login') !== 0 &&
+                    (u.indexOf('/api/admin/') === 0 || (u.indexOf('/api/live') === 0 && u.indexOf('admin=') > -1));
+  if (isAdminCall) {
+   // Подставляем ключ только если его нет или он пустой
+   if (u.indexOf('admin=') === -1) {
+    u += (u.indexOf('?') === -1 ? '?' : '&') + 'admin=' + encodeURIComponent(window.__getAKey());
+   } else {
+    u = u.replace(/([?&])admin=[^&]*/, '$1admin=' + encodeURIComponent(window.__getAKey()));
+   }
+  }
+  var p = _origFetch.call(this, u, o);
+  if (isAdminCall && u.indexOf('/api/admin/') === 0) {
+   p.then(function(r) {
+    if (r.status === 403) setTimeout(window.__adminLogout, 150);
+   }).catch(function(){});
+  }
   return p;
  };
- function show(){
-  var el=document.getElementById('apList');if(!el)return;
-  el.innerHTML='<div style="text-align:center;padding:20px"><div style="color:var(--danger);font-weight:800;margin-bottom:12px">Сессия админа устарела</div><button class="ap-btn" onclick="__adminRelogin()">🔑 Войти заново</button></div>';
- }
- window.__adminRelogin=function(){
-  var p=prompt('Пароль админа:');if(!p)return;
-  fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pwd:p})})
-  .then(function(r){return r.json()})
-  .then(function(d){if(d&&d.key){localStorage.setItem('rs_akey',d.key);localStorage.setItem('rs_admin','1');if(window.loadVisitors)window.loadVisitors();}else alert('Неверный пароль')})
-  .catch(function(){alert('Ошибка сети')});
+
+ window.__adminLogin = function(pwd) {
+  return fetch('/api/admin/login', {
+   method: 'POST',
+   headers: {'Content-Type': 'application/json'},
+   body: JSON.stringify({pwd: pwd})
+  }).then(function(r){ return r.json().then(function(d){ d._status = r.status; return d; }); });
+ };
+
+ window.__adminLogout = function() {
+  try {
+   localStorage.removeItem('rs_akey');
+   localStorage.removeItem('rs_admin');
+  } catch(e){}
+  var el = document.getElementById('apList');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:24px 16px">' +
+   '<div style="font-size:2rem;margin-bottom:8px">🔑</div>' +
+   '<div style="color:var(--danger);font-weight:800;margin-bottom:14px">Сессия админа истекла</div>' +
+   '<button class="ap-btn" style="width:100%;padding:14px" onclick="__adminRelogin()">Войти заново</button>' +
+   '</div>';
+ };
+
+ window.__adminRelogin = function() {
+  var p = prompt('Пароль админа:');
+  if (!p) return;
+  window.__adminLogin(p).then(function(d) {
+   if (d && d.key) {
+    try { localStorage.setItem('rs_akey', d.key); localStorage.setItem('rs_admin', '1'); } catch(e){}
+    if (window.loadVisitors) window.loadVisitors();
+   } else if (d && d.error === 'no_password_configured') {
+    alert('Пароль не настроен на сервере. Обратитесь к администратору.');
+   } else if (d && d.error === 'slow') {
+    alert('Слишком много попыток. Подожди 10 минут.');
+   } else if (d && d.left !== undefined) {
+    alert('Неверный пароль. Осталось попыток: ' + d.left);
+   } else {
+    alert('Неверный пароль');
+   }
+  }).catch(function(){ alert('Ошибка сети'); });
  };
 })();
 </script>
@@ -3642,11 +3706,13 @@ class H(BaseHTTPRequestHandler):
             n = min(int(self.headers.get("Content-Length") or 0), 1000)
             body = json.loads(self.rfile.read(n) or b"{}")
             pwd = str(body.get("pwd", ""))
-            if ADMIN_PASSWORD and hmac.compare_digest(pwd.encode(), ADMIN_PASSWORD.encode()):
+            if not ADMIN_PASSWORD:
+                self._json({"error": "no_password_configured"}, 500); return
+            if hmac.compare_digest(pwd.encode(), ADMIN_PASSWORD.encode()):
                 _login_fails.pop(ip, None)
                 self._json({"key": ADMIN_KEY}); return
             _login_fails[ip] = (c + 1, t)
-            self._json({"error": "forbidden"}, 403)
+            self._json({"error": "forbidden", "left": max(0, 5 - c - 1)}, 403)
         except Exception:
             try: self.send_response(400); self.end_headers()
             except Exception: pass
@@ -3675,6 +3741,8 @@ class H(BaseHTTPRequestHandler):
                 m = get_pending(_vid); self._json(m or {}); return
             if _pt == "/api/messages/read":
                 mark_read(_vid, q.get("id",[""])[0]); self._json({"ok": True}); return
+            if _pt == "/api/admin/check":
+                self._json({"ok": _admin == ADMIN_KEY, "has_pwd": bool(ADMIN_PASSWORD)}); return
             if _pt == "/api/admin/list":
                 if _admin != ADMIN_KEY: self._json({"error":"forbidden"}, 403); return
                 d = _ld(VISITORS_FILE, {}); blocked = _ld(BLOCKED_FILE, {})
