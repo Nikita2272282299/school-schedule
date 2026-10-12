@@ -64,7 +64,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v50';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v50').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v52';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v52').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -1623,7 +1623,7 @@ html.first-render .sheet-link {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-12-62';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-12-64';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -1826,10 +1826,6 @@ html.first-render .sheet-link {
           </select>
         </div>
 
-        <div class="acc-sub">🔔 Уведомления</div>
-        <div class="srow" onclick="requestNotifications()"><span class="srow-label" data-ico="🔔">Разрешить уведомления</span><span class="srow-value" id="val-notif">выкл</span></div>
-        <div class="srow" onclick="toggleOpt('notif_before5')"><span class="srow-label" data-ico="⏰">Напоминать за 5 минут</span><span class="srow-value" id="val-notif_before5">вкл</span></div>
-        <div class="srow" onclick="toggleOpt('badge_count')"><span class="srow-label" data-ico="🔢">Цифра на иконке приложения</span><span class="srow-value" id="val-badge_count">вкл</span></div>
 
         <div class="acc-sub">🖼 Иконка и обои</div>
         <div class="acc-slider"><label>Своя иконка <output id="o-icon_out"></output></label>
@@ -2498,6 +2494,24 @@ document.documentElement.classList.add('first-render');
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){ navigator.serviceWorker.register('/sw.js').catch(function(){}); });
 }
+
+// ─── Уведомления: авто-запрос разрешения при первом входе ───
+(function autoNotify(){
+    try {
+        if (typeof Notification === 'undefined') return;
+        // Не спрашиваем, если уже решили (или уже granted/denied)
+        if (Notification.permission !== 'default') return;
+        // Не спрашиваем в эту сессию, если уже спрашивали
+        if (sessionStorage.getItem('rs_notif_asked') === '1') return;
+        // Спрашиваем через 3 секунды после загрузки, чтобы не мешать
+        setTimeout(function(){
+            try { sessionStorage.setItem('rs_notif_asked', '1'); } catch(e){}
+            Notification.requestPermission().then(function(p){
+                try { localStorage.setItem('rs_notif_perm', p); } catch(e){}
+            }).catch(function(){});
+        }, 3000);
+    } catch(e){}
+})();
 
 /* ===== 100+ настроек ===== */
 function setEmoji(em){
