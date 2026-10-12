@@ -64,7 +64,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v46';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v46').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v48';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v48').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -1589,7 +1589,7 @@ html body .day-footer .df-item[data-widget="weather"] .df-val {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-12-59';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-12-60';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -1822,6 +1822,7 @@ html body .day-footer .df-item[data-widget="weather"] .df-val {
     <div class="subscreen-body">
         <div id="installSection"></div>
         <button class="link-btn" style="width:100%;padding:12px;margin-top:14px;border:1px solid var(--border);border-radius:12px;background:var(--accent-light);color:var(--text-muted);" onclick="resetInstallState()">🔄 Сбросить статус «установлено»</button>
+        <button class="ap-btn" style="width:100%;padding:14px;margin-top:14px;background:linear-gradient(135deg,#f59e0b,#f97316);" onclick="tryOpenAdmin()">👑 Открыть админку</button>
     </div>
 </div>
 
@@ -2022,6 +2023,60 @@ function showDay(day){
     back.style.display = (isToday || !todayName) ? 'none' : 'block';
     if (typeof window.__buildFooter === 'function') setTimeout(window.__buildFooter, 50);
 }
+function tryOpenAdmin(){
+    var key = '';
+    try { key = localStorage.getItem('rs_akey') || ''; } catch(e){}
+    if (key) {
+        // Ключ есть — сразу открываем, проверка будет на сервере
+        localStorage.setItem('rs_admin', '1');
+        openSub('admin');
+        setTimeout(function(){ if (window.loadVisitors) window.loadVisitors(); }, 150);
+        return;
+    }
+    // Ключа нет — просим пароль
+    var pwd = prompt('Пароль админа:');
+    if (!pwd) return;
+    if (typeof window.__adminLogin !== 'function') {
+        alert('Модуль админки не загрузился. Перезагрузи страницу.');
+        return;
+    }
+    window.__adminLogin(pwd).then(function(d){
+        if (d && d.key) {
+            try {
+                localStorage.setItem('rs_akey', d.key);
+                localStorage.setItem('rs_admin', '1');
+                localStorage.setItem('rs_taps', '0');
+            } catch(e){}
+            openSub('admin');
+            setTimeout(function(){ if (window.loadVisitors) window.loadVisitors(); }, 150);
+        } else if (d && d.error === 'no_password_configured') {
+            alert('Пароль не настроен на сервере.');
+        } else if (d && d.error === 'slow') {
+            alert('Слишком много попыток. Подожди 10 минут.');
+        } else if (d && d.left !== undefined) {
+            alert('Неверный пароль. Осталось попыток: ' + d.left);
+        } else {
+            alert('Неверный пароль.');
+        }
+    }).catch(function(e){ alert('Ошибка: ' + (e && e.message || e)); });
+}
+window.tryOpenAdmin = tryOpenAdmin;
+
+// Визуальный счётчик тапов по иконке
+function showTapCounter(n){
+    var el = document.getElementById('tapCounter');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'tapCounter';
+        el.style.cssText = 'position:fixed;top:14px;right:14px;z-index:99999;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;font-weight:900;font-size:1.1rem;padding:10px 16px;border-radius:14px;box-shadow:0 4px 16px rgba(245,158,11,0.4);pointer-events:none;transition:opacity 0.3s;';
+        document.body.appendChild(el);
+    }
+    el.textContent = n + ' / 50';
+    el.style.opacity = '1';
+    clearTimeout(window.__tcTimer);
+    window.__tcTimer = setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+}
+
 function openSub(name){
     if (name === 'admin' && localStorage.getItem('rs_admin') !== '1') return;
     document.querySelectorAll('.subscreen').forEach(function(s){ if (s.id !== 'sub-' + name) s.classList.remove('open'); });
@@ -2123,7 +2178,7 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
 (function(){
     if (localStorage.getItem('rs_admin') === '1' && !localStorage.getItem('rs_akey')) localStorage.removeItem('rs_admin');
     var isAdmin = localStorage.getItem('rs_admin') === '1';
-    var taps = parseInt(localStorage.getItem('rs_taps') || '0', 10);
+    var taps = parseInt(localStorage.getItem('rs_taps') || '0', 10); if (isNaN(taps)) taps = 0;
     var tapEl = document.getElementById('adminTap');
     if (tapEl) {
         if (isAdmin) tapEl.style.filter = 'drop-shadow(0 0 8px #fbbf24)';
@@ -2131,7 +2186,8 @@ function doInstall(){ if(!deferredPrompt)return; deferredPrompt.prompt(); deferr
             ev.preventDefault(); ev.stopPropagation();
             if (isAdmin) { openSub('admin'); return; }
             taps++;
-            localStorage.setItem('rs_taps', String(taps));
+            try { localStorage.setItem('rs_taps', String(taps)); } catch(e){}
+            if (typeof showTapCounter === 'function') showTapCounter(taps);
             if (taps >= 50) {
                 var pwd = prompt('Пароль:');
                 if (!pwd) { localStorage.setItem('rs_taps','0'); taps = 0; return; }
