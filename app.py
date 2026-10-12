@@ -64,7 +64,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v48';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v48').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v49';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v49').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -1586,10 +1586,44 @@ html body .day-footer .df-item[data-widget="weather"] .df-val {
   font-weight: 800 !important;
   letter-spacing: -0.01em;
 }
+
+/* ===== NO FLICKER: при soft-update отключаем все анимации ===== */
+html.soft-update-running .card,
+html.soft-update-running .header-card,
+html.soft-update-running .live-banner,
+html.soft-update-running .tabs,
+html.soft-update-running .tab,
+html.soft-update-running .day-footer .df-item,
+html.soft-update-running .sheet-link,
+html.soft-update-running .info-box,
+html.soft-update-running .container,
+html.soft-update-running .day-block {
+  animation: none !important;
+  transition: none !important;
+}
+html.soft-update-running .container {
+  opacity: 1 !important;
+  transform: none !important;
+}
+html.soft-update-running .card.now { animation: none !important; }
+html.soft-update-running .now-pill { animation: none !important; }
+html.soft-update-running .today-pill::after { animation: none !important; }
+html.soft-update-running .progress-fill::after { animation: none !important; }
+html.soft-update-running .card.now .progress-fill { animation: none !important; }
+
+/* Первый рендер — анимации показываем (страница только что открылась) */
+html.first-render .card,
+html.first-render .header-card,
+html.first-render .live-banner,
+html.first-render .tabs,
+html.first-render .day-footer .df-item,
+html.first-render .sheet-link {
+  animation-name: slideInUp, fadeSlideIn, nowGlow !important;
+}
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-12-60';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-12-61';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -2021,7 +2055,11 @@ function showDay(day){
         if (tabs && tabs.parentNode) tabs.parentNode.insertBefore(back, tabs.nextSibling);
     }
     back.style.display = (isToday || !todayName) ? 'none' : 'block';
-    if (typeof window.__buildFooter === 'function') setTimeout(window.__buildFooter, 50);
+    // Footer пересчитываем с force — день изменился
+    if (typeof window.__buildFooter === 'function') {
+        _noAnim(300);
+        setTimeout(function(){ window.__buildFooter(true); }, 50);
+    }
 }
 function tryOpenAdmin(){
     var key = '';
@@ -2390,6 +2428,12 @@ document.addEventListener('visibilitychange', function(){
     var ps = document.hidden ? 'paused' : 'running';
     document.querySelectorAll('.particle').forEach(function(p){ p.style.animationPlayState = ps; });
 });
+
+// Убираем анимации через 1 секунду после загрузки — чтобы новые рендеры не дёргали
+setTimeout(function(){
+    document.documentElement.classList.remove('first-render');
+}, 1000);
+document.documentElement.classList.add('first-render');
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){ navigator.serviceWorker.register('/sw.js').catch(function(){}); });
@@ -2781,19 +2825,30 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
     }
 
     // ── Собираем day-footer под {content} ──
-    function buildFooter(){
-        var old = document.getElementById('dayFooter');
-        if (old) old.remove();
+    function buildFooter(force){
         var cont = document.querySelector('.container');
         if (!cont) return;
-        var sheet = cont.querySelector('.sheet-link');
-        var f = document.createElement('div');
-        f.id = 'dayFooter'; f.className = 'day-footer';
-        var html = '';
+        // Считаем хэш содержимого — если совпадает, не пересоздаём
         var name = getActiveDayName();
         var isPast = isPastDayName(name);
         var isToday = isTodayName(name);
         var isFuture = isFutureDayName(name);
+        var _newSig = [name, isPast?1:0, isToday?1:0, isFuture?1:0,
+                       _optIsOn('widget_endday')?1:0, _optIsOn('widget_weather')?1:0].join('|');
+        var old = document.getElementById('dayFooter');
+        if (!force && old && old.dataset.sig === _newSig) {
+            // Ничего не поменялось — только обновляем значения, не пересоздаём
+            renderWeather();
+            var endEl = old.querySelector('[data-widget="endday"] .df-val');
+            if (endEl) endEl.textContent = calcEndOfDay();
+            return;
+        }
+        if (old) old.remove();
+        var sheet = cont.querySelector('.sheet-link');
+        var f = document.createElement('div');
+        f.id = 'dayFooter'; f.className = 'day-footer';
+        f.dataset.sig = _newSig;
+        var html = '';
         // "До конца" — только для сегодняшнего дня
         if (_optIsOn('widget_endday') && isToday) {
             html += '<div class="df-item" data-widget="endday"><span class="df-ico">🏁</span><span class="df-text"><span class="df-name">\u0414\u043e \u043a\u043e\u043d\u0446\u0430</span><span class="df-val">'+calcEndOfDay()+'</span></span></div>';
@@ -2808,7 +2863,7 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
     }
     window.__buildFooter = buildFooter;
     buildFooter();
-    setInterval(function(){ buildFooter(); }, 30000);
+    setInterval(function(){ if (typeof window.__buildFooter === 'function') window.__buildFooter(); }, 60000);
 
     // ── Счётчик онлайн ──
     function pollOnline(){
@@ -3252,11 +3307,24 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
         var tag = (a.tagName || '').toUpperCase();
         return tag === 'INPUT' || tag === 'TEXTAREA' || a.isContentEditable;
     }
+    function _noAnim(ms){
+        var h = document.documentElement;
+        h.classList.add('soft-update-running');
+        clearTimeout(window.__noAnimTimer);
+        window.__noAnimTimer = setTimeout(function(){
+            h.classList.remove('soft-update-running');
+        }, ms || 300);
+    }
+    window.__noAnim = _noAnim;
+
     function _applyFragments(d){
         if (_isTyping()) return;
         if (Date.now() < _redrawLock) return;
         var cont = document.querySelector('.container');
         if (!cont) return;
+
+        // Отключаем анимации на время перерисовки — ничего не дёргается
+        _noAnim(400);
 
         var desiredDay = _activeDay();
 
@@ -3404,11 +3472,13 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                     }
                 }
 
-                // Если сервер изменил ts или день — soft-update
+                // Если сервер изменил ts или день — soft-update (но не чаще раза в 5 сек)
                 var dayChanged = (d.day_today !== undefined) && (document.body.getAttribute('data-today') !== d.day_today);
-                if ((d.ts && d.ts !== lastTs) || dayChanged) {
+                var nowMs = Date.now();
+                if (((d.ts && d.ts !== lastTs) || dayChanged) && (nowMs - (window.__lastRedrawTs || 0) > 5000)) {
+                    window.__lastRedrawTs = nowMs;
                     lastTs = d.ts || lastTs;
-                    _redrawLock = Date.now() + 800;
+                    _redrawLock = nowMs + 800;
                     _applyFragments(d);
                     return;
                 }
