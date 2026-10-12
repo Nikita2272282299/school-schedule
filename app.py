@@ -10,7 +10,7 @@ SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit"
 SELF_URL = "https://school-schedule-4ldw.onrender.com/"
 PERM_TZ = timezone(timedelta(hours=5))
 CLASS_CODE = "8г"
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD") or "Nikita#Admin2026"
+ADMIN_PASSWORD = "Nikita#Admin2026"
 print(f"[boot] ADMIN_PASSWORD set: {bool(ADMIN_PASSWORD)}, length: {len(ADMIN_PASSWORD)}")
 ADMIN_KEY = hashlib.sha256(("sk|" + ADMIN_PASSWORD).encode()).hexdigest()
 _VID_OK = re.compile(r"^[A-Za-z0-9_-]{1,40}$")
@@ -3741,6 +3741,8 @@ class H(BaseHTTPRequestHandler):
                 m = get_pending(_vid); self._json(m or {}); return
             if _pt == "/api/messages/read":
                 mark_read(_vid, q.get("id",[""])[0]); self._json({"ok": True}); return
+            if _pt == "/api/admin/check":
+                self._json({"ok": _admin == ADMIN_KEY, "has_pwd": bool(ADMIN_PASSWORD)}); return
             if _pt == "/api/admin/check":
                 self._json({"ok": _admin == ADMIN_KEY, "has_pwd": bool(ADMIN_PASSWORD)}); return
             if _pt == "/api/admin/list":
