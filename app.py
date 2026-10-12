@@ -172,39 +172,30 @@ PAGE = """<!DOCTYPE html>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root,html[data-theme="light"]{
   --bg:#f5f5f7; --bg-grad1:#ffffff; --bg-grad2:#e8ecf2;
-  --card:#ffffff; --card-hover:#fafbfc;
-  --text:#1a1a1f; --text-muted:#6b7280;
+  --card:#ffffff; --text:#1a1a1f; --text-muted:#6b7280;
   --accent:#4f46e5; --accent-2:#7c3aed; --accent-soft:rgba(79,70,229,0.10);
-  --border:rgba(0,0,0,0.06); --border-strong:rgba(0,0,0,0.10);
-  --shadow-sm:0 1px 2px rgba(0,0,0,0.04);
+  --border:rgba(0,0,0,0.06);
   --shadow:0 2px 8px rgba(15,23,42,0.06),0 8px 24px rgba(15,23,42,0.04);
-  --shadow-lg:0 12px 32px rgba(15,23,42,0.10);
   --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.12);
   --green:#10b981; --green-soft:rgba(16,185,129,0.12);
   --num-bg:linear-gradient(135deg,var(--accent),var(--accent-2)); --num-color:#fff;
 }
 html[data-theme="dark"]{
   --bg:#0e0e10; --bg-grad1:#1a1a1f; --bg-grad2:#0e0e10;
-  --card:#1c1c22; --card-hover:#24242c;
-  --text:#f0f0f3; --text-muted:#9a9aa8;
+  --card:#1c1c22; --text:#f0f0f3; --text-muted:#9a9aa8;
   --accent:#818cf8; --accent-2:#c084fc; --accent-soft:rgba(129,140,248,0.14);
-  --border:rgba(255,255,255,0.06); --border-strong:rgba(255,255,255,0.12);
-  --shadow-sm:0 1px 2px rgba(0,0,0,0.3);
+  --border:rgba(255,255,255,0.06);
   --shadow:0 4px 16px rgba(0,0,0,0.35),0 12px 32px rgba(0,0,0,0.25);
-  --shadow-lg:0 16px 48px rgba(0,0,0,0.5);
   --orange:#fbbf24; --orange-soft:rgba(251,191,36,0.14);
   --green:#34d399; --green-soft:rgba(52,211,153,0.14);
   --num-bg:linear-gradient(135deg,var(--accent),var(--accent-2)); --num-color:#1a1a1f;
 }
 html[data-theme="cosmic"]{
   --bg:#07071c; --bg-grad1:#141138; --bg-grad2:#050512;
-  --card:rgba(30,25,70,0.55); --card-hover:rgba(40,32,90,0.65);
-  --text:#eae4ff; --text-muted:#a89dd8;
+  --card:rgba(30,25,70,0.55); --text:#eae4ff; --text-muted:#a89dd8;
   --accent:#b794f6; --accent-2:#7cf5c0; --accent-soft:rgba(183,148,246,0.18);
-  --border:rgba(183,148,246,0.16); --border-strong:rgba(183,148,246,0.32);
-  --shadow-sm:0 1px 2px rgba(0,0,0,0.4);
+  --border:rgba(183,148,246,0.16);
   --shadow:0 6px 24px rgba(80,30,200,0.25),0 0 40px rgba(120,80,240,0.15);
-  --shadow-lg:0 20px 60px rgba(80,30,200,0.4);
   --orange:#fbbf24; --orange-soft:rgba(251,191,36,0.18);
   --green:#7cf5c0; --green-soft:rgba(124,245,192,0.16);
   --num-bg:linear-gradient(135deg,var(--accent),var(--accent-2)); --num-color:#1a0d3d;
@@ -213,10 +204,8 @@ html{min-height:100%;background:var(--bg);overflow-x:hidden}
 body{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;
   background:var(--bg);color:var(--text);min-height:100vh;
-  padding:20px 16px 40px;
-  -webkit-font-smoothing:antialiased;
-  transition:background 0.35s ease,color 0.35s ease;
-  overflow-x:hidden;
+  padding:14px 12px 30px;-webkit-font-smoothing:antialiased;
+  transition:background 0.35s ease,color 0.35s ease;overflow-x:hidden;
 }
 html[data-theme="light"] body{background-image:linear-gradient(180deg,var(--bg-grad1),var(--bg-grad2))}
 html[data-theme="dark"] body{background-image:linear-gradient(180deg,var(--bg-grad1),var(--bg-grad2))}
@@ -231,98 +220,43 @@ html[data-theme="cosmic"] body{
 
 /* ===== Шапка ===== */
 .header{
-  background:var(--card);border:1px solid var(--border);border-radius:20px;
-  padding:14px 18px;margin-bottom:14px;
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:4px 4px 12px;
 }
-html[data-theme="cosmic"] .header{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-.brand{display:flex;align-items:center;gap:10px;min-width:0}
-.brand-emoji{font-size:1.5rem;line-height:1;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:8px;min-width:0}
+.brand-emoji{font-size:1.3rem;line-height:1;flex-shrink:0}
 .brand-text{
-  font-size:1.2rem;font-weight:800;letter-spacing:-0.02em;
+  font-size:1.15rem;font-weight:800;letter-spacing:-0.02em;
   background:linear-gradient(135deg,var(--accent),var(--accent-2));
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;
 }
+.header-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .badge{
   background:var(--accent-soft);color:var(--accent);
-  padding:6px 12px;border-radius:11px;font-weight:800;font-size:0.88rem;
-  flex-shrink:0;border:1px solid var(--border);
+  padding:5px 10px;border-radius:10px;font-weight:800;font-size:0.8rem;
+  border:1px solid var(--border);
 }
+.theme-toggle{
+  width:34px;height:34px;border-radius:10px;border:1px solid var(--border);
+  background:var(--card);color:var(--text);font-size:1.05rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-family:inherit;
+  transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),background 0.2s ease;
+}
+.theme-toggle:hover{background:var(--accent-soft)}
+.theme-toggle:active{transform:scale(0.9) rotate(-15deg)}
 
-/* ===== Переключатель тем ===== */
-.themes{display:flex;gap:4px;padding:4px;background:var(--accent-soft);
-  border-radius:12px;margin-bottom:14px;border:1px solid var(--border)}
-.theme-btn{
-  flex:1;padding:9px 6px;border:none;background:transparent;border-radius:9px;
-  font-family:inherit;font-weight:700;font-size:0.82rem;color:var(--text-muted);
-  cursor:pointer;transition:all 0.2s ease;display:flex;align-items:center;
-  justify-content:center;gap:6px;
-}
-.theme-btn:hover{color:var(--text)}
-.theme-btn.active{
-  background:linear-gradient(135deg,var(--accent),var(--accent-2));
-  color:#fff;box-shadow:0 3px 10px var(--accent-soft);
-}
-html[data-theme="cosmic"] .theme-btn.active{color:#1a0d3d}
-.theme-btn .emoji{font-size:1rem}
-
-/* ===== Баннер урока ===== */
-.banner{
-  border-radius:18px;padding:16px 18px;margin-bottom:14px;
-  background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);
-  transition:all 0.3s ease;
-}
-html[data-theme="cosmic"] .banner{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-.banner.now{
-  border:1.5px solid var(--accent);
-  background:linear-gradient(135deg,var(--accent-soft),var(--card));
-  box-shadow:0 8px 28px var(--accent-soft),0 0 0 1px var(--accent) inset;
-}
-.banner.before{border:1.5px solid var(--orange);
-  background:linear-gradient(135deg,var(--orange-soft),var(--card));}
-.banner.break{border:1.5px solid var(--green);
-  background:linear-gradient(135deg,var(--green-soft),var(--card));}
-.banner-row{display:flex;align-items:center;gap:12px}
-.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.banner.now .dot{background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft);animation:pulse 1.8s infinite}
-.banner.before .dot{background:var(--orange);box-shadow:0 0 0 4px var(--orange-soft)}
-.banner.break .dot{background:var(--green);box-shadow:0 0 0 4px var(--green-soft)}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.45}}
-.banner-body{flex:1;min-width:0}
-.banner-label{
-  font-size:0.68rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;
-  margin-bottom:3px;
-}
-.banner.now .banner-label{color:var(--accent)}
-.banner.before .banner-label{color:var(--orange)}
-.banner.break .banner-label{color:var(--green)}
-.banner-title{font-size:1.05rem;font-weight:800;line-height:1.25;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.01em}
-.banner-time{font-size:0.8rem;color:var(--text-muted);font-weight:600;margin-top:3px}
-.banner-time strong{color:inherit;font-weight:800}
-.banner.now .banner-time strong{color:var(--accent)}
-.banner.before .banner-time strong{color:var(--orange)}
-.banner.break .banner-time strong{color:var(--green)}
-.progress{height:3px;border-radius:2px;background:var(--border);overflow:hidden;margin-top:10px}
-.progress-fill{
-  height:100%;border-radius:2px;
-  background:linear-gradient(90deg,var(--accent),var(--accent-2));
-  transition:width 0.6s linear;
-}
-
-/* ===== Табы ===== */
+/* ===== Табы (дни недели) ===== */
 .tabs{display:flex;gap:4px;padding:4px;background:var(--card);
-  border-radius:16px;margin-bottom:14px;border:1px solid var(--border);
+  border-radius:14px;margin-bottom:10px;border:1px solid var(--border);
   box-shadow:var(--shadow);overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 html[data-theme="cosmic"] .tabs{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .tab{
-  flex:1;min-width:0;padding:9px 4px;border:none;background:transparent;
-  border-radius:12px;font-family:inherit;font-weight:800;font-size:0.85rem;
+  flex:1;min-width:0;padding:8px 4px;border:none;background:transparent;
+  border-radius:11px;font-family:inherit;font-weight:800;font-size:0.82rem;
   color:var(--text-muted);cursor:pointer;transition:all 0.22s ease;
-  position:relative;min-height:46px;display:flex;flex-direction:column;
+  position:relative;min-height:42px;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:2px;
 }
 .tab:hover:not(.active){background:var(--accent-soft);color:var(--text)}
@@ -331,61 +265,102 @@ html[data-theme="cosmic"] .tabs{backdrop-filter:blur(14px);-webkit-backdrop-filt
   color:#fff;box-shadow:0 4px 14px var(--accent-soft);
 }
 html[data-theme="cosmic"] .tab.active{color:#1a0d3d}
-.tab-day{font-size:0.6rem;opacity:0.75;font-weight:700}
+.tab-day{font-size:0.58rem;opacity:0.75;font-weight:700}
 .tab.today:not(.active)::after{
-  content:"";position:absolute;bottom:5px;left:50%;transform:translateX(-50%);
-  width:5px;height:5px;border-radius:50%;background:var(--accent);
+  content:"";position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:var(--accent);
 }
+
+/* ===== КОМПАКТНЫЙ баннер урока ===== */
+.banner{
+  border-radius:14px;padding:10px 14px;margin-bottom:10px;
+  background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);
+  transition:all 0.3s ease;
+}
+html[data-theme="cosmic"] .banner{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.banner.now{border:1px solid var(--accent);
+  background:linear-gradient(135deg,var(--accent-soft),var(--card))}
+.banner.before{border:1px solid var(--orange);
+  background:linear-gradient(135deg,var(--orange-soft),var(--card))}
+.banner.break{border:1px solid var(--green);
+  background:linear-gradient(135deg,var(--green-soft),var(--card))}
+.banner-row{display:flex;align-items:center;gap:10px}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.banner.now .dot{background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);animation:pulse 1.8s infinite}
+.banner.before .dot{background:var(--orange);box-shadow:0 0 0 3px var(--orange-soft)}
+.banner.break .dot{background:var(--green);box-shadow:0 0 0 3px var(--green-soft)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.banner-body{flex:1;min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.banner-label{
+  font-size:0.6rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;
+  flex-shrink:0;
+}
+.banner.now .banner-label{color:var(--accent)}
+.banner.before .banner-label{color:var(--orange)}
+.banner.break .banner-label{color:var(--green)}
+.banner-title{
+  font-size:0.9rem;font-weight:800;line-height:1.2;letter-spacing:-0.005em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;
+}
+.banner-time{
+  font-size:0.72rem;color:var(--text-muted);font-weight:700;flex-shrink:0;
+}
+.banner-time strong{font-weight:800}
+.banner.now .banner-time strong{color:var(--accent)}
+.banner.before .banner-time strong{color:var(--orange)}
+.banner.break .banner-time strong{color:var(--green)}
+.progress{height:3px;border-radius:2px;background:var(--border);overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;border-radius:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2));
+  transition:width 0.6s linear}
 
 /* ===== Заголовок дня ===== */
 .day-header{display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:10px;padding:0 4px}
-.day-title{font-size:1rem;font-weight:800;letter-spacing:-0.01em}
+  margin-bottom:8px;padding:0 2px}
+.day-title{font-size:0.92rem;font-weight:800;letter-spacing:-0.01em}
 .today-chip{
-  font-size:0.65rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;
-  padding:5px 11px;border-radius:12px;background:var(--accent-soft);color:var(--accent);
+  font-size:0.6rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;
+  padding:4px 9px;border-radius:10px;background:var(--accent-soft);color:var(--accent);
   border:1px solid var(--accent);
 }
 
 /* ===== Карточки уроков ===== */
-.list{display:flex;flex-direction:column;gap:8px}
+.list{display:flex;flex-direction:column;gap:6px}
 .card{
-  background:var(--card);border:1px solid var(--border);border-radius:16px;
-  padding:14px 16px;display:flex;align-items:center;gap:14px;
-  box-shadow:var(--shadow-sm);transition:all 0.22s ease;
+  background:var(--card);border:1px solid var(--border);border-radius:13px;
+  padding:10px 12px;display:flex;align-items:center;gap:11px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.22s ease;
   position:relative;overflow:hidden;
 }
 html[data-theme="cosmic"] .card{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .card.now{
   border-color:var(--accent);background:linear-gradient(135deg,var(--accent-soft),var(--card));
-  box-shadow:0 6px 24px var(--accent-soft),0 0 0 1px var(--accent) inset;
+  box-shadow:0 4px 16px var(--accent-soft),0 0 0 1px var(--accent) inset;
 }
 .card.next{
   border-color:var(--orange);
   background:linear-gradient(135deg,var(--orange-soft),var(--card));
-  box-shadow:0 4px 16px var(--orange-soft),0 0 0 1px var(--orange) inset;
 }
 .card.next::before{
   content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
   background:var(--orange);
 }
 .num{
-  width:42px;height:42px;min-width:42px;border-radius:13px;
+  width:36px;height:36px;min-width:36px;border-radius:11px;
   background:var(--num-bg);color:var(--num-color);
   display:flex;align-items:center;justify-content:center;
-  font-weight:800;font-size:1.05rem;flex-shrink:0;
-  box-shadow:0 3px 10px var(--accent-soft);
+  font-weight:800;font-size:0.95rem;flex-shrink:0;
+  box-shadow:0 2px 8px var(--accent-soft);
 }
-.card.next .num{background:linear-gradient(135deg,var(--orange),#f97316);color:#fff;
-  box-shadow:0 3px 12px var(--orange-soft)}
+.card.next .num{background:linear-gradient(135deg,var(--orange),#f97316);color:#fff}
 .card-body{flex:1;min-width:0}
-.card-time{font-size:0.75rem;color:var(--text-muted);font-weight:700;
-  letter-spacing:0.01em;margin-bottom:2px}
-.card-lesson{font-size:1rem;font-weight:700;line-height:1.3;
+.card-time{font-size:0.7rem;color:var(--text-muted);font-weight:700;
+  letter-spacing:0.01em;margin-bottom:1px}
+.card-lesson{font-size:0.94rem;font-weight:700;line-height:1.25;
   letter-spacing:-0.005em;word-wrap:break-word}
 .pill{
-  font-size:0.6rem;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;
-  padding:4px 9px;border-radius:11px;margin-left:auto;flex-shrink:0;color:#fff;
+  font-size:0.56rem;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;
+  padding:3px 8px;border-radius:10px;margin-left:auto;flex-shrink:0;color:#fff;
 }
 .pill-now{background:linear-gradient(135deg,var(--accent),var(--accent-2))}
 html[data-theme="cosmic"] .pill-now{color:#1a0d3d}
@@ -393,34 +368,30 @@ html[data-theme="cosmic"] .pill-now{color:#1a0d3d}
 
 /* ===== Пустой день ===== */
 .empty{
-  text-align:center;padding:36px 20px;background:var(--card);
-  border-radius:16px;border:1px solid var(--border);
-  color:var(--text-muted);font-weight:700;box-shadow:var(--shadow-sm);
+  text-align:center;padding:26px 16px;background:var(--card);
+  border-radius:13px;border:1px solid var(--border);
+  color:var(--text-muted);font-weight:700;font-size:0.85rem;
 }
-.empty-emoji{font-size:2rem;display:block;margin-bottom:8px;opacity:0.7}
+.empty-emoji{font-size:1.6rem;display:block;margin-bottom:6px;opacity:0.7}
 
-/* ===== Ссылка на таблицу ===== */
+/* ===== Ссылка ===== */
 .footer-link{
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  margin-top:18px;padding:13px 16px;
-  color:var(--accent);text-decoration:none;font-size:0.82rem;font-weight:800;
-  border-radius:14px;border:1.5px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  margin-top:14px;padding:10px 14px;
+  color:var(--accent);text-decoration:none;font-size:0.78rem;font-weight:800;
+  border-radius:12px;border:1px solid var(--accent);
   background:transparent;transition:all 0.22s ease;
 }
 .footer-link:hover{background:var(--accent-soft)}
 .footer-link:active{transform:scale(0.98)}
 
-/* ===== Узкие экраны ===== */
 @media (max-width:380px){
-  body{padding:14px 12px 30px}
-  .header{padding:12px 14px;border-radius:16px}
-  .brand-text{font-size:1.05rem}
-  .badge{font-size:0.78rem;padding:5px 9px}
-  .card{padding:12px 14px;gap:12px}
-  .num{width:38px;height:38px;min-width:38px;font-size:0.95rem}
-  .card-lesson{font-size:0.94rem}
-  .banner{padding:14px 14px}
-  .banner-title{font-size:0.98rem}
+  body{padding:10px 8px 24px}
+  .card{padding:9px 10px;gap:10px}
+  .num{width:32px;height:32px;min-width:32px;font-size:0.88rem}
+  .card-lesson{font-size:0.88rem}
+  .banner{padding:9px 12px}
+  .banner-title{font-size:0.85rem}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
@@ -434,17 +405,14 @@ html[data-theme="cosmic"] .pill-now{color:#1a0d3d}
       <span class="brand-emoji">📅</span>
       <span class="brand-text">Расписание</span>
     </div>
-    <div class="badge">8Г</div>
+    <div class="header-right">
+      <span class="badge">8Г</span>
+      <button class="theme-toggle" id="themeBtn" title="Сменить тему">🎨</button>
+    </div>
   </div>
 
-  <div class="themes">
-    <button class="theme-btn" data-theme="light"><span class="emoji">☀️</span>Светлая</button>
-    <button class="theme-btn" data-theme="dark"><span class="emoji">🌙</span>Тёмная</button>
-    <button class="theme-btn" data-theme="cosmic"><span class="emoji">🌌</span>Космос</button>
-  </div>
-
-  {banner}
   {tabs}
+  {banner}
   {content}
 
   <a class="footer-link" href="{sheet_url}" target="_blank" rel="noopener">
@@ -455,27 +423,33 @@ html[data-theme="cosmic"] .pill-now{color:#1a0d3d}
 <script>
 (function(){
   var THEME_KEY = 'sch_theme';
+  var THEMES = ['light','dark','cosmic'];
+  var THEME_EMOJI = {light:'☀️', dark:'🌙', cosmic:'🌌'};
   var THEME_META = {light:'#f5f5f7', dark:'#0e0e10', cosmic:'#07071c'};
 
-  function setTheme(t){
+  var btn = document.getElementById('themeBtn');
+  var cur = 'light';
+  try { cur = localStorage.getItem(THEME_KEY) || 'light'; } catch(e){}
+  if (THEMES.indexOf(cur) === -1) cur = 'light';
+
+  function apply(t){
     document.documentElement.setAttribute('data-theme', t);
     try { localStorage.setItem(THEME_KEY, t); } catch(e){}
     var meta = document.getElementById('themeMeta');
     if (meta) meta.setAttribute('content', THEME_META[t] || '#f5f5f7');
-    document.querySelectorAll('.theme-btn').forEach(function(b){
-      b.classList.toggle('active', b.getAttribute('data-theme') === t);
+    if (btn) btn.textContent = THEME_EMOJI[t] || '🎨';
+    cur = t;
+  }
+
+  if (btn) {
+    btn.addEventListener('click', function(){
+      var i = THEMES.indexOf(cur);
+      var next = THEMES[(i + 1) % THEMES.length];
+      apply(next);
     });
   }
 
-  document.querySelectorAll('.theme-btn').forEach(function(b){
-    b.addEventListener('click', function(){ setTheme(b.getAttribute('data-theme')); });
-  });
-
-  // Init theme
-  var saved = 'light';
-  try { saved = localStorage.getItem(THEME_KEY) || 'light'; } catch(e){}
-  if (!THEME_META[saved]) saved = 'light';
-  setTheme(saved);
+  apply(cur);
 
   // Tabs
   var tabs = document.querySelectorAll('.tab');
@@ -490,7 +464,7 @@ html[data-theme="cosmic"] .pill-now{color:#1a0d3d}
     });
   });
 
-  // Auto-update timer every 1 sec
+  // Таймер каждую секунду
   function tick(){
     var now = Date.now();
     document.querySelectorAll('[data-end-unix]').forEach(function(el){
@@ -511,7 +485,6 @@ html[data-theme="cosmic"] .pill-now{color:#1a0d3d}
         span.textContent = 'в ' + s + ' · через ' + left + ' мин';
       }
     });
-    // Прогресс-бар
     document.querySelectorAll('.banner.now').forEach(function(el){
       var end = parseInt(el.getAttribute('data-end-unix'), 10);
       var start = parseInt(el.getAttribute('data-start-unix') || '0', 10);
