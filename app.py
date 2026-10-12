@@ -63,7 +63,7 @@ ICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <text x="256" y="365" font-family="Arial,Helvetica,sans-serif" font-size="210" font-weight="900" fill="#6366f1" text-anchor="middle">8Г</text>
 </svg>'''
 
-SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v43';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v43').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
+SW_JS = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('message',e=>{if(e.data&&e.data.type==='showNotification'){e.waitUntil(self.registration.showNotification(e.data.title||'Уведомление',{body:e.data.body||'',tag:e.data.tag||'default',icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],requireInteraction:false}));}});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!=='school-v45';}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}).then(function(){return self.clients.matchAll({type:'window'});}).then(function(cs){cs.forEach(function(c){try{c.navigate(c.url);}catch(x){}});}));});self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||e.request.url.indexOf('/api/')>-1)return;e.respondWith(caches.open('school-v45').then(function(cache){return fetch(e.request).then(function(resp){if(resp&&resp.status===200)cache.put(e.request,resp.clone());return resp;}).catch(function(){return cache.match(e.request).then(function(r){return r||cache.match('/');});});}));});"
 
 # ============ HELPERS ============
 def _ld(path, default):
@@ -580,7 +580,38 @@ html.scroll-guard .srow:active, html.scroll-guard .theme-btn:active, html.scroll
 .today-pill { font-size:0.68rem; background: var(--accent-light); color: var(--accent); padding:5px 11px; border-radius:20px; font-weight:800; text-transform:uppercase; }
 .card { background: var(--card-bg); padding:12px 14px; margin-bottom:7px; border-radius:var(--radius-block); box-shadow: var(--shadow); display:flex; align-items:center; gap:12px; border:1px solid var(--border); min-height:60px; box-sizing:border-box; }
 .card.now { box-shadow: 0 6px 24px var(--accent-light), 0 0 0 1.5px var(--accent); background: linear-gradient(135deg, var(--accent-light), var(--card-bg)); }
-.card.next-up { box-shadow: 0 6px 20px var(--orange-soft), 0 0 0 1px var(--orange); }
+.card.next-up {
+  box-shadow: 0 6px 24px var(--orange-soft), 0 0 0 1.5px var(--orange);
+  background: linear-gradient(135deg, var(--orange-soft) 0%, var(--card-bg) 65%);
+  position: relative;
+  overflow: hidden;
+}
+.card.next-up::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--orange), color-mix(in srgb, var(--orange) 60%, transparent));
+  border-radius: 0 4px 4px 0;
+}
+.next-pill {
+  font-size: 0.58rem;
+  background: var(--orange);
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-left: auto;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px var(--orange-soft);
+  letter-spacing: 0.04em;
+}
+.card.next-up .num {
+  background: var(--orange) !important;
+  color: #fff !important;
+  box-shadow: 0 3px 12px var(--orange-soft) !important;
+}
 .num { width:40px; height:40px; min-width:40px; border-radius:11px; background: var(--num-bg); color: var(--num-color); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.02rem; flex-shrink:0; box-shadow: var(--num-shadow); box-sizing:border-box; align-self:center; }
 .card.now .num { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: var(--on-accent); }
 .left-side { display:flex; flex-direction:column; gap:2px; flex-grow:1; min-width:0; justify-content:center; overflow:hidden; }
@@ -1557,7 +1588,7 @@ html body .day-footer .df-item[data-widget="weather"] .df-val {
 </style>
 </head>
 <body data-changed-at="{changed_at}" data-today="{day_today}">
-<script>(function(){var B='2026-10-09-56';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
+<script>(function(){var B='2026-10-12-58';if(localStorage.getItem('rs_build')!==B){try{['rs_emoji','rs_opt_show_logo','rs_card_opacity','rs_card_blur','rs_card_shadow','rs_glow_pow','rs_bg_opacity','rs_f_saturate','rs_f_brightness','rs_f_contrast','rs_f_hue-rotate','rs_f_sepia','rs_f_invert','rs_f_grayscale','rs_particle_size','rs_particle_opacity','rs_particle_speed','rs_u_page_maxw','rs_u_page_pad','rs_weather_week'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}localStorage.setItem('rs_build',B);}})();</script>
 <div id="particles"></div>
 <div id="installBanner" class="install-banner" style="display:none;">
     <span class="install-ico">📲</span>
@@ -3324,6 +3355,36 @@ if (document.readyState !== "loading") initAllNew(); else document.addEventListe
                         (!hasNow && !hasBefore && !hasBreak && (srvNow || srvBefore || srvBreak))) {
                         _applyFragments(d);
                     }
+                    // Обновляем "next-up" и "now" классы без перерисовки всего
+                    var srvNum = d.live.num;
+                    document.querySelectorAll('.card').forEach(function(c){
+                        var numEl = c.querySelector('.num');
+                        if (!numEl) return;
+                        var n = parseInt(numEl.textContent, 10);
+                        var pillEl = c.querySelector('.now-pill, .next-pill');
+                        if (srvNow && n === srvNum) {
+                            if (!c.classList.contains('now')) { c.classList.add('now'); c.classList.remove('next-up'); }
+                            if (!pillEl) {
+                                var p = document.createElement('span');
+                                p.className = 'now-pill'; p.textContent = 'сейчас';
+                                c.appendChild(p);
+                            } else if (pillEl.className.indexOf('now') === -1) {
+                                pillEl.className = 'now-pill'; pillEl.textContent = 'сейчас';
+                            }
+                        } else if ((srvBefore || srvBreak) && n === srvNum) {
+                            if (!c.classList.contains('next-up')) { c.classList.add('next-up'); c.classList.remove('now'); }
+                            if (!pillEl) {
+                                var p2 = document.createElement('span');
+                                p2.className = 'next-pill'; p2.textContent = 'дальше';
+                                c.appendChild(p2);
+                            } else if (pillEl.className.indexOf('next') === -1) {
+                                pillEl.className = 'next-pill'; pillEl.textContent = 'дальше';
+                            }
+                        } else {
+                            c.classList.remove('now', 'next-up');
+                            if (pillEl) pillEl.remove();
+                        }
+                    });
                 } else {
                     // live == null, но баннер висит — обновляем
                     if (document.querySelector('.live-banner')) _applyFragments(d);
@@ -3519,10 +3580,13 @@ def build_content(days, active, err, st):
         else:
             for tv, num, lesson in lessons:
                 cc = "card"; pill = ""
-                if full == today_full and st and st["type"]=="now" and num==st["num"]:
-                    cc += " now"; pill = '<span class="now-pill">сейчас</span>'
-                elif full == today_full and st and st["type"]=="before" and num==st["num"]:
+                is_today = (full == today_full)
+                if is_today and st and st["type"] == "now" and num == st["num"]:
+                    cc += " now"
+                    pill = '<span class="now-pill">сейчас</span>'
+                elif is_today and st and st["type"] in ("before", "break") and num == st["num"]:
                     cc += " next-up"
+                    pill = '<span class="next-pill">дальше</span>'
                 html += f'<div class="{cc}"><div class="num">{num}</div>'
                 html += f'<div class="left-side"><div class="time">{tv}</div>'
                 html += f'<div class="lesson">{_esc(lesson)}</div></div>{pill}</div>'
