@@ -3,7 +3,6 @@ from http.server import HTTPServer, ThreadingHTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, timezone, timedelta
 from html import escape as _esc
 
-# ============ CONFIG ============
 SPREADSHEET_ID = "1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE"
 CSV_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/export?format=csv"
 SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit"
@@ -23,9 +22,7 @@ DAY_FULL = ["Понедельник","Вторник","Среда","Четвер
 CACHE_FILE = "schedule_cache.json"
 cache = {"days": {}, "err": "", "ts": 0}
 CACHE_TTL = 300
-_lock = threading.Lock()
 
-# ============ SCHEDULE PARSER ============
 def _load_disk():
     try:
         with open(CACHE_FILE, "r", encoding="utf-8") as f:
@@ -40,12 +37,14 @@ def _save_disk(days):
     except Exception:
         pass
 
-def _norm_t(s):
+def _norm_time(s):
     s = s.replace("–","-").replace("—","-").replace(" ", "").replace(".", ":")
     if "-" not in s: return ""
-    a, b = s.split("-", 1)
     try:
-        return f"{int(a.split(':')[0])}:{a.split(':')[1]}-{int(b.split(':')[0])}:{b.split(':')[1]}"
+        a, b = s.split("-", 1)
+        ah, am = a.split(":")
+        bh, bm = b.split(":")
+        return f"{int(ah)}:{am}-{int(bh)}:{bm}"
     except Exception:
         return ""
 
@@ -53,15 +52,17 @@ def fetch_schedule():
     now = time.time()
     if cache["days"] and (now - cache["ts"] < CACHE_TTL):
         return cache["days"], cache["err"]
-    days = {}; err = ""
+    days = {}
+    err = ""
     try:
         req = urllib.request.urlopen(CSV_URL, timeout=8)
         data = req.read().decode("utf-8")
         rows = list(csv.reader(io.StringIO(data)))
 
-        def norm(s): return "".join(c for c in (s or "").lower() if c.isalnum())
-        target = norm(CLASS_CODE)
+        def norm(s):
+            return "".join(c for c in (s or "").lower() if c.isalnum())
 
+        target = norm(CLASS_CODE)
         col = -1
         for row in rows:
             for i, c in enumerate(row):
@@ -88,11 +89,11 @@ def fetch_schedule():
             cur_day = ""
             for row in rows:
                 if not row: continue
-                text_low = " ".join(row).lower()
+                words = " ".join(row).lower().split()
                 found = None
                 for full, aliases in day_aliases.items():
                     for a in aliases:
-                        if a in text_low.split():
+                        if a in words:
                             found = full; break
                     if found: break
                 if found:
@@ -102,31 +103,32 @@ def fetch_schedule():
                 if not cur_day: continue
                 tv = ""
                 for c in row:
-                    cc = c.strip()
-                    n = _norm_t(cc)
-                    if n and n in TIME_TO_NUM:
-                        tv = n; break
+                    t = _norm_time(c.strip())
+                    if t and t in TIME_TO_NUM:
+                        tv = t; break
                 if not tv: continue
                 if len(row) > col:
                     lv = row[col].strip()
                     if not lv or len(lv) < 2 or ":" in lv: continue
-                    if lv.lower() in ["урок","-","—",""]: continue
+                    if lv.lower() in ("урок","-","—",""): continue
                     num = TIME_TO_NUM[tv]
                     days[cur_day].append([tv, num, lv])
             for d in days:
                 days[d] = sorted(days[d], key=lambda x: x[1])
-            cache["days"] = days; cache["err"] = ""; cache["ts"] = now
+            cache["days"] = days
+            cache["err"] = ""
+            cache["ts"] = now
             _save_disk(days)
-    except Exception as e:
+    except Exception:
         disk = _load_disk()
         if disk:
-            cache["days"] = disk; cache["err"] = ""
+            cache["days"] = disk
+            cache["err"] = ""
             return disk, ""
         err = "Офлайн-режим"
     cache["err"] = err
     return days, err
 
-# ============ LIVE STATUS ============
 def get_live(lessons):
     if not lessons: return None
     now = datetime.now(PERM_TZ)
@@ -140,14 +142,15 @@ def get_live(lessons):
             eh, em = map(int, e.split(":"))
         except Exception:
             continue
-        ss = sh*60+sm; ee = eh*60+em
+        ss = sh*60+sm
+        ee = eh*60+em
         if ss <= cur < ee:
             prog = int((cur - ss) / max(ee - ss, 1) * 100)
             return {
                 "type": "now", "num": num, "lesson": lesson, "progress": prog,
                 "until": e, "left_min": max(0, ee - cur),
-                "end_unix": int(now.replace(hour=eh,minute=em,second=0,microsecond=0).timestamp()),
-                "start_unix": int(now.replace(hour=sh,minute=sm,second=0,microsecond=0).timestamp())
+                "start_unix": int(now.replace(hour=sh,minute=sm,second=0,microsecond=0).timestamp()),
+                "end_unix":   int(now.replace(hour=eh,minute=em,second=0,microsecond=0).timestamp()),
             }
         if cur < ss:
             st_unix = int(now.replace(hour=sh,minute=sm,second=0,microsecond=0).timestamp())
@@ -160,7 +163,6 @@ def get_live(lessons):
         prev_end = ee
     return None
 
-# ============ HTML ============
 PAGE = """<!DOCTYPE html>
 <html lang="ru" data-theme="light">
 <head>
@@ -170,172 +172,175 @@ PAGE = """<!DOCTYPE html>
 <title>Расписание 8Г</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root,html[data-theme="light"]{
-  --bg:#f5f5f7; --bg-grad1:#ffffff; --bg-grad2:#e8ecf2;
-  --card:#ffffff; --text:#1a1a1f; --text-muted:#6b7280;
-  --accent:#4f46e5; --accent-2:#7c3aed; --accent-soft:rgba(79,70,229,0.10);
-  --border:rgba(0,0,0,0.06);
+
+html[data-theme="light"]{
+  --bg:#f5f5f7; --bg1:#ffffff; --bg2:#e8ecf2;
+  --card:#ffffff; --text:#1a1a1f; --muted:#6b7280;
+  --accent:#4f46e5; --accent2:#7c3aed; --accent-soft:rgba(79,70,229,0.10);
+  --border:rgba(0,0,0,0.07);
   --shadow:0 2px 8px rgba(15,23,42,0.06),0 8px 24px rgba(15,23,42,0.04);
   --orange:#f59e0b; --orange-soft:rgba(245,158,11,0.12);
   --green:#10b981; --green-soft:rgba(16,185,129,0.12);
-  --num-bg:linear-gradient(135deg,var(--accent),var(--accent-2)); --num-color:#fff;
+  --num:linear-gradient(135deg,#4f46e5,#7c3aed); --num-fg:#fff;
 }
 html[data-theme="dark"]{
-  --bg:#0e0e10; --bg-grad1:#1a1a1f; --bg-grad2:#0e0e10;
-  --card:#1c1c22; --text:#f0f0f3; --text-muted:#9a9aa8;
-  --accent:#818cf8; --accent-2:#c084fc; --accent-soft:rgba(129,140,248,0.14);
-  --border:rgba(255,255,255,0.06);
+  --bg:#0e0e10; --bg1:#1a1a1f; --bg2:#0e0e10;
+  --card:#1c1c22; --text:#f0f0f3; --muted:#9a9aa8;
+  --accent:#818cf8; --accent2:#c084fc; --accent-soft:rgba(129,140,248,0.14);
+  --border:rgba(255,255,255,0.07);
   --shadow:0 4px 16px rgba(0,0,0,0.35),0 12px 32px rgba(0,0,0,0.25);
   --orange:#fbbf24; --orange-soft:rgba(251,191,36,0.14);
   --green:#34d399; --green-soft:rgba(52,211,153,0.14);
-  --num-bg:linear-gradient(135deg,var(--accent),var(--accent-2)); --num-color:#1a1a1f;
+  --num:linear-gradient(135deg,#818cf8,#c084fc); --num-fg:#1a1a1f;
 }
 html[data-theme="cosmic"]{
-  --bg:#07071c; --bg-grad1:#141138; --bg-grad2:#050512;
-  --card:rgba(30,25,70,0.55); --text:#eae4ff; --text-muted:#a89dd8;
-  --accent:#b794f6; --accent-2:#7cf5c0; --accent-soft:rgba(183,148,246,0.18);
-  --border:rgba(183,148,246,0.16);
+  --bg:#07071c; --bg1:#141138; --bg2:#050512;
+  --card:rgba(30,25,70,0.55); --text:#eae4ff; --muted:#a89dd8;
+  --accent:#b794f6; --accent2:#7cf5c0; --accent-soft:rgba(183,148,246,0.18);
+  --border:rgba(183,148,246,0.18);
   --shadow:0 6px 24px rgba(80,30,200,0.25),0 0 40px rgba(120,80,240,0.15);
   --orange:#fbbf24; --orange-soft:rgba(251,191,36,0.18);
   --green:#7cf5c0; --green-soft:rgba(124,245,192,0.16);
-  --num-bg:linear-gradient(135deg,var(--accent),var(--accent-2)); --num-color:#1a0d3d;
+  --num:linear-gradient(135deg,#b794f6,#7cf5c0); --num-fg:#1a0d3d;
 }
+
 html{min-height:100%;background:var(--bg);overflow-x:hidden}
 body{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;
   background:var(--bg);color:var(--text);min-height:100vh;
-  padding:14px 12px 30px;-webkit-font-smoothing:antialiased;
-  transition:background 0.35s ease,color 0.35s ease;overflow-x:hidden;
+  padding:12px 12px 28px;-webkit-font-smoothing:antialiased;
+  transition:background .35s ease,color .35s ease;overflow-x:hidden;
 }
-html[data-theme="light"] body{background-image:linear-gradient(180deg,var(--bg-grad1),var(--bg-grad2))}
-html[data-theme="dark"] body{background-image:linear-gradient(180deg,var(--bg-grad1),var(--bg-grad2))}
+html[data-theme="light"] body{background-image:linear-gradient(180deg,var(--bg1),var(--bg2))}
+html[data-theme="dark"]  body{background-image:linear-gradient(180deg,var(--bg1),var(--bg2))}
 html[data-theme="cosmic"] body{
   background-image:
     radial-gradient(ellipse 60% 40% at 15% 10%,rgba(120,80,240,0.25),transparent 60%),
     radial-gradient(ellipse 50% 40% at 85% 85%,rgba(60,220,180,0.12),transparent 55%),
-    linear-gradient(180deg,var(--bg-grad1),var(--bg-grad2));
+    linear-gradient(180deg,var(--bg1),var(--bg2));
   background-attachment:fixed;
 }
-.wrap{max-width:440px;margin:0 auto;position:relative;z-index:1}
+.wrap{max-width:420px;margin:0 auto}
 
-/* ===== Шапка ===== */
-.header{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding:4px 4px 12px;
+/* ====== Шапка ====== */
+.head{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:6px 4px 12px;
 }
-.brand{display:flex;align-items:center;gap:8px;min-width:0}
-.brand-emoji{font-size:1.3rem;line-height:1;flex-shrink:0}
-.brand-text{
-  font-size:1.15rem;font-weight:800;letter-spacing:-0.02em;
-  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+.head-left{display:flex;align-items:center;gap:8px;min-width:0}
+.head-emoji{font-size:1.35rem;line-height:1;flex-shrink:0}
+.head-title{
+  font-size:1.15rem;font-weight:800;letter-spacing:-.02em;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  white-space:nowrap;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.header-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.badge{
+.head-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.head-class{
   background:var(--accent-soft);color:var(--accent);
-  padding:5px 10px;border-radius:10px;font-weight:800;font-size:0.8rem;
+  padding:5px 10px;border-radius:10px;font-weight:800;font-size:.8rem;
   border:1px solid var(--border);
 }
-.theme-toggle{
+.theme-btn{
   width:34px;height:34px;border-radius:10px;border:1px solid var(--border);
   background:var(--card);color:var(--text);font-size:1.05rem;cursor:pointer;
   display:flex;align-items:center;justify-content:center;font-family:inherit;
-  transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),background 0.2s ease;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),background .2s;
 }
-.theme-toggle:hover{background:var(--accent-soft)}
-.theme-toggle:active{transform:scale(0.9) rotate(-15deg)}
+.theme-btn:hover{background:var(--accent-soft)}
+.theme-btn:active{transform:scale(.88) rotate(-12deg)}
 
-/* ===== Табы (дни недели) ===== */
-.tabs{display:flex;gap:4px;padding:4px;background:var(--card);
-  border-radius:14px;margin-bottom:10px;border:1px solid var(--border);
-  box-shadow:var(--shadow);overflow-x:auto;scrollbar-width:none}
+/* ====== Табы дней ====== */
+.tabs{
+  display:flex;gap:3px;padding:3px;background:var(--card);
+  border-radius:13px;margin-bottom:10px;border:1px solid var(--border);
+  box-shadow:var(--shadow);overflow-x:auto;scrollbar-width:none;
+}
 .tabs::-webkit-scrollbar{display:none}
 html[data-theme="cosmic"] .tabs{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .tab{
-  flex:1;min-width:0;padding:8px 4px;border:none;background:transparent;
-  border-radius:11px;font-family:inherit;font-weight:800;font-size:0.82rem;
-  color:var(--text-muted);cursor:pointer;transition:all 0.22s ease;
-  position:relative;min-height:42px;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:2px;
+  flex:1;min-width:0;padding:7px 4px;border:none;background:transparent;
+  border-radius:10px;font-family:inherit;font-weight:800;font-size:.82rem;
+  color:var(--muted);cursor:pointer;transition:all .22s;
+  position:relative;min-height:40px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;
 }
 .tab:hover:not(.active){background:var(--accent-soft);color:var(--text)}
 .tab.active{
-  background:linear-gradient(135deg,var(--accent),var(--accent-2));
-  color:#fff;box-shadow:0 4px 14px var(--accent-soft);
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;box-shadow:0 3px 12px var(--accent-soft);
 }
 html[data-theme="cosmic"] .tab.active{color:#1a0d3d}
-.tab-day{font-size:0.58rem;opacity:0.75;font-weight:700}
+.tab-sub{font-size:.55rem;opacity:.75;font-weight:700}
 .tab.today:not(.active)::after{
   content:"";position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
   width:4px;height:4px;border-radius:50%;background:var(--accent);
 }
 
-/* ===== КОМПАКТНЫЙ баннер урока ===== */
-.banner{
-  border-radius:14px;padding:10px 14px;margin-bottom:10px;
-  background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);
-  transition:all 0.3s ease;
+/* ====== КОМПАКТНЫЙ бар урока ====== */
+.bar{
+  border-radius:13px;padding:9px 12px;margin-bottom:10px;
+  background:var(--card);border:1px solid var(--border);
+  box-shadow:var(--shadow);transition:all .3s;
+  display:flex;align-items:center;gap:10px;
 }
-html[data-theme="cosmic"] .banner{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-.banner.now{border:1px solid var(--accent);
-  background:linear-gradient(135deg,var(--accent-soft),var(--card))}
-.banner.before{border:1px solid var(--orange);
-  background:linear-gradient(135deg,var(--orange-soft),var(--card))}
-.banner.break{border:1px solid var(--green);
-  background:linear-gradient(135deg,var(--green-soft),var(--card))}
-.banner-row{display:flex;align-items:center;gap:10px}
-.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.banner.now .dot{background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);animation:pulse 1.8s infinite}
-.banner.before .dot{background:var(--orange);box-shadow:0 0 0 3px var(--orange-soft)}
-.banner.break .dot{background:var(--green);box-shadow:0 0 0 3px var(--green-soft)}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-.banner-body{flex:1;min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.banner-label{
-  font-size:0.6rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;
+html[data-theme="cosmic"] .bar{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.bar.now{border-color:var(--accent);background:linear-gradient(135deg,var(--accent-soft),var(--card))}
+.bar.before{border-color:var(--orange);background:linear-gradient(135deg,var(--orange-soft),var(--card))}
+.bar.break{border-color:var(--green);background:linear-gradient(135deg,var(--green-soft),var(--card))}
+.bar .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.bar.now .dot{background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);animation:pulse 1.8s infinite}
+.bar.before .dot{background:var(--orange);box-shadow:0 0 0 3px var(--orange-soft)}
+.bar.break .dot{background:var(--green);box-shadow:0 0 0 3px var(--green-soft)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.bar-content{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+.bar-label{
+  font-size:.6rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
   flex-shrink:0;
 }
-.banner.now .banner-label{color:var(--accent)}
-.banner.before .banner-label{color:var(--orange)}
-.banner.break .banner-label{color:var(--green)}
-.banner-title{
-  font-size:0.9rem;font-weight:800;line-height:1.2;letter-spacing:-0.005em;
+.bar.now .bar-label{color:var(--accent)}
+.bar.before .bar-label{color:var(--orange)}
+.bar.break .bar-label{color:var(--green)}
+.bar-title{
+  font-size:.9rem;font-weight:800;line-height:1.2;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;
 }
-.banner-time{
-  font-size:0.72rem;color:var(--text-muted);font-weight:700;flex-shrink:0;
+.bar-time{font-size:.7rem;color:var(--muted);font-weight:700;flex-shrink:0}
+.bar-time strong{font-weight:800}
+.bar.now .bar-time strong{color:var(--accent)}
+.bar.before .bar-time strong{color:var(--orange)}
+.bar.break .bar-time strong{color:var(--green)}
+.bar-progress{
+  position:absolute;left:12px;right:12px;bottom:4px;height:2px;
+  background:var(--border);border-radius:1px;overflow:hidden;
 }
-.banner-time strong{font-weight:800}
-.banner.now .banner-time strong{color:var(--accent)}
-.banner.before .banner-time strong{color:var(--orange)}
-.banner.break .banner-time strong{color:var(--green)}
-.progress{height:3px;border-radius:2px;background:var(--border);overflow:hidden;margin-top:8px}
-.progress-fill{height:100%;border-radius:2px;
-  background:linear-gradient(90deg,var(--accent),var(--accent-2));
-  transition:width 0.6s linear}
+.bar.now{position:relative}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transition:width .6s linear}
 
-/* ===== Заголовок дня ===== */
-.day-header{display:flex;align-items:center;justify-content:space-between;
+/* ====== Заголовок дня ====== */
+.day-head{display:flex;align-items:center;justify-content:space-between;
   margin-bottom:8px;padding:0 2px}
-.day-title{font-size:0.92rem;font-weight:800;letter-spacing:-0.01em}
-.today-chip{
-  font-size:0.6rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;
-  padding:4px 9px;border-radius:10px;background:var(--accent-soft);color:var(--accent);
-  border:1px solid var(--accent);
+.day-name{font-size:.9rem;font-weight:800}
+.day-chip{
+  font-size:.58rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 8px;border-radius:9px;background:var(--accent-soft);
+  color:var(--accent);border:1px solid var(--accent);
 }
 
-/* ===== Карточки уроков ===== */
+/* ====== Карточки ====== */
 .list{display:flex;flex-direction:column;gap:6px}
 .card{
   background:var(--card);border:1px solid var(--border);border-radius:13px;
   padding:10px 12px;display:flex;align-items:center;gap:11px;
-  box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.22s ease;
+  box-shadow:0 1px 3px rgba(0,0,0,.03);transition:all .22s;
   position:relative;overflow:hidden;
 }
 html[data-theme="cosmic"] .card{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .card.now{
-  border-color:var(--accent);background:linear-gradient(135deg,var(--accent-soft),var(--card));
-  box-shadow:0 4px 16px var(--accent-soft),0 0 0 1px var(--accent) inset;
+  border-color:var(--accent);
+  background:linear-gradient(135deg,var(--accent-soft),var(--card));
+  box-shadow:0 4px 16px var(--accent-soft);
 }
 .card.next{
   border-color:var(--orange);
@@ -347,51 +352,47 @@ html[data-theme="cosmic"] .card{backdrop-filter:blur(10px);-webkit-backdrop-filt
 }
 .num{
   width:36px;height:36px;min-width:36px;border-radius:11px;
-  background:var(--num-bg);color:var(--num-color);
+  background:var(--num);color:var(--num-fg);
   display:flex;align-items:center;justify-content:center;
-  font-weight:800;font-size:0.95rem;flex-shrink:0;
+  font-weight:800;font-size:.95rem;flex-shrink:0;
   box-shadow:0 2px 8px var(--accent-soft);
 }
-.card.next .num{background:linear-gradient(135deg,var(--orange),#f97316);color:#fff}
+.card.next .num{background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff}
 .card-body{flex:1;min-width:0}
-.card-time{font-size:0.7rem;color:var(--text-muted);font-weight:700;
-  letter-spacing:0.01em;margin-bottom:1px}
-.card-lesson{font-size:0.94rem;font-weight:700;line-height:1.25;
-  letter-spacing:-0.005em;word-wrap:break-word}
+.card-time{font-size:.7rem;color:var(--muted);font-weight:700;margin-bottom:1px}
+.card-title{font-size:.94rem;font-weight:700;line-height:1.25;
+  letter-spacing:-.005em;word-wrap:break-word}
 .pill{
-  font-size:0.56rem;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;
+  font-size:.55rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
   padding:3px 8px;border-radius:10px;margin-left:auto;flex-shrink:0;color:#fff;
 }
-.pill-now{background:linear-gradient(135deg,var(--accent),var(--accent-2))}
-html[data-theme="cosmic"] .pill-now{color:#1a0d3d}
-.pill-next{background:var(--orange)}
+.pill.now{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+html[data-theme="cosmic"] .pill.now{color:#1a0d3d}
+.pill.next{background:var(--orange)}
 
-/* ===== Пустой день ===== */
 .empty{
   text-align:center;padding:26px 16px;background:var(--card);
   border-radius:13px;border:1px solid var(--border);
-  color:var(--text-muted);font-weight:700;font-size:0.85rem;
+  color:var(--muted);font-weight:700;font-size:.85rem;
 }
-.empty-emoji{font-size:1.6rem;display:block;margin-bottom:6px;opacity:0.7}
+.empty-emoji{font-size:1.6rem;display:block;margin-bottom:6px;opacity:.65}
 
-/* ===== Ссылка ===== */
-.footer-link{
+.foot{
   display:flex;align-items:center;justify-content:center;gap:6px;
   margin-top:14px;padding:10px 14px;
-  color:var(--accent);text-decoration:none;font-size:0.78rem;font-weight:800;
+  color:var(--accent);text-decoration:none;font-size:.78rem;font-weight:800;
   border-radius:12px;border:1px solid var(--accent);
-  background:transparent;transition:all 0.22s ease;
+  background:transparent;transition:all .22s;
 }
-.footer-link:hover{background:var(--accent-soft)}
-.footer-link:active{transform:scale(0.98)}
+.foot:hover{background:var(--accent-soft)}
 
 @media (max-width:380px){
-  body{padding:10px 8px 24px}
+  body{padding:10px 8px 22px}
   .card{padding:9px 10px;gap:10px}
-  .num{width:32px;height:32px;min-width:32px;font-size:0.88rem}
-  .card-lesson{font-size:0.88rem}
-  .banner{padding:9px 12px}
-  .banner-title{font-size:0.85rem}
+  .num{width:32px;height:32px;min-width:32px;font-size:.88rem}
+  .card-title{font-size:.88rem}
+  .bar{padding:8px 10px}
+  .bar-title{font-size:.85rem}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
@@ -400,139 +401,135 @@ html[data-theme="cosmic"] .pill-now{color:#1a0d3d}
 </head>
 <body>
 <div class="wrap">
-  <div class="header">
-    <div class="brand">
-      <span class="brand-emoji">📅</span>
-      <span class="brand-text">Расписание</span>
+  <div class="head">
+    <div class="head-left">
+      <span class="head-emoji">📅</span>
+      <span class="head-title">Расписание</span>
     </div>
-    <div class="header-right">
-      <span class="badge">8Г</span>
-      <button class="theme-toggle" id="themeBtn" title="Сменить тему">🎨</button>
+    <div class="head-right">
+      <span class="head-class">8Г</span>
+      <button class="theme-btn" id="themeBtn" title="Сменить тему">🌙</button>
     </div>
   </div>
 
   {tabs}
-  {banner}
+  {bar}
   {content}
 
-  <a class="footer-link" href="{sheet_url}" target="_blank" rel="noopener">
+  <a class="foot" href="{sheet_url}" target="_blank" rel="noopener">
     📊 Открыть таблицу
   </a>
 </div>
 
 <script>
 (function(){
-  var THEME_KEY = 'sch_theme';
+  var TK = 'sch_theme_v2';
   var THEMES = ['light','dark','cosmic'];
-  var THEME_EMOJI = {light:'☀️', dark:'🌙', cosmic:'🌌'};
-  var THEME_META = {light:'#f5f5f7', dark:'#0e0e10', cosmic:'#07071c'};
+  var ICON = {light:'☀️', dark:'🌙', cosmic:'🌌'};
+  var META = {light:'#f5f5f7', dark:'#0e0e10', cosmic:'#07071c'};
 
   var btn = document.getElementById('themeBtn');
   var cur = 'light';
-  try { cur = localStorage.getItem(THEME_KEY) || 'light'; } catch(e){}
+  try { cur = localStorage.getItem(TK) || 'light'; } catch(e){}
   if (THEMES.indexOf(cur) === -1) cur = 'light';
 
   function apply(t){
     document.documentElement.setAttribute('data-theme', t);
-    try { localStorage.setItem(THEME_KEY, t); } catch(e){}
+    try { localStorage.setItem(TK, t); } catch(e){}
     var meta = document.getElementById('themeMeta');
-    if (meta) meta.setAttribute('content', THEME_META[t] || '#f5f5f7');
-    if (btn) btn.textContent = THEME_EMOJI[t] || '🎨';
+    if (meta) meta.setAttribute('content', META[t]);
+    if (btn) btn.textContent = ICON[t];
     cur = t;
   }
 
-  if (btn) {
-    btn.addEventListener('click', function(){
-      var i = THEMES.indexOf(cur);
-      var next = THEMES[(i + 1) % THEMES.length];
-      apply(next);
-    });
-  }
+  btn.addEventListener('click', function(){
+    var i = THEMES.indexOf(cur);
+    apply(THEMES[(i + 1) % THEMES.length]);
+  });
 
   apply(cur);
 
-  // Tabs
   var tabs = document.querySelectorAll('.tab');
   var blocks = document.querySelectorAll('.day-block');
-  tabs.forEach(function(tab){
-    tab.addEventListener('click', function(){
-      var day = tab.getAttribute('data-day');
-      tabs.forEach(function(t){ t.classList.toggle('active', t === tab); });
-      blocks.forEach(function(b){
-        b.classList.toggle('active-day', b.id === 'block-' + day);
+  for (var i = 0; i < tabs.length; i++) {
+    (function(tab){
+      tab.addEventListener('click', function(){
+        var day = tab.getAttribute('data-day');
+        for (var j = 0; j < tabs.length; j++) tabs[j].classList.toggle('active', tabs[j] === tab);
+        for (var k = 0; k < blocks.length; k++) blocks[k].classList.toggle('active-day', blocks[k].id === 'block-' + day);
       });
-    });
-  });
+    })(tabs[i]);
+  }
 
-  // Таймер каждую секунду
   function tick(){
-    var now = Date.now();
-    document.querySelectorAll('[data-end-unix]').forEach(function(el){
-      var end = parseInt(el.getAttribute('data-end-unix'), 10) * 1000;
-      var left = Math.max(0, Math.ceil((end - now) / 60000));
-      var span = el.querySelector('.js-left');
-      if (span) {
-        var until = el.getAttribute('data-until') || '';
-        span.textContent = 'до ' + until + ' · ' + left + ' мин';
+    var nowMs = Date.now();
+    var nowSec = Math.floor(nowMs / 1000);
+
+    // Баннер "now"
+    var nowEl = document.querySelector('.bar.now');
+    if (nowEl) {
+      var endS = parseInt(nowEl.getAttribute('data-end'), 10);
+      var startS = parseInt(nowEl.getAttribute('data-start'), 10);
+      var until = nowEl.getAttribute('data-until') || '';
+      var leftMin = Math.max(0, Math.ceil((endS - nowSec) / 60));
+      var t = nowEl.querySelector('.bar-time strong');
+      if (t) t.textContent = 'до ' + until + ' · ' + leftMin + ' мин';
+      var fill = nowEl.querySelector('.bar-fill');
+      if (fill && startS && endS > startS) {
+        var total = endS - startS;
+        var passed = Math.max(0, Math.min(total, nowSec - startS));
+        fill.style.width = Math.round(passed/total*100) + '%';
       }
-    });
-    document.querySelectorAll('[data-start-unix]').forEach(function(el){
-      var start = parseInt(el.getAttribute('data-start-unix'), 10) * 1000;
-      var left = Math.max(0, Math.ceil((start - now) / 60000));
-      var span = el.querySelector('.js-wait');
-      if (span) {
-        var s = el.getAttribute('data-start') || '';
-        span.textContent = 'в ' + s + ' · через ' + left + ' мин';
-      }
-    });
-    document.querySelectorAll('.banner.now').forEach(function(el){
-      var end = parseInt(el.getAttribute('data-end-unix'), 10);
-      var start = parseInt(el.getAttribute('data-start-unix') || '0', 10);
-      if (!start) return;
-      var total = end - start;
-      var passed = Math.max(0, Math.min(total, Math.floor(Date.now()/1000) - start));
-      var fill = el.querySelector('.progress-fill');
-      if (fill) fill.style.width = Math.round(passed/total*100) + '%';
-    });
+    }
+
+    // Баннер "before" / "break"
+    var preEl = document.querySelector('.bar.before, .bar.break');
+    if (preEl) {
+      var stS = parseInt(preEl.getAttribute('data-start'), 10);
+      var stStr = preEl.getAttribute('data-start-str') || '';
+      var leftMin2 = Math.max(0, Math.ceil((stS - nowSec) / 60));
+      var t2 = preEl.querySelector('.bar-time strong');
+      if (t2) t2.textContent = 'в ' + stStr + ' · через ' + leftMin2 + ' мин';
+    }
   }
   tick();
   setInterval(tick, 1000);
 })();
 </script>
 </body>
-</html>
-"""
+</html>"""
 
-def build_banner(st):
+def build_bar(st):
     if not st: return ""
     if st["type"] == "now":
-        return (f'<div class="banner now" data-end-unix="{st["end_unix"]}" data-start-unix="{st["start_unix"]}" data-until="{st["until"]}">'
-                '<div class="banner-row">'
-                '<div class="dot"></div>'
-                '<div class="banner-body">'
-                '<div class="banner-label">Сейчас идёт</div>'
-                f'<div class="banner-title">{_esc(st["lesson"])}</div>'
-                f'<div class="banner-time"><strong class="js-left">до {st["until"]} · {st["left_min"]} мин</strong></div>'
-                f'<div class="progress"><div class="progress-fill" style="width:{st["progress"]}%"></div></div>'
-                '</div></div></div>')
+        return (
+            f'<div class="bar now" data-start="{st["start_unix"]}" data-end="{st["end_unix"]}" data-until="{st["until"]}">'
+            '<div class="dot"></div>'
+            '<div class="bar-content">'
+            '<span class="bar-label">Сейчас идёт</span>'
+            f'<span class="bar-title">{_esc(st["lesson"])}</span>'
+            f'<span class="bar-time"><strong>до {st["until"]} · {st["left_min"]} мин</strong></span>'
+            '</div>'
+            f'<div class="bar-progress"><div class="bar-fill" style="width:{st["progress"]}%"></div></div>'
+            '</div>')
     if st["type"] == "before":
-        return (f'<div class="banner before" data-start-unix="{st["start_unix"]}" data-start="{st["start"]}">'
-                '<div class="banner-row">'
-                '<div class="dot"></div>'
-                '<div class="banner-body">'
-                '<div class="banner-label">Скоро урок</div>'
-                f'<div class="banner-title">{_esc(st["lesson"])}</div>'
-                f'<div class="banner-time"><strong class="js-wait">в {st["start"]} · через {st["wait_min"]} мин</strong></div>'
-                '</div></div></div>')
+        return (
+            f'<div class="bar before" data-start="{st["start_unix"]}" data-start-str="{st["start"]}">'
+            '<div class="dot"></div>'
+            '<div class="bar-content">'
+            '<span class="bar-label">Скоро</span>'
+            f'<span class="bar-title">{_esc(st["lesson"])}</span>'
+            f'<span class="bar-time"><strong>в {st["start"]} · через {st["wait_min"]} мин</strong></span>'
+            '</div></div>')
     if st["type"] == "break":
-        return (f'<div class="banner break" data-start-unix="{st["start_unix"]}" data-start="{st["start"]}">'
-                '<div class="banner-row">'
-                '<div class="dot"></div>'
-                '<div class="banner-body">'
-                '<div class="banner-label">Перемена</div>'
-                f'<div class="banner-title">Дальше: {_esc(st["lesson"])}</div>'
-                f'<div class="banner-time"><strong class="js-wait">в {st["start"]} · через {st["wait_min"]} мин</strong></div>'
-                '</div></div></div>')
+        return (
+            f'<div class="bar break" data-start="{st["start_unix"]}" data-start-str="{st["start"]}">'
+            '<div class="dot"></div>'
+            '<div class="bar-content">'
+            '<span class="bar-label">Перемена</span>'
+            f'<span class="bar-title">Дальше: {_esc(st["lesson"])}</span>'
+            f'<span class="bar-time"><strong>в {st["start"]} · через {st["wait_min"]} мин</strong></span>'
+            '</div></div>')
     return ""
 
 def build_tabs(active, days):
@@ -544,7 +541,7 @@ def build_tabs(active, days):
         if full == active: cls += " active"
         if i == now_idx: cls += " today"
         html += f'<button class="{cls}" data-day="{full}">{DAY_SHORT[full]}'
-        html += f'<span class="tab-day">{"•" if has else "—"}</span></button>'
+        html += f'<span class="tab-sub">{"•" if has else "—"}</span></button>'
     html += '</div>'
     return html
 
@@ -558,67 +555,67 @@ def build_content(days, active, st, err):
         lessons = days.get(full, [])
         cls = " active-day" if full == active else ""
         html += f'<div class="day-block{cls}" id="block-{full}">'
-        # Заголовок дня
-        html += '<div class="day-header">'
-        html += f'<div class="day-title">{full}</div>'
+        html += '<div class="day-head">'
+        html += f'<div class="day-name">{full}</div>'
         if full == today_full:
-            html += '<div class="today-chip">✨ Сегодня</div>'
+            html += '<div class="day-chip">✨ Сегодня</div>'
         html += '</div>'
-        # Уроки
         if not lessons:
             html += '<div class="empty"><span class="empty-emoji">📭</span>Нет уроков</div>'
         else:
             html += '<div class="list">'
             for tv, num, lesson in lessons:
-                cc = "card"; pill = ""
-                is_today = (full == today_full)
-                if is_today and st and st["type"] == "now" and num == st["num"]:
-                    cc += " now"; pill = '<span class="pill pill-now">сейчас</span>'
-                elif is_today and st and st["type"] in ("before","break") and num == st["num"]:
-                    cc += " next"; pill = '<span class="pill pill-next">дальше</span>'
+                cc = "card"
+                pill = ""
+                if full == today_full and st and st["type"] == "now" and num == st["num"]:
+                    cc += " now"
+                    pill = '<span class="pill now">сейчас</span>'
+                elif full == today_full and st and st["type"] in ("before","break") and num == st["num"]:
+                    cc += " next"
+                    pill = '<span class="pill next">дальше</span>'
                 html += f'<div class="{cc}"><div class="num">{num}</div>'
                 html += '<div class="card-body">'
                 html += f'<div class="card-time">{tv}</div>'
-                html += f'<div class="card-lesson">{_esc(lesson)}</div>'
+                html += f'<div class="card-title">{_esc(lesson)}</div>'
                 html += f'</div>{pill}</div>'
             html += '</div>'
         html += '</div>'
     return html
 
-# ============ HTTP ============
-class H(BaseHTTPRequestHandler):
+class Handler(BaseHTTPRequestHandler):
     def log_message(self, *a): pass
-    def _send(self, ct, body, cache=False):
-        self.send_response(200)
-        self.send_header("Content-Type", ct)
-        self.send_header("Cache-Control", "public, max-age=3600" if cache else "no-store")
-        self.end_headers()
-        self.wfile.write(body)
+
     def do_GET(self):
         try:
-            path = self.path.split("?")[0]
-            if path != "/":
+            if self.path.split("?")[0] != "/":
                 self.send_response(404); self.end_headers(); return
 
             days, err = fetch_schedule()
             now = datetime.now(PERM_TZ)
             wi = now.weekday()
-            cur_day = DAY_FULL[wi] if wi < 5 else "Суббота"
+            cur_day = DAY_FULL[wi] if wi < 5 else ""
             today_lessons = days.get(cur_day, [])
             st = get_live(today_lessons) if wi < 5 else None
 
-            active = cur_day if cur_day in DAY_FULL else (DAY_FULL[0] if DAY_FULL else "")
+            active = cur_day if cur_day in DAY_FULL else ""
             if not days.get(active):
                 for d in DAY_FULL:
                     if days.get(d):
                         active = d; break
+            if not active:
+                active = DAY_FULL[0]
 
             html = PAGE
-            html = html.replace("{banner}", build_banner(st))
             html = html.replace("{tabs}", build_tabs(active, days))
+            html = html.replace("{bar}", build_bar(st))
             html = html.replace("{content}", build_content(days, active, st, err))
             html = html.replace("{sheet_url}", SHEET_URL)
-            self._send("text/html; charset=utf-8", html.encode("utf-8"))
+
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(html.encode("utf-8"))
         except Exception as e:
             import traceback
             self.send_response(500); self.end_headers()
@@ -632,6 +629,6 @@ def keep_alive():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    print(f"[boot] server on port {port}")
+    print(f"[boot] port {port}")
     threading.Thread(target=keep_alive, daemon=True).start()
-    ThreadingHTTPServer(("0.0.0.0", port), H).serve_forever()
+    ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()
