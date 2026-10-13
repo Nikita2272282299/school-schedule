@@ -263,7 +263,7 @@ h1{overflow:hidden;text-overflow:ellipsis}
 (()=>{
 'use strict';
 const TZ='Asia/Yekaterinburg'; // Пермь
-const BUILD='13.10 в 11:15';
+const _B='13.10 в 11:15';
 const WD_SHORT=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const WD_FULL=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
 const MON_GEN=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
@@ -493,8 +493,7 @@ function renderFoot(){
   const u=S.meta.updated,parts=[];
   if(u){const t=new Date(u*1000),z=x=>String(x).padStart(2,'0');
     const same=t.toDateString()===new Date().toDateString();
-    parts.push(`<span>Данные загружены ${same?'':t.getDate()+'.'+z(t.getMonth()+1)+' '}в ${t.getHours()}:${z(t.getMinutes())}</span>`);}
-  parts.push(`<span>Сайт обновлён ${BUILD}</span>`);
+    parts.push(`<span>Таблица проверена ${same?'':t.getDate()+'.'+z(t.getMonth()+1)+' '}в ${t.getHours()}:${z(t.getMinutes())}</span>`);}
   if(S.meta.sheet)parts.push(`<a href="${esc(S.meta.sheet)}" target="_blank" rel="noopener">Открыть таблицу</a>`);
   $('#foot').innerHTML=parts.join('');
 }
@@ -519,20 +518,13 @@ function render(){
 
 /* ---------- данные ---------- */
 function persist(){store.set('sch.data',{days:S.days,meta:S.meta})}
-const seen=store.get('sch.seen',{});
-function track(d){
-  const h=JSON.stringify((d.lessons||[]).map(l=>[l.n,l.time,l.raw,l.room])),r=seen[d.date],t=Date.now();
-  if(!r)seen[d.date]={h,first:t,changed:0};
-  else if(r.h!==h){r.h=h;r.changed=t}
-}
 function stamp(iso){
-  const r=seen[iso];if(!r)return '';
-  const f=t=>{const x=new Date(t),z=n=>String(n).padStart(2,'0');return `${z(x.getDate())}.${z(x.getMonth()+1)} в ${x.getHours()}:${z(x.getMinutes())}`};
-  return r.changed?`изменено ${f(r.changed)}`:`появилось ${f(r.first)}`;
+  const r=S.days[iso];if(!r)return '';
+  const f=t=>{const x=new Date(t*1000),z=n=>String(n).padStart(2,'0');return `${z(x.getDate())}.${z(x.getMonth()+1)} в ${x.getHours()}:${z(x.getMinutes())}`};
+  return r.changed?`расписание изменено ${f(r.changed)}`:(r.first?`расписание появилось ${f(r.first)}`:'');
 }
 function merge(j){
-  (j.days||[]).forEach(d=>{track(d);S.days[d.date]=d});
-  store.set('sch.seen',seen);
+  (j.days||[]).forEach(d=>{S.days[d.date]=d});
   const lim=isoAdd(nowSchool().iso,-21);
   Object.keys(S.days).forEach(k=>{if(k<lim)delete S.days[k]});
   Object.assign(S.meta,{ok:j.ok,error:j.error||'',updated:j.updated||S.meta.updated,sheet:j.sheet_url||S.meta.sheet,cls:j.class||S.meta.cls});

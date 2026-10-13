@@ -210,21 +210,24 @@ def parse_sheet(rows, class_code, today):
 _lock = threading.Lock()
 _state = {"ts": 0.0, "ok": False, "error": "", "updated": 0, "fresh": set()}
 _store = {}
+_meta = {}   # iso -> {h: хэш уроков, first: когда появилось, changed: когда менялось}
 
 
 def load_store():
-    global _store
+    global _store, _meta
     try:
         with open(STORE_FILE, "r", encoding="utf-8") as f:
-            _store = json.load(f).get("days", {})
+            j = json.load(f)
+            _store = j.get("days", {})
+            _meta = j.get("meta", {})
     except Exception:
-        _store = {}
+        _store, _meta = {}, {}
 
 
 def save_store():
     try:
         with open(STORE_FILE, "w", encoding="utf-8") as f:
-            json.dump({"days": _store}, f, ensure_ascii=False)
+            json.dump({"days": _store, "meta": _meta}, f, ensure_ascii=False)
     except Exception:
         pass
 
@@ -256,6 +259,13 @@ def refresh(force=False):
                 days, found = parse_sheet(rows, CLASS_CODE, today)
                 found_any = found_any or found
                 for iso, d in days.items():
+                    h = json.dumps(d.get("lessons", []), sort_keys=True, ensure_ascii=False)
+                    m = _meta.get(iso)
+                    now_ts = int(time.time())
+                    if not m:
+                        _meta[iso] = {"h": h, "first": now_ts, "changed": 0}
+                    elif m["h"] != h:
+                        m["h"], m["changed"] = h, now_ts
                     _store[iso] = d
                     fresh.add(iso)
             except Exception as e:  # сеть / доступ к таблице
@@ -287,6 +297,9 @@ def build_payload(force=False):
         if lo <= iso <= hi:
             d = dict(_store[iso])
             d["live"] = iso in _state["fresh"]
+            m = _meta.get(iso) or {}
+            d["first"] = m.get("first", 0)
+            d["changed"] = m.get("changed", 0)
             out.append(d)
     return {
         "class": CLASS_CODE.upper(),
