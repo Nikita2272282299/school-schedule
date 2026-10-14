@@ -119,23 +119,23 @@ h2{margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.2
 
 /* lesson card */
 .list{display:flex;flex-direction:column;gap:10px}
-.lesson{contain:layout paint;--h:230;--c:hsl(var(--h) var(--sat) var(--lig));display:grid;gap:2px 14px;align-items:center;
+.lesson{--c:var(--accent);contain:layout paint;display:grid;gap:2px 14px;align-items:center;
  grid-template-columns:34px 54px minmax(0,1fr);grid-template-areas:"num time subj" "num time room";
- padding:14px 16px 14px 14px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);position:relative;overflow:hidden;transition:border-color .18s,box-shadow .2s,transform .18s,background .3s}
-.lesson::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:0 4px 4px 0;background:var(--c)}
-.lesson .num{grid-area:num;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-weight:800;font-size:13.5px;color:var(--c);background:color-mix(in srgb,var(--c) 15%,transparent);justify-self:center;transition:transform .18s,background .18s,color .18s}
-.lesson .room{transition:color .18s,border-color .18s,background .18s}
+ padding:14px 16px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);position:relative;overflow:hidden;transition:border-color .18s,box-shadow .2s,transform .18s,background .3s}
+.lesson .num{grid-area:num;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-weight:800;font-size:13.5px;color:var(--muted);background:var(--surface2);border:1px solid var(--line);justify-self:center;transition:transform .18s,background .18s,color .18s,border-color .18s}
 .lesson .tm{grid-area:time;display:flex;flex-direction:column;line-height:1.25;font-variant-numeric:tabular-nums}
-.lesson .t1{font-weight:800;font-size:17px}
+.lesson .t1{font-weight:800;font-size:17px;letter-spacing:-.01em}
 .lesson .t2{font-size:12.5px;color:var(--muted);font-weight:600}
-.lesson .subj{grid-area:subj;font-weight:700;font-size:17.5px;line-height:1.3;overflow-wrap:anywhere}
-.lesson .room{grid-area:room;font-size:13px;color:var(--muted);font-weight:600}
+.lesson .subj{grid-area:subj;font-weight:700;font-size:17.5px;line-height:1.3;letter-spacing:-.01em;overflow-wrap:anywhere}
+.lesson .room{grid-area:room;font-size:13px;color:var(--muted);font-weight:600;transition:color .18s,border-color .18s,background .18s}
 .lesson.past.dim{opacity:.45}
-.lesson.cur{border-color:var(--c);box-shadow:0 0 0 1px var(--c),var(--shadow);background:color-mix(in srgb,var(--c) 6%,var(--surface))}
-.lesson .pbar{position:absolute;left:0;right:0;bottom:0;height:3px;background:color-mix(in srgb,var(--c) 20%,transparent)}
-.lesson .pbar i{display:block;height:100%;width:100%;background:var(--c);transform:scaleX(0);transform-origin:left;transition:transform 1s linear}
-.lesson.window{--c:var(--muted);background:transparent;border:1.5px dashed var(--line);box-shadow:none}
-.lesson.window::before{opacity:.35}
+.lesson.cur{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),var(--shadow);background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
+.lesson.cur::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent);border-radius:0 4px 4px 0}
+.lesson.cur .num{color:var(--on-accent);background:var(--accent);border-color:transparent}
+.lesson .pbar{position:absolute;left:0;right:0;bottom:0;height:3px;background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.lesson .pbar i{display:block;height:100%;width:100%;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform 1s linear}
+.lesson.window{background:transparent;border:1.5px dashed var(--line);box-shadow:none}
+.lesson.window .num{background:transparent}
 .lesson.window .subj{color:var(--muted);font-weight:600;font-size:15px}
 @media(min-width:640px){
  .lesson{grid-template-columns:38px 58px minmax(0,1fr) auto;grid-template-areas:"num time subj room";gap:0 16px;padding:15px 18px 15px 16px}
@@ -172,11 +172,10 @@ h2{margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.2
 .wh{display:flex;justify-content:space-between;align-items:baseline;width:100%;border:0;background:none;padding:0 2px 8px;text-align:left}
 .wh b{font-size:15.5px;font-weight:800}
 .wh span{font-size:12.5px;color:var(--muted);font-weight:600}
-.wl{--h:230;display:grid;grid-template-columns:20px 1fr;gap:8px;padding:8px 2px;border-top:1px solid var(--line);align-items:start}
-.wl i{width:20px;height:20px;border-radius:7px;background:color-mix(in srgb,hsl(var(--h) var(--sat) var(--lig)) 16%,transparent);color:hsl(var(--h) var(--sat) var(--lig));font-style:normal;font-weight:800;font-size:12px;display:grid;place-items:center}
+.wl{display:grid;grid-template-columns:20px 1fr;gap:8px;padding:8px 2px;border-top:1px solid var(--line);align-items:start}
+.wl i{width:20px;height:20px;border-radius:7px;background:var(--surface2);border:1px solid var(--line);color:var(--muted);font-style:normal;font-weight:800;font-size:12px;display:grid;place-items:center}
 .wl b{display:block;font-size:14.5px;font-weight:700;line-height:1.25}
 .wl small{font-size:12.5px;color:var(--muted);font-weight:600}
-.wl.win i{background:var(--surface2);color:var(--muted)}
 .wl.win b{color:var(--muted);font-weight:600}
 .wnone{padding:10px 2px 6px;font-size:13.5px;color:var(--muted);font-weight:600;border-top:1px solid var(--line)}
 
@@ -236,9 +235,8 @@ dialog::backdrop{background:rgba(5,8,20,.6)}
 
 /* ---------- реакция на наведение ---------- */
 @media(hover:hover){
- .lesson:hover{border-color:color-mix(in srgb,var(--c) 45%,var(--line));box-shadow:0 8px 28px -10px color-mix(in srgb,var(--c) 50%,transparent),var(--shadow);transform:translateY(-2px)}
- .lesson:hover .num{transform:scale(1.12)}
- .lesson:hover .room{color:var(--c);border-color:color-mix(in srgb,var(--c) 40%,var(--line))}
+ .lesson:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));box-shadow:0 10px 30px -12px color-mix(in srgb,var(--accent) 40%,transparent),var(--shadow);transform:translateY(-2px)}
+ .lesson:hover .num{background:var(--accent-soft);color:var(--accent);border-color:transparent;transform:scale(1.06)}
  .lesson.past.dim:hover{opacity:.8}
  .day:hover:not(.active){background:var(--surface2)}
  .wcol:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 35%,var(--line));box-shadow:0 12px 34px -16px rgba(0,0,0,.35),var(--shadow)}
@@ -322,12 +320,12 @@ const THEME_ICON={
  dark:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
  cosmic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 17v4M17 19h4"/></svg>'};
 
-// сокращение в таблице → [полное название, оттенок]
-const SUBJ={'алг':['Алгебра',225],'геом':['Геометрия',262],'матем':['Математика',235],'вис':['Вероятность и статистика',245],
-'рус.яз.':['Русский язык',350],'литер':['Литература',18],'ин.яз.':['Иностранный язык',172],'ист':['История',36],'общ':['Обществознание',52],
-'географ':['География',132],'физ-ра':['Физкультура',148],'физика':['Физика',196],'хим':['Химия',96],'химия':['Химия',96],'био':['Биология',116],
-'инф':['Информатика',280],'обзр':['ОБЗР',4],'ров':['Разговоры о важном',305],'изо':['ИЗО',322],'муз':['Музыка',334],'труд':['Труд (технология)',64],
-'алгоритмика':['Алгоритмика',275],'эврика':['Эврика',20]};
+// сокращение в таблице → полное название
+const SUBJ={'алг':'Алгебра','геом':'Геометрия','матем':'Математика','вис':'Вероятность и статистика',
+'рус.яз.':'Русский язык','литер':'Литература','ин.яз.':'Иностранный язык','ист':'История','общ':'Обществознание',
+'географ':'География','физ-ра':'Физкультура','физика':'Физика','хим':'Химия','химия':'Химия','био':'Биология',
+'инф':'Информатика','обзр':'ОБЗР','ров':'Разговоры о важном','изо':'ИЗО','муз':'Музыка','труд':'Труд (технология)',
+'алгоритмика':'Алгоритмика','эврика':'Эврика'};
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -372,16 +370,14 @@ function schoolParts(sec){
 /* ---------- уроки ---------- */
 function parseTime(t){const m=/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/.exec(t||'');
   return m?{s:+m[1]*3600+ +m[2]*60,e:+m[3]*3600+ +m[4]*60,a:`${+m[1]}:${m[2]}`,b:`${+m[3]}:${m[4]}`}:null}
-const hash=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h};
 function subjInfo(subject){
   const parts=String(subject||'').split(',').map(s=>s.trim()).filter(Boolean);
-  const full=[];let hue=null;
+  const full=[];
   for(const p of parts){
     const m=p.match(/^(.*?)\s+пр$/i),base=(m?m[1]:p).trim(),hit=SUBJ[base.toLowerCase()];
-    full.push((hit?hit[0]:base)+(m?' ПР':''));
-    if(hue===null)hue=hit?hit[1]:hash(base.toLowerCase());
+    full.push((hit?hit:base)+(m?' ПР':''));
   }
-  return {title:prefs.full?full.join(' / '):parts.join(', '),hue:hue??210};
+  return {title:prefs.full?full.join(' / '):parts.join(', ')};
 }
 const roomText=r=>r?'каб. '+String(r).replace(/\s*,\s*/g,', '):'';
 function prep(day){
@@ -390,7 +386,7 @@ function prep(day){
   const out=[];
   for(let k=i;k<raw.length;k++){
     const l=raw[k],tm=parseTime(l.time);
-    if(l.raw){const si=subjInfo(l.subject||l.raw);out.push({kind:'l',n:l.n,tm,room:l.room,title:si.title,hue:si.hue})}
+    if(l.raw){out.push({kind:'l',n:l.n,tm,room:l.room,title:subjInfo(l.subject||l.raw).title})}
     else out.push({kind:'w',n:l.n,tm});
   }
   return out;
@@ -488,12 +484,10 @@ function rowHTML(it,ctx){
   const past=!isW&&ctx.today&&it.tm&&ctx.sec>=it.tm.e,cur=!isW&&ctx.today&&it.tm&&ctx.sec>=it.tm.s&&ctx.sec<it.tm.e;
   const dim=past&&prefs.dim;
   const pct=cur?((ctx.sec-it.tm.s)/(it.tm.e-it.tm.s)).toFixed(3):0;
-  const hue=isW?null:it.hue;
   const cls='lesson'+(isW?' window':'')+(past?' past':'')+(dim?' dim':'')+(cur?' cur':'');
-  const style=hue!=null?` style="--h:${hue}"`:'';
   const tm=it.tm?`<span class="t1">${it.tm.a}</span><span class="t2">${it.tm.b}</span>`:`<span class="t1">${it.n}</span>`;
   const room=!isW&&it.room&&prefs.rooms?`<span class="room">${esc(roomText(it.room))}</span>`:'';
-  return `<div class="${cls}"${style}${cur?' id="curRow"':''} role="listitem">
+  return `<div class="${cls}"${cur?' id="curRow"':''} role="listitem">
     <span class="num">${it.n}</span>
     <div class="tm">${tm}</div>
     <div class="subj">${isW?'Окно':esc(it.title)}</div>
@@ -523,7 +517,7 @@ function weekHTML(n){
     else if(!items.length)body='<div class="wnone">Уроков нет</div>';
     else body=items.map(it=>it.kind==='w'
       ?`<div class="wl win"><i>${it.n}</i><div><b>Окно</b></div></div>`
-      :`<div class="wl" style="--h:${it.hue}"><i>${it.n}</i><div><b>${esc(it.title)}</b><small>${it.tm?it.tm.a:''}${it.room&&prefs.rooms?(it.tm?', ':'')+esc(roomText(it.room)):''}</small></div></div>`).join('');
+      :`<div class="wl"><i>${it.n}</i><div><b>${esc(it.title)}</b><small>${it.tm?it.tm.a:''}${it.room&&prefs.rooms?(it.tm?', ':'')+esc(roomText(it.room)):''}</small></div></div>`).join('');
     return `<section class="wcol${iso===n.iso?' today':''}"><button class="wh" data-go="${iso}" title="Открыть день"><b>${WD_SHORT[isoWd(iso)]}, ${dd} ${MON_SHORT[m-1]}</b><span>${st.count?lessonsWord(st.count):''}</span></button>${body}</section>`;
   }).join('')}</div>`;
 }
