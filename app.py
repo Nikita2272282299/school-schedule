@@ -12,9 +12,12 @@
   CLASS_CODE      класс, по умолчанию "8г"
   EXTRA_GIDS      gid дополнительных вкладок через запятую, если дни лежат на разных вкладках
   KEEPALIVE       "0" — выключить самопинг (нужен, чтобы бесплатный Render не засыпал)
-  DATA_DIR        куда писать days_store.json
+  DATA_DIR        куда писать days_store.json (на бесплатном Render файловая
+                  система эфемерна: файл переживёт работу, но не рестарт/деплой;
+                  для надёжности подключите Render Disk и укажите DATA_DIR)
 """
 import csv
+import gzip
 import io
 import json
 import os
@@ -207,7 +210,9 @@ def parse_sheet(rows, class_code, today):
 
 # ============ ЗАГРУЗКА И КЭШ ============
 
-_lock = threading.Lock()
+_lock = threading.Lock()          # защищает _state/_store/_meta (только данные, без сети)
+_fetch_lock = threading.Lock()    # гарантирует, что одновременно идёт максимум один фетч
+_save_warned = False
 _state = {"ts": 0.0, "ok": False, "error": "", "updated": 0, "fresh": set()}
 _store = {}
 _meta = {}   # iso -> {h: хэш уроков, first: когда появилось, changed: когда менялось}
@@ -225,11 +230,14 @@ def load_store():
 
 
 def save_store():
+    global _save_warned
     try:
         with open(STORE_FILE, "w", encoding="utf-8") as f:
             json.dump({"days": _store, "meta": _meta}, f, ensure_ascii=False)
-    except Exception:
-        pass
+    except Exception as e:
+        if not _save_warned:
+            _save_warned = True
+            print(f"[warn] не удалось сохранить {STORE_FILE}: {e}")
 
 
 def fetch_csv(gid=None):
@@ -242,70 +250,98 @@ def fetch_csv(gid=None):
     return list(csv.reader(io.StringIO(data)))
 
 
+def _needs_refresh(force):
+    age = time.time() - _state["ts"]
+    if force and age < FORCE_COOLDOWN:
+        return False
+    if not force and _state["ok"] and age < CACHE_TTL:
+        return False
+    if not force and not _state["ok"] and _state["ts"] and age < 15:
+        return False
+    return True
+
+
 def refresh(force=False):
-    with _lock:
-        age = time.time() - _state["ts"]
-        if force and age < FORCE_COOLDOWN:
-            return
-        if not force and _state["ok"] and age < CACHE_TTL:
-            return
-        if not force and not _state["ok"] and _state["ts"] and age < 15:
-            return
+    """Обновляет данные при необходимости.
+
+    Сетевой запрос идёт БЕЗ удержания _lock, поэтому запросы к /api/schedule
+    не ждут чужой загрузки таблицы. Одновременно идёт максимум один фетч.
+    """
+    if not _needs_refresh(force):
+        return
+    if not _fetch_lock.acquire(blocking=False):
+        return  # обновление уже идёт — отдадим то, что есть
+    try:
         today = now_perm().date()
-        found_any, fresh, errors = False, set(), []
+        found_any, errors, updates = False, [], {}
         for gid in [None] + EXTRA_GIDS:
             try:
                 rows = fetch_csv(gid)
                 days, found = parse_sheet(rows, CLASS_CODE, today)
                 found_any = found_any or found
-                for iso, d in days.items():
-                    h = json.dumps(d.get("lessons", []), sort_keys=True, ensure_ascii=False)
-                    m = _meta.get(iso)
-                    now_ts = int(time.time())
-                    if not m:
-                        _meta[iso] = {"h": h, "first": now_ts, "changed": 0}
-                    elif m["h"] != h:
-                        m["h"], m["changed"] = h, now_ts
-                    _store[iso] = d
-                    fresh.add(iso)
+                updates.update(days)
             except Exception as e:  # сеть / доступ к таблице
                 errors.append(f"{type(e).__name__}: {e}")
-        _state["ts"] = time.time()
-        if errors and not fresh and not found_any:
-            _state["ok"] = False
-            _state["error"] = "Не удалось загрузить таблицу. Показаны сохранённые данные."
-        elif not found_any:
-            _state["ok"] = False
-            _state["error"] = f"Класс {CLASS_CODE.upper()} не найден в таблице."
-        else:
-            _state["ok"] = True
-            _state["error"] = ""
-            _state["updated"] = int(time.time())
-            _state["fresh"] = fresh
-            cutoff = (today - timedelta(days=KEEP_DAYS)).isoformat()
-            for k in [k for k in _store if k < cutoff]:
-                del _store[k]
-            save_store()
+        now_ts = int(time.time())
+        fresh = set()
+        with _lock:
+            for iso, d in updates.items():
+                h = json.dumps(d.get("lessons", []), sort_keys=True, ensure_ascii=False)
+                m = _meta.get(iso)
+                if not m:
+                    _meta[iso] = {"h": h, "first": now_ts, "changed": 0}
+                elif m["h"] != h:
+                    m["h"], m["changed"] = h, now_ts
+                _store[iso] = d
+                fresh.add(iso)
+            _state["ts"] = time.time()
+            if errors and not fresh and not found_any:
+                _state["ok"] = False
+                _state["error"] = "Не удалось загрузить таблицу. Показаны сохранённые данные."
+            elif not found_any:
+                _state["ok"] = False
+                _state["error"] = f"Класс {CLASS_CODE.upper()} не найден в таблице."
+            else:
+                _state["ok"] = True
+                _state["error"] = ""
+                _state["updated"] = now_ts
+                _state["fresh"] = fresh
+                cutoff = (today - timedelta(days=KEEP_DAYS)).isoformat()
+                for k in [k for k in _store if k < cutoff]:
+                    del _store[k]
+        save_store()
+    finally:
+        _fetch_lock.release()
 
 
 def build_payload(force=False):
-    refresh(force)
+    # Данные уже есть → отдаём сразу и обновляем в фоне (stale-while-revalidate).
+    # Холодный старт (данных нет) или явное «обновить» → ждём загрузку.
+    if not force and _store:
+        if _needs_refresh(False):
+            threading.Thread(target=refresh, daemon=True).start()
+    else:
+        refresh(force)
+    with _lock:
+        store_snapshot = dict(_store)
+        state = dict(_state)
+        meta_snapshot = dict(_meta)
     today = now_perm().date()
     lo, hi = (today - timedelta(days=21)).isoformat(), (today + timedelta(days=21)).isoformat()
     out = []
-    for iso in sorted(_store):
+    for iso in sorted(store_snapshot):
         if lo <= iso <= hi:
-            d = dict(_store[iso])
-            d["live"] = iso in _state["fresh"]
-            m = _meta.get(iso) or {}
+            d = dict(store_snapshot[iso])
+            d["live"] = iso in state["fresh"]
+            m = meta_snapshot.get(iso) or {}
             d["first"] = m.get("first", 0)
             d["changed"] = m.get("changed", 0)
             out.append(d)
     return {
         "class": CLASS_CODE.upper(),
-        "ok": _state["ok"],
-        "error": _state["error"],
-        "updated": _state["updated"],
+        "ok": state["ok"],
+        "error": state["error"],
+        "updated": state["updated"],
         "server_time": int(time.time()),
         "sheet_url": SHEET_URL,
         "days": out,
@@ -328,13 +364,24 @@ STATIC = {
 
 class Handler(BaseHTTPRequestHandler):
     server_version = "Schedule8G/2.0"
+    protocol_version = "HTTP/1.1"   # keep-alive: меньше соединений на загрузку
 
     def log_message(self, *a):
         pass
 
     def _send(self, code, body, ctype, cache="no-store", head=False):
+        if isinstance(body, str):
+            body = body.encode("utf-8")
+        ae = (self.headers.get("Accept-Encoding") or "").lower()
+        compressible = ctype.startswith("text/") or "json" in ctype or "javascript" in ctype or "svg" in ctype
+        encoding = None
+        if len(body) > 512 and "gzip" in ae and compressible:
+            body, encoding = gzip.compress(body, 6), "gzip"
         self.send_response(code)
         self.send_header("Content-Type", ctype)
+        if encoding:
+            self.send_header("Content-Encoding", encoding)
+            self.send_header("Vary", "Accept-Encoding")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", cache)
         self.send_header("X-Content-Type-Options", "nosniff")
