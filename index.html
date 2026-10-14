@@ -38,7 +38,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0 12px}
 .brand{display:flex;align-items:center;gap:12px;min-width:0}
 .logo{width:44px;height:44px;border-radius:14px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;font-size:18px;flex:none}
-h1{white-space:nowrap;margin:0;font-size:19px;font-weight:800;letter-spacing:-.01em;line-height:1.2;overflow:hidden;text-overflow:ellipsis}
+h1{white-space:nowrap;margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em;line-height:1.2;overflow:hidden;text-overflow:ellipsis}
+@media(min-width:960px){h1{font-size:23px}}
+#title .t-short{display:none}
+@media(max-width:600px){#title .t-long{display:none}#title .t-short{display:inline}}
 .today-line{margin:2px 0 0;font-size:13px;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tools{display:flex;align-items:center;gap:8px;flex:none}
 .seg{display:inline-flex;padding:2px;border-radius:12px;background:transparent;border:0;gap:0}
@@ -108,14 +111,17 @@ h1{white-space:nowrap;margin:0;font-size:19px;font-weight:800;letter-spacing:-.0
 }
 
 /* main */
-.mainhead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:6px 0 14px}
-h2{margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
-@media(min-width:960px){h2{font-size:30px}}
-.stamp{opacity:.85}
-.mh-sub{margin:4px 0 0;font-size:14px;color:var(--muted);font-weight:600}
-.ctrl{display:flex;gap:8px;align-items:center}
-.ctrl .ibtn{width:36px;height:36px;border-radius:11px}
-.pill{display:inline-block;padding:2px 9px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-size:12.5px;font-weight:700;vertical-align:middle;margin-left:6px}
+.ctrlbar{display:flex;align-items:center;gap:8px;margin:2px 0 12px;min-height:36px}
+.ctrlbar .wname{font-size:15px;font-weight:800;letter-spacing:-.01em;color:var(--muted)}
+.ctrlbar .ibtn{width:36px;height:36px;border-radius:11px}
+.ctrlbar [data-act=today]{width:auto;padding:0 12px;font-weight:700;font-size:13.5px}
+.stepbtns{display:flex;gap:8px;margin-left:auto}
+/* сводка дня — всегда внизу */
+.dayfoot{margin-top:16px;padding:16px 20px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);text-align:center;animation:rise .45s cubic-bezier(.2,.7,.2,1) both}
+.df-h{font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.df-count{margin-top:7px;font-size:15.5px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.df-stamp{margin-top:3px;font-size:13px;color:var(--muted);font-weight:600}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
 /* lesson card */
 .list{display:flex;flex-direction:column;gap:10px}
@@ -192,10 +198,8 @@ h2{margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.2
  .l-next{display:none}
  .bar{margin:9px 0 2px;height:5px}
  .top{padding:10px 0 6px}
- .mainhead{flex-wrap:nowrap;align-items:center;margin:2px 0 10px;gap:8px}
- h2{font-size:19px}
- .mh-sub{font-size:13px;margin-top:2px}
- .ctrl [data-step]{display:none}
+ .ctrlbar{margin:0 0 10px}
+ .dayfoot{padding:14px 16px;margin-top:12px}
  .foot{margin-top:14px}
 }
 /* settings */
@@ -224,7 +228,7 @@ dialog::backdrop{background:rgba(5,8,20,.6)}
  .tools .ibtn{width:36px;height:36px;border-radius:11px}
 }
 .brand>div:last-child{min-width:0}
-@media(max-width:410px){.brand>div:last-child{display:none}.logo{width:42px;height:42px}}
+@media(max-width:360px){.brand>div:last-child{display:none}.logo{width:42px;height:42px}}
 /* ---------- появление и живой фон ---------- */
 .top{animation:drop .5s cubic-bezier(.2,.7,.2,1) both}
 @keyframes drop{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
@@ -358,7 +362,6 @@ function nowSchool(){
   const n=new Date(),z=x=>String(x).padStart(2,'0');
   return {iso:`${n.getFullYear()}-${z(n.getMonth()+1)}-${z(n.getDate())}`,sec:n.getHours()*3600+n.getMinutes()*60+n.getSeconds()};
 }
-const longDate=iso=>{const {d,m}=isoDM(iso);return `${WD_FULL[isoWd(iso)]}, ${d} ${MON_GEN[m-1]}`};
 function relLabel(iso,today){const d=isoDiff(iso,today);return d===0?'Сегодня':d===1?'Завтра':d===-1?'Вчера':''}
 function fmtLeft(sec){
   sec=Math.max(0,Math.round(sec));
@@ -529,32 +532,53 @@ function weekHTML(n){
     return `<section class="wcol${iso===n.iso?' today':''}"><button class="wh" data-go="${iso}" title="Открыть день"><b>${WD_SHORT[isoWd(iso)]}, ${dd} ${MON_SHORT[m-1]}</b><span>${st.count?lessonsWord(st.count):''}</span></button>${body}</section>`;
   }).join('')}</div>`;
 }
+function dayFootHTML(){
+  const iso=S.sel,d=S.days[iso],st=d?stats(prep(d)):null,s=stamp(iso);
+  let line;
+  if(!d)line='данных пока нет';
+  else if(!st||!st.count)line='уроков нет';
+  else line=`${lessonsWord(st.count)}${st.start?`, с ${st.start} до ${st.end}`:''}`;
+  return `<section class="dayfoot">
+    <div class="df-h">Расписание</div>
+    <div class="df-count">${line}</div>
+    ${s?`<div class="df-stamp">${s}</div>`:''}
+  </section>`;
+}
 function renderMain(){
   const n=nowSchool(),el=$('#main'),week=prefs.view==='week';
   ENTER=!!S.enter;S.enter=false;
-  let head;
+  let title='';
   if(week){
     const ds=weekDates(S.sel),a=isoDM(ds[0]),b=isoDM(ds[ds.length-1]);
-    head=`<h2>Неделя, ${a.d} ${a.m!==b.m?MON_GEN[a.m-1]+' ':''}– ${b.d} ${MON_GEN[b.m-1]}</h2><p class="mh-sub">Нажмите на день, чтобы открыть его отдельно</p>`;
-  }else{
-    const d=S.days[S.sel],st=d?stats(prep(d)):null,rel=relLabel(S.sel,n.iso);
-    head=`<h2>${longDate(S.sel)}${rel?`<span class="pill">${rel}</span>`:''}</h2>
-      <p class="mh-sub">${st&&st.count?`${lessonsWord(st.count)}${st.start?`, с ${st.start} до ${st.end}`:''}`:'&nbsp;'}</p>
-      ${stamp(S.sel)?`<p class="mh-sub stamp">${stamp(S.sel)}</p>`:''}`;
+    title=`<span class="wname">Неделя, ${a.d} ${a.m!==b.m?MON_GEN[a.m-1]+' ':''}– ${b.d} ${MON_GEN[b.m-1]}</span>`;
+  }else if(S.sel!==n.iso){
+    title=`<button class="ibtn" data-act="today" title="Вернуться к сегодняшнему дню" aria-label="К сегодняшнему дню">Сегодня</button>`;
   }
-  const toToday=(S.sel!==n.iso&&!week)?`<button class="ibtn" data-act="today" title="Вернуться к сегодняшнему дню" aria-label="К сегодняшнему дню" style="width:auto;padding:0 12px;font-weight:700;font-size:13.5px">Сегодня</button>`:'';
-  el.innerHTML=`${noticeHTML()}<div class="mainhead"><div>${head}</div>
-    <div class="ctrl">${toToday}<button class="ibtn" data-step="-1" aria-label="Предыдущий день"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
-    <button class="ibtn" data-step="1" aria-label="Следующий день"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div></div>
-    ${week?weekHTML(n):dayHTML(S.sel,n)}`;
+  el.innerHTML=`${noticeHTML()}
+    <div class="ctrlbar">${title}<div class="stepbtns">
+      <button class="ibtn" data-step="-1" aria-label="Предыдущий день"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <button class="ibtn" data-step="1" aria-label="Следующий день"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+    </div></div>
+    ${week?weekHTML(n):dayHTML(S.sel,n)}
+    ${week?'':dayFootHTML()}`;
 }
 function renderControls(){
   document.querySelectorAll('#viewSeg [data-view]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.view==='week')===(prefs.view==='week'))));
 }
 function renderHeader(){
-  const n=nowSchool(),{d,m}=isoDM(n.iso);
-  $('#todayLine').textContent=`${WD_FULL[isoWd(n.iso)]}, ${d} ${MON_GEN[m-1]}`;
-  const c=S.meta.cls||'8Г';$('#logo').textContent=c;document.title='Расписание '+c;
+  const n=nowSchool(),iso=S.sel||n.iso,{d,m}=isoDM(iso),c=S.meta.cls||'8Г';
+  let long,short;
+  if(prefs.view==='week'){
+    const ds=weekDates(iso),a=isoDM(ds[0]),b=isoDM(ds[ds.length-1]);
+    long='Неделя';short='Нед.';
+    $('#todayLine').textContent=`${a.d} ${MON_GEN[a.m-1]} – ${b.d} ${MON_GEN[b.m-1]}`;
+  }else{
+    long=WD_FULL[isoWd(iso)];short=WD_SHORT[isoWd(iso)];
+    const rel=relLabel(iso,n.iso);
+    $('#todayLine').textContent=`${d} ${MON_GEN[m-1]}${rel?' · '+rel:''}`;
+  }
+  $('#title').innerHTML=`<span class="t-long">${long}</span><span class="t-short">${short}</span>`;
+  $('#logo').textContent=c;document.title='Расписание '+c;
 }
 function renderFoot(){
   const u=S.meta.updated,parts=[];
