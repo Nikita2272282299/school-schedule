@@ -336,6 +336,14 @@ let ENTER=false;
 const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:true,lastFetch:0};
 const cached=store.get('sch.data',null);
 if(cached){S.days=cached.days||{};Object.assign(S.meta,cached.meta||{});}
+const seen=store.get('sch.seen',{});   // iso -> когда устройство впервые увидело день
+function markSeen(){
+  const now=Math.floor(Date.now()/1000);let ch=false;
+  Object.keys(S.days).forEach(iso=>{if(!seen[iso]){seen[iso]=now;ch=true}});
+  const lim=isoAdd(nowSchool().iso,-45);
+  Object.keys(seen).forEach(k=>{if(k<lim){delete seen[k];ch=true}});
+  if(ch)store.set('sch.seen',seen);
+}
 
 /* ---------- даты ---------- */
 const toUTC=iso=>{const [y,m,d]=iso.split('-').map(Number);return Date.UTC(y,m-1,d)};
@@ -532,7 +540,7 @@ function renderMain(){
     const d=S.days[S.sel],st=d?stats(prep(d)):null,rel=relLabel(S.sel,n.iso);
     head=`<h2>${longDate(S.sel)}${rel?`<span class="pill">${rel}</span>`:''}</h2>
       <p class="mh-sub">${st&&st.count?`${lessonsWord(st.count)}${st.start?`, с ${st.start} до ${st.end}`:''}`:'&nbsp;'}</p>
-      ${st&&st.count&&stamp(S.sel)?`<p class="mh-sub stamp">${stamp(S.sel)}</p>`:''}`;
+      ${stamp(S.sel)?`<p class="mh-sub stamp">${stamp(S.sel)}</p>`:''}`;
   }
   const toToday=(S.sel!==n.iso&&!week)?`<button class="ibtn" data-act="today" title="Вернуться к сегодняшнему дню" aria-label="К сегодняшнему дню" style="width:auto;padding:0 12px;font-weight:700;font-size:13.5px">Сегодня</button>`:'';
   el.innerHTML=`${noticeHTML()}<div class="mainhead"><div>${head}</div>
@@ -570,6 +578,7 @@ function renderLive(force){
   const cb=$('#curBar');if(cb&&st.t==='now')cb.style.transform='scaleX('+st.prog.toFixed(3)+')';
 }
 function render(){
+  markSeen();
   if(!S.sel)S.sel=pickDefault();
   renderControls();renderHeader();renderTabs();renderMain();renderLive(true);renderFoot();
 }
@@ -579,7 +588,12 @@ function persist(){store.set('sch.data',{days:S.days,meta:S.meta})}
 function stamp(iso){
   const r=S.days[iso];if(!r)return '';
   const f=t=>{const p=schoolParts(t);return `${p.day}.${p.month} в ${p.hour}:${p.minute}`};
-  return r.changed?`расписание изменено ${f(r.changed)}`:(r.first?`расписание появилось ${f(r.first)}`:'');
+  const srv=r.first>0?r.first:0,loc=seen[iso]||0;
+  const t=srv&&loc?Math.min(srv,loc):(srv||loc);
+  if(!t)return '';
+  let s=`расписание появилось ${f(t)}`;
+  if(r.changed&&r.changed>t)s+=` · изменено ${f(r.changed)}`;
+  return s;
 }
 function merge(j){
   (j.days||[]).forEach(d=>{S.days[d.date]=d});
@@ -652,7 +666,8 @@ $('#closeSettings').addEventListener('click',()=>dlg.close());
 dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});
 dlg.querySelectorAll('[data-pref]').forEach(i=>i.addEventListener('change',()=>{setPrefs({[i.dataset.pref]:i.checked});render();}));
 $('#resetBtn').addEventListener('click',()=>{
-  store.del('sch.data');S.days={};S.picked=false;S.sel=null;dlg.close();toast('Данные сброшены, загружаю заново');load(true);});
+  store.del('sch.data');store.del('sch.seen');Object.keys(seen).forEach(k=>delete seen[k]);
+  S.days={};S.picked=false;S.sel=null;dlg.close();toast('Данные сброшены, загружаю заново');load(true);});
 let deferred=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;$('#installBtn').hidden=false});
 $('#installBtn').addEventListener('click',async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice;deferred=null;$('#installBtn').hidden=true});
