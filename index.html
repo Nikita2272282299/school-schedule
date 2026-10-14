@@ -65,7 +65,7 @@ h1{white-space:nowrap;margin:0;font-size:20px;font-weight:800;letter-spacing:-.0
 }
 
 /* live */
-.live{border-radius:var(--r);padding:16px 18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);margin-bottom:12px;animation:fade .35s ease both}
+.live{border-radius:var(--r);padding:16px 18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);margin-bottom:12px}
 @media(min-width:960px){.live{margin-bottom:0}}
 .live.now{border-color:var(--accent)}
 .live.now .l-top{color:var(--accent)}
@@ -117,7 +117,8 @@ h1{white-space:nowrap;margin:0;font-size:20px;font-weight:800;letter-spacing:-.0
 .ctrlbar [data-act=today]{width:auto;padding:0 12px;font-weight:700;font-size:13.5px}
 .stepbtns{display:flex;gap:8px;margin-left:auto}
 /* сводка дня — всегда внизу */
-.dayfoot{margin-top:16px;padding:16px 20px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);text-align:center;animation:rise .45s cubic-bezier(.2,.7,.2,1) both}
+.dayfoot{margin-top:16px;padding:16px 20px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);text-align:center}
+.dayfoot.enter{animation:rise .45s cubic-bezier(.2,.7,.2,1) both}
 .df-h{font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .df-count{margin-top:7px;font-size:15.5px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
 .df-stamp{margin-top:3px;font-size:13px;color:var(--muted);font-weight:600}
@@ -126,9 +127,9 @@ h1{white-space:nowrap;margin:0;font-size:20px;font-weight:800;letter-spacing:-.0
 /* lesson card */
 .list{display:flex;flex-direction:column;gap:10px}
 .lesson{--c:var(--accent);contain:layout paint;display:grid;gap:2px 14px;align-items:center;
- grid-template-columns:34px 54px minmax(0,1fr);grid-template-areas:"num time subj" "num time room";
+ grid-template-columns:40px 54px minmax(0,1fr);grid-template-areas:"num time subj" "num time room";
  padding:14px 16px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);position:relative;overflow:hidden;transition:border-color .18s,box-shadow .2s,transform .18s,background .3s}
-.lesson .num{grid-area:num;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-weight:800;font-size:13.5px;color:var(--muted);background:var(--surface2);border:1px solid var(--line);justify-self:center;transition:transform .18s,background .18s,color .18s,border-color .18s}
+.lesson .num{grid-area:num;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-weight:800;font-size:15px;color:var(--muted);background:var(--surface2);border:1px solid var(--line);justify-self:center;transition:transform .18s,background .18s,color .18s,border-color .18s}
 .lesson .tm{grid-area:time;display:flex;flex-direction:column;line-height:1.25;font-variant-numeric:tabular-nums}
 .lesson .t1{font-weight:800;font-size:17px;letter-spacing:-.01em}
 .lesson .t2{font-size:12.5px;color:var(--muted);font-weight:600}
@@ -144,8 +145,8 @@ h1{white-space:nowrap;margin:0;font-size:20px;font-weight:800;letter-spacing:-.0
 .lesson.window .num{background:transparent}
 .lesson.window .subj{color:var(--muted);font-weight:600;font-size:15px}
 @media(min-width:640px){
- .lesson{grid-template-columns:38px 58px minmax(0,1fr) auto;grid-template-areas:"num time subj room";gap:0 16px;padding:15px 18px 15px 16px}
- .lesson .num{width:32px;height:32px}
+ .lesson{grid-template-columns:44px 58px minmax(0,1fr) auto;grid-template-areas:"num time subj room";gap:0 16px;padding:15px 18px 15px 16px}
+ .lesson .num{width:38px;height:38px;font-size:15.5px}
  .lesson .subj{font-size:18px}
  .lesson .room{align-self:center;font-size:13.5px;font-weight:700;color:var(--muted);background:var(--surface2);border:1px solid var(--line);padding:5px 12px;border-radius:999px}
  .lesson.window .room{background:transparent;border-color:transparent}
@@ -170,7 +171,6 @@ h1{white-space:nowrap;margin:0;font-size:20px;font-weight:800;letter-spacing:-.0
 .list.enter .lesson:nth-child(9),.week.enter .wcol:nth-child(9){animation-delay:.32s}
 .day,.seg button,.ibtn,.btn{transition:background .15s,color .15s,transform .12s}
 .day:active,.seg button:active,.ibtn:active,.btn:active{transform:scale(.95)}
-@keyframes fade{from{opacity:0}to{opacity:1}}
 /* week */
 .week{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px}
 .wcol{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 12px 8px;transition:transform .18s,box-shadow .2s,border-color .18s}
@@ -178,8 +178,8 @@ h1{white-space:nowrap;margin:0;font-size:20px;font-weight:800;letter-spacing:-.0
 .wh{display:flex;justify-content:space-between;align-items:baseline;width:100%;border:0;background:none;padding:0 2px 8px;text-align:left}
 .wh b{font-size:15.5px;font-weight:800}
 .wh span{font-size:12.5px;color:var(--muted);font-weight:600}
-.wl{display:grid;grid-template-columns:20px 1fr;gap:8px;padding:8px 2px;border-top:1px solid var(--line);align-items:start}
-.wl i{width:20px;height:20px;border-radius:7px;background:var(--surface2);border:1px solid var(--line);color:var(--muted);font-style:normal;font-weight:800;font-size:12px;display:grid;place-items:center}
+.wl{display:grid;grid-template-columns:24px 1fr;gap:8px;padding:8px 2px;border-top:1px solid var(--line);align-items:start}
+.wl i{width:24px;height:24px;border-radius:8px;background:var(--surface2);border:1px solid var(--line);color:var(--muted);font-style:normal;font-weight:800;font-size:13px;display:grid;place-items:center}
 .wl b{display:block;font-size:14.5px;font-weight:700;line-height:1.25}
 .wl small{font-size:12.5px;color:var(--muted);font-weight:600}
 .wl.win b{color:var(--muted);font-weight:600}
@@ -232,7 +232,7 @@ dialog::backdrop{background:rgba(5,8,20,.6)}
 /* ---------- появление и живой фон ---------- */
 .top{animation:drop .5s cubic-bezier(.2,.7,.2,1) both}
 @keyframes drop{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
-.days .day{animation:up .4s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:calc(var(--i,0)*35ms)}
+.days.enter .day{animation:up .4s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:calc(var(--i,0)*35ms)}
 .logo{transition:transform .25s cubic-bezier(.2,.7,.2,1),background .2s,color .2s}
 [data-theme=cosmic] .bg{animation:drift 26s ease-in-out infinite alternate}
 @keyframes drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(-26px,20px,0)}}
@@ -337,6 +337,7 @@ const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v)
 
 const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,view:'day'},store.get('sch.prefs',{}));
 let ENTER=false;
+let tabsAnimated=false;
 const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:true,lastFetch:0};
 const cached=store.get('sch.data',null);
 if(cached){S.days=cached.days||{};Object.assign(S.meta,cached.meta||{});}
@@ -480,6 +481,7 @@ function weekDates(iso){
 function renderTabs(){
   const n=nowSchool(),el=$('#days');
   el.hidden=prefs.view==='week';
+  if(!tabsAnimated){el.classList.add('enter');tabsAnimated=true;}else{el.classList.remove('enter');}
   el.innerHTML=tabDates().map((iso,i)=>{
     const d=S.days[iso],st=d?stats(prep(d)):null,{d:dd,m}=isoDM(iso);
     const sub=st&&st.count?`${st.count} ур., с ${st.start||'—'}`:(d?'нет уроков':'нет данных');
@@ -538,7 +540,7 @@ function dayFootHTML(){
   if(!d)line='данных пока нет';
   else if(!st||!st.count)line='уроков нет';
   else line=`${lessonsWord(st.count)}${st.start?`, с ${st.start} до ${st.end}`:''}`;
-  return `<section class="dayfoot">
+  return `<section class="dayfoot${ENTER?' enter':''}">
     <div class="df-h">Расписание</div>
     <div class="df-count">${line}</div>
     ${s?`<div class="df-stamp">${s}</div>`:''}
