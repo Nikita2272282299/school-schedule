@@ -355,11 +355,27 @@ STATIC = {
     "/index.html": ("index.html", "text/html; charset=utf-8", "no-cache"),
     "/sw.js": ("sw.js", "application/javascript; charset=utf-8", "no-cache"),
     "/manifest.json": ("manifest.json", "application/manifest+json; charset=utf-8", "no-cache"),
-    "/icon.svg": ("icon.svg", "image/svg+xml", "public, max-age=86400"),
-    "/icon-192.png": ("icon-192.png", "image/png", "public, max-age=86400"),
-    "/icon-512.png": ("icon-512.png", "image/png", "public, max-age=86400"),
-    "/apple-touch-icon.png": ("apple-touch-icon.png", "image/png", "public, max-age=86400"),
+    "/icon.svg": ("icon.svg", "image/svg+xml", "public, max-age=604800"),
+    "/icon-192.png": ("icon-192.png", "image/png", "public, max-age=604800"),
+    "/icon-512.png": ("icon-512.png", "image/png", "public, max-age=604800"),
+    "/apple-touch-icon.png": ("apple-touch-icon.png", "image/png", "public, max-age=604800"),
+    "/favicon.ico": ("icon-192.png", "image/png", "public, max-age=604800"),
 }
+
+# файлы отдаются из памяти: диск читается только при изменении файла
+_static_cache = {}
+
+
+def static_cached(f):
+    """(сырые байты, gzip-версия) с перепроверкой по mtime и размеру."""
+    st = f.stat()
+    hit = _static_cache.get(f.name)
+    if hit and hit[0] == st.st_mtime and hit[1] == st.st_size:
+        return hit[2], hit[3]
+    raw = f.read_bytes()
+    gz = gzip.compress(raw, 6) if len(raw) > 512 else None
+    _static_cache[f.name] = (st.st_mtime, st.st_size, raw, gz)
+    return raw, gz
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -369,13 +385,15 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
 
-    def _send(self, code, body, ctype, cache="no-store", head=False):
+    def _send(self, code, body, ctype, cache="no-store", head=False, etag=None, gz=None):
         if isinstance(body, str):
             body = body.encode("utf-8")
         ae = (self.headers.get("Accept-Encoding") or "").lower()
         compressible = ctype.startswith("text/") or "json" in ctype or "javascript" in ctype or "svg" in ctype
         encoding = None
-        if len(body) > 512 and "gzip" in ae and compressible:
+        if gz is not None and "gzip" in ae and compressible:
+            body, encoding = gz, "gzip"
+        elif gz is None and len(body) > 512 and "gzip" in ae and compressible:
             body, encoding = gzip.compress(body, 6), "gzip"
         self.send_response(code)
         self.send_header("Content-Type", ctype)
@@ -385,9 +403,20 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", cache)
         self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
+        self.send_header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+        if etag:
+            self.send_header("ETag", etag)
         self.end_headers()
         if not head:
             self.wfile.write(body)
+
+    def _not_modified(self, etag, cache):
+        self.send_response(304)
+        self.send_header("ETag", etag)
+        self.send_header("Cache-Control", cache)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def _handle(self, head=False):
         u = urlparse(self.path)
@@ -404,7 +433,11 @@ class Handler(BaseHTTPRequestHandler):
                 f = BASE / name
                 if not f.is_file():
                     return self._send(404, b"not found", "text/plain", head=head)
-                return self._send(200, f.read_bytes(), ctype, cache, head=head)
+                raw, gz = static_cached(f)
+                etag = f'W/"{int(f.stat().st_mtime)}-{len(raw)}"'
+                if self.headers.get("If-None-Match") == etag:
+                    return self._not_modified(etag, cache)
+                return self._send(200, raw, ctype, cache, head=head, etag=etag, gz=gz)
             return self._send(404, "Не найдено".encode("utf-8"), "text/plain; charset=utf-8", head=head)
         except (BrokenPipeError, ConnectionResetError):
             pass
