@@ -878,7 +878,7 @@ function renderRail(){
 /* ---------- рендер: уроки ---------- */
 function rowHTML(it,ctx){
  const isW=it.kind==='w';
- const past=!isW&&ctx.today&&it.tm&&ctx.sec>=it.tm.e;
+ const past=prefs.dim&&!isW&&ctx.today&&it.tm&&ctx.sec>=it.tm.e;
  const cur=!isW&&ctx.today&&it.tm&&ctx.sec>=it.tm.s&&ctx.sec<it.tm.e;
  const pct=cur?((ctx.sec-it.tm.s)/(it.tm.e-it.tm.s)):0;
  const cls='les'+(isW?' win':'')+(past?' past':'')+(cur?' cur':'');
