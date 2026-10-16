@@ -72,7 +72,7 @@ html[data-theme=ocean]{
   --ok:#0e9488; --warn:#b45309; --alert:#dc5a4b;
   --shadow-1:0 1px 2px rgba(2,44,67,.07),0 12px 28px -20px rgba(2,80,120,.6);
   --shadow-2:0 24px 54px -30px rgba(2,90,140,.65);
-  --aurora-1:rgba(34,211,238,.5); --aurora-2:rgba(14,165,233,.44); --aurora-3:rgba(45,212,191,.42);
+  --aurora-1:rgba(34,211,238,.5); --aurora-2:rgba(14,165,233,.44); --aurora-3:rgba(56,189,248,.42);
   --glass:rgba(247,253,255,.72); color-scheme:light;
 }
 /* «Океан»: глубина воды — блики на карточке, волна в шапке */
@@ -219,9 +219,9 @@ html[data-theme=cosmic] .pop{background:#150e30}
   background:radial-gradient(130% 110% at 100% 0%,color-mix(in srgb,var(--hc) 20%,transparent),transparent 62%);
   opacity:.95;transition:background .4s}
 .hero.now{--hc:var(--accent);border-color:color-mix(in srgb,var(--hc) 40%,var(--line))}
-.hero.brk{--hc:var(--ok);border-color:color-mix(in srgb,var(--hc) 34%,var(--line))}
+.hero.brk{--hc:var(--accent-2);border-color:color-mix(in srgb,var(--hc) 34%,var(--line))}
 .hero.win{--hc:var(--warn);border-color:color-mix(in srgb,var(--hc) 30%,var(--line))}
-.hero.done{--hc:var(--ok)}
+.hero.done{--hc:var(--accent);border-color:color-mix(in srgb,var(--hc) 30%,var(--line))}
 .hero.soon{--hc:var(--accent-2)}
 .hero.idle{--hc:var(--muted)}
 .hero-in{position:relative;display:flex;gap:14px;align-items:center}
@@ -629,7 +629,7 @@ const WD_SHORT=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const WD_FULL=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
 const MON_GEN=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const MON_SHORT=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
-const THEME_COLOR={light:'#eef1f8',dark:'#070a12',cosmic:'#05030f',ocean:'#e8f4f9'};
+const THEME_COLOR={light:'#eef1f8',dark:'#070a12',cosmic:'#05030f',ocean:'#cfe7f9'};
 const THEME_NAME={light:'Светлая',dark:'Тёмная',cosmic:'Космос',ocean:'Океан'};
 const THEME_ORDER=['light','dark','cosmic','ocean'];
 const ICON={
