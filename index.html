@@ -64,6 +64,17 @@ html[data-theme=cosmic]{
   --aurora-1:rgba(139,92,246,.4); --aurora-2:rgba(34,211,238,.2); --aurora-3:rgba(236,72,153,.2);
   --glass:rgba(12,6,32,.7); color-scheme:dark;
 }
+html[data-theme=ocean]{
+  --bg:#e8f4f9; --surface:#fff; --surface-2:#f1f8fb; --surface-3:#e0eef6;
+  --text:#07293a; --muted:#57798a; --muted-2:#7c9dab;
+  --line:rgba(7,41,58,.09); --line-2:rgba(7,41,58,.16);
+  --accent:#0e7490; --accent-2:#06b6d4; --accent-ink:#fff; --accent-soft:rgba(14,116,144,.11);
+  --ok:#0d9488; --warn:#b45309; --alert:#dc5a4b;
+  --shadow-1:0 1px 2px rgba(7,41,58,.05),0 10px 26px -20px rgba(7,50,80,.45);
+  --shadow-2:0 22px 50px -30px rgba(6,60,95,.5);
+  --aurora-1:rgba(6,182,212,.22); --aurora-2:rgba(45,212,191,.2); --aurora-3:rgba(56,189,248,.17);
+  --glass:rgba(255,255,255,.74); color-scheme:light;
+}
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{
@@ -131,14 +142,15 @@ h1,h2,h3,p{margin:0}
 html[data-theme=cosmic] .seg .ind{background:var(--surface-3)}
 .seg button{
   position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:6px;
-  width:36px;height:32px;border-radius:10px;font-size:13px;font-weight:700;
+  height:32px;border-radius:10px;font-size:13px;font-weight:700;
   color:var(--muted);transition:color .2s var(--ease)}
 .seg button svg{width:17px;height:17px;flex:none}
-.seg button span{display:none}
+#viewSeg button{width:36px}
+#viewSeg button span{display:none}
 @media (min-width:620px){
-  .seg button{width:64px}
-  .seg button svg{display:none}
-  .seg button span{display:inline}
+  #viewSeg button{width:64px}
+  #viewSeg button svg{display:none}
+  #viewSeg button span{display:inline}
 }
 .seg button[aria-pressed=true]{color:var(--text)}
 .ibtn{
@@ -149,6 +161,33 @@ html[data-theme=cosmic] .seg .ind{background:var(--surface-3)}
 .ibtn:active{transform:scale(.92)}
 .spin svg{animation:rot .9s linear infinite}
 @keyframes rot{to{transform:rotate(360deg)}}
+
+/* ============ окно выбора темы ============ */
+.pop-wrap{position:relative;display:flex}
+.pop{
+  position:absolute;top:calc(100% + 10px);right:0;z-index:45;width:228px;padding:6px;
+  border-radius:18px;background:var(--surface);border:1px solid var(--line);
+  box-shadow:0 28px 64px -30px rgba(8,12,35,.6),var(--shadow-1);
+  transform-origin:top right;animation:popIn .22s var(--ease) both}
+html[data-theme=cosmic] .pop{background:#150e30}
+.pop[hidden]{display:none}
+@keyframes popIn{from{opacity:0;transform:translateY(-8px) scale(.96)}to{opacity:1;transform:none}}
+.pop-h{padding:8px 10px 6px;font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2)}
+.pop-i{
+  display:flex;align-items:center;gap:11px;width:100%;padding:9px 10px;border-radius:12px;
+  font-size:14.5px;font-weight:700;color:var(--text);text-align:left;
+  transition:background .16s,color .16s,transform .14s var(--ease)}
+.pop-i:hover{background:var(--surface-2)}
+.pop-i:active{transform:scale(.98)}
+.pop-i[aria-checked=true]{background:var(--accent-soft);color:var(--accent)}
+.pop-t{flex:1}
+.pchip{width:25px;height:25px;border-radius:8px;flex:none;border:1px solid var(--line-2);box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.t-light{background:linear-gradient(140deg,#fff,#e2e7f8 58%,#c3cbf0)}
+.t-dark{background:linear-gradient(140deg,#2b3554,#0b0f1a)}
+.t-cosmic{background:linear-gradient(140deg,#8b5cf6,#22d3ee 62%,#ec4899)}
+.t-ocean{background:linear-gradient(140deg,#7dd3fc,#06b6d4 55%,#0e7490)}
+.tick{width:16px;height:16px;color:var(--accent);opacity:0;transition:opacity .18s}
+.pop-i[aria-checked=true] .tick{opacity:1}
 
 /* ============ каркас ============ */
 .wrap{max-width:1160px;margin:0 auto;padding:0 16px calc(30px + env(safe-area-inset-bottom))}
@@ -233,18 +272,21 @@ html[data-theme=cosmic] .seg .ind{background:var(--surface-3)}
   content:"";position:absolute;left:0;right:0;bottom:-14px;height:14px;pointer-events:none;
   background:linear-gradient(var(--bg),transparent);opacity:.9}
 .rail{
-  display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;
+  display:flex;align-items:flex-start;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;
   padding:8px 16px 11px;scrollbar-width:none;overscroll-behavior-x:contain;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent);
   mask-image:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent)}
 .rail::-webkit-scrollbar{display:none}
 .pill{
-  flex:0 0 auto;scroll-snap-align:center;position:relative;min-width:56px;
-  padding:7px 9px 8px;border-radius:15px;border:1px solid var(--line);background:var(--surface);
-  display:flex;flex-direction:column;align-items:center;gap:1px;text-align:center;
+  flex:1 1 0;min-width:44px;max-width:68px;aspect-ratio:1;scroll-snap-align:center;position:relative;
+  padding:0;border-radius:17px;border:1px solid var(--line);background:var(--surface);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;text-align:center;
   transition:transform .18s var(--ease),background .25s,border-color .25s,box-shadow .25s,color .25s}
-.pill .pw{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);transition:color .25s}
-.pill .pd{font-size:16.5px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.15}
+@media (hover:hover){
+  .pill:hover:not(.active):not(.blank){transform:translateY(-1px);box-shadow:var(--shadow-1)}
+}
+.pill .pw{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);line-height:1.1;transition:color .25s}
+.pill .pd{font-size:17.5px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.05;margin-top:2px}
 .pill .pc{display:none}
 .pill.active{
   color:var(--accent-ink);border-color:transparent;
@@ -252,9 +294,11 @@ html[data-theme=cosmic] .seg .ind{background:var(--surface-3)}
   background:linear-gradient(155deg,var(--accent),color-mix(in srgb,var(--accent) 55%,var(--accent-2)));
   box-shadow:0 12px 26px -16px color-mix(in srgb,var(--accent) 85%,transparent)}
 .pill.active .pw{color:color-mix(in srgb,var(--accent-ink) 72%,transparent)}
-.pill.empty{background:transparent;border-color:transparent;box-shadow:none}
-.pill.empty .pw,.pill.empty .pd{color:var(--muted-2)}
-.pill.empty .pc{color:var(--muted-2)}
+.pill.blank{
+  background:color-mix(in srgb,var(--surface) 45%,transparent);
+  border-style:dashed;border-color:var(--line-2);box-shadow:none}
+.pill.blank .pw,.pill.blank .pd{color:var(--muted-2)}
+.pill.blank .pc{color:var(--muted-2)}
 .pill.today::after{
   content:"";position:absolute;top:6px;right:6px;width:5px;height:5px;border-radius:50%;
   background:var(--accent-2);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent-2) 25%,transparent)}
@@ -306,6 +350,10 @@ html[data-theme=dark] .les,html[data-theme=cosmic] .les{--sc-ink:color-mix(in sr
 .les .subj{grid-area:subj;font-size:17px;font-weight:700;letter-spacing:-.015em;line-height:1.25;overflow-wrap:anywhere}
 .les .room{grid-area:room;justify-self:start}
 .les.win{--sc:#94a3b8;background:var(--surface-2);background:color-mix(in srgb,var(--surface) 62%,transparent);border-style:dashed;box-shadow:none}
+/* однотонный режим: предметы без своих цветов, текущий урок — акцентным */
+.list.mono .les{--sc:#7c8399;--sc-ink:var(--muted)}
+.list.mono .les.cur{--sc:var(--accent);--sc-fg:var(--accent-ink)}
+.week.mono .wl{--sc:#7c8399}
 .les.win::before{display:none}
 .les.win .num{background:transparent;border:1px dashed var(--line-2);color:var(--muted-2)}
 .les.win .subj{font-size:15px;font-weight:600;color:var(--muted)}
@@ -476,8 +524,11 @@ dialog[open]{animation:pop .3s var(--ease)}
     flex-direction:column;gap:6px;overflow:visible;padding:0;margin:0;
     -webkit-mask-image:none;mask-image:none;scroll-snap-type:none}
   .pill{
-    flex-direction:row;align-items:center;gap:10px;min-width:0;width:100%;
-    padding:10px 12px;border-radius:14px;text-align:left;border-color:transparent;background:transparent}
+    flex:0 0 auto;flex-direction:row;align-items:center;gap:10px;min-width:0;width:100%;
+    max-width:none;aspect-ratio:auto;padding:10px 12px;border-radius:14px;text-align:left;
+    border-color:transparent;background:transparent}
+  .pill.blank{background:transparent;border-color:transparent}
+  .pill:hover:not(.active):not(.blank){transform:none}
   .pill .pw{width:30px;font-size:11.5px}
   .pill .pd{font-size:15.5px}
   .pill .pc{margin-left:auto;display:block;font-size:12px;font-weight:700;color:var(--muted-2);white-space:nowrap}
@@ -509,7 +560,16 @@ dialog[open]{animation:pop .3s var(--ease)}
         <button data-view="day" aria-pressed="true" aria-label="Вид: день" title="День"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg><span>День</span></button>
         <button data-view="week" aria-pressed="false" aria-label="Вид: неделя" title="Неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="2.2"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="2.2"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="2.2"/><rect x="13" y="13" width="7.5" height="7.5" rx="2.2"/></svg><span>Неделя</span></button>
       </div>
-      <button class="ibtn" id="themeBtn" aria-label="Сменить тему"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+      <div class="pop-wrap">
+        <button class="ibtn" id="themeBtn" aria-label="Тема оформления" aria-haspopup="true" aria-expanded="false" title="Тема оформления"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+        <div class="pop" id="themePop" role="menu" aria-label="Тема оформления" hidden>
+          <div class="pop-h">Тема оформления</div>
+          <button class="pop-i" role="menuitemradio" data-theme-set="light" aria-checked="false"><span class="pchip t-light"></span><span class="pop-t">Светлая</span><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></button>
+          <button class="pop-i" role="menuitemradio" data-theme-set="dark" aria-checked="false"><span class="pchip t-dark"></span><span class="pop-t">Тёмная</span><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></button>
+          <button class="pop-i" role="menuitemradio" data-theme-set="cosmic" aria-checked="false"><span class="pchip t-cosmic"></span><span class="pop-t">Космос</span><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></button>
+          <button class="pop-i" role="menuitemradio" data-theme-set="ocean" aria-checked="false"><span class="pchip t-ocean"></span><span class="pop-t">Океан</span><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></button>
+        </div>
+      </div>
       <button class="ibtn" id="refreshBtn" aria-label="Обновить расписание" title="Обновить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg></button>
       <button class="ibtn" id="settingsBtn" aria-label="Настройки" title="Настройки"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button>
     </div>
@@ -532,14 +592,16 @@ dialog[open]{animation:pop .3s var(--ease)}
     <button class="ibtn" id="closeSettings" aria-label="Закрыть" style="width:36px;height:36px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </div>
   <div class="db">
-    <div class="row"><span>Тема<small>Светлая, тёмная или «Космос»</small></span>
+    <div class="row"><span>Тема<small>Четыре варианта оформления</small></span>
       <div class="seg" id="themePick" role="radiogroup" aria-label="Тема оформления">
         <span class="ind" aria-hidden="true"></span>
-        <button role="radio" data-theme-set="light" aria-checked="false" aria-label="Светлая" title="Светлая" style="width:44px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:17px;height:17px;margin:auto"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
-        <button role="radio" data-theme-set="dark" aria-checked="false" aria-label="Тёмная" title="Тёмная" style="width:44px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;margin:auto"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
-        <button role="radio" data-theme-set="cosmic" aria-checked="false" aria-label="Космос" title="Космос" style="width:44px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;margin:auto"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 17v4M17 19h4"/></svg></button>
+        <button role="radio" data-theme-set="light" aria-checked="false" aria-label="Светлая" title="Светлая" style="width:38px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px;margin:auto"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+        <button role="radio" data-theme-set="dark" aria-checked="false" aria-label="Тёмная" title="Тёмная" style="width:38px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;margin:auto"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+        <button role="radio" data-theme-set="cosmic" aria-checked="false" aria-label="Космос" title="Космос" style="width:38px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;margin:auto"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 17v4M17 19h4"/></svg></button>
+        <button role="radio" data-theme-set="ocean" aria-checked="false" aria-label="Океан" title="Океан" style="width:38px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px;margin:auto"><path d="M2 9.5c2.4 0 3.2-2 5.6-2s3.2 2 5.6 2 3.2-2 5.6-2"/><path d="M2 15c2.4 0 3.2-2 5.6-2s3.2 2 5.6 2 3.2-2 5.6-2"/></svg></button>
       </div>
     </div>
+    <label class="row"><span>Цветные предметы<small>Каждый предмет — своим цветом</small></span><input type="checkbox" class="sw" data-pref="colors"></label>
     <label class="row"><span>Полные названия предметов<small>«Геом» → «Геометрия»</small></span><input type="checkbox" class="sw" data-pref="full"></label>
     <label class="row"><span>Показывать кабинеты</span><input type="checkbox" class="sw" data-pref="rooms"></label>
     <label class="row"><span>Приглушать прошедшие уроки</span><input type="checkbox" class="sw" data-pref="dim"></label>
@@ -558,13 +620,14 @@ const WD_SHORT=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const WD_FULL=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
 const MON_GEN=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const MON_SHORT=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
-const THEME_COLOR={light:'#eef1f8',dark:'#070a12',cosmic:'#05030f'};
-const THEME_NAME={light:'Светлая',dark:'Тёмная',cosmic:'Космос'};
-const THEME_ORDER=['light','dark','cosmic'];
+const THEME_COLOR={light:'#eef1f8',dark:'#070a12',cosmic:'#05030f',ocean:'#e8f4f9'};
+const THEME_NAME={light:'Светлая',dark:'Тёмная',cosmic:'Космос',ocean:'Океан'};
+const THEME_ORDER=['light','dark','cosmic','ocean'];
 const ICON={
  light:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
  dark:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
  cosmic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 17v4M17 19h4"/></svg>',
+ ocean:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 9.5c2.4 0 3.2-2 5.6-2s3.2 2 5.6 2 3.2-2 5.6-2"/><path d="M2 15c2.4 0 3.2-2 5.6-2s3.2 2 5.6 2 3.2-2 5.6-2"/></svg>',
  clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3.2 2"/></svg>',
  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg>',
  moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.6 6.6 0 0 0 10.5 10.5z"/></svg>',
@@ -602,7 +665,7 @@ const store={
  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
  del(k){try{localStorage.removeItem(k)}catch(e){}}};
 
-const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,view:'day'},store.get('sch.prefs',{}));
+const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:false,view:'day'},store.get('sch.prefs',{}));
 const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:true,lastFetch:0,enter:false};
 const cached=store.get('sch.data',null);
 if(cached){S.days=cached.days||{};Object.assign(S.meta,cached.meta||{});}
@@ -793,7 +856,7 @@ function renderRail(){
  el.innerHTML=dates.map((iso,i)=>{
    const d=S.days[iso],st=d?stats(prep(d)):null,{d:dd,m}=isoDM(iso);
    const cnt=st&&st.count?`${st.count} ур.${st.start?' · '+st.start:''}`:(d?'нет уроков':'нет данных');
-   return `<button class="pill${iso===S.sel?' active':''}${iso===n.iso?' today':''}${st&&st.count?'':' empty'}" data-day="${iso}" style="--i:${i}" aria-pressed="${iso===S.sel}" title="${WD_FULL[isoWd(iso)]}, ${dd} ${MON_GEN[m-1]}">
+   return `<button class="pill${iso===S.sel?' active':''}${iso===n.iso?' today':''}${st&&st.count?'':' blank'}" data-day="${iso}" style="--i:${i}" aria-pressed="${iso===S.sel}" title="${WD_FULL[isoWd(iso)]}, ${dd} ${MON_GEN[m-1]}">
      <span class="pw">${WD_SHORT[isoWd(iso)]}</span><span class="pd">${dd}</span><span class="pc">${cnt}</span></button>`;
  }).join('');
  const a=el.querySelector('.active');
@@ -810,7 +873,7 @@ function rowHTML(it,ctx){
  const cur=!isW&&ctx.today&&it.tm&&ctx.sec>=it.tm.s&&ctx.sec<it.tm.e;
  const pct=cur?((ctx.sec-it.tm.s)/(it.tm.e-it.tm.s)):0;
  const cls='les'+(isW?' win':'')+(past?' past':'')+(cur?' cur':'');
- const style=isW?'':` style="--sc:${it.color};--sc-fg:${fgFor(it.color)}"`;
+ const style=isW||!prefs.colors?'':` style="--sc:${it.color};--sc-fg:${fgFor(it.color)}"`;
  const tm=it.tm?`<span class="tm"><b>${it.tm.a}</b><span>${it.tm.b}</span></span>`:`<span class="tm"><b>${it.n}</b></span>`;
  return `<div class="${cls}"${style} role="listitem">
    <span class="num">${it.n}</span>${tm}
@@ -830,18 +893,18 @@ function dayHTML(iso,n){
  if(!d)return emptyHTML(ICON.cal,'Расписание ещё не опубликовано','Когда этот день появится в таблице, он сразу покажется здесь.');
  if(!items.length)return emptyHTML(ICON.moon,'В этот день уроков нет','В таблице для '+esc(S.meta.cls)+' на эту дату пусто. Возможно, это выходной.');
  const ctx={today:iso===n.iso,sec:n.sec};
- return `<div class="list${S.enter?' enter':''}" role="list">${items.map(it=>rowHTML(it,ctx)).join('')}</div>`;
+ return `<div class="list${S.enter?' enter':''}${prefs.colors?'':' mono'}" role="list">${items.map(it=>rowHTML(it,ctx)).join('')}</div>`;
 }
 function weekHTML(n){
  const dates=weekDates(S.sel);
- return `<div class="week${S.enter?' enter':''}">`+dates.map(iso=>{
+ return `<div class="week${S.enter?' enter':''}${prefs.colors?'':' mono'}">`+dates.map(iso=>{
    const d=S.days[iso],items=prep(d),{d:dd,m}=isoDM(iso),st=stats(items);
    let body;
    if(!d)body='<div class="wnone">Пока не опубликовано</div>';
    else if(!items.length)body='<div class="wnone">Уроков нет</div>';
    else body=items.map(it=>it.kind==='w'
      ?`<div class="wl win"><span class="n">${it.n}</span><div><b>Окно</b></div></div>`
-     :`<div class="wl" style="--sc:${it.color}"><span class="n">${it.n}</span><div><b>${esc(it.title)}</b><small>${it.tm?it.tm.a:''}${it.room&&prefs.rooms?(it.tm?', ':'')+esc(roomText(it.room)):''}</small></div></div>`).join('');
+     :`<div class="wl"${prefs.colors?` style="--sc:${it.color}"`:''}><span class="n">${it.n}</span><div><b>${esc(it.title)}</b><small>${it.tm?it.tm.a:''}${it.room&&prefs.rooms?(it.tm?', ':'')+esc(roomText(it.room)):''}</small></div></div>`).join('');
    return `<section class="wcard${iso===n.iso?' today':''}"><button class="wh" data-go="${iso}" title="Открыть день">
      <b>${WD_SHORT[isoWd(iso)]}, ${dd}</b><em>${MON_SHORT[m-1]}</em><span>${st.count?lessonsWord(st.count):''}</span></button>${body}</section>`;
  }).join('')+'</div>';
@@ -993,32 +1056,29 @@ function applyTheme(t){
  document.documentElement.dataset.theme=t;
  $('#themeColor').setAttribute('content',THEME_COLOR[t]||'#eef1f8');
  const tb=$('#themeBtn');
- if(tb){tb.innerHTML=ICON[t];tb.setAttribute('aria-label','Тема: '+THEME_NAME[t]+'. Нажмите, чтобы сменить.');tb.title='Тема: '+THEME_NAME[t]}
- const pick=$('#themePick');
- pick.querySelectorAll('[data-theme-set]').forEach((b,i)=>{
+ if(tb){tb.innerHTML=ICON[t];tb.setAttribute('aria-label','Тема: '+THEME_NAME[t]+'. Открыть выбор темы.');tb.title='Тема: '+THEME_NAME[t]}
+ document.querySelectorAll('[data-theme-set]').forEach(b=>{
    const on=b.dataset.themeSet===t;
    b.setAttribute('aria-checked',String(on));
    b.setAttribute('aria-pressed',String(on));
  });
- setSegIndicator(pick,THEME_ORDER.indexOf(t));
+ setSegIndicator($('#themePick'),THEME_ORDER.indexOf(t));
 }
 function setSegIndicator(seg,index){
  if(!seg)return;
- if(seg.classList.contains('seg'))seg.dataset.i=index;
- const btns=seg.querySelectorAll('button');
- const b=btns[index];
- if(b&&seg.id==='themePick'){
-   const ind=seg.querySelector('.ind');
-   if(ind){ind.style.width=b.offsetWidth+'px';ind.style.transform='translateX('+(b.offsetLeft-3)+'px)'}
- }
+ const b=seg.querySelectorAll('button')[index],ind=seg.querySelector('.ind');
+ if(!b||!ind)return;
+ ind.style.width=b.offsetWidth+'px';
+ ind.style.transform='translateX('+(b.offsetLeft-3)+'px)';
 }
-function cycleTheme(){
- const cur=document.documentElement.dataset.theme||'light';
- const nxt=THEME_ORDER[(THEME_ORDER.indexOf(cur)+1)%THEME_ORDER.length];
- setPrefs({theme:nxt});applyTheme(nxt);
- toast('Тема: '+THEME_NAME[nxt]);
+/* окно выбора темы */
+const themePop=$('#themePop'),themeBtn=$('#themeBtn');
+const themePopOpen=()=>!themePop.hidden;
+function setThemePop(open){
+ themePop.hidden=!open;
+ themeBtn.setAttribute('aria-expanded',String(open));
+ if(open)setSegIndicator($('#themePick'),THEME_ORDER.indexOf(document.documentElement.dataset.theme||'light'));
 }
-
 /* ---------- действия ---------- */
 function step(dir){
  S.picked=true;S.enter=true;
@@ -1063,7 +1123,7 @@ async function shareDay(){
 document.addEventListener('click',e=>{
  const t=e.target.closest('[data-theme-set],[data-day],[data-step],[data-view],[data-go],[data-act]');
  if(!t)return;
- if(t.dataset.themeSet){setPrefs({theme:t.dataset.themeSet});applyTheme(t.dataset.themeSet);return}
+ if(t.dataset.themeSet){setPrefs({theme:t.dataset.themeSet});applyTheme(t.dataset.themeSet);setThemePop(false);return}
  if(t.dataset.day){S.sel=t.dataset.day;S.picked=true;S.enter=true;railSig='';render();return}
  if(t.dataset.step){step(+t.dataset.step);return}
  if(t.dataset.view){if(prefs.view===t.dataset.view)return;setPrefs({view:t.dataset.view});S.enter=true;railSig='';render();return}
@@ -1072,7 +1132,8 @@ document.addEventListener('click',e=>{
  if(t.dataset.act==='retry'){load(true);return}
  if(t.dataset.act==='share'){shareDay();return}
 });
-$('#themeBtn').addEventListener('click',cycleTheme);
+themeBtn.addEventListener('click',e=>{e.stopPropagation();setThemePop(!themePopOpen())});
+document.addEventListener('click',e=>{if(themePopOpen()&&!e.target.closest('.pop-wrap'))setThemePop(false)});
 $('#refreshBtn').addEventListener('click',()=>load(true));
 const dlg=$('#settings');
 const openDlg=()=>{try{if(typeof dlg.showModal==='function')dlg.showModal();else dlg.setAttribute('open','')}catch(e){dlg.setAttribute('open','')}};
@@ -1088,11 +1149,27 @@ $('#resetBtn').addEventListener('click',()=>{
  store.del('sch.data');store.del('sch.seen');Object.keys(seen).forEach(k=>delete seen[k]);
  S.days={};S.picked=false;S.sel=null;railSig='';closeDlg();toast('Данные сброшены, загружаю заново');load(true);
 });
+/* ---------- установка на телефон ---------- */
 let deferred=null;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;$('#installBtn').hidden=false});
-$('#installBtn').addEventListener('click',async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice;deferred=null;$('#installBtn').hidden=true});
+const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const isIOS=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function paintInstall(){
+ const b=$('#installBtn');if(!b)return;
+ b.hidden=isStandalone();
+ if(b.hidden)return;
+ b.classList.toggle('primary',!!deferred);
+ b.textContent=deferred?'Установить как приложение':(isIOS?'Как поставить на iPhone':'Установить как приложение');
+}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;paintInstall()});
+window.addEventListener('appinstalled',()=>{deferred=null;paintInstall()});
+$('#installBtn').addEventListener('click',async()=>{
+ if(deferred){deferred.prompt();try{await deferred.userChoice}catch(e){}deferred=null;paintInstall();return}
+ toast(isIOS?'«Поделиться» → «На экран Домой»':'Меню браузера → «Установить приложение»');
+});
+paintInstall();
 document.addEventListener('keydown',e=>{
  if(dlg.open||e.metaKey||e.ctrlKey||e.altKey)return;
+ if(e.key==='Escape'&&themePopOpen()){setThemePop(false);return}
  if(e.key==='ArrowLeft')step(-1);
  else if(e.key==='ArrowRight')step(1);
  else if(e.key==='t'||e.key==='T'||e.key==='е'||e.key==='Е'){S.sel=nowSchool().iso;S.picked=true;S.enter=true;railSig='';render()}
