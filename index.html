@@ -36,7 +36,7 @@ html[data-theme=light]{
   --text:#0e1322; --muted:#69718c; --muted-2:#8b93ab;
   --line:rgba(14,19,34,.08); --line-2:rgba(14,19,34,.14);
   --accent:#4f46e5; --accent-2:#0ea5e9; --accent-ink:#fff; --accent-soft:rgba(79,70,229,.10);
-  --ok:#0d9a68; --warn:#c07a06; --alert:#dc5a4b;
+  --ok:#0d9488; --warn:#c07a06; --alert:#dc5a4b;
   --shadow-1:0 1px 2px rgba(16,22,45,.05),0 10px 26px -20px rgba(16,22,45,.45);
   --shadow-2:0 22px 50px -30px rgba(28,32,90,.55);
   --aurora-1:rgba(99,102,241,.17); --aurora-2:rgba(14,165,233,.15); --aurora-3:rgba(244,114,182,.11);
@@ -47,7 +47,7 @@ html[data-theme=dark]{
   --text:#e9edf7; --muted:#8b95ad; --muted-2:#6f7a92;
   --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.16);
   --accent:#8b9cff; --accent-2:#38bdf8; --accent-ink:#0a0e18; --accent-soft:rgba(139,156,255,.14);
-  --ok:#34d399; --warn:#fbbf24; --alert:#fb7185;
+  --ok:#2dd4bf; --warn:#fbbf24; --alert:#fb7185;
   --shadow-1:0 1px 2px rgba(0,0,0,.4),0 14px 34px -26px rgba(0,0,0,.9);
   --shadow-2:0 26px 60px -34px rgba(0,0,0,.95);
   --aurora-1:rgba(99,102,241,.20); --aurora-2:rgba(14,165,233,.14); --aurora-3:rgba(168,85,247,.14);
@@ -65,16 +65,25 @@ html[data-theme=cosmic]{
   --glass:rgba(12,6,32,.7); color-scheme:dark;
 }
 html[data-theme=ocean]{
-  --bg:#e8f4f9; --surface:#fff; --surface-2:#f1f8fb; --surface-3:#e0eef6;
-  --text:#07293a; --muted:#57798a; --muted-2:#7c9dab;
-  --line:rgba(7,41,58,.09); --line-2:rgba(7,41,58,.16);
-  --accent:#0e7490; --accent-2:#06b6d4; --accent-ink:#fff; --accent-soft:rgba(14,116,144,.11);
-  --ok:#0d9488; --warn:#b45309; --alert:#dc5a4b;
-  --shadow-1:0 1px 2px rgba(7,41,58,.05),0 10px 26px -20px rgba(7,50,80,.45);
-  --shadow-2:0 22px 50px -30px rgba(6,60,95,.5);
-  --aurora-1:rgba(6,182,212,.22); --aurora-2:rgba(45,212,191,.2); --aurora-3:rgba(56,189,248,.17);
-  --glass:rgba(255,255,255,.74); color-scheme:light;
+  --bg:#cfe7f9; --surface:#f7fdff; --surface-2:#e2f2fd; --surface-3:#cbe6f8;
+  --text:#022c43; --muted:#3a6782; --muted-2:#6a97b1;
+  --line:rgba(2,44,67,.12); --line-2:rgba(2,44,67,.22);
+  --accent:#0284c7; --accent-2:#22d3ee; --accent-ink:#fff; --accent-soft:rgba(2,132,199,.14);
+  --ok:#0e9488; --warn:#b45309; --alert:#dc5a4b;
+  --shadow-1:0 1px 2px rgba(2,44,67,.07),0 12px 28px -20px rgba(2,80,120,.6);
+  --shadow-2:0 24px 54px -30px rgba(2,90,140,.65);
+  --aurora-1:rgba(34,211,238,.5); --aurora-2:rgba(14,165,233,.44); --aurora-3:rgba(45,212,191,.42);
+  --glass:rgba(247,253,255,.72); color-scheme:light;
 }
+/* «Океан»: глубина воды — блики на карточке, волна в шапке */
+html[data-theme=ocean] .hero{
+  background:
+    radial-gradient(120% 92% at 90% -24%,rgba(34,211,238,.34),transparent 62%),
+    radial-gradient(90% 76% at 4% 112%,rgba(2,132,199,.2),transparent 64%),
+    linear-gradient(158deg,#ffffff 0%,#eaf7ff 58%,#d7edfc 100%);
+  border-color:rgba(2,132,199,.24)}
+html[data-theme=ocean] .topbar::after{
+  background:linear-gradient(90deg,#22d3ee,#0284c7 55%,#14b8a6)}
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{
@@ -190,10 +199,10 @@ html[data-theme=cosmic] .pop{background:#150e30}
 .pop-i[aria-checked=true] .tick{opacity:1}
 
 /* ============ каркас ============ */
-.wrap{max-width:1160px;margin:0 auto;padding:0 16px calc(30px + env(safe-area-inset-bottom))}
+.wrap{max-width:1160px;margin:0 auto;padding:12px 16px calc(30px + env(safe-area-inset-bottom))}
 .layout{display:block}
 @media (min-width:960px){
-  .wrap{padding-left:24px;padding-right:24px}
+  .wrap{padding-top:0;padding-left:24px;padding-right:24px}
   .layout{display:grid;grid-template-columns:296px minmax(0,1fr);gap:26px;align-items:start}
   .side{position:sticky;top:calc(var(--topH) + 20px);display:flex;flex-direction:column;gap:14px}
 }
