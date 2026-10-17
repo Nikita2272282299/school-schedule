@@ -828,10 +828,10 @@ function heroHTML(st,n){
 
 /* ---------- выбор дня ---------- */
 function tabDates(){
- const today=nowSchool().iso,mon=isoAdd(today,-isoWd(today)),set=new Set();
+ const today=nowSchool().iso,mon=isoAdd(today,-isoWd(today)),sun=isoAdd(mon,6),set=new Set();
  for(let i=0;i<5;i++)set.add(isoAdd(mon,i));
- if(isoWd(today)>=5){set.add(isoAdd(mon,5));for(let i=7;i<12;i++)set.add(isoAdd(mon,i))}
- Object.keys(S.days).forEach(k=>{if(k>=mon&&k<=isoAdd(mon,20))set.add(k)});
+ set.add(today);
+ Object.keys(S.days).forEach(k=>{if(k>=mon&&k<=sun)set.add(k)});
  return[...set].sort();
 }
 function pickDefault(){
