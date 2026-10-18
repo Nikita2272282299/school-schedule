@@ -8,8 +8,8 @@
 <meta name="theme-color" content="#eef1f8" id="themeColor">
 <meta name="color-scheme" content="light dark">
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" id="favicon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" id="appleIcon" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="8Г">
 <meta name="format-detection" content="telephone=no">
@@ -122,7 +122,7 @@ h1,h2,h3,p{margin:0}
   border-bottom:1px solid transparent;
 }
 @supports not (backdrop-filter:blur(2px)){.topbar{background:var(--bg)}}
-.topbar.stuck{border-bottom-color:var(--line);background:var(--bg);background:color-mix(in srgb,var(--bg) 88%,transparent)}
+.topbar.stuck{border-bottom-color:var(--line);background:var(--bg);background:color-mix(in srgb,var(--bg) 88%,transparent);box-shadow:0 14px 30px -28px rgba(8,12,35,.55)}
 .bar{max-width:1160px;margin:0 auto;padding:9px 16px;display:flex;align-items:center;gap:12px;min-height:var(--topH)}
 .topbar::after{
   content:"";position:absolute;left:0;bottom:-1px;height:2px;width:calc(var(--dp,0) * 100%);
@@ -137,6 +137,7 @@ h1,h2,h3,p{margin:0}
   box-shadow:0 8px 20px -12px color-mix(in srgb,var(--accent) 80%,transparent);
   transition:transform .3s var(--ease)}
 .brand:hover .mark{transform:rotate(-4deg) scale(1.04)}
+.mark svg{width:21px;height:21px;display:block}
 .brand-txt{min-width:0}
 .brand h1{font-size:17px;font-weight:800;letter-spacing:-.02em;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brand .sub{font-size:12.5px;color:var(--muted);font-weight:600;line-height:1.3;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -253,6 +254,17 @@ html[data-theme=cosmic] .pop{background:#150e30}
 .hero .next b{color:var(--text);font-weight:700}
 .hero .next .arw{color:var(--hc);flex:none;width:15px;height:15px;margin-top:2px}
 .hero .next .arw svg{width:100%;height:100%;display:block}
+.hero .cta{
+  margin-top:12px;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border-radius:10px;
+  font-size:12.5px;font-weight:800;color:var(--hc);white-space:nowrap;max-width:100%;
+  background:color-mix(in srgb,var(--hc) 12%,transparent);
+  border:1px solid color-mix(in srgb,var(--hc) 22%,transparent);
+  transition:background .18s,transform .16s var(--ease)}
+.hero .cta:hover{background:color-mix(in srgb,var(--hc) 20%,transparent)}
+.hero .cta:active{transform:scale(.96)}
+.hero .cta svg{width:14px;height:14px;flex:none}
+.hero.idle .cta{color:var(--accent);background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 24%,transparent)}
+.hero.idle .cta:hover{background:color-mix(in srgb,var(--accent) 17%,transparent)}
 .ring{position:relative;width:78px;height:78px;flex:none}
 .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
 .ring circle{fill:none;stroke-width:6.5;stroke-linecap:round}
@@ -345,6 +357,14 @@ html[data-theme=cosmic] .pop{background:#150e30}
 .les::before{
   content:"";position:absolute;inset:0;pointer-events:none;opacity:.9;
   background:linear-gradient(100deg,color-mix(in srgb,var(--sc) 11%,transparent),transparent 48%)}
+.list:not(.mono) .les::after{
+  content:"";position:absolute;left:0;top:13px;bottom:13px;width:3px;border-radius:0 4px 4px 0;
+  pointer-events:none;opacity:.8;
+  background:linear-gradient(180deg,var(--sc),color-mix(in srgb,var(--sc) 55%,var(--accent-2)));
+  transition:opacity .2s,top .2s,bottom .2s}
+.list:not(.mono) .les.cur::after{top:0;bottom:0;opacity:1}
+.list:not(.mono) .les.past::after{opacity:.35}
+.list:not(.mono) .les.win::after{display:none}
 .les>*{position:relative}
 html[data-theme=dark] .les,html[data-theme=cosmic] .les{--sc-ink:color-mix(in srgb,var(--sc) 68%,#fff)}
 .les .num{
@@ -400,16 +420,22 @@ html[data-theme=dark] .les.cur .num,html[data-theme=cosmic] .les.cur .num{color:
 
 /* ============ итог дня ============ */
 .dayfoot{
-  margin-top:14px;padding:15px 18px;border-radius:var(--r);text-align:center;
+  margin-top:14px;padding:14px 16px;border-radius:var(--r);text-align:left;
+  display:flex;align-items:center;gap:8px 16px;
   background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-1)}
 .dayfoot.enter{animation:up .45s var(--ease) backwards;animation-delay:.16s}
+.dayfoot .df-main{flex:1;min-width:0}
 .dayfoot .h{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2)}
-.dayfoot .c{margin-top:7px;font-size:15.5px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
-.dayfoot .s{margin-top:4px;font-size:12.5px;font-weight:600;color:var(--muted-2)}
+.dayfoot .c{margin-top:4px;font-size:15.5px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.dayfoot .s{margin-top:3px;font-size:12px;font-weight:600;color:var(--muted-2)}
 .dayfoot .share{
-  margin-top:12px;height:36px;padding:0 16px;border-radius:11px;font-size:13.5px;font-weight:700;
+  margin-top:0;flex:none;height:36px;padding:0 15px;border-radius:11px;font-size:13px;font-weight:700;
   background:var(--surface-2);border:1px solid var(--line);display:inline-flex;align-items:center;gap:7px;
   transition:background .18s,transform .16s var(--ease)}
+@media (max-width:560px){
+  .dayfoot{flex-wrap:wrap}
+  .dayfoot .share{margin-top:2px;width:100%;justify-content:center}
+}
 .dayfoot .share:hover{background:var(--accent-soft);color:var(--accent)}
 .dayfoot .share:active{transform:scale(.96)}
 .dayfoot .share svg{width:15px;height:15px}
@@ -429,7 +455,14 @@ html[data-theme=dark] .les.cur .num,html[data-theme=cosmic] .les.cur .num{color:
 .week.enter .wcard:nth-child(4){animation-delay:.17s}
 .week.enter .wcard:nth-child(5){animation-delay:.22s}
 .week.enter .wcard:nth-child(n+6){animation-delay:.26s}
-.wcard.today{border-color:var(--accent);border-color:color-mix(in srgb,var(--accent) 48%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent),var(--shadow-1)}
+.wcard.today{
+  border-color:var(--accent);border-color:color-mix(in srgb,var(--accent) 48%,transparent);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 7%,var(--surface)),var(--surface) 58%);
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent),var(--shadow-1)}
+.wcard.today .wh b{color:var(--accent)}
+.wcard.today .wh b::after{
+  content:"";display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:var(--accent);margin-left:6px;vertical-align:middle}
 .wcard .wh{display:flex;align-items:baseline;gap:8px;width:100%;padding:0 2px 9px;text-align:left}
 .wcard .wh b{font-size:15px;font-weight:800;letter-spacing:-.015em}
 .wcard .wh em{font-style:normal;font-size:12.5px;font-weight:700;color:var(--muted-2)}
@@ -453,7 +486,9 @@ html[data-theme=dark] .wl,html[data-theme=cosmic] .wl{--sc-ink:color-mix(in srgb
 .empty{
   border-radius:var(--r);padding:34px 22px;text-align:center;
   background:var(--surface);border:1px dashed var(--line-2);color:var(--muted)}
-.empty svg{width:30px;height:30px;color:var(--muted-2);margin-bottom:10px}
+.empty svg{
+  width:22px;height:22px;padding:10px;box-sizing:content-box;border-radius:50%;
+  background:var(--accent-soft);color:var(--accent);margin-bottom:12px}
 .empty b{display:block;color:var(--text);font-size:16.5px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px}
 .empty p{font-size:14px;line-height:1.5;font-weight:500}
 .sk{height:66px;border-radius:var(--r);border:1px solid var(--line);
@@ -472,8 +507,9 @@ html[data-theme=dark] .wl,html[data-theme=cosmic] .wl{--sc-ink:color-mix(in srgb
 
 /* ============ подвал ============ */
 .foot{
-  margin-top:22px;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;
+  margin-top:22px;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 10px;
   font-size:12.5px;font-weight:600;color:var(--muted-2);text-align:center}
+.foot .sep{width:3px;height:3px;border-radius:50%;background:var(--line-2);display:inline-block}
 .foot a{color:var(--accent);text-decoration:none;font-weight:700}
 .foot a:hover{text-decoration:underline}
 
@@ -491,6 +527,18 @@ dialog[open]{animation:pop .3s var(--ease)}
 .row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 2px;border-bottom:1px solid var(--line);font-size:14.5px;font-weight:600}
 .row:last-of-type{border-bottom:0}
 .row small{display:block;margin-top:3px;font-size:12.5px;font-weight:500;color:var(--muted-2)}
+.row.icon-row{flex-wrap:wrap}
+.iconpick{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;width:100%}
+.icbtn{
+  width:36px;height:36px;border-radius:11px;display:grid;place-items:center;
+  background:var(--surface-2);border:1px solid var(--line);color:var(--muted);
+  transition:background .16s,color .16s,border-color .16s,transform .14s var(--ease)}
+.icbtn:hover{background:var(--accent-soft);color:var(--accent)}
+.icbtn:active{transform:scale(.94)}
+.icbtn svg{width:18px;height:18px}
+.icbtn b{font-size:11px;font-weight:800;letter-spacing:-.02em}
+.icbtn[aria-checked=true]{background:var(--accent);color:var(--accent-ink);border-color:transparent;
+  box-shadow:0 8px 18px -12px color-mix(in srgb,var(--accent) 80%,transparent)}
 .sw{appearance:none;-webkit-appearance:none;width:46px;height:28px;border-radius:99px;background:var(--surface-3);position:relative;flex:none;cursor:pointer;transition:background .22s;margin:0;border:1px solid var(--line)}
 .sw::after{content:"";position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.35);transition:transform .24s var(--ease)}
 .sw:checked{background:var(--accent);border-color:transparent}
@@ -610,6 +658,16 @@ dialog[open]{animation:pop .3s var(--ease)}
         <button role="radio" data-theme-set="ocean" aria-checked="false" aria-label="Океан" title="Океан" style="width:38px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px;margin:auto"><path d="M2 9.5c2.4 0 3.2-2 5.6-2s3.2 2 5.6 2 3.2-2 5.6-2"/><path d="M2 15c2.4 0 3.2-2 5.6-2s3.2 2 5.6 2 3.2-2 5.6-2"/></svg></button>
       </div>
     </div>
+    <div class="row icon-row"><span>Иконка<small>Значок в шапке и на вкладке браузера</small></span>
+      <div class="iconpick" role="radiogroup" aria-label="Иконка сайта">
+        <button class="icbtn" data-icon-set="class" role="radio" aria-checked="false" title="Буквы класса" aria-label="Буквы класса"><b>8Г</b></button>
+        <button class="icbtn" data-icon-set="cap" role="radio" aria-checked="false" title="Школа" aria-label="Школа"></button>
+        <button class="icbtn" data-icon-set="cal" role="radio" aria-checked="false" title="Календарь" aria-label="Календарь"></button>
+        <button class="icbtn" data-icon-set="book" role="radio" aria-checked="false" title="Книга" aria-label="Книга"></button>
+        <button class="icbtn" data-icon-set="clock" role="radio" aria-checked="false" title="Часы" aria-label="Часы"></button>
+        <button class="icbtn" data-icon-set="star" role="radio" aria-checked="false" title="Звезда" aria-label="Звезда"></button>
+      </div>
+    </div>
     <label class="row"><span>Цветные предметы<small>Каждый предмет — своим цветом</small></span><input type="checkbox" class="sw" data-pref="colors"></label>
     <label class="row"><span>Полные названия предметов<small>«Геом» → «Геометрия»</small></span><input type="checkbox" class="sw" data-pref="full"></label>
     <label class="row"><span>Показывать кабинеты</span><input type="checkbox" class="sw" data-pref="rooms"></label>
@@ -648,6 +706,45 @@ const ICON={
  off:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.8A15 15 0 0 1 12 4.5c3.9 0 7.4 1.6 10 4.3"/><path d="M5.5 12.3A10.5 10.5 0 0 1 12 9.8c2.5 0 4.8.9 6.5 2.5"/><path d="M8.8 15.8a5.6 5.6 0 0 1 6.4 0"/><path d="M12 19.5h.01"/><path d="M3 3l18 18"/></svg>',
  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3.5V6M16 3.5V6"/></svg>'
 };
+/* значки сайта: буквы класса или один из символов */
+const ICON_PATHS={
+ cap:'<path d="M3 9.4 12 5l9 4.4-9 4.4-9-4.4Z"/><path d="M7 11.4v4.2c0 1.3 2.2 2.3 5 2.3s5-1 5-2.3v-4.2"/><path d="M21 9.4v4.7"/>',
+ cal:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3.5V6M16 3.5V6"/>',
+ book:'<path d="M4.5 5.5A2.5 2.5 0 0 1 7 3h12.5v14.5H7a2.5 2.5 0 0 0-2.5 2.5z"/><path d="M4.5 20A2.5 2.5 0 0 1 7 17.5h12.5V21H7A2.5 2.5 0 0 1 4.5 20Z"/>',
+ clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3.2 2"/>',
+ star:'<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.5 9.7l5.9-.9z"/>'
+};
+const ICON_SVG=key=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_PATHS[key]||''}</svg>`;
+function markHTML(cls){
+ if(!ICON_PATHS[prefs.icon])return esc(cls||'8Г');
+ return ICON_SVG(prefs.icon);
+}
+function paintMark(cls){
+ const m=$('#mark');
+ if(m)m.innerHTML=markHTML(cls);
+}
+function iconHref(key){
+ const p=ICON_PATHS[key];
+ if(!p)return '/icon.svg';
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f46e5"/><stop offset=".55" stop-color="#6366f1"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient></defs><rect width="24" height="24" rx="5.5" fill="url(#g)"/><g transform="translate(2.6 2.6) scale(.78)" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+p+'</g></svg>';
+ return 'data:image/svg+xml,'+encodeURIComponent(svg);
+}
+function paintIconPicker(){
+ document.querySelectorAll('[data-icon-set]').forEach(b=>{
+   const k=b.dataset.iconSet;
+   if(k==='class'){const t=b.querySelector('b');if(t)t.textContent=S.meta.cls||'8Г';return}
+   if(ICON_PATHS[k]&&!b.querySelector('svg'))b.innerHTML=ICON_SVG(k);
+ });
+}
+function applyIcon(key){
+ const k=ICON_PATHS[key]?key:'class';
+ prefs.icon=k;
+ const f=$('#favicon'),a=$('#appleIcon');
+ if(f)f.href=iconHref(k);
+ if(a)a.href=k==='class'?'/apple-touch-icon.png':iconHref(k);
+ document.querySelectorAll('[data-icon-set]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.iconSet===k)));
+ paintMark(S.meta.cls||'8Г');
+}
 const SUBJ={'алг':'Алгебра','геом':'Геометрия','матем':'Математика','математика':'Математика','вис':'Вероятность и статистика',
 'рус.яз.':'Русский язык','русский язык':'Русский язык','литер':'Литература','литература':'Литература',
 'ин.яз.':'Иностранный язык','иностранный язык':'Иностранный язык','англ':'Английский язык','англ.яз.':'Английский язык',
@@ -674,7 +771,7 @@ const store={
  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
  del(k){try{localStorage.removeItem(k)}catch(e){}}};
 
-const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:false,view:'day'},store.get('sch.prefs',{}));
+const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:true,view:'day',icon:'class'},store.get('sch.prefs',{}));
 const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:true,lastFetch:0,enter:false};
 const cached=store.get('sch.data',null);
 if(cached){S.days=cached.days||{};Object.assign(S.meta,cached.meta||{});}
@@ -819,10 +916,13 @@ function heroHTML(st,n){
    return head('idle','Уроков нет',glyph(ICON.moon),
      `<h2>Сегодня уроков нет</h2>
       <div class="meta"><span>В таблице на ${isoDM(n.iso).d} ${MON_GEN[isoDM(n.iso).m-1]} для ${esc(S.meta.cls)} пусто</span></div>`);
-  default:
+  default:{const k=st.weekend?nextDayWithLessons(n.iso):null,s=k?stats(prep(S.days[k])):null;
+   const rel=k?(relLabel(k,n.iso)||WD_FULL[isoWd(k)]):'';
+   const info=k?`${rel}: ${lessonsWord(s.count)}${s.start?`, начало в ${s.start}`:''}`:(st.weekend?'Отдыхай — расписание появится здесь':'Как только день добавят в таблицу, он появится тут');
    return head('idle',st.weekend?'Выходной':'Нет данных',glyph(st.weekend?ICON.moon:ICON.cal),
      `<h2>${st.weekend?'Сегодня выходной':'Расписания пока нет'}</h2>
-      <div class="meta"><span>${st.weekend?'Отдыхай — в понедельник всё появится здесь':'Как только день добавят в таблицу, он появится тут'}</span></div>`);
+      <div class="meta"><span>${info}</span></div>
+      ${k?`<button class="cta" data-go="${k}">${ICON.arrow}Открыть расписание</button>`:''}`);}
  }
 }
 
@@ -933,9 +1033,11 @@ function dayFootHTML(){
  else if(!st||!st.count)line='уроков нет';
  else line=`${lessonsWord(st.count)}${st.start?`, с ${st.start} до ${st.end}`:''}`;
  return `<section class="dayfoot${S.enter?' enter':''}">
-   <div class="h">Расписание дня</div>
-   <div class="c">${line}</div>
-   ${s?`<div class="s">${s}</div>`:''}
+   <div class="df-main">
+     <div class="h">Расписание дня</div>
+     <div class="c">${line}</div>
+     ${s?`<div class="s">${s}</div>`:''}
+   </div>
    ${d&&st&&st.count?`<button class="share" data-act="share">${ICON.share}Поделиться днём</button>`:''}
  </section>`;
 }
@@ -971,7 +1073,7 @@ function renderHead(){
    $('#subline').textContent=`${d} ${MON_SHORT[m-1]}${rel&&rel!=='Сегодня'?' · '+rel:''}`;
  }
  $('#title').innerHTML=`<span class="lg">${long}</span><span class="sm">${short}</span>`;
- $('#mark').textContent=c;
+ paintMark(c);
  document.title=(prefs.view==='week'?'Неделя · ':'')+'Расписание '+c+(prefs.view==='week'?'':' · '+long.toLowerCase());
  document.querySelectorAll('#viewSeg [data-view]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.view==='week')===(prefs.view==='week'))));
  $('#viewSeg').dataset.i=prefs.view==='week'?1:0;
@@ -981,8 +1083,7 @@ function renderFoot(){
  if(u){const p=schoolParts(u),n=schoolParts(Math.floor(Date.now()/1000)),same=n.day===p.day&&n.month===p.month;
    parts.push(`<span>Таблица проверена ${same?'':p.day+'.'+p.month+' '}в ${p.hour}:${p.minute}</span>`)}
  if(S.meta.sheet)parts.push(`<a href="${esc(S.meta.sheet)}" target="_blank" rel="noopener">Открыть таблицу</a>`);
- parts.push('<span>Сделано для 8Г</span>');
- $('#foot').innerHTML=parts.join('');
+ $('#foot').innerHTML=parts.join(' <span class="sep" aria-hidden="true"></span> ');
 }
 function renderHero(st,n){
  const key=st.t+'|'+((st.cur&&st.cur.n)||(st.next&&st.next.n)||'')+'|'+n.iso+'|'+(S.loaded?1:0)+'|'+S.meta.cls+'|'+(prefs.rooms?1:0);
@@ -1128,9 +1229,10 @@ async function shareDay(){
  toast(await copyText(txt)?'Расписание дня скопировано':'Не удалось поделиться');
 }
 document.addEventListener('click',e=>{
- const t=e.target.closest('[data-theme-set],[data-day],[data-step],[data-view],[data-go],[data-act]');
+ const t=e.target.closest('[data-theme-set],[data-icon-set],[data-day],[data-step],[data-view],[data-go],[data-act]');
  if(!t)return;
  if(t.dataset.themeSet){setPrefs({theme:t.dataset.themeSet});applyTheme(t.dataset.themeSet);setThemePop(false);return}
+ if(t.dataset.iconSet){setPrefs({icon:t.dataset.iconSet});applyIcon(t.dataset.iconSet);return}
  if(t.dataset.day){S.sel=t.dataset.day;S.picked=true;S.enter=true;railSig='';render();return}
  if(t.dataset.step){step(+t.dataset.step);return}
  if(t.dataset.view){if(prefs.view===t.dataset.view)return;setPrefs({view:t.dataset.view});S.enter=true;railSig='';render();return}
@@ -1147,7 +1249,7 @@ const openDlg=()=>{try{if(typeof dlg.showModal==='function')dlg.showModal();else
 const closeDlg=()=>{try{if(typeof dlg.close==='function')dlg.close()}catch(e){}dlg.removeAttribute('open')};
 $('#settingsBtn').addEventListener('click',()=>{
  dlg.querySelectorAll('[data-pref]').forEach(i=>i.checked=!!prefs[i.dataset.pref]);
- openDlg();applyTheme(document.documentElement.dataset.theme||'light');
+ openDlg();applyTheme(document.documentElement.dataset.theme||'light');paintIconPicker();applyIcon(prefs.icon);
 });
 $('#closeSettings').addEventListener('click',closeDlg);
 dlg.addEventListener('click',e=>{if(e.target===dlg)closeDlg()});
@@ -1198,6 +1300,8 @@ addEventListener('resize',()=>{syncTopbar();setSegIndicator($('#themePick'),THEM
 
 /* ---------- старт ---------- */
 applyTheme(prefs.theme||document.documentElement.dataset.theme||'light');
+paintIconPicker();
+applyIcon(prefs.icon);
 syncTopbar();
 render();
 load(false);
