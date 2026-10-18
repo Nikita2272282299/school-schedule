@@ -1,5 +1,5 @@
 /* Расписание 8Г — сервис-воркер: мгновенный запуск, свежие данные, работа офлайн. */
-const V = 'sched-v12';
+const V = 'sched-v13';
 const STATIC = ['/', '/index.html', '/manifest.json', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -26,6 +26,63 @@ const put = (req, resp) => {
   }
   return resp;
 };
+
+// Push от сервера: новое или изменённое расписание.
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data ? e.data.text() : '' }; }
+  const title = d.title || 'Расписание 8Г';
+  e.waitUntil(self.registration.showNotification(title, {
+    body: d.body || 'Расписание обновилось',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: d.tag || 'schedule',
+    renotify: true,
+    lang: 'ru',
+    data: { url: d.url || '/' }
+  }));
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || '/', self.location.origin).href;
+  e.waitUntil((async () => {
+    const ws = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const w of ws) {
+      if (w.url === url && 'focus' in w) return w.focus();
+    }
+    if (clients.openWindow) return clients.openWindow(url);
+  })());
+});
+
+// Браузер обновил подписку — сообщаем серверу, чтобы уведомления не пропали.
+self.addEventListener('pushsubscriptionchange', e => {
+  e.waitUntil((async () => {
+    try {
+      const r = await fetch('/api/push/key');
+      const j = await r.json();
+      if (!j.key) return;
+      const sub = await self.registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: b64u8(j.key)
+      });
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscription: sub.toJSON() })
+      });
+    } catch (_) {}
+  })());
+});
+
+function b64u8(s) {
+  s = String(s).replace(/-/g, '+').replace(/_/g, '/');
+  const pad = s.length % 4 ? '='.repeat(4 - s.length % 4) : '';
+  const bin = atob(s + pad);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
 
 self.addEventListener('fetch', e => {
   const r = e.request;

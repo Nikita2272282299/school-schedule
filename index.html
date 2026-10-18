@@ -516,6 +516,7 @@ html[data-theme=dark] .wl,html[data-theme=cosmic] .wl{--sc-ink:color-mix(in srgb
 /* ============ настройки ============ */
 dialog{
   border:0;padding:0;border-radius:24px;width:calc(100% - 28px);max-width:430px;
+  max-height:calc(100% - 24px);overflow-y:auto;overscroll-behavior:contain;
   background:var(--surface);color:var(--text);box-shadow:0 30px 80px rgba(0,0,0,.45)}
 html[data-theme=cosmic] dialog{background:#130c2c;border:1px solid var(--line)}
 dialog::backdrop{background:rgba(6,9,20,.58);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
@@ -672,6 +673,7 @@ dialog[open]{animation:pop .3s var(--ease)}
     <label class="row"><span>Полные названия предметов<small>«Геом» → «Геометрия»</small></span><input type="checkbox" class="sw" data-pref="full"></label>
     <label class="row"><span>Показывать кабинеты</span><input type="checkbox" class="sw" data-pref="rooms"></label>
     <label class="row"><span>Приглушать прошедшие уроки</span><input type="checkbox" class="sw" data-pref="dim"></label>
+    <label class="row"><span>Уведомления<small id="pushHint">Изменения расписания — на телефон</small></span><input type="checkbox" class="sw" id="pushToggle" aria-label="Уведомления об изменениях расписания"></label>
     <button class="btn primary" id="installBtn" hidden>Установить как приложение</button>
     <button class="btn" id="resetBtn">Сбросить сохранённые данные</button>
     <p class="hint">На компьютере: ← и → листают дни, T возвращает к сегодняшнему. На телефоне день переключается свайпом. На iPhone сайт ставится на экран «Домой» через «Поделиться» → «На экран Домой».</p>
@@ -771,10 +773,11 @@ const store={
  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
  del(k){try{localStorage.removeItem(k)}catch(e){}}};
 
-const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:true,view:'day',icon:'class'},store.get('sch.prefs',{}));
+const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:true,view:'day',icon:'class',push:false},store.get('sch.prefs',{}));
 const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:true,lastFetch:0,enter:false};
 const cached=store.get('sch.data',null);
 if(cached){S.days=cached.days||{};Object.assign(S.meta,cached.meta||{});}
+try{const qDay=new URLSearchParams(location.search).get('day');if(/^\d{4}-\d{2}-\d{2}$/.test(qDay||'')){S.sel=qDay;S.picked=true}}catch(e){}
 const seen=store.get('sch.seen',{});
 let railSig='',heroKey='',curBarP=-1;
 
@@ -921,8 +924,7 @@ function heroHTML(st,n){
    const info=k?`${rel}: ${lessonsWord(s.count)}${s.start?`, начало в ${s.start}`:''}`:(st.weekend?'Отдыхай — расписание появится здесь':'Как только день добавят в таблицу, он появится тут');
    return head('idle',st.weekend?'Выходной':'Нет данных',glyph(st.weekend?ICON.moon:ICON.cal),
      `<h2>${st.weekend?'Сегодня выходной':'Расписания пока нет'}</h2>
-      <div class="meta"><span>${info}</span></div>
-      ${k?`<button class="cta" data-go="${k}">${ICON.arrow}Открыть расписание</button>`:''}`);}
+      <div class="meta"><span>${info}</span></div>`);}
  }
 }
 
@@ -1250,6 +1252,7 @@ const closeDlg=()=>{try{if(typeof dlg.close==='function')dlg.close()}catch(e){}d
 $('#settingsBtn').addEventListener('click',()=>{
  dlg.querySelectorAll('[data-pref]').forEach(i=>i.checked=!!prefs[i.dataset.pref]);
  openDlg();applyTheme(document.documentElement.dataset.theme||'light');paintIconPicker();applyIcon(prefs.icon);
+ paintPushState();
 });
 $('#closeSettings').addEventListener('click',closeDlg);
 dlg.addEventListener('click',e=>{if(e.target===dlg)closeDlg()});
@@ -1276,6 +1279,77 @@ $('#installBtn').addEventListener('click',async()=>{
  toast(isIOS?'«Поделиться» → «На экран Домой»':'Меню браузера → «Установить приложение»');
 });
 paintInstall();
+/* ---------- уведомления о расписании ---------- */
+const pushSupported='serviceWorker'in navigator&&'PushManager'in window&&'Notification'in window;
+const pushToggle=$('#pushToggle'),pushHint=$('#pushHint');
+function b64u8(s){
+ s=String(s).replace(/-/g,'+').replace(/_/g,'/');
+ const pad=s.length%4?'='.repeat(4-s.length%4):'';
+ const bin=atob(s+pad),out=new Uint8Array(bin.length);
+ for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);
+ return out;
+}
+function u8b64(u){
+ let s='';u.forEach(b=>s+=String.fromCharCode(b));
+ return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function samePushKey(a,b){
+ if(!a||!b)return true;
+ try{return u8b64(new Uint8Array(a))===(typeof b==='string'?b:u8b64(new Uint8Array(b)))}catch(e){return false}
+}
+function paintPush(on){
+ if(!pushToggle)return;
+ pushToggle.checked=!!on;
+ pushToggle.disabled=!pushSupported;
+ const iosHint=isIOS()&&!isStandalone()?'Доступно после установки на экран «Домой»':'';
+ if(pushHint)pushHint.textContent=!pushSupported?(iosHint||'Не поддерживается этим браузером'):on?'Изменения расписания придут на телефон':'Изменения расписания — на телефон';
+}
+async function pushReg(){try{return await navigator.serviceWorker.ready}catch(e){return null}}
+async function pushKey(){
+ try{const r=await fetch('/api/push/key',{cache:'no-store'});const j=await r.json();return j&&j.supported?j.key:''}catch(e){return ''}
+}
+async function paintPushState(){
+ if(!pushSupported){paintPush(false);return}
+ if(!prefs.push||Notification.permission!=='granted'){paintPush(false);return}
+ try{const reg=await pushReg();const sub=reg?await reg.pushManager.getSubscription():null;paintPush(!!sub)}catch(e){paintPush(false)}
+}
+async function pushSync(){
+ if(!pushSupported||!prefs.push||Notification.permission!=='granted')return false;
+ const key=await pushKey();if(!key)return false;
+ const reg=await pushReg();if(!reg)return false;
+ let sub=await reg.pushManager.getSubscription();
+ if(sub&&!samePushKey(sub.options.applicationServerKey,key)){try{await sub.unsubscribe()}catch(e){}sub=null}
+ if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u8(key)});
+ await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subscription:sub.toJSON()})});
+ paintPush(true);return true;
+}
+if(pushToggle)pushToggle.addEventListener('change',async()=>{
+ if(!pushToggle.checked){
+   try{const reg=await pushReg();const sub=reg?await reg.pushManager.getSubscription():null;
+     if(sub){await fetch('/api/push/unsubscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:sub.endpoint})});await sub.unsubscribe()}
+   }catch(e){}
+   setPrefs({push:false});
+   paintPush(false);toast('Уведомления выключены');return;
+ }
+ if(!pushSupported){paintPush(false);toast('Браузер не поддерживает уведомления');return}
+ try{
+   const perm=await Notification.requestPermission();
+   if(perm!=='granted'){paintPush(false);toast(isIOS()?'Разрешите уведомления в настройках iPhone':'Разрешите уведомления в настройках браузера');return}
+   const key=await pushKey();
+   if(!key){paintPush(false);toast('Уведомления временно недоступны');return}
+   const reg=await pushReg();
+   if(!reg){paintPush(false);toast('Не удалось подготовить приложение');return}
+   let sub=await reg.pushManager.getSubscription();
+   if(sub&&!samePushKey(sub.options.applicationServerKey,key)){try{await sub.unsubscribe()}catch(e){}sub=null}
+   if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u8(key)});
+   const r=await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subscription:sub.toJSON()})});
+   if(!r.ok)throw new Error('subscribe');
+   setPrefs({push:true});
+   paintPush(true);toast('Уведомления включены');
+   fetch('/api/push/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subscription:sub.toJSON()})}).catch(()=>{});
+ }catch(e){paintPush(false);toast('Не удалось включить уведомления')}
+});
+paintPushState();
 document.addEventListener('keydown',e=>{
  if(dlg.open||e.metaKey||e.ctrlKey||e.altKey)return;
  if(e.key==='Escape'&&themePopOpen()){setThemePop(false);return}
@@ -1322,7 +1396,10 @@ setInterval(()=>{
  }
 },1000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){syncTopbar();if(Date.now()-S.lastFetch>60*1000)load(false)}});
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+if('serviceWorker' in navigator)window.addEventListener('load',async()=>{
+ try{await navigator.serviceWorker.register('/sw.js')}catch(e){}
+ try{await pushSync()}catch(e){}
+});
 })();
 </script>
 </body>

@@ -15,7 +15,17 @@
   DATA_DIR        куда писать days_store.json (на бесплатном Render файловая
                   система эфемерна: файл переживёт работу, но не рестарт/деплой;
                   для надёжности подключите Render Disk и укажите DATA_DIR)
+  VAPID_PRIVATE_KEY  ключ для push-уведомлений (base64url или PEM); если не
+                  задан, ключ создаётся сам и лежит в DATA_DIR/vapid.json.
+                  Клиент при каждом открытии сайта заново присылает подписку,
+                  поэтому смена ключей не ломает уведомления.
+  WATCH_SECONDS   как часто сервер сам проверяет таблицу, по умолчанию 180;
+                  "0" — проверять только при запросах сайта
+
+Push-уведомления: при появлении нового дня или изменении уроков сервер шлёт
+Web Push всем подписанным телефонам. Подписки и ключи лежат в DATA_DIR.
 """
+import base64
 import csv
 import gzip
 import io
@@ -30,6 +40,12 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+try:
+    from pywebpush import WebPushException, webpush
+    PUSH_OK = True
+except Exception:  # библиотека не установлена — сайт работает, уведомления нет
+    PUSH_OK = False
+
 BASE = Path(__file__).resolve().parent
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID", "1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE")
 CLASS_CODE = os.getenv("CLASS_CODE", "8г")
@@ -42,12 +58,17 @@ FORCE_COOLDOWN = 10     # сек: защита от частых «обнови�
 KEEP_DAYS = 30
 DATA_DIR = Path(os.getenv("DATA_DIR", str(BASE)))
 STORE_FILE = DATA_DIR / "days_store.json"
+VAPID_FILE = DATA_DIR / "vapid.json"
+PUSH_FILE = DATA_DIR / "push_subs.json"
+VAPID_SUBJECT = os.getenv("VAPID_SUBJECT", SELF_URL.rstrip("/"))
 
 MONTHS = {"января": 1, "февраля": 2, "марта": 3, "апреля": 4, "мая": 5, "июня": 6,
           "июля": 7, "августа": 8, "сентября": 9, "октября": 10, "ноября": 11, "декабря": 12}
 WEEKDAYS = {"понедельник": 0, "вторник": 1, "среда": 2, "четверг": 3, "пятница": 4,
             "суббота": 5, "воскресенье": 6}
 WD_NAMES = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
+MONTHS_GEN = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа",
+              "сентября", "октября", "ноября", "декабря"]
 # Звонки (по вашей таблице) — нужны, только если в строке нет времени
 BELLS = {1: "8:00-8:40", 2: "8:50-9:30", 3: "9:45-10:25", 4: "10:40-11:20", 5: "11:35-12:15",
          6: "12:25-13:05", 7: "13:15-13:55", 8: "14:00-14:40", 9: "14:55-15:35", 10: "15:50-16:30",
@@ -208,6 +229,199 @@ def parse_sheet(rows, class_code, today):
     return days, class_found
 
 
+# ============ PUSH-УВЕДОМЛЕНИЯ ============
+
+_psave_warned = False
+
+def b64u(raw):
+    return base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii")
+
+
+def _vapid_normalize(private_key):
+    """Принимает raw base64url или PEM → (raw base64url, публичный base64url)."""
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import ec
+    s = private_key.strip()
+    if "BEGIN" in s:
+        key = serialization.load_pem_private_key(s.replace("\\n", "\n").encode("utf-8"), password=None)
+    else:
+        raw = base64.urlsafe_b64decode(s + "=" * (-len(s) % 4))
+        key = ec.derive_private_key(int.from_bytes(raw, "big"), ec.SECP256R1())
+    raw = key.private_numbers().private_value.to_bytes(32, "big")
+    pub = key.public_key().public_bytes(serialization.Encoding.X962,
+                                        serialization.PublicFormat.UncompressedPoint)
+    return b64u(raw), b64u(pub)
+
+
+def load_vapid():
+    """Ключи из env, из файла или новые (файл в DATA_DIR)."""
+    env_priv = os.getenv("VAPID_PRIVATE_KEY", "").strip()
+    try:
+        if env_priv:
+            return _vapid_normalize(env_priv)
+        try:
+            with open(VAPID_FILE, "r", encoding="utf-8") as f:
+                j = json.load(f)
+            priv, pub = _vapid_normalize(j["private"])
+            return priv, pub
+        except Exception:
+            pass
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
+        key = ec.generate_private_key(ec.SECP256R1())
+        raw = key.private_numbers().private_value.to_bytes(32, "big")
+        priv = b64u(raw)
+        pub = b64u(key.public_key().public_bytes(serialization.Encoding.X962,
+                                                 serialization.PublicFormat.UncompressedPoint))
+        try:
+            with open(VAPID_FILE, "w", encoding="utf-8") as f:
+                json.dump({"private": priv, "public": pub}, f)
+        except Exception as e:
+            print(f"[warn] не удалось сохранить {VAPID_FILE}: {e}")
+        return priv, pub
+    except Exception as e:
+        print(f"[warn] VAPID-ключи недоступны: {e}")
+        return "", ""
+
+
+VAPID_PRIVATE_PEM, VAPID_PUBLIC_KEY = load_vapid()
+_push_lock = threading.Lock()
+_subs = {}
+_notify_ready = False
+
+
+def load_push():
+    global _subs
+    try:
+        with open(PUSH_FILE, "r", encoding="utf-8") as f:
+            _subs = json.load(f).get("subs", {})
+    except Exception:
+        _subs = {}
+
+
+def save_push():
+    global _psave_warned
+    try:
+        with open(PUSH_FILE, "w", encoding="utf-8") as f:
+            json.dump({"subs": _subs}, f, ensure_ascii=False)
+    except Exception as e:
+        if not _psave_warned:
+            _psave_warned = True
+            print(f"[warn] не удалось сохранить {PUSH_FILE}: {e}")
+
+
+def valid_subscription(sub):
+    if not isinstance(sub, dict):
+        return False
+    endpoint = sub.get("endpoint")
+    keys = sub.get("keys") or {}
+    return (isinstance(endpoint, str) and endpoint.startswith("https://") and len(endpoint) < 2000
+            and bool(keys.get("p256dh")) and bool(keys.get("auth")))
+
+
+def add_subscription(sub):
+    endpoint = sub["endpoint"]
+    clean = {"endpoint": endpoint, "ts": int(time.time()),
+             "keys": {"p256dh": sub["keys"]["p256dh"], "auth": sub["keys"]["auth"]}}
+    with _push_lock:
+        _subs[endpoint] = clean
+        if len(_subs) > 500:  # защита от бесконечного роста
+            for k in sorted(_subs, key=lambda e: _subs[e].get("ts", 0))[:len(_subs) - 500]:
+                _subs.pop(k, None)
+    save_push()
+    return len(_subs)
+
+
+def remove_subscription(endpoint):
+    with _push_lock:
+        _subs.pop(endpoint, None)
+    save_push()
+
+
+def _send_push(sub, payload):
+    return webpush(subscription_info=sub,
+                   data=json.dumps(payload, ensure_ascii=False),
+                   vapid_private_key=VAPID_PRIVATE_PEM,
+                   vapid_claims={"sub": VAPID_SUBJECT},
+                   ttl=3600, timeout=10)
+
+
+def push_ready():
+    return PUSH_OK and bool(VAPID_PRIVATE_PEM and VAPID_PUBLIC_KEY)
+
+
+def broadcast(events):
+    """Рассылает события всем телефонам; мёртвые подписки удаляет."""
+    if not push_ready() or not events:
+        return
+    with _push_lock:
+        targets = list(_subs.values())
+    dead = []
+    for sub in targets:
+        for ev in events:
+            try:
+                _send_push(sub, ev)
+            except WebPushException as e:
+                code = getattr(getattr(e, "response", None), "status_code", None)
+                if code in (401, 403, 404, 410):  # подписка мертва или ключ сменился
+                    dead.append(sub.get("endpoint"))
+                else:
+                    print(f"[push] {code}: {str(e)[:200]}")
+                break
+            except Exception as e:
+                print(f"[push] {type(e).__name__}: {str(e)[:200]}")
+                break
+    if dead:
+        with _push_lock:
+            for endpoint in dead:
+                _subs.pop(endpoint, None)
+        save_push()
+
+
+def _lesson_line(l):
+    return f"{l.get('n')}. {l.get('subject') or '—'}"
+
+
+def build_event(iso, day, old, is_new):
+    """Текст уведомления об одном дне."""
+    try:
+        d = date.fromisoformat(iso)
+    except ValueError:
+        return None
+    when = f"{d.day} {MONTHS_GEN[d.month - 1]}"
+    lessons = [l for l in day.get("lessons", []) if l.get("raw")]
+    old_map = {l.get("n"): l for l in (old or {}).get("lessons", []) if l.get("raw")}
+    new_map = {l.get("n"): l for l in lessons}
+    if is_new or not old_map:
+        title = f"Расписание на {when}"
+        if lessons:
+            body = ", ".join(_lesson_line(l) for l in lessons[:4])
+            if len(lessons) > 4:
+                body += f" и ещё {len(lessons) - 4}"
+        else:
+            body = "Уроков нет"
+        return {"title": title, "body": body, "tag": iso, "url": f"/?day={iso}"}
+    parts = []
+    for n in sorted(set(old_map) | set(new_map)):
+        a, b = old_map.get(n), new_map.get(n)
+        if a and not b:
+            parts.append(f"− {n}. {a.get('subject') or '—'}")
+        elif b and not a:
+            parts.append(f"+ {n}. {b.get('subject') or '—'}")
+        elif a.get("subject") != b.get("subject"):
+            parts.append(f"{n}. {a.get('subject') or '—'} → {b.get('subject') or '—'}")
+        elif a.get("room") != b.get("room"):
+            parts.append(f"{n}. {b.get('subject') or '—'}: каб. {a.get('room') or '—'} → {b.get('room') or '—'}")
+        elif a.get("time") != b.get("time"):
+            parts.append(f"{n}. {a.get('time')} → {b.get('time')}")
+    if not parts:
+        parts.append("Расписание обновилось")
+    body = ", ".join(parts[:3])
+    if len(parts) > 3:
+        body += f" и ещё {len(parts) - 3}"
+    return {"title": f"Изменения на {when}", "body": body, "tag": iso, "url": f"/?day={iso}"}
+
+
 # ============ ЗАГРУЗКА И КЭШ ============
 
 _lock = threading.Lock()          # защищает _state/_store/_meta (только данные, без сети)
@@ -219,7 +433,7 @@ _meta = {}   # iso -> {h: хэш уроков, first: когда появило�
 
 
 def load_store():
-    global _store, _meta
+    global _store, _meta, _notify_ready
     try:
         with open(STORE_FILE, "r", encoding="utf-8") as f:
             j = json.load(f)
@@ -227,6 +441,8 @@ def load_store():
             _meta = j.get("meta", {})
     except Exception:
         _store, _meta = {}, {}
+    # первый запуск с пустым хранилищем не должен разослать всё расписание
+    _notify_ready = bool(_store)
 
 
 def save_store():
@@ -284,16 +500,27 @@ def refresh(force=False):
                 errors.append(f"{type(e).__name__}: {e}")
         now_ts = int(time.time())
         fresh = set()
+        events = []
+        today_iso = today.isoformat()
         with _lock:
+            notify = _notify_ready
             for iso, d in updates.items():
+                old = _store.get(iso)
                 h = json.dumps(d.get("lessons", []), sort_keys=True, ensure_ascii=False)
                 m = _meta.get(iso)
-                if not m:
+                is_new = m is None
+                changed = False
+                if is_new:
                     _meta[iso] = {"h": h, "first": now_ts, "changed": 0}
                 elif m["h"] != h:
                     m["h"], m["changed"] = h, now_ts
+                    changed = True
                 _store[iso] = d
                 fresh.add(iso)
+                if notify and iso >= today_iso and (is_new or changed):
+                    ev = build_event(iso, d, old, is_new)
+                    if ev:
+                        events.append(ev)
             _state["ts"] = time.time()
             if errors and not fresh and not found_any:
                 _state["ok"] = False
@@ -309,7 +536,11 @@ def refresh(force=False):
                 cutoff = (today - timedelta(days=KEEP_DAYS)).isoformat()
                 for k in [k for k in _store if k < cutoff]:
                     del _store[k]
+            if found_any:
+                globals()["_notify_ready"] = True
         save_store()
+        if events:
+            threading.Thread(target=broadcast, args=(events[:3],), daemon=True).start()
     finally:
         _fetch_lock.release()
 
@@ -418,14 +649,31 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", "0")
         self.end_headers()
 
+    def _json(self, code, obj, head=False):
+        body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
+        return self._send(code, body, "application/json; charset=utf-8", head=head)
+
+    def _read_json(self, limit=8192):
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            return None
+        if n <= 0 or n > limit:
+            return None
+        try:
+            return json.loads(self.rfile.read(n).decode("utf-8"))
+        except Exception:
+            return None
+
     def _handle(self, head=False):
         u = urlparse(self.path)
         path = u.path
         try:
+            if path == "/api/push/key":
+                return self._json(200, {"key": VAPID_PUBLIC_KEY, "supported": push_ready()}, head=head)
             if path == "/api/schedule":
                 force = parse_qs(u.query).get("force", ["0"])[0] == "1"
-                body = json.dumps(build_payload(force), ensure_ascii=False).encode("utf-8")
-                return self._send(200, body, "application/json; charset=utf-8", head=head)
+                return self._json(200, build_payload(force), head=head)
             if path == "/healthz":
                 return self._send(200, b"ok", "text/plain", head=head)
             if path in STATIC:
@@ -453,6 +701,55 @@ class Handler(BaseHTTPRequestHandler):
     def do_HEAD(self):
         self._handle(head=True)
 
+    def do_POST(self):
+        path = urlparse(self.path).path
+        try:
+            if path == "/api/push/subscribe":
+                data = self._read_json() or {}
+                sub = data.get("subscription") or data
+                if not valid_subscription(sub):
+                    return self._json(400, {"ok": False, "error": "bad subscription"})
+                count = add_subscription(sub)
+                return self._json(200, {"ok": True, "count": count})
+            if path == "/api/push/unsubscribe":
+                data = self._read_json() or {}
+                endpoint = data.get("endpoint")
+                if isinstance(endpoint, str) and endpoint:
+                    remove_subscription(endpoint)
+                return self._json(200, {"ok": True})
+            if path == "/api/push/test":
+                data = self._read_json() or {}
+                sub = data.get("subscription") or data
+                if not push_ready():
+                    return self._json(503, {"ok": False, "error": "push disabled"})
+                if not valid_subscription(sub):
+                    return self._json(400, {"ok": False, "error": "bad subscription"})
+                try:
+                    _send_push(sub, {"title": "8Г · Уведомления включены",
+                                     "body": "Изменения расписания придут на этот телефон.",
+                                     "tag": "test", "url": "/"})
+                except Exception as e:
+                    code = getattr(getattr(e, "response", None), "status_code", None)
+                    print(f"[push] test: {type(e).__name__}: {str(e)[:200]}")
+                    return self._json(502, {"ok": False, "error": f"push {code or 'error'}"})
+                return self._json(200, {"ok": True})
+            return self._send(404, "Не найдено".encode("utf-8"), "text/plain; charset=utf-8")
+        except Exception:
+            try:
+                self._json(500, {"ok": False, "error": "server error"})
+            except Exception:
+                pass
+
+
+def watcher(interval):
+    """Сам проверяет таблицу, чтобы уведомления не ждали открытия сайта."""
+    while True:
+        time.sleep(interval)
+        try:
+            refresh(force=True)
+        except Exception as e:
+            print(f"[watch] {type(e).__name__}: {e}")
+
 
 def keepalive():
     """Бесплатный Render засыпает через 15 минут без запросов — будим сами себя."""
@@ -466,7 +763,16 @@ def keepalive():
 
 def main():
     load_store()
+    load_push()
+    if not push_ready():
+        print("[warn] push-уведомления выключены: нет pywebpush или VAPID-ключей")
     threading.Thread(target=refresh, daemon=True).start()
+    try:
+        watch_seconds = int(os.getenv("WATCH_SECONDS", "180"))
+    except ValueError:
+        watch_seconds = 180
+    if watch_seconds > 0:
+        threading.Thread(target=watcher, args=(watch_seconds,), daemon=True).start()
     if os.getenv("KEEPALIVE", "1") != "0":
         threading.Thread(target=keepalive, daemon=True).start()
     port = int(os.getenv("PORT", "8000"))
