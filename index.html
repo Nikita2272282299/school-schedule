@@ -555,10 +555,14 @@ dialog[open]{animation:pop .3s var(--ease)}
 /* экран блокировки */
 .lockcard{margin:2px 0 12px;padding:14px;border-radius:18px;border:1px solid var(--line);
   background:linear-gradient(160deg,var(--surface-2),color-mix(in srgb,var(--accent) 8%,var(--surface)))}
-.lh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.lh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:0;list-style:none;cursor:pointer}
+.lh::-webkit-details-marker{display:none}
+.lockcard[open] .lh{margin-bottom:10px}
 .lh b{font-size:14.5px;font-weight:800}
 .lh small{display:block;margin-top:2px;font-size:12px;font-weight:500;color:var(--muted-2)}
-.lockbadge{flex:none;padding:4px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-size:10.5px;font-weight:800}
+.lockbadge{flex:none;display:inline-flex;align-items:center;gap:3px;padding:4px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-size:10.5px;font-weight:800}
+.lcv{width:13px;height:13px;transition:transform .2s var(--ease)}
+.lockcard[open] .lcv{transform:rotate(180deg)}
 .lockprev{position:relative;overflow:hidden;border-radius:18px;padding:14px;color:#fff;
   background:linear-gradient(160deg,#1b2238,#0a0d16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
 .lockprev::before{content:"";position:absolute;left:10%;right:10%;top:-55px;height:100px;border-radius:50%;
@@ -709,8 +713,8 @@ dialog[open]{animation:pop .3s var(--ease)}
         <button class="icbtn" data-icon-set="star" role="radio" aria-checked="false" title="Звезда" aria-label="Звезда"></button>
       </div>
     </div>
-    <div class="lockcard" id="lockCard">
-      <div class="lh"><span><b>Экран блокировки</b><small>Сколько осталось до конца урока — на телефоне</small></span><span class="lockbadge">iPhone · Android</span></div>
+    <details class="lockcard" id="lockCard">
+      <summary class="lh"><span><b>Экран блокировки</b><small>Сколько осталось до конца урока — на телефоне</small></span><span class="lockbadge">iPhone · Android<svg class="lcv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5l6 6 6-6"/></svg></span></summary>
       <div class="lockprev" id="lockPrev" style="--lock-accent:#6366f1">
         <div class="lockclock"><span id="lockDay">8Г · ПН</span><span id="lockClock">9:41</span></div>
         <div class="lockwidget">
@@ -755,7 +759,7 @@ dialog[open]{animation:pop .3s var(--ease)}
         </ol>
       </details>
       <p class="hint">На iPhone экран блокировки всегда чёрно-белый — это ограничение iOS. Цвета видны на главном экране и в предпросмотре.</p>
-    </div>
+    </details>
     <label class="row"><span>Цветные предметы<small>Каждый предмет — своим цветом</small></span><input type="checkbox" class="sw" data-pref="colors"></label>
     <label class="row"><span>Полные названия предметов<small>«Геом» → «Геометрия»</small></span><input type="checkbox" class="sw" data-pref="full"></label>
     <label class="row"><span>Показывать кабинеты</span><input type="checkbox" class="sw" data-pref="rooms"></label>
