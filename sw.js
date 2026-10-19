@@ -1,5 +1,5 @@
 /* Расписание 8Г — сервис-воркер: мгновенный запуск, свежие данные, работа офлайн. */
-const V = 'sched-v16';
+const V = 'sched-v17';
 const STATIC = ['/', '/index.html', '/manifest.json', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

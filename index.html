@@ -552,51 +552,6 @@ dialog[open]{animation:pop .3s var(--ease)}
 .btn:active{transform:scale(.98)}
 .btn.primary{background:var(--accent);background:linear-gradient(150deg,var(--accent),color-mix(in srgb,var(--accent) 55%,var(--accent-2)));color:var(--accent-ink);border-color:transparent}
 .hint{margin:14px 0 0;font-size:12.5px;line-height:1.55;font-weight:500;color:var(--muted-2)}
-/* экран блокировки */
-.lockcard{margin:2px 0 12px;padding:14px;border-radius:18px;border:1px solid var(--line);
-  background:linear-gradient(160deg,var(--surface-2),color-mix(in srgb,var(--accent) 8%,var(--surface)))}
-.lh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:0;list-style:none;cursor:pointer}
-.lh::-webkit-details-marker{display:none}
-.lockcard[open] .lh{margin-bottom:10px}
-.lh b{font-size:14.5px;font-weight:800}
-.lh small{display:block;margin-top:2px;font-size:12px;font-weight:500;color:var(--muted-2)}
-.lockbadge{flex:none;display:inline-flex;align-items:center;gap:3px;padding:4px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-size:10.5px;font-weight:800}
-.lcv{width:13px;height:13px;transition:transform .2s var(--ease)}
-.lockcard[open] .lcv{transform:rotate(180deg)}
-.beta{font-style:normal;margin-left:6px;padding:2px 6px;border-radius:99px;background:var(--warn);color:#fff;font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;vertical-align:1px}
-.lockprev{position:relative;overflow:hidden;border-radius:18px;padding:14px;color:#fff;
-  background:linear-gradient(160deg,#1b2238,#0a0d16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
-.lockprev::before{content:"";position:absolute;left:10%;right:10%;top:-55px;height:100px;border-radius:50%;
-  background:var(--lock-accent);filter:blur(34px);opacity:.45}
-.lockclock{position:relative;display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;
-  font-size:10px;font-weight:800;letter-spacing:.05em;color:rgba(255,255,255,.5)}
-.lockwidget{position:relative;border-radius:14px;padding:9px 11px;background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.08)}
-.locktop{display:flex;justify-content:space-between;gap:8px;font-size:9.5px;font-weight:800;
-  letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.55)}
-.locktop span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lock-subj{margin-top:1px;font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lock-cd{display:flex;align-items:baseline;gap:5px;margin-top:1px}
-.lock-cd b{font-size:29px;line-height:1.05;font-weight:800;letter-spacing:-.03em;color:var(--lock-accent)}
-.lock-cd span{font-size:10.5px;font-weight:700;color:rgba(255,255,255,.6)}
-.lock-sub{font-size:10px;font-weight:600;color:rgba(255,255,255,.6)}
-.lock-prog{height:4px;margin-top:7px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.18)}
-.lock-prog i{display:block;height:100%;border-radius:99px;background:var(--lock-accent);transform-origin:left;transition:transform .5s linear}
-.lock-next{margin-top:5px;font-size:9.5px;font-weight:600;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lockopts{display:grid;gap:1px;margin-top:8px}
-.lockopt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 2px;font-size:13px;font-weight:600}
-.lockopt>span{color:var(--muted)}
-.locktheme,.lockcolors{display:flex;gap:5px}
-.locktheme button{padding:4px 7px;border-radius:8px;background:var(--surface-3);color:var(--muted);font-size:11.5px;font-weight:700}
-.locktheme button[aria-checked=true]{background:var(--accent);color:var(--accent-ink)}
-.lc{width:22px;height:22px;border-radius:50%;border:2px solid transparent;transition:transform .15s}
-.lc[aria-checked=true]{border-color:var(--text);transform:scale(1.08)}
-.lockdl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
-.lockdl .btn{margin-top:0;padding:10px 6px;font-size:13px;display:block;text-align:center;text-decoration:none}
-.lockhow{margin-top:9px;font-size:12px;line-height:1.5;color:var(--muted-2)}
-.lockhow summary{cursor:pointer;font-weight:800;color:var(--accent)}
-.lockhow ol{margin:5px 0 0;padding-left:18px}
-.lockhow b{color:var(--text)}
 
 /* ============ тост ============ */
 #toast{
@@ -714,53 +669,6 @@ dialog[open]{animation:pop .3s var(--ease)}
         <button class="icbtn" data-icon-set="star" role="radio" aria-checked="false" title="Звезда" aria-label="Звезда"></button>
       </div>
     </div>
-    <details class="lockcard" id="lockCard">
-      <summary class="lh"><span><b>Экран блокировки<i class="beta">бета</i></b><small>Сколько осталось до конца урока — на телефоне</small></span><span class="lockbadge">iPhone · Android<svg class="lcv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5l6 6 6-6"/></svg></span></summary>
-      <div class="lockprev" id="lockPrev" style="--lock-accent:#6366f1">
-        <div class="lockclock"><span id="lockDay">8Г · ПН</span><span id="lockClock">9:41</span></div>
-        <div class="lockwidget">
-          <div class="locktop"><span id="lockHead">Урок 3</span><span id="lockRoom">каб. 204</span></div>
-          <div class="lock-subj" id="lockSubj">Алгебра</div>
-          <div class="lock-cd"><b id="lockCd">18</b><span id="lockUnit">мин · до конца</span></div>
-          <div class="lock-sub" id="lockSub">до 10:25</div>
-          <div class="lock-prog" id="lockProgWrap"><i id="lockProg" style="transform:scaleX(.6)"></i></div>
-          <div class="lock-next" id="lockNext">Дальше: Геометрия · 10:40</div>
-        </div>
-      </div>
-      <div class="lockopts">
-        <div class="lockopt"><span>Тема</span>
-          <div class="locktheme" role="radiogroup" aria-label="Тема виджета">
-            <button data-lock-theme="auto" role="radio" aria-checked="true">Авто</button>
-            <button data-lock-theme="dark" role="radio" aria-checked="false">Тёмная</button>
-            <button data-lock-theme="light" role="radio" aria-checked="false">Светлая</button>
-          </div>
-        </div>
-        <div class="lockopt"><span>Цвет</span>
-          <div class="lockcolors" id="lockColors" role="radiogroup" aria-label="Цвет виджета">
-            <button class="lc" data-lock-color="#6366f1" style="background:#6366f1" role="radio" aria-checked="true" aria-label="Индиго"></button>
-            <button class="lc" data-lock-color="#0ea5e9" style="background:#0ea5e9" role="radio" aria-checked="false" aria-label="Голубой"></button>
-            <button class="lc" data-lock-color="#10b981" style="background:#10b981" role="radio" aria-checked="false" aria-label="Зелёный"></button>
-            <button class="lc" data-lock-color="#f43f5e" style="background:#f43f5e" role="radio" aria-checked="false" aria-label="Розовый"></button>
-            <button class="lc" data-lock-color="#f59e0b" style="background:#f59e0b" role="radio" aria-checked="false" aria-label="Оранжевый"></button>
-          </div>
-        </div>
-        <label class="lockopt"><span>Кабинет в виджете</span><input class="sw" type="checkbox" data-lock="room"></label>
-        <label class="lockopt"><span>Следующий урок</span><input class="sw" type="checkbox" data-lock="next"></label>
-        <label class="lockopt"><span>Полоса прогресса</span><input class="sw" type="checkbox" data-lock="progress"></label>
-      </div>
-      <div class="lockdl">
-        <a class="btn primary" id="lockIos" href="#" download>Скачать iPhone</a>
-        <a class="btn" id="lockAndroid" href="#" download>Скачать Android</a>
-      </div>
-      <details class="lockhow"><summary>Как поставить</summary>
-        <ol>
-          <li><b>iPhone:</b> установите бесплатное приложение <b>Scriptable</b>, откройте скачанный файл → «Поделиться» → Scriptable. Затем зажмите экран блокировки → «Настроить» → «Добавить виджет» → Scriptable.</li>
-          <li><b>Android:</b> установите <b>KWGT</b>, импортируйте скачанный файл и добавьте виджет на главный экран. На Samsung через <b>LockStar</b> его можно перенести на экран блокировки.</li>
-          <li>Файл можно скачивать заново сколько угодно — настройки сохраняются.</li>
-        </ol>
-      </details>
-      <p class="hint">На iPhone экран блокировки всегда чёрно-белый — это ограничение iOS. Цвета видны на главном экране и в предпросмотре.</p>
-    </details>
     <label class="row"><span>Цветные предметы<small>Каждый предмет — своим цветом</small></span><input type="checkbox" class="sw" data-pref="colors"></label>
     <label class="row"><span>Полные названия предметов<small>«Геом» → «Геометрия»</small></span><input type="checkbox" class="sw" data-pref="full"></label>
     <label class="row"><span>Показывать кабинеты</span><input type="checkbox" class="sw" data-pref="rooms"></label>
@@ -865,9 +773,7 @@ const store={
  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
  del(k){try{localStorage.removeItem(k)}catch(e){}}};
 
-const LOCK_DEF={theme:'auto',accent:'#6366f1',room:true,next:true,progress:true};
-const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:true,view:'day',icon:'class',push:false,lock:Object.assign({},LOCK_DEF)},store.get('sch.prefs',{}));
-prefs.lock=Object.assign({},LOCK_DEF,prefs.lock||{});
+const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:true,view:'day',icon:'class',push:false},store.get('sch.prefs',{}));
 const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:true,lastFetch:0,enter:false};
 const cached=store.get('sch.data',null);
 if(cached){S.days=cached.days||{};Object.assign(S.meta,cached.meta||{});}
@@ -1325,10 +1231,8 @@ async function shareDay(){
  toast(await copyText(txt)?'Расписание дня скопировано':'Не удалось поделиться');
 }
 document.addEventListener('click',e=>{
- const t=e.target.closest('[data-theme-set],[data-icon-set],[data-day],[data-step],[data-view],[data-go],[data-act],[data-lock-theme],[data-lock-color]');
+ const t=e.target.closest('[data-theme-set],[data-icon-set],[data-day],[data-step],[data-view],[data-go],[data-act]');
  if(!t)return;
- if(t.dataset.lockTheme){const l=lockPrefs();l.theme=t.dataset.lockTheme;setPrefs({lock:l});paintLock();return}
- if(t.dataset.lockColor){const l=lockPrefs();l.accent=t.dataset.lockColor;setPrefs({lock:l});paintLock();return}
  if(t.dataset.themeSet){setPrefs({theme:t.dataset.themeSet});applyTheme(t.dataset.themeSet);setThemePop(false);return}
  if(t.dataset.iconSet){setPrefs({icon:t.dataset.iconSet});applyIcon(t.dataset.iconSet);return}
  if(t.dataset.day){S.sel=t.dataset.day;S.picked=true;S.enter=true;railSig='';render();return}
@@ -1342,82 +1246,17 @@ document.addEventListener('click',e=>{
 themeBtn.addEventListener('click',e=>{e.stopPropagation();setThemePop(!themePopOpen())});
 document.addEventListener('click',e=>{if(themePopOpen()&&!e.target.closest('.pop-wrap'))setThemePop(false)});
 $('#refreshBtn').addEventListener('click',()=>load(true));
-/* ---------- виджет на экран блокировки ---------- */
-const lockPrefs=()=>prefs.lock;
-function lockQuery(){
-  const l=lockPrefs();
-  return new URLSearchParams({theme:l.theme,accent:String(l.accent||'#6366f1').replace('#',''),
-    room:l.room?'1':'0',next:l.next?'1':'0',progress:l.progress?'1':'0',full:prefs.full?'1':'0'}).toString();
-}
-function lockNextDay(iso){
-  const k=nextDayWithLessons(iso);
-  if(!k)return 'Следующих дней в таблице пока нет';
-  const s=stats(prep(S.days[k]));
-  return (relLabel(k,iso)||WD_FULL[isoWd(k)])+': '+lessonsWord(s.count)+(s.start?' · с '+s.start:'');
-}
-function lockView(st,n){
-  const l=lockPrefs(),room=it=>l.room&&it&&it.room?roomText(it.room):'';
-  const mins=s=>String(Math.max(0,Math.ceil(s/60)));
-  if(st.t==='now'){
-    const c=st.cur,nx=st.next;
-    return{head:'Урок '+c.n,subject:c.title,room:room(c),cd:mins(st.left),unit:'мин · до конца',sub:'до '+c.tm.b,prog:st.prog,
-      next:l.next?(nx?'Дальше: '+nx.title+' · '+nx.tm.a:'Последний урок сегодня'):''};
-  }
-  if(st.t==='break'||st.t==='window'){
-    const nx=st.next,L=reals(prep(S.days[n.iso])).filter(x=>x.tm),i=L.indexOf(nx),after=i>=0?L[i+1]:null;
-    return{head:st.t==='window'?'Окно':'Перемена',subject:nx.title,room:room(nx),cd:mins(st.wait),unit:'мин · до урока',sub:'до '+nx.tm.a,prog:st.prog,
-      next:l.next?(after?'После: '+after.title+' · '+after.tm.a:'Последний урок сегодня'):''};
-  }
-  if(st.t==='before'){
-    const nx=st.next;
-    return{head:'Скоро уроки',subject:nx.title,room:room(nx),cd:mins(st.wait),unit:'мин · до начала',sub:'в '+nx.tm.a,prog:0,
-      next:l.next?'Всего '+lessonsWord(st.total):''};
-  }
-  if(st.t==='done')return{head:'Уроки закончились',subject:'Отдыхай',room:'',cd:'—',unit:'',sub:'на сегодня всё',prog:0,next:l.next?lockNextDay(n.iso):''};
-  if(st.t==='free')return{head:'Уроков нет',subject:'Сегодня уроков нет',room:'',cd:'—',unit:'',sub:'уроков нет',prog:0,next:l.next?lockNextDay(n.iso):''};
-  const w=st.weekend;
-  return{head:w?'Выходной':'Нет данных',subject:w?'Сегодня выходной':'Расписание не опубликовано',room:'',cd:'—',unit:'',
-    sub:w?'выходной':'нет данных',prog:0,next:l.next?lockNextDay(n.iso):''};
-}
-function paintLock(){
-  const l=lockPrefs(),prev=$('#lockPrev');
-  if(!prev)return;
-  const n=nowSchool(),v=lockView(statusNow(n),n),p=schoolParts(Date.now()/1000);
-  prev.style.setProperty('--lock-accent',l.accent);
-  $('#lockDay').textContent=(S.meta.cls||'8Г')+' · '+WD_SHORT[isoWd(n.iso)];
-  $('#lockClock').textContent=p.hour+':'+p.minute;
-  $('#lockHead').textContent=v.head;
-  $('#lockSubj').textContent=v.subject;
-  $('#lockRoom').textContent=v.room;
-  $('#lockRoom').style.display=v.room?'':'none';
-  $('#lockCd').textContent=v.cd;
-  $('#lockUnit').textContent=v.unit;
-  $('#lockSub').textContent=v.sub;
-  $('#lockProgWrap').style.display=l.progress?'':'none';
-  $('#lockProg').style.transform='scaleX('+(l.progress?Math.max(0,Math.min(1,v.prog||0)).toFixed(3):0)+')';
-  $('#lockNext').textContent=v.next;
-  $('#lockNext').style.display=l.next&&v.next?'':'none';
-  document.querySelectorAll('[data-lock-theme]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.lockTheme===l.theme)));
-  document.querySelectorAll('[data-lock-color]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.lockColor===l.accent)));
-  document.querySelectorAll('[data-lock]').forEach(i=>i.checked=!!l[i.dataset.lock]);
-  const q=lockQuery();
-  $('#lockIos').href='/api/widget/ios?'+q;
-  $('#lockAndroid').href='/api/widget/kwgt?'+q;
-}
 const dlg=$('#settings');
 const openDlg=()=>{try{if(typeof dlg.showModal==='function')dlg.showModal();else dlg.setAttribute('open','')}catch(e){dlg.setAttribute('open','')}};
 const closeDlg=()=>{try{if(typeof dlg.close==='function')dlg.close()}catch(e){}dlg.removeAttribute('open')};
 $('#settingsBtn').addEventListener('click',()=>{
  dlg.querySelectorAll('[data-pref]').forEach(i=>i.checked=!!prefs[i.dataset.pref]);
  openDlg();applyTheme(document.documentElement.dataset.theme||'light');paintIconPicker();applyIcon(prefs.icon);
- paintPushState();paintLock();
+ paintPushState();
 });
 $('#closeSettings').addEventListener('click',closeDlg);
 dlg.addEventListener('click',e=>{if(e.target===dlg)closeDlg()});
-dlg.querySelectorAll('[data-pref]').forEach(i=>i.addEventListener('change',()=>{setPrefs({[i.dataset.pref]:i.checked});render();if(dlg.open)paintLock()}));
-dlg.querySelectorAll('[data-lock]').forEach(i=>i.addEventListener('change',()=>{
-  const l=lockPrefs();l[i.dataset.lock]=i.checked;setPrefs({lock:l});paintLock();
-}));
+dlg.querySelectorAll('[data-pref]').forEach(i=>i.addEventListener('change',()=>{setPrefs({[i.dataset.pref]:i.checked});render()}));
 $('#resetBtn').addEventListener('click',()=>{
  store.del('sch.data');store.del('sch.seen');Object.keys(seen).forEach(k=>delete seen[k]);
  S.days={};S.picked=false;S.sel=null;railSig='';closeDlg();toast('Данные сброшены, загружаю заново');load(true);
@@ -1550,7 +1389,6 @@ setInterval(()=>{
  const min=Math.floor(n.sec/60);
  if(min!==lastMin){
    lastMin=min;
-   if(dlg.open)paintLock();
    if(n.iso!==lastDay){lastDay=n.iso;if(!S.picked)S.sel=null;railSig='';heroKey='';render()}
    else if(!S.picked){const p=pickDefault();if(p!==S.sel){S.sel=p;railSig='';render()}}
    renderFoot();
