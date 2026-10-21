@@ -425,6 +425,7 @@ html[data-theme=dark] .les,html[data-theme=cosmic] .les{--sc-ink:color-mix(in sr
 .les.win .subj{font-size:15px;font-weight:600;color:var(--muted)}
 .les.past{opacity:.5}
 .les.past .subj{font-weight:600}
+.les.disabled{opacity:.35;filter:grayscale(0.8)}
 .les.cur{
   border-color:var(--sc);
   border-color:color-mix(in srgb,var(--sc) 52%,transparent);
@@ -712,6 +713,7 @@ dialog[open]{animation:pop .3s var(--ease)}
     <label class="row"><span>Показывать кабинеты</span><input type="checkbox" class="sw" data-pref="rooms"></label>
     <label class="row"><span>Линия прогресса дня<small>Полоска под шапкой показывает прогресс дня</small></span><input type="checkbox" class="sw" data-pref="progress"></label>
     <label class="row"><span>Приглушать прошедшие уроки</span><input type="checkbox" class="sw" data-pref="dim"></label>
+    <label class="row"><span>Отключить Химию ПР<small>Практикум становится полупрозрачным</small></span><input type="checkbox" class="sw" data-pref="disableChemLab"></label>
     <label class="row"><span>Уведомления<small id="pushHint">Изменения расписания — на телефон</small></span><input type="checkbox" class="sw" id="pushToggle" aria-label="Уведомления об изменениях расписания"></label>
     <button class="btn primary" id="installBtn" hidden>Установить как приложение</button>
     <button class="btn" id="resetBtn">Сбросить сохранённые данные</button>
@@ -812,7 +814,7 @@ const store={
  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
  del(k){try{localStorage.removeItem(k)}catch(e){}}};
 
-const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:true,vibrant:false,progress:false,view:'day',icon:'class',push:false},store.get('sch.prefs',{}));
+const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:true,vibrant:false,progress:false,view:'day',icon:'class',push:false,disableChemLab:false},store.get('sch.prefs',{}));
 if(prefs.vibrant)document.body.classList.add('vibrant');
 if(prefs.progress)document.body.classList.add('show-progress');
 const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:true,lastFetch:0,enter:false};
@@ -1017,12 +1019,16 @@ function renderRail(){
 }
 
 /* ---------- рендер: уроки ---------- */
+function isChemLabLesson(title){
+ return /хим.*пр|пр.*хим/i.test(title||'');
+}
 function rowHTML(it,ctx){
  const isW=it.kind==='w';
+ const isChemLab=prefs.disableChemLab&&isChemLabLesson(it.title);
  const past=prefs.dim&&!isW&&ctx.today&&it.tm&&ctx.sec>=it.tm.e;
  const cur=!isW&&ctx.today&&it.tm&&ctx.sec>=it.tm.s&&ctx.sec<it.tm.e;
  const pct=cur?((ctx.sec-it.tm.s)/(it.tm.e-it.tm.s)):0;
- const cls='les'+(isW?' win':'')+(past?' past':'')+(cur?' cur':'');
+ const cls='les'+(isW?' win':'')+(past?' past':'')+(cur?' cur':'')+(isChemLab?' disabled':'');
  const style=isW||!prefs.colors?'':` style="--sc:${it.color};--sc-fg:${fgFor(it.color)}"`;
  const tm=it.tm?`<span class="tm"><b>${it.tm.a}</b><span>${it.tm.b}</span></span>`:`<span class="tm"><b>${it.n}</b></span>`;
  return `<div class="${cls}"${style} role="listitem">
@@ -1301,6 +1307,12 @@ dlg.querySelectorAll('[data-pref]').forEach(i=>i.addEventListener('change',()=>{
   setPrefs({[i.dataset.pref]:i.checked});
   if(i.dataset.pref==='vibrant'){document.body.classList.toggle('vibrant',i.checked)}
   if(i.dataset.pref==='progress'){document.body.classList.toggle('show-progress',i.checked)}
+  if(i.dataset.pref==='disableChemLab'){
+    const n=nowSchool(),st=statusNow(n);
+    if(i.checked&&(st.t==='now'||st.t==='break'||st.t==='window')&&st.cur&&isChemLabLesson(st.cur.title)){
+      toast('Хим ПР\n'+st.cur.title);
+    }
+  }
   render()
 }));
 $('#resetBtn').addEventListener('click',()=>{
