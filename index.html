@@ -697,16 +697,6 @@ dialog[open]{animation:pop .3s var(--ease)}
         <button role="radio" data-theme-set="ocean" aria-checked="false" aria-label="Океан" title="Океан" style="width:38px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px;margin:auto"><path d="M2 9.5c2.4 0 3.2-2 5.6-2s3.2 2 5.6 2 3.2-2 5.6-2"/><path d="M2 15c2.4 0 3.2-2 5.6-2s3.2 2 5.6 2 3.2-2 5.6-2"/></svg></button>
       </div>
     </div>
-    <div class="row icon-row"><span>Иконка<small>Значок в шапке и на вкладке браузера</small></span>
-      <div class="iconpick" role="radiogroup" aria-label="Иконка сайта">
-        <button class="icbtn" data-icon-set="class" role="radio" aria-checked="false" title="Буквы класса" aria-label="Буквы класса"><b>8Г</b></button>
-        <button class="icbtn" data-icon-set="cap" role="radio" aria-checked="false" title="Школа" aria-label="Школа"></button>
-        <button class="icbtn" data-icon-set="cal" role="radio" aria-checked="false" title="Календарь" aria-label="Календарь"></button>
-        <button class="icbtn" data-icon-set="book" role="radio" aria-checked="false" title="Книга" aria-label="Книга"></button>
-        <button class="icbtn" data-icon-set="clock" role="radio" aria-checked="false" title="Часы" aria-label="Часы"></button>
-        <button class="icbtn" data-icon-set="star" role="radio" aria-checked="false" title="Звезда" aria-label="Звезда"></button>
-      </div>
-    </div>
     <label class="row"><span>Цветные предметы<small>Каждый предмет — своим цветом</small></span><input type="checkbox" class="sw" data-pref="colors"></label>
     <label class="row"><span>Насыщенные цвета<small>Сделать интерфейс ярче и контрастнее</small></span><input type="checkbox" class="sw" data-pref="vibrant"></label>
     <label class="row"><span>Полные названия предметов<small>«Геом» → «Геометрия»</small></span><input type="checkbox" class="sw" data-pref="full"></label>
@@ -1307,12 +1297,6 @@ dlg.querySelectorAll('[data-pref]').forEach(i=>i.addEventListener('change',()=>{
   setPrefs({[i.dataset.pref]:i.checked});
   if(i.dataset.pref==='vibrant'){document.body.classList.toggle('vibrant',i.checked)}
   if(i.dataset.pref==='progress'){document.body.classList.toggle('show-progress',i.checked)}
-  if(i.dataset.pref==='disableChemLab'){
-    const n=nowSchool(),st=statusNow(n);
-    if(i.checked&&(st.t==='now'||st.t==='break'||st.t==='window')&&st.cur&&isChemLabLesson(st.cur.title)){
-      toast('Хим ПР\n'+st.cur.title);
-    }
-  }
   render()
 }));
 $('#resetBtn').addEventListener('click',()=>{
