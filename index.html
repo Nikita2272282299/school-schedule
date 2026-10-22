@@ -119,7 +119,6 @@ h1,h2,h3,p{margin:0}
 ::selection{background:color-mix(in srgb,var(--accent) 28%,transparent)}
 
 /* ============ насыщенный режим ============ */
-body.vibrant{filter:saturate(1.3) brightness(1.05)}
 body.vibrant .hero,
 body.vibrant .les,
 body.vibrant .pill.active,
@@ -673,8 +672,9 @@ html[data-theme=cosmic] .set-head{background:#130c2c}
 .set-card{border-radius:15px;background:var(--surface-2);border:1px solid var(--line);padding:0 14px}
 html[data-theme=cosmic] .set-card{background:color-mix(in srgb,#fff 6%,transparent)}
 .set-row{
-  display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 0;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 0;min-width:0;
   border-bottom:1px solid var(--line);font-size:14px;font-weight:600;cursor:pointer}
+.set-row > span:first-child{flex:1;min-width:0;overflow-wrap:anywhere}
 .set-card .set-row:last-child{border-bottom:0}
 .set-row small{display:block;margin-top:2px;font-size:12px;font-weight:500;line-height:1.4;color:var(--muted-2)}
 .set-note{margin:8px 2px 0;font-size:11.5px;line-height:1.5;color:var(--muted-2)}
