@@ -3,3 +3,9 @@ __pycache__/
 days_store.json
 vapid.json
 push_subs.json
+
+# локальные служебные файлы агента
+.agents/
+.claude/
+freeclaude.bat
+skills-lock.json
