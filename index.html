@@ -716,20 +716,6 @@ html[data-theme=cosmic] .set-card{background:color-mix(in srgb,#fff 6%,transpare
   display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:6px;
   border:1px solid var(--line-2);border-bottom-width:2px;background:var(--surface);
   font-family:var(--font);font-size:11px;font-weight:800;color:var(--muted);line-height:1}
-/* ---- выбор «сейчас»: полоса / карточка / скрыть ---- */
-.widgetgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.widgetcard{
-  position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
-  padding:10px 6px;border-radius:13px;border:1px solid var(--line);background:var(--surface-2);
-  text-align:center;color:inherit;min-height:66px;
-  transition:border-color .18s,background-color .18s,transform .15s ease-out}
-@media (hover:hover){.widgetcard:hover{border-color:var(--line-2)}}
-.widgetcard:not(:disabled):active{transform:scale(.96)}
-.widgetcard[aria-checked=true]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--surface-2))}
-.widgetcard svg{width:20px;height:20px;color:var(--muted);flex:none}
-.widgetcard[aria-checked=true] svg{color:var(--accent)}
-.widget-name{font-size:11px;font-weight:700;line-height:1.2;color:var(--muted)}
-.widgetcard[aria-checked=true] .widget-name{color:var(--text)}
 @media (max-width:390px){.themegrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* ---- полировка типографики и фокуса ---- */
 .hero h2{letter-spacing:-.03em;text-wrap:balance}
@@ -836,26 +822,8 @@ html[data-theme=cosmic] .set-card{background:color-mix(in srgb,#fff 6%,transpare
         <label class="set-row"><span>Полные названия предметов<small>«Геом» → «Геометрия»</small></span><input type="checkbox" class="sw" data-pref="full"></label>
         <label class="set-row"><span>Показывать кабинеты</span><input type="checkbox" class="sw" data-pref="rooms"></label>
         <label class="set-row"><span>Приглушать прошедшие уроки</span><input type="checkbox" class="sw" data-pref="dim"></label>
+        <label class="set-row"><span>Показывать полосу дня<small>Полоса уроков над списком</small></span><input type="checkbox" class="sw" data-pref="strip"></label>
       </div>
-    </section>
-
-    <section class="set-sec">
-      <h3 class="set-h">Полоса дня</h3>
-      <div class="widgetgrid" id="widgetPick" role="radiogroup" aria-label="Вид полосы дня">
-        <button class="widgetcard" role="radio" data-widget="strip" aria-checked="false">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9h16M4 15h16"/><circle cx="9" cy="9" r="2"/><circle cx="15" cy="15" r="2"/></svg>
-          <span class="widget-name">Полоса дня</span>
-        </button>
-        <button class="widgetcard" role="radio" data-widget="banner" aria-checked="false">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="4" width="17" height="13" rx="3"/><path d="M3.5 12h17M8 9h1"/></svg>
-          <span class="widget-name">Только карточка</span>
-        </button>
-        <button class="widgetcard" role="radio" data-widget="off" aria-checked="false">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.5 5.2A10.5 10.5 0 0 1 21 12a10.4 10.4 0 0 1-1.6 3.3M6.6 6.6A10.5 10.5 0 0 0 3 12a10.5 10.5 0 0 0 14 6.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
-          <span class="widget-name">Скрыть обе</span>
-        </button>
-      </div>
-      <p class="set-note">Полоса уроков над списком: показывать, заменить только карточкой «сейчас» или убрать вместе с ней.</p>
     </section>
 
     <section class="set-sec">
@@ -977,9 +945,7 @@ const store={
  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
  del(k){try{localStorage.removeItem(k)}catch(e){}}};
 
-const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:true,vibrant:false,view:'day',icon:'class',push:false,daywidget:null},store.get('sch.prefs',{}));
-/* старую галочку «Линия прогресса дня» превращаем в выбор полосы дня */
-if(!prefs.daywidget)prefs.daywidget=prefs.progress?'strip':'banner';
+const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:true,vibrant:false,view:'day',icon:'class',push:false,strip:false},store.get('sch.prefs',{}));
 delete prefs.progress;
 if(prefs.vibrant)document.body.classList.add('vibrant');
 const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:true,lastFetch:0,enter:false};
@@ -1210,7 +1176,7 @@ function dayHTML(iso,n){
  if(!d)return emptyHTML(ICON.cal,'Расписание ещё не опубликовано','Когда этот день появится в таблице, он сразу покажется здесь.');
  if(!items.length)return emptyHTML(ICON.moon,'В этот день уроков нет','В таблице для '+esc(S.meta.cls)+' на эту дату пусто. Возможно, это выходной.');
  const ctx={today:iso===n.iso,sec:n.sec};
- return (prefs.daywidget==='strip'?stripHTML(iso,n):'')+`<div class="list${S.enter?' enter':''}${prefs.colors?'':' mono'}" role="list">${items.map(it=>rowHTML(it,ctx)).join('')}</div>`;
+ return (prefs.strip?stripHTML(iso,n):'')+`<div class="list${S.enter?' enter':''}${prefs.colors?'':' mono'}" role="list">${items.map(it=>rowHTML(it,ctx)).join('')}</div>`;
 }
 function weekHTML(n){
  const dates=weekDates(S.sel);
@@ -1301,11 +1267,6 @@ function renderHero(st,n){
  heroKey=key;
  $('#hero').innerHTML=heroHTML(st,n);
  return true;
-}
-function applyDayWidget(){
-  const hero=$('#hero');
-  if(hero)hero.hidden=prefs.daywidget==='off';
-  document.querySelectorAll('[data-widget]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.widget===prefs.daywidget)));
 }
 function setDayProgress(st,n){
  const el=$('#topbar');
@@ -1450,11 +1411,10 @@ async function shareDay(){
  toast(await copyText(txt)?'Расписание дня скопировано':'Не удалось поделиться');
 }
 document.addEventListener('click',e=>{
- const t=e.target.closest('[data-theme-set],[data-icon-set],[data-day],[data-step],[data-view],[data-go],[data-act],[data-widget]');
+ const t=e.target.closest('[data-theme-set],[data-icon-set],[data-day],[data-step],[data-view],[data-go],[data-act]');
  if(!t)return;
  if(t.dataset.themeSet){setPrefs({theme:t.dataset.themeSet});themeSwitch(t.dataset.themeSet);setThemePop(false);return}
  if(t.dataset.iconSet){setPrefs({icon:t.dataset.iconSet});applyIcon(t.dataset.iconSet);return}
- if(t.dataset.widget){setPrefs({daywidget:t.dataset.widget});S.enter=true;railSig='';applyDayWidget();render();return}
   if(t.dataset.day){S.sel=t.dataset.day;S.picked=true;S.enter=true;railSig='';render();return}
  if(t.dataset.step){step(+t.dataset.step);return}
  if(t.dataset.view){if(prefs.view===t.dataset.view)return;setPrefs({view:t.dataset.view});S.enter=true;railSig='';render();return}
@@ -1472,7 +1432,7 @@ const openDlg=()=>{try{if(typeof dlg.showModal==='function')dlg.showModal();else
 const closeDlg=()=>{try{if(typeof dlg.close==='function')dlg.close()}catch(e){}dlg.removeAttribute('open')};
 $('#settingsBtn').addEventListener('click',()=>{
  dlg.querySelectorAll('[data-pref]').forEach(i=>i.checked=!!prefs[i.dataset.pref]);
- openDlg();applyTheme(document.documentElement.dataset.theme||'light');paintIconPicker();applyIcon(prefs.icon);applyDayWidget();
+ openDlg();applyTheme(document.documentElement.dataset.theme||'light');paintIconPicker();applyIcon(prefs.icon);
  paintPushState();
 });
 $('#closeSettings').addEventListener('click',closeDlg);
@@ -1646,7 +1606,6 @@ function paintStrip(n,st){
 applyTheme(prefs.theme||document.documentElement.dataset.theme||'light');
 paintIconPicker();
 applyIcon(prefs.icon);
-applyDayWidget();
 syncTopbar();
 render();
 load(false);
