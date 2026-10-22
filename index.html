@@ -835,28 +835,27 @@ html[data-theme=cosmic] .set-card{background:color-mix(in srgb,#fff 6%,transpare
         <label class="set-row"><span>Насыщенные цвета<small>Сделать интерфейс ярче и контрастнее</small></span><input type="checkbox" class="sw" data-pref="vibrant"></label>
         <label class="set-row"><span>Полные названия предметов<small>«Геом» → «Геометрия»</small></span><input type="checkbox" class="sw" data-pref="full"></label>
         <label class="set-row"><span>Показывать кабинеты</span><input type="checkbox" class="sw" data-pref="rooms"></label>
-        <label class="set-row"><span>Линия прогресса дня<small>Полоска под шапкой показывает прогресс дня</small></span><input type="checkbox" class="sw" data-pref="progress"></label>
         <label class="set-row"><span>Приглушать прошедшие уроки</span><input type="checkbox" class="sw" data-pref="dim"></label>
       </div>
     </section>
 
     <section class="set-sec">
-      <h3 class="set-h">«Сейчас» наверху</h3>
-      <div class="widgetgrid" id="widgetPick" role="radiogroup" aria-label="Вид индикатора дня">
+      <h3 class="set-h">Полоса дня</h3>
+      <div class="widgetgrid" id="widgetPick" role="radiogroup" aria-label="Вид полосы дня">
         <button class="widgetcard" role="radio" data-widget="strip" aria-checked="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9h16M4 15h16"/><circle cx="9" cy="9" r="2"/><circle cx="15" cy="15" r="2"/></svg>
           <span class="widget-name">Полоса дня</span>
         </button>
         <button class="widgetcard" role="radio" data-widget="banner" aria-checked="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="4" width="17" height="13" rx="3"/><path d="M3.5 12h17M8 9h1"/></svg>
-          <span class="widget-name">Карточка «сейчас»</span>
+          <span class="widget-name">Только карточка</span>
         </button>
         <button class="widgetcard" role="radio" data-widget="off" aria-checked="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.5 5.2A10.5 10.5 0 0 1 21 12a10.4 10.4 0 0 1-1.6 3.3M6.6 6.6A10.5 10.5 0 0 0 3 12a10.5 10.5 0 0 0 14 6.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
           <span class="widget-name">Скрыть обе</span>
         </button>
       </div>
-      <p class="set-note">Что показывать наверху: тонкую полосу дня, большую карточку с текущим уроком или ничего.</p>
+      <p class="set-note">Полоса уроков над списком: показывать, заменить только карточкой «сейчас» или убрать вместе с ней.</p>
     </section>
 
     <section class="set-sec">
@@ -978,9 +977,11 @@ const store={
  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
  del(k){try{localStorage.removeItem(k)}catch(e){}}};
 
-const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:true,vibrant:false,progress:false,view:'day',icon:'class',push:false,daywidget:'off'},store.get('sch.prefs',{}));
+const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:true,vibrant:false,view:'day',icon:'class',push:false,daywidget:null},store.get('sch.prefs',{}));
+/* старую галочку «Линия прогресса дня» превращаем в выбор полосы дня */
+if(!prefs.daywidget)prefs.daywidget=prefs.progress?'strip':'banner';
+delete prefs.progress;
 if(prefs.vibrant)document.body.classList.add('vibrant');
-if(prefs.progress)document.body.classList.add('show-progress');
 const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:true,lastFetch:0,enter:false};
 const cached=store.get('sch.data',null);
 if(cached){S.days=cached.days||{};Object.assign(S.meta,cached.meta||{});}
@@ -1303,7 +1304,7 @@ function renderHero(st,n){
 }
 function applyDayWidget(){
   const hero=$('#hero');
-  if(hero)hero.hidden=prefs.daywidget!=='banner';
+  if(hero)hero.hidden=prefs.daywidget==='off';
   document.querySelectorAll('[data-widget]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.widget===prefs.daywidget)));
 }
 function setDayProgress(st,n){
@@ -1479,7 +1480,6 @@ dlg.addEventListener('click',e=>{if(e.target===dlg)closeDlg()});
 dlg.querySelectorAll('[data-pref]').forEach(i=>i.addEventListener('change',()=>{
   setPrefs({[i.dataset.pref]:i.checked});
   if(i.dataset.pref==='vibrant'){document.body.classList.toggle('vibrant',i.checked)}
-  if(i.dataset.pref==='progress'){document.body.classList.toggle('show-progress',i.checked)}
   render()
 }));
 $('#resetBtn').addEventListener('click',()=>{
