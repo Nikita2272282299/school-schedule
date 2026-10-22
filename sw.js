@@ -1,5 +1,5 @@
 /* Расписание 8Г — сервис-воркер: мгновенный запуск, свежие данные, работа офлайн. */
-const V = 'sched-v17';
+const V = 'sched-v18';
 const STATIC = ['/', '/index.html', '/manifest.json', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -99,7 +99,18 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Статика: мгновенно из кэша, в фоне тихо обновляем.
+  // Навигация (страница): сначала сеть — всегда показываем свежий HTML.
+  // При офлайне — последняя сохранённая копия.
+  if (r.mode === 'navigate') {
+    e.respondWith(
+      fetch(r)
+        .then(resp => put(r, resp))
+        .catch(() => caches.match(r, { ignoreSearch: true }).then(m => m || caches.match('/')))
+    );
+    return;
+  }
+
+  // Остальная статика: мгновенно из кэша, в фоне тихо обновляем.
   e.respondWith(
     caches.match(r, { ignoreSearch: true }).then(hit => {
       const net = fetch(r)

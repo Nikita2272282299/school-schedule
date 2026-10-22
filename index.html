@@ -1627,8 +1627,21 @@ setInterval(()=>{
 },1000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){syncTopbar();if(Date.now()-S.lastFetch>60*1000)load(false)}});
 if('serviceWorker' in navigator)window.addEventListener('load',async()=>{
- try{await navigator.serviceWorker.register('/sw.js')}catch(e){}
- try{await pushSync()}catch(e){}
+  try{
+    await navigator.serviceWorker.register('/sw.js');
+    let refreshing=false;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      if(refreshing)return;
+      refreshing=true;
+      if(document.visibilityState==='visible'){
+        toast('Загружена новая версия — обновляю…');
+        setTimeout(()=>location.reload(),900);
+      }else{
+        location.reload();
+      }
+    });
+  }catch(e){}
+  try{await pushSync()}catch(e){}
 });
 })();
 </script>
