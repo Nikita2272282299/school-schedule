@@ -567,6 +567,21 @@ html[data-theme=dark] .wl,html[data-theme=cosmic] .wl{--sc-ink:color-mix(in srgb
   margin-left:auto;padding:6px 11px;border-radius:10px;font-size:13px;font-weight:800;color:var(--warn);
   transition:background .18s}
 @media (hover:hover){.notice button:hover{background:color-mix(in srgb,var(--warn) 15%,transparent)}}
+/* сообщение «домен не работает без VPN» + ссылка на зеркало */
+.notice.mirror{
+  background:color-mix(in srgb,var(--accent) 12%,transparent);
+  border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);
+  align-items:flex-start;flex-wrap:wrap;gap:10px 12px}
+.notice.mirror svg{color:var(--accent);margin-top:2px}
+.notice.mirror span{flex:1 1 220px;line-height:1.45}
+.notice.mirror b{font-weight:800}
+.notice.mirror .notice-go{
+  margin-left:auto;padding:9px 15px;border-radius:11px;background:var(--accent);color:var(--accent-ink);
+  font-size:13px;font-weight:800;text-decoration:none;white-space:nowrap;
+  transition:filter .18s,transform .15s}
+@media (hover:hover){.notice.mirror .notice-go:hover{filter:brightness(1.09)}}
+.notice.mirror .notice-go:active{transform:scale(.97)}
+.empty .btn{max-width:280px;margin-left:auto;margin-right:auto;text-align:center;text-decoration:none;display:block}
 
 /* ============ подвал ============ */
 .foot{
@@ -897,6 +912,12 @@ html[data-theme=cosmic] .set-card{background:color-mix(in srgb,#fff 6%,transpare
 (()=>{
 'use strict';
 const TZ='Asia/Yekaterinburg';                                  // Пермь
+/* ---------- адреса: основной сайт и зеркало ---------- */
+/* Если поменяете имя на PythonAnywhere — поправьте MIRROR_URL. */
+const PRIMARY_URL='https://school-schedule-4ldw.onrender.com';
+const MIRROR_URL='https://schedule8g.pythonanywhere.com';
+const IS_MIRROR=/\.pythonanywhere\.com$/i.test(location.hostname);
+const OTHER_URL=IS_MIRROR?PRIMARY_URL:MIRROR_URL;
 const WD_SHORT=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const WD_FULL=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
 const MON_GEN=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
@@ -1209,12 +1230,19 @@ function rowHTML(it,ctx){
 const emptyHTML=(icon,title,text)=>`<div class="empty">${icon}<b>${title}</b><p>${text}</p></div>`;
 function noticeHTML(){
  if(S.online&&S.meta.ok)return'';
+ if(!S.online&&MIRROR_URL&&!IS_MIRROR){
+  return `<div class="notice mirror">${ICON.off}<span><b>Извините, этот домен плохо работает без VPN.</b> Основной сайт на Render не отвечает — откройте зеркало, оно открывается всегда.</span><a class="notice-go" href="${MIRROR_URL}">Перейти на зеркало</a></div>`;
+ }
  const t=!S.online?'Нет связи с сервером — показаны данные, сохранённые на устройстве':esc(S.meta.error||'Таблица сейчас недоступна');
  return `<div class="notice">${ICON.off}<span>${t}</span><button data-act="retry">Повторить</button></div>`;
 }
 function dayHTML(iso,n){
  const d=S.days[iso],items=prep(d);
  if(!S.loaded&&!d)return'<div class="list" role="list"><div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>';
+ if(!d&&!S.online&&!Object.keys(S.days).length){
+  if(MIRROR_URL&&!IS_MIRROR)return emptyHTML(ICON.off,'Сайт не отвечает','Похоже, этот домен не открывается без VPN. На зеркале расписание доступно всегда.')+`<a class="btn primary" href="${MIRROR_URL}">Перейти на зеркало</a>`;
+  return emptyHTML(ICON.off,'Сайт не отвечает','Нет связи с сервером и нет сохранённых данных. Проверьте интернет и попробуйте ещё раз.')+'<button class="btn" data-act="retry">Повторить</button>';
+ }
  if(!d)return emptyHTML(ICON.cal,'Расписание ещё не опубликовано','Когда этот день появится в таблице, он сразу покажется здесь.');
  if(!items.length)return emptyHTML(ICON.moon,'В этот день уроков нет','В таблице для '+esc(S.meta.cls)+' на эту дату пусто. Возможно, это выходной.');
  const ctx={today:iso===n.iso,sec:n.sec};
@@ -1301,6 +1329,8 @@ function renderFoot(){
  if(u){const p=schoolParts(u),n=schoolParts(Math.floor(Date.now()/1000)),same=n.day===p.day&&n.month===p.month;
    parts.push(`<span>Таблица проверена ${same?'':p.day+'.'+p.month+' '}в ${p.hour}:${p.minute}</span>`)}
  if(S.meta.sheet)parts.push(`<a href="${esc(S.meta.sheet)}" target="_blank" rel="noopener">Открыть таблицу</a>`);
+ if(MIRROR_URL&&!IS_MIRROR)parts.push(`<a href="${MIRROR_URL}" rel="noopener" title="Зеркало на PythonAnywhere — открывается без VPN">Зеркало без VPN</a>`);
+ else if(IS_MIRROR)parts.push('<span>Зеркало · работает без VPN</span>');
  $('#foot').innerHTML=parts.join(' <span class="sep" aria-hidden="true"></span> ');
 }
 function renderHero(st,n){
@@ -1365,17 +1395,23 @@ function merge(j){
 }
 let toastT;
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)}
+let loadTry=0;
 async function load(force){
  const btn=$('#refreshBtn');btn.classList.add('spin');
+ const ctl=typeof AbortController!=='undefined'?new AbortController():null;
+ const timer=ctl?setTimeout(()=>ctl.abort(),15000):0;
  try{
-   const r=await fetch('/api/schedule'+(force?'?force=1':''),{cache:'no-store'});
+   const r=await fetch('/api/schedule'+(force?'?force=1':''),{cache:'no-store',signal:ctl?ctl.signal:undefined});
    if(!r.ok)throw new Error('HTTP '+r.status);
-   merge(await r.json());S.online=true;S.lastFetch=Date.now();
+   merge(await r.json());S.online=true;loadTry=0;S.lastFetch=Date.now();
    if(force)toast(S.meta.ok?'Расписание обновлено':(S.meta.error||'Не удалось обновить'));
  }catch(e){
    S.online=false;
    if(force||!S.loaded)toast('Нет связи. Показаны сохранённые данные');
+   /* домен мог «заснуть» — сами пробуем ещё пару раз */
+   if(loadTry<2&&!IS_MIRROR){loadTry++;setTimeout(()=>{if(!S.online)load(false)},12000)}
  }finally{
+   clearTimeout(timer);
    if(!S.loaded)S.enter=true;
    S.loaded=true;btn.classList.remove('spin');persist();
    if(!S.picked)S.sel=pickDefault();
