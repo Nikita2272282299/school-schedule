@@ -1,9 +1,9 @@
 /* Scope-safe PWA for GitHub project Pages. */
 importScripts('./config.js');
 const BASE=new URL('./',self.location.href);
-const API=(self.SCHEDULE_CONFIG?.apiBase||self.location.origin).replace(/\/$/,'');
+const API=((self.SCHEDULE_CONFIG&&self.SCHEDULE_CONFIG.apiBase)||self.location.origin).replace(/\/$/,'');
 const PREFIX='schedule8g-'+BASE.pathname+'-';
-const V=PREFIX+'v20';
+const V=PREFIX+'v21';
 const asset=p=>new URL(p,BASE).href;
 const STATIC=['./','index.html','config.js','manifest.json','icon.svg','icon-192.png','icon-512.png','apple-touch-icon.png'].map(asset);
 self.addEventListener('install',e=>e.waitUntil(caches.open(V).then(c=>c.addAll(STATIC)).then(()=>self.skipWaiting())));
@@ -19,7 +19,7 @@ self.addEventListener('push',e=>{
 });
 self.addEventListener('notificationclick',e=>{
  e.notification.close();
- const u=new URL(e.notification.data?.url||'./',BASE);
+ const u=new URL((e.notification.data&&e.notification.data.url)||'./',BASE);
  if(u.origin!==BASE.origin||!u.pathname.startsWith(BASE.pathname))return;
  e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(async ws=>{
   for(const w of ws)if(w.url===u.href&&'focus'in w)return w.focus();

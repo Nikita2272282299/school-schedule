@@ -598,6 +598,7 @@ dialog{
   background:var(--surface);color:var(--text);box-shadow:0 30px 80px rgba(0,0,0,.45)}
 html[data-theme=cosmic] dialog{background:#130c2c;border:1px solid var(--line)}
 dialog::backdrop{background:rgba(6,9,20,.58);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+dialog:not([open]){display:none}
 dialog[open]{animation:pop .3s var(--ease)}
 @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
 .sw{appearance:none;-webkit-appearance:none;width:46px;height:28px;border-radius:99px;background:var(--surface-3);position:relative;flex:none;cursor:pointer;transition:background .22s;margin:0;border:1px solid var(--line)}
@@ -816,7 +817,7 @@ html[data-theme=cosmic] .set-card{background:color-mix(in srgb,#fff 6%,transpare
       <section id="hero" aria-label="Что сейчас"></section>
       <div class="railwrap"><nav class="rail" id="rail" aria-label="Дни"></nav></div>
     </aside>
-    <main id="main" aria-live="polite"></main>
+    <main id="main" aria-live="polite"><noscript><div style="padding:18px 16px;border-radius:16px;background:#fff;border:1px solid rgba(99,102,241,.18);font:600 15px/1.45 system-ui,-apple-system,sans-serif;color:#0a0e1a"><b style="display:block;font-size:17px;margin-bottom:6px">Расписание 8Г</b>Чтобы увидеть живое расписание, включите JavaScript в настройках браузера.<div style="margin-top:10px;font-weight:600">Зеркало: <a href="https://nassda.pythonanywhere.com/" style="color:#4f46e5">nassda.pythonanywhere.com</a></div></div></noscript></main>
   </div>
   <footer class="foot" id="foot"></footer>
 </div>
@@ -912,8 +913,9 @@ html[data-theme=cosmic] .set-card{background:color-mix(in srgb,#fff 6%,transpare
 <script>
 (()=>{
 'use strict';
+document.documentElement.dataset.app='ok';
 const TZ='Asia/Yekaterinburg';                                  // Пермь
-const API_BASE=(self.SCHEDULE_CONFIG?.apiBase||'').replace(/\/$/,'');
+const API_BASE=((self.SCHEDULE_CONFIG&&self.SCHEDULE_CONFIG.apiBase)||'').replace(/\/$/,'');
 const SITE_BASE=new URL('./',location.href);
 const NEEDS_API=location.hostname.endsWith('.github.io')&&!API_BASE;
 const MIRROR_URL='';
@@ -1729,6 +1731,21 @@ if('serviceWorker' in navigator)window.addEventListener('load',async()=>{
   }catch(e){}
   try{await pushSync()}catch(e){}
 });
+})();
+</script>
+<script>
+/* Страховка для старых браузеров: если основной скрипт не запустился
+   (например, синтаксис не поддержан), показываем сообщение вместо
+   пустой страницы. */
+(function(){
+ if(document.documentElement.dataset.app==='ok')return;
+ var m=document.getElementById('main');if(!m)return;
+ m.innerHTML='<div style="padding:18px 16px;border-radius:16px;background:#fff;border:1px solid rgba(99,102,241,.18);font:600 15px/1.5 system-ui,-apple-system,sans-serif;color:#0a0e1a">'
+  +'<b style="display:block;font-size:17px;margin-bottom:6px">Браузер слишком старый</b>'
+  +'Расписание не загрузилось: этот браузер не поддерживает часть кода сайта. Обновите Safari (Настройки → Основные → Обновление ПО) или откройте сайт в Chrome.'
+  +'<div style="margin-top:10px">Зеркало: <a href="https://nassda.pythonanywhere.com/" style="color:#4f46e5">nassda.pythonanywhere.com</a></div>'
+  +'<button onclick="location.reload()" style="margin-top:12px;padding:10px 16px;border-radius:12px;border:0;background:#6366f1;color:#fff;font:700 15px system-ui,-apple-system,sans-serif">Перезагрузить</button>'
+  +'</div>';
 })();
 </script>
 </body>
