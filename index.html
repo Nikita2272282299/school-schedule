@@ -583,6 +583,20 @@ html[data-theme=dark] .wl,html[data-theme=cosmic] .wl{--sc-ink:color-mix(in srgb
 .notice.mirror .notice-go:active{transform:scale(.97)}
 .empty .btn{max-width:280px;margin-left:auto;margin-right:auto;text-align:center;text-decoration:none;display:block}
 
+/* Постоянная ссылка на новый хост доступна и без загрузки API. */
+.host-link{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+  margin-bottom:16px;padding:12px 16px;border:1px solid var(--line-2);
+  border-radius:var(--r);background:var(--surface);font-size:14px;color:var(--muted)}
+.host-link a{
+  display:inline-flex;align-items:center;justify-content:center;min-height:44px;
+  padding:10px 16px;border-radius:11px;background:color-mix(in srgb,var(--accent) 80%,#000);color:#fff;
+  font-weight:800;text-decoration:none;white-space:nowrap;transition:filter .18s}
+@media (hover:hover){.host-link a:hover{filter:brightness(1.09)}}
+.host-link a:focus-visible{outline:3px solid var(--text);outline-offset:3px}
+.host-link a:active{filter:brightness(.92)}
+@media (prefers-reduced-motion:reduce){.host-link a{transition:none}}
+
 /* ============ подвал ============ */
 .foot{
   margin-top:22px;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 10px;
@@ -811,6 +825,10 @@ html[data-theme=cosmic] .set-card{background:color-mix(in srgb,#fff 6%,transpare
 </header>
 
 <div class="wrap">
+  <nav class="host-link" aria-label="Новый адрес сайта">
+    <span>Расписание на PythonAnywhere</span>
+    <a id="newHostLink" href="https://nassda.pythonanywhere.com/">Новый хост</a>
+  </nav>
   <div class="layout">
     <aside class="side">
       <section id="hero" aria-label="Что сейчас"></section>
@@ -915,7 +933,7 @@ const TZ='Asia/Yekaterinburg';                                  // Пермь
 /* ---------- адреса: основной сайт и зеркало ---------- */
 /* Если поменяете имя на PythonAnywhere — поправьте MIRROR_URL. */
 const PRIMARY_URL='https://school-schedule-4ldw.onrender.com';
-const MIRROR_URL='https://schedule8g.pythonanywhere.com';
+const MIRROR_URL='https://nassda.pythonanywhere.com';
 const IS_MIRROR=/\.pythonanywhere\.com$/i.test(location.hostname);
 const OTHER_URL=IS_MIRROR?PRIMARY_URL:MIRROR_URL;
 const WD_SHORT=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
@@ -1011,7 +1029,7 @@ const store={
 const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:true,vibrant:false,view:'day',icon:'class',push:false,strip:false},store.get('sch.prefs',{}));
 delete prefs.progress;
 if(prefs.vibrant)document.body.classList.add('vibrant');
-const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:true,lastFetch:0,enter:false};
+const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:true,slow:false,lastFetch:0,enter:false};
 const cached=store.get('sch.data',null);
 if(cached){S.days=cached.days||{};Object.assign(S.meta,cached.meta||{});}
 try{const qDay=new URLSearchParams(location.search).get('day');if(/^\d{4}-\d{2}-\d{2}$/.test(qDay||'')){S.sel=qDay;S.picked=true}}catch(e){}
@@ -1229,9 +1247,12 @@ function rowHTML(it,ctx){
 }
 const emptyHTML=(icon,title,text)=>`<div class="empty">${icon}<b>${title}</b><p>${text}</p></div>`;
 function noticeHTML(){
- if(S.online&&S.meta.ok)return'';
+ if(S.online&&S.meta.ok&&!S.slow)return'';
  if(!S.online&&MIRROR_URL&&!IS_MIRROR){
   return `<div class="notice mirror">${ICON.off}<span><b>Извините, этот домен плохо работает без VPN.</b> Основной сайт на Render не отвечает — откройте зеркало, оно открывается всегда.</span><a class="notice-go" href="${MIRROR_URL}">Перейти на зеркало</a></div>`;
+ }
+ if(S.slow&&MIRROR_URL&&!IS_MIRROR){
+  return `<div class="notice mirror">${ICON.off}<span>Сайт грузится медленно — домен на Render часто «засыпает». Можно подождать или открыть зеркало, оно работает без VPN.</span><a class="notice-go" href="${MIRROR_URL}">Открыть зеркало</a></div>`;
  }
  const t=!S.online?'Нет связи с сервером — показаны данные, сохранённые на устройстве':esc(S.meta.error||'Таблица сейчас недоступна');
  return `<div class="notice">${ICON.off}<span>${t}</span><button data-act="retry">Повторить</button></div>`;
@@ -1395,9 +1416,13 @@ function merge(j){
 }
 let toastT;
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)}
-let loadTry=0;
+let loadTry=0,slowT=0;
 async function load(force){
  const btn=$('#refreshBtn');btn.classList.add('spin');
+ S.slow=false;
+ clearTimeout(slowT);
+ /* если ответа нет 6 секунд — показываем плашку про зеркало, но продолжаем ждать */
+ slowT=setTimeout(()=>{S.slow=true;render()},6000);
  const ctl=typeof AbortController!=='undefined'?new AbortController():null;
  const timer=ctl?setTimeout(()=>ctl.abort(),15000):0;
  try{
@@ -1411,7 +1436,7 @@ async function load(force){
    /* домен мог «заснуть» — сами пробуем ещё пару раз */
    if(loadTry<2&&!IS_MIRROR){loadTry++;setTimeout(()=>{if(!S.online)load(false)},12000)}
  }finally{
-   clearTimeout(timer);
+   clearTimeout(timer);clearTimeout(slowT);S.slow=false;
    if(!S.loaded)S.enter=true;
    S.loaded=true;btn.classList.remove('spin');persist();
    if(!S.picked)S.sel=pickDefault();
