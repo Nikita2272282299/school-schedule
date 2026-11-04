@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Расписание 8Г v2.0</title>
+<title>Расписание 8Г · версия 264</title>
 <meta name="description" content="Живое расписание 8Г: что идёт сейчас, сколько осталось до звонка, кабинеты и уроки на неделю.">
 <meta name="theme-color" content="#f0f4ff" id="themeColor">
 <meta name="color-scheme" content="light dark">
@@ -1016,6 +1016,7 @@ const store={
 const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:true,vibrant:false,view:'day',icon:'class',push:false,strip:false},store.get('sch.prefs',{}));
 delete prefs.progress;
 if(prefs.vibrant)document.body.classList.add('vibrant');
+const APP_VER='264';
 const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:true,slow:false,lastFetch:0,enter:false};
 const cached=store.get('sch.data',null);
 if(cached){S.days=cached.days||{};Object.assign(S.meta,cached.meta||{});}
@@ -1335,7 +1336,7 @@ function renderHead(){
  }
  $('#title').innerHTML=`<span class="lg">${long}</span><span class="sm">${short}</span>`;
  paintMark(c);
- document.title=(prefs.view==='week'?'Неделя · ':'')+'Расписание '+c+(prefs.view==='week'?'':' · '+long.toLowerCase());
+ document.title=(prefs.view==='week'?'Неделя · ':'')+'Расписание '+c+(prefs.view==='week'?'':' · '+long.toLowerCase()+' · версия '+APP_VER);
  document.querySelectorAll('#viewSeg [data-view]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.view==='week')===(prefs.view==='week'))));
  $('#viewSeg').dataset.i=prefs.view==='week'?1:0;
 }
@@ -1346,7 +1347,8 @@ function renderFoot(){
  if(S.meta.sheet)parts.push(`<a href="${esc(S.meta.sheet)}" target="_blank" rel="noopener">Открыть таблицу</a>`);
  if(MIRROR_URL&&!IS_MIRROR)parts.push(`<a href="${MIRROR_URL}" rel="noopener" title="Зеркало на PythonAnywhere — открывается без VPN">Зеркало без VPN</a>`);
  else if(IS_MIRROR)parts.push('<span>Зеркало · работает без VPN</span>');
- $('#foot').innerHTML=parts.join(' <span class="sep" aria-hidden="true"></span> ');
+  parts.push('<span>версия '+APP_VER+'</span>');
+$('#foot').innerHTML=parts.join(' <span class="sep" aria-hidden="true"></span> ');
 }
 function renderHero(st,n){
  const key=st.t+'|'+((st.cur&&st.cur.n)||(st.next&&st.next.n)||'')+'|'+n.iso+'|'+(S.loaded?1:0)+'|'+S.meta.cls+'|'+(prefs.rooms?1:0);
