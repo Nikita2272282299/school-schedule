@@ -134,11 +134,11 @@ html[data-theme=ocean] body{
   background-attachment:fixed;
 }
 *,*::before,*::after{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;background:var(--bg);background-color:var(--bg)}
 body{
   margin:0;font-family:var(--font);background:var(--bg);color:var(--text);
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
-  min-height:100vh;min-height:100svh;overflow-x:hidden;
+  min-height:100vh;min-height:100svh;overflow-x:hidden;background-color:var(--bg);
   transition:background .5s cubic-bezier(0.4, 0, 0.2, 1),color .5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0;-webkit-tap-highlight-color:transparent}
@@ -401,7 +401,7 @@ html[data-theme=cosmic] .pop{background:#150e30}
 @media (hover:hover){.ctrl .ibtn:hover{border-color:var(--line-2)}}
 .todaybtn{
   height:34px;padding:0 13px;border-radius:11px;font-size:13px;font-weight:800;
-  background:var(--surface);border:1px solid var(--line);color:var(--accent);
+  background:var(--surface);border:1px solid var(--line);color:color-mix(in srgb,var(--accent) 74%,var(--text));
   transition:background-color .15s,transform .15s ease-out}
 @media (hover:hover){.todaybtn:hover{background:var(--accent-soft)}}
 .todaybtn:not(:disabled):active{transform:scale(.96)}
@@ -409,11 +409,11 @@ html[data-theme=cosmic] .pop{background:#150e30}
 /* ============ список уроков ============ */
 .list{display:flex;flex-direction:column;gap:9px}
 .les{
-  --sc:#64748b;--sc-ink:var(--sc);
+  --sc:#64748b;--sc-ink:color-mix(in srgb,var(--sc) 58%,#101828);
   position:relative;display:grid;align-items:center;overflow:hidden;
-  grid-template-columns:36px 52px minmax(0,1fr);
-  grid-template-areas:"num time subj" "num time room";
-  gap:2px 12px;padding:12px 14px 12px 12px;border-radius:var(--r);
+  grid-template-columns:34px 48px minmax(0,1fr) var(--roomW,68px);
+  grid-template-areas:"num time subj room";
+  gap:2px 10px;padding:12px 14px 12px 12px;border-radius:var(--r);
   background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-1);
   contain:layout paint;
   transition:transform .3s var(--ease),box-shadow .3s var(--ease),border-color .3s var(--ease),opacity .3s}
@@ -440,7 +440,7 @@ html[data-theme=dark] .les,html[data-theme=cosmic] .les{--sc-ink:color-mix(in sr
 .les .tm b{font-size:16.5px;font-weight:800;letter-spacing:-.02em}
 .les .tm span{font-size:12px;font-weight:600;color:var(--muted-2)}
 .les .subj{grid-area:subj;font-size:17px;font-weight:700;letter-spacing:-.015em;line-height:1.25;overflow-wrap:anywhere}
-.les .room{grid-area:room;justify-self:start}
+.les .room{grid-area:room;align-self:center;justify-self:end;display:block;max-width:100%;text-align:center;font-size:11.5px;padding:3px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .les.win{--sc:#94a3b8;background:var(--surface-2);background:color-mix(in srgb,var(--surface) 62%,transparent);border-style:dashed;box-shadow:none}
 /* однотонный режим: предметы без своих цветов, текущий урок — акцентным */
 .list.mono .les{--sc:#7c8399;--sc-ink:var(--muted)}
@@ -460,7 +460,7 @@ html[data-theme=dark] .les.cur .num,html[data-theme=cosmic] .les.cur .num{color:
 .les .pbar{position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--line);background:color-mix(in srgb,var(--sc) 16%,transparent)}
 .les .pbar i{display:block;height:100%;transform-origin:left;transform:scaleX(0);background:var(--sc);transition:transform 1s linear}
 @media (min-width:600px){
-  .les{grid-template-columns:38px 56px minmax(0,1fr) auto;grid-template-areas:"num time subj room";gap:0 15px;padding:13px 16px}
+  .les{grid-template-columns:40px 56px minmax(0,1fr) var(--roomW,88px);grid-template-areas:"num time subj room";gap:0 16px;padding:13px 16px}
   .les .num{width:36px;height:36px}
   .les .subj{font-size:17.5px}
   .les .room{align-self:center;justify-self:end}
@@ -785,6 +785,9 @@ html[data-theme=cosmic] .set-card{background:color-mix(in srgb,#fff 6%,transpare
 @media (prefers-reduced-motion:reduce){
   .dstrip{animation:none}
 }
+
+/* Фон за пределами контента (включая системную полосу телефона) — в цвет темы. */
+html{background:var(--bg);min-height:100%}
 </style>
 </head>
 <body>
@@ -942,7 +945,7 @@ const WD_SHORT=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const WD_FULL=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
 const MON_GEN=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const MON_SHORT=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
-const THEME_COLOR={light:'#eef1f8',dark:'#070a12',cosmic:'#05030f',ocean:'#cfe7f9',sunset:'#170c12',emerald:'#05150f'};
+const THEME_COLOR={light:'#f0f4ff',dark:'#0a0d14',cosmic:'#05030f',ocean:'#daf0fa',sunset:'#170c12',emerald:'#05150f'};
 const THEME_NAME={light:'Светлая',dark:'Тёмная',cosmic:'Космос',ocean:'Океан',sunset:'Закат',emerald:'Изумруд'};
 const THEME_ORDER=['light','dark','cosmic','ocean','sunset','emerald'];
 const ICON={
@@ -1096,6 +1099,13 @@ function subjInfo(subject){
  return{title:prefs.full?full.join(' / '):parts.join(', '),color:subjColor(first)};
 }
 const roomText=r=>r?'каб. '+String(r).replace(/\s*,\s*/g,', '):'';
+const roomShort=r=>r?String(r).replace(/\s*,\s*/g,', '):'';
+/* ширина колонки кабинета по самому длинному кабинету дня */
+function roomW(items){
+ let m=0;
+ for(let i=0;i<items.length;i++){const it=items[i];if(it.kind==='w'||!it.room)continue;const s=roomShort(it.room);if(s.length>m)m=s.length}
+ return m?' style="--roomW:'+Math.min(104,Math.max(56,Math.round(m*6.9)+20))+'px"':'';
+}
 function prep(day){
  const raw=(day&&day.lessons)||[];let i=0;
  while(i<raw.length&&!raw[i].raw)i++;
@@ -1138,7 +1148,7 @@ function nextDayWithLessons(today){
  return k&&isoDiff(k,today)<=7?k:null;
 }
 const lineOf=it=>`${esc(it.title)}${it.room&&prefs.rooms?', '+esc(roomText(it.room)):''}`;
-const roomChip=it=>it.room&&prefs.rooms?`<span class="room">${esc(roomText(it.room))}</span>`:'';
+const roomChip=it=>it.room&&prefs.rooms?`<span class="room" title="${esc(roomText(it.room))}">${esc(roomShort(it.room))}</span>`:'';
 
 function heroHTML(st,n){
  const head=(cls,label,extra,body)=>`<div class="hero ${cls}" id="heroCard"><div class="hero-in"><div class="hero-main">
@@ -1244,7 +1254,7 @@ function rowHTML(it,ctx){
  return `<div class="${cls}"${style} role="listitem">
    <span class="num">${it.n}</span>${tm}
    <div class="subj">${isW?'Окно':esc(it.title)}</div>
-   ${!isW&&it.room&&prefs.rooms?`<span class="room">${esc(roomText(it.room))}</span>`:''}
+   ${!isW&&it.room&&prefs.rooms?`<span class="room" title="${esc(roomText(it.room))}">${esc(roomShort(it.room))}</span>`:''}
    ${cur?`<div class="pbar"><i id="curBar" style="transform:scaleX(${pct.toFixed(3)})"></i></div>`:''}</div>`;
 }
 const emptyHTML=(icon,title,text)=>`<div class="empty">${icon}<b>${title}</b><p>${text}</p></div>`;
@@ -1269,7 +1279,7 @@ function dayHTML(iso,n){
  if(!d)return emptyHTML(ICON.cal,'Расписание ещё не опубликовано','Когда этот день появится в таблице, он сразу покажется здесь.');
  if(!items.length)return emptyHTML(ICON.moon,'В этот день уроков нет','В таблице для '+esc(S.meta.cls)+' на эту дату пусто. Возможно, это выходной.');
  const ctx={today:iso===n.iso,sec:n.sec};
- return (prefs.strip?stripHTML(iso,n):'')+`<div class="list${S.enter?' enter':''}${prefs.colors?'':' mono'}" role="list">${items.map(it=>rowHTML(it,ctx)).join('')}</div>`;
+ return (prefs.strip?stripHTML(iso,n):'')+`<div class="list${S.enter?' enter':''}${prefs.colors?'':' mono'}"${roomW(items)} role="list">${items.map(it=>rowHTML(it,ctx)).join('')}</div>`;
 }
 function weekHTML(n){
  const dates=weekDates(S.sel);
@@ -1450,7 +1460,7 @@ async function load(force){
 function applyTheme(t){
  t=ICON[t]?t:'light';
  document.documentElement.dataset.theme=t;
- $('#themeColor').setAttribute('content',THEME_COLOR[t]||'#eef1f8');
+ $('#themeColor').setAttribute('content',THEME_COLOR[t]||'#f0f4ff');
  const tb=$('#themeBtn');  if(tb){if(!tb.dataset.icons){tb.innerHTML=THEME_ORDER.map(k=>'<span class="tb-ico" data-ico="'+k+'" aria-hidden="true">'+ICON[k]+'</span>').join('');tb.dataset.icons='1'}tb.dataset.icon=t;tb.setAttribute('aria-label','Тема: '+THEME_NAME[t]+'. Открыть выбор темы.');tb.title='Тема: '+THEME_NAME[t]}
  document.querySelectorAll('[data-theme-set]').forEach(b=>{
    const on=b.dataset.themeSet===t;

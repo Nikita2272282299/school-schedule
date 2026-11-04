@@ -3,7 +3,7 @@ importScripts('./config.js');
 const BASE=new URL('./',self.location.href);
 const API=((self.SCHEDULE_CONFIG&&self.SCHEDULE_CONFIG.apiBase)||self.location.origin).replace(/\/$/,'');
 const PREFIX='schedule8g-'+BASE.pathname+'-';
-const V=PREFIX+'v21';
+const V=PREFIX+'v23';
 const asset=p=>new URL(p,BASE).href;
 const STATIC=['./','index.html','config.js','manifest.json','icon.svg','icon-192.png','icon-512.png','apple-touch-icon.png'].map(asset);
 self.addEventListener('install',e=>e.waitUntil(caches.open(V).then(c=>c.addAll(STATIC)).then(()=>self.skipWaiting())));

@@ -4,6 +4,10 @@ days_store.json
 vapid.json
 push_subs.json
 
+# лиды с Яндекс.Карт: история просмотров и выгрузки
+.leads_seen.json
+leads_*.csv
+
 # локальные служебные файлы агента
 .agents/
 .claude/
