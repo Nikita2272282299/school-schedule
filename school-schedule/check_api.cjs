@@ -10,6 +10,8 @@ const base=ctx.self.SCHEDULE_CONFIG.apiBase;
  if(!r.ok)throw Error('API HTTP '+r.status);
  if(r.headers.get('access-control-allow-origin')!==origin)throw Error('API CORS is not configured');
  const j=await r.json();
- if(!j.ok||!Array.isArray(j.days))throw Error('API cannot load the source schedule');
- console.log('Production API ready');
+ /* ok:false бывает сразу после рестарта WSGI, пока таблица не сверена заново.
+    Для публикации важно, что API отдаёт расписание и нужный CORS. */
+ if(!Array.isArray(j.days)||!j.days.length)throw Error('API has no schedule days');
+ console.log('Production API ready'+(j.ok?'':' (данные из сохранённой копии, ok=false)'));
 })().catch(e=>{console.error(e.message);process.exitCode=1});

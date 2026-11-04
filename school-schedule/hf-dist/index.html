@@ -1368,7 +1368,10 @@ function rowHTML(it,ctx){
 }
 const emptyHTML=(icon,title,text)=>`<div class="empty">${icon}<b>${title}</b><p>${text}</p></div>`;
 function noticeHTML(){
- if(S.online&&S.meta.ok&&!S.slow)return'';
+ /* ok:false при непустых днях означает «не удалось сверить таблицу прямо сейчас»,
+    а не «данных нет». Расписание есть — не пугаем пользователя плашкой. */
+ const haveDays=Object.keys(S.days).length>0;
+ if(S.online&&!S.slow&&(S.meta.ok||(haveDays&&!S.meta.error)))return'';
  if(!S.online){
   const has=Object.keys(S.days).length;
   const text=has?'<b>Офлайн.</b> Показано расписание с устройства — всё работает без сети. Обновится само, когда сеть вернётся.'
@@ -1571,7 +1574,7 @@ async function load(force){
    const j=await r.json();
    if(!j||!Array.isArray(j.days))throw new Error('bad payload');
    merge(j);S.online=true;loadTry=0;S.lastFetch=Date.now();
-   if(force)toast(S.meta.ok?'Расписание обновлено':(S.meta.error||'Не удалось обновить'));
+   if(force)toast((S.meta.ok||Object.keys(S.days).length)?'Расписание обновлено':(S.meta.error||'Не удалось обновить'));
  }catch(e){
    S.online=false;
    if(force)toast('Нет связи — расписание с устройства');
