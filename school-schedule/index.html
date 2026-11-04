@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Расписание 8Г · версия 264</title>
+<title>Расписание 8Г · версия 266</title>
 <meta name="description" content="Живое расписание 8Г: что идёт сейчас, сколько осталось до звонка, кабинеты и уроки на неделю.">
 <meta name="theme-color" content="#f0f4ff" id="themeColor">
 <meta name="color-scheme" content="light dark">
@@ -13,9 +13,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="8Г">
 <meta name="format-detection" content="telephone=no">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400..800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<!-- Шрифт лежит рядом с сайтом: никаких внешних запросов, одинаковый вид онлайн и офлайн. -->
+<link rel="preload" href="assets/fonts/manrope-cyrillic-400-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/manrope-latin-400-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <script>
 try{
   var p=JSON.parse(localStorage.getItem('sch.prefs')||'{}');
@@ -24,6 +24,17 @@ try{
 }catch(e){}
 </script>
 <style>
+/* ============ локальный шрифт (работает без интернета) ============ */
+@font-face{
+  font-family:"Manrope";font-style:normal;font-weight:400 800;font-display:swap;
+  src:url("assets/fonts/manrope-cyrillic-400-800-normal.woff2") format("woff2");
+  unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116
+}
+@font-face{
+  font-family:"Manrope";font-style:normal;font-weight:400 800;font-display:swap;
+  src:url("assets/fonts/manrope-latin-400-800-normal.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD
+}
 /* ============ база ============ */
 :root{
   --font:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
@@ -774,6 +785,63 @@ html[data-theme=cosmic] .set-card{background:color-mix(in srgb,#fff 6%,transpare
 
 /* Фон за пределами контента (включая системную полосу телефона) — в цвет темы. */
 html{background:var(--bg);min-height:100%}
+
+/* ================= полировка: ровные края, единый ритм ================= */
+:root{--r-xl:24px;--r-lg:20px;--r:16px;--r-sm:12px;--edge:16px}
+/* карточки стоят на одной вертикальной линии и имеют общую шкалу скруглений */
+.bar,.wrap{padding-left:var(--edge);padding-right:var(--edge)}
+.hero,.dstrip,.dayfoot,.empty,.wcard{border-radius:var(--r-lg)}
+.hero{padding:18px 19px 17px}
+.dstrip{padding:12px 14px 11px;border-radius:var(--r)}
+.dayfoot,.empty{border-radius:var(--r)}
+.list,.week{gap:10px}
+.les{border-radius:var(--r);gap:2px 12px;padding:12px 13px;
+  grid-template-columns:34px 50px minmax(0,1fr) var(--roomW,68px)}
+.les .num{border-radius:10px}
+.pill{border-radius:14px}
+.pop{border-radius:16px}
+.todaybtn,.ctrl .ibtn,.dayfoot .share,.btn{border-radius:12px}
+@media (min-width:600px){.les{grid-template-columns:40px 58px minmax(0,1fr) var(--roomW,88px);gap:0 16px;padding:13px 16px}}
+@media (min-width:960px){.bar,.wrap{padding-left:24px;padding-right:24px}}
+@media (max-width:400px){.bar,.wrap{padding-left:12px;padding-right:12px}}
+/* кабинет — аккуратный чип с фиксированной шириной: правый край списка больше не «скачет» */
+.les .room{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:54px;max-width:100%;padding:5px 9px;border-radius:9px;
+  border:1px solid var(--line-2);background:color-mix(in srgb,var(--sc) 10%,var(--surface-2));
+  color:var(--sc-ink,var(--muted));font-size:11.5px;font-weight:800;line-height:1.1;
+  letter-spacing:.01em;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.22)}
+.les.cur .room{border-color:color-mix(in srgb,var(--sc) 45%,transparent)}
+.les.win .room{background:transparent;border-style:dashed;color:var(--muted-2)}
+/* лента дней без «размытых» краёв: теперь первая и последняя pills целые */
+.rail{-webkit-mask-image:none;mask-image:none;scroll-padding-inline:var(--edge)}
+.railwrap::after{opacity:.75}
+/* спокойный офлайн-статус вместо тревожной плашки «нет связи» */
+.notice--offline{
+  background:color-mix(in srgb,var(--accent) 9%,transparent);
+  border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);
+  align-items:center;gap:10px 12px}
+.notice--offline svg{color:var(--accent)}
+.notice--offline b{font-weight:800}
+.notice-badge{
+  margin-left:auto;flex:none;padding:5px 10px;border-radius:99px;white-space:nowrap;
+  background:var(--surface);border:1px solid var(--line-2);
+  font-size:11px;font-weight:800;color:var(--accent)}
+@media (max-width:520px){
+  .notice--offline{padding:10px 12px;gap:9px;font-size:13px;line-height:1.45;flex-wrap:nowrap}
+  .notice--offline .notice-badge{display:none}
+}
+.foot-net{color:var(--accent);font-weight:800}
+.foot-net--ok{color:var(--muted-2);font-weight:700}
+.set-note b{color:var(--text);font-weight:800}
+/* типографика и мелочи */
+.hero h2,.empty b,.set-head__txt b{text-wrap:balance}
+.les .subj,.wl b{overflow-wrap:anywhere;text-wrap:pretty}
+.hero .meta,.hero .next,.foot{text-wrap:pretty}
+.grain{opacity:.018}
+html[data-theme=light] .grain,html[data-theme=ocean] .grain{opacity:.015}
+.foot{margin-top:24px;padding-top:2px;gap:5px 11px}
+:focus-visible{outline-offset:3px}
 </style>
 </head>
 <body>
@@ -820,7 +888,7 @@ html{background:var(--bg);min-height:100%}
       <section id="hero" aria-label="Что сейчас"></section>
       <div class="railwrap"><nav class="rail" id="rail" aria-label="Дни"></nav></div>
     </aside>
-    <main id="main" aria-live="polite"><noscript><div style="padding:18px 16px;border-radius:16px;background:#fff;border:1px solid rgba(99,102,241,.18);font:600 15px/1.45 system-ui,-apple-system,sans-serif;color:#0a0e1a"><b style="display:block;font-size:17px;margin-bottom:6px">Расписание 8Г</b>Чтобы увидеть живое расписание, включите JavaScript в настройках браузера.<div style="margin-top:10px;font-weight:600">Зеркало: <a href="https://nassda.pythonanywhere.com/" style="color:#4f46e5;display:inline-block;padding:10px 0">nassda.pythonanywhere.com</a></div></div></noscript></main>
+    <main id="main" aria-live="polite"><noscript><div style="padding:18px 16px;border-radius:16px;background:#fff;border:1px solid rgba(99,102,241,.18);font:600 15px/1.45 system-ui,-apple-system,sans-serif;color:#0a0e1a"><b style="display:block;font-size:17px;margin-bottom:6px">Расписание 8Г</b>Чтобы увидеть расписание, включите JavaScript в настройках браузера.</div></noscript></main>
   </div>
   <footer class="foot" id="foot"></footer>
 </div>
@@ -899,6 +967,7 @@ html{background:var(--bg);min-height:100%}
         <button class="btn primary" id="installBtn" hidden>Установить как приложение</button>
         <button class="btn quiet" id="resetBtn">Сбросить сохранённые данные</button>
       </div>
+      <p class="set-note" id="offlineInfo"></p>
     </section>
 
     <section class="set-sec set-sec--keys">
@@ -912,17 +981,29 @@ html{background:var(--bg);min-height:100%}
 </dialog>
 <div id="toast" role="status"></div>
 
+<script src="offline-data.js"></script>
 <script src="config.js"></script>
 <script>
 (()=>{
 'use strict';
 document.documentElement.dataset.app='ok';
 const TZ='Asia/Yekaterinburg';                                  // Пермь
-const API_BASE=((self.SCHEDULE_CONFIG&&self.SCHEDULE_CONFIG.apiBase)||'').replace(/\/$/,'');
+/* Локальный запуск, file:// и домашняя сеть всегда работают со своим сервером /
+   встроенной копией данных: гонять запросы на внешний API им не нужно. */
+const LOCAL_HOST=(function(){
+  var h=(typeof location!=='undefined'&&location.hostname)||'';
+  var p=(typeof location!=='undefined'&&location.protocol)||'';
+  return p==='file:'||!h||/^(localhost|127(?:\.\d{1,3}){3}|0\.0\.0\.0|\[::1\]|::1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i.test(h)||/\.local$/i.test(h);
+})();
+const CONFIGURED_API=((self.SCHEDULE_CONFIG&&self.SCHEDULE_CONFIG.apiBase)||'').replace(/\/$/,'');
+const API_BASE=LOCAL_HOST?'':CONFIGURED_API;
 const SITE_BASE=new URL('./',location.href);
-const NEEDS_API=location.hostname.endsWith('.github.io')&&!API_BASE;
+const NEEDS_API=false;
 const MIRROR_URL='';
 const IS_MIRROR=false;
+const SNAPSHOT=(self.SCHEDULE_SNAPSHOT&&Array.isArray(self.SCHEDULE_SNAPSHOT.days))?self.SCHEDULE_SNAPSHOT:null;
+const isOffline=()=>typeof navigator!=='undefined'&&navigator.onLine===false;
+const FILE_MODE=location.protocol==='file:';
 const WD_SHORT=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const WD_FULL=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
 const MON_GEN=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
@@ -1016,10 +1097,27 @@ const store={
 const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:true,vibrant:false,view:'day',icon:'class',push:false,strip:false},store.get('sch.prefs',{}));
 delete prefs.progress;
 if(prefs.vibrant)document.body.classList.add('vibrant');
-const APP_VER='264';
-const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:true,slow:false,lastFetch:0,enter:false};
+const APP_VER='266';
+const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:!isOffline(),slow:false,lastFetch:0,enter:false,source:'',savedAt:0};
+/* Единая точка приёма данных: массив дней из API/снимка или объект из localStorage. */
+function adoptDays(j,source){
+ if(!j)return;
+ const list=Array.isArray(j.days)?j.days:Object.keys(j.days||{}).map(k=>j.days[k]);
+ list.forEach(d=>{if(d&&d.date)S.days[d.date]=d});
+ const m=j.meta||{};
+ Object.assign(S.meta,{ok:j.ok!==false,error:j.error||m.error||'',updated:j.updated||m.updated||S.meta.updated,
+   sheet:j.sheet_url||m.sheet||S.meta.sheet,cls:j.class||m.cls||S.meta.cls});
+ S.source=source;
+ S.savedAt=j.saved_at||j.updated||m.updated||0;
+}
+/* Старт без сети: сначала сохранённое на устройстве, затем встроенный снимок,
+   если он свежее. Так расписание есть даже при самом первом запуске офлайн. */
 const cached=store.get('sch.data',null);
-if(cached){S.days=cached.days||{};Object.assign(S.meta,cached.meta||{});}
+if(cached&&cached.days)adoptDays(cached,'cache');
+if(SNAPSHOT){
+ const saved=Math.max(cached&&cached.savedAt||0,cached&&cached.meta&&cached.meta.updated||0);
+ if(!cached||!cached.days||SNAPSHOT.updated>=saved)adoptDays(SNAPSHOT,'snapshot');
+}
 try{const qDay=new URLSearchParams(location.search).get('day');if(/^\d{4}-\d{2}-\d{2}$/.test(qDay||'')){S.sel=qDay;S.picked=true}}catch(e){}
 const seen=store.get('sch.seen',{});
 let railSig='',heroKey='',curBarP=-1;
@@ -1089,13 +1187,36 @@ function roomW(items){
  for(let i=0;i<items.length;i++){const it=items[i];if(it.kind==='w'||!it.room)continue;const s=roomShort(it.room);if(s.length>m)m=s.length}
  return m?' style="--roomW:'+Math.min(104,Math.max(56,Math.round(m*6.9)+20))+'px"':'';
 }
+/* кабинет, дописанный в ячейку предмета: «Англ319/221», «истор 305» */
+const ROOM_WORDS=['спортзал','стадион','актовый зал','библиотека','столовая','мастерская','бассейн'];
+function splitRoom(text){
+ const t=String(text||'').replace(/\s+/g,' ').trim();
+ const i=t.indexOf('(');
+ if(i>-1){
+   let room=t.slice(i).trim();
+   if(room.charAt(0)==='('&&room.charAt(room.length-1)===')')room=room.slice(1,-1);
+   return{subject:t.slice(0,i).trim(),room:room.trim()};
+ }
+ const low=t.toLowerCase();
+ for(const w of ROOM_WORDS){
+   if(low.length>w.length+2&&low.slice(-w.length-1)===' '+w)
+     return{subject:t.slice(0,-w.length).replace(/[\s,-]+$/,''),room:t.slice(-w.length).trim()};
+ }
+ const m=t.match(/^(.*[A-Za-zА-Яа-яЁё].*?)\s*(?:каб\.?\s*)?(\d{2,3}[A-Za-zА-Яа-яЁё]?(?:\s*[/,]\s*\d{1,3}[A-Za-zА-Яа-яЁё]?)*)$/);
+ if(m&&m[1].replace(/[\s,-]+$/,'').length>=3)
+   return{subject:m[1].replace(/[\s,-]+$/,''),room:m[2].trim()};
+ return{subject:t,room:''};
+}
 function prep(day){
  const raw=(day&&day.lessons)||[];let i=0;
  while(i<raw.length&&!raw[i].raw)i++;
  const out=[];
  for(let k=i;k<raw.length;k++){
    const l=raw[k],tm=parseTime(l.time);
-   if(l.raw){const si=subjInfo(l.subject||l.raw);out.push({kind:'l',n:l.n,tm,room:l.room,title:si.title,color:si.color})}
+   if(l.raw){
+     const sp=splitRoom(l.subject||l.raw),si=subjInfo(sp.subject);
+     out.push({kind:'l',n:l.n,tm,room:l.room||sp.room,title:si.title,color:si.color});
+   }
    else out.push({kind:'w',n:l.n,tm});
  }
  return out;
@@ -1169,12 +1290,17 @@ function heroHTML(st,n){
    return head('idle','Уроков нет',glyph(ICON.moon),
      `<h2>Сегодня уроков нет</h2>
       <div class="meta"><span>В таблице на ${isoDM(n.iso).d} ${MON_GEN[isoDM(n.iso).m-1]} для ${esc(S.meta.cls)} пусто</span></div>`);
-  default:{const k=st.weekend?nextDayWithLessons(n.iso):null,s=k?stats(prep(S.days[k])):null;
+  default:{const k=nextDayWithLessons(n.iso),s=k?stats(prep(S.days[k])):null;
    const rel=k?(relLabel(k,n.iso)||WD_FULL[isoWd(k)]):'';
-   const info=k?`${rel}: ${lessonsWord(s.count)}${s.start?`, начало в ${s.start}`:''}`:(st.weekend?'Отдыхай — расписание появится здесь':'Как только день добавят в таблицу, он появится тут');
+   /* Не показываем унылое «нет данных», если расписание на ближайший день уже есть. */
+   if(k)return head('soon','Ближайшие уроки','',
+     `<h2>${rel}: ${lessonsWord(s.count)}</h2>
+      <div class="meta"><span>${s.start?`Начало в ${s.start}${s.end?`, конец в ${s.end}`:''}`:'Расписание уже опубликовано'}</span></div>
+      <div class="next"><span class="arw">${ICON.arrow}</span><span>На сегодня уроков нет</span></div>
+      <button class="cta" data-go="${k}">${ICON.arrow}Открыть ${rel.toLowerCase()}</button>`);
    return head('idle',st.weekend?'Выходной':'Нет данных',glyph(st.weekend?ICON.moon:ICON.cal),
      `<h2>${st.weekend?'Сегодня выходной':'Расписания пока нет'}</h2>
-      <div class="meta"><span>${info}</span></div>`);}
+      <div class="meta"><span>${st.weekend?'Отдыхай — расписание появится здесь':'Как только день добавят в таблицу, он появится тут'}</span></div>`);}
  }
 }
 
@@ -1243,21 +1369,21 @@ function rowHTML(it,ctx){
 const emptyHTML=(icon,title,text)=>`<div class="empty">${icon}<b>${title}</b><p>${text}</p></div>`;
 function noticeHTML(){
  if(S.online&&S.meta.ok&&!S.slow)return'';
- if(!S.online&&MIRROR_URL&&!IS_MIRROR){
-  return `<div class="notice mirror">${ICON.off}<span><b>Извините, этот домен плохо работает без VPN.</b> Основной сайт на Render не отвечает — откройте зеркало, оно открывается всегда.</span><a class="notice-go" href="${MIRROR_URL}">Перейти на зеркало</a></div>`;
+ if(!S.online){
+  const has=Object.keys(S.days).length;
+  const text=has?'<b>Офлайн.</b> Показано расписание с устройства — всё работает без сети. Обновится само, когда сеть вернётся.'
+                :'<b>Офлайн.</b> Сохранённой копии пока нет. Один раз откройте сайт с интернетом — дальше он будет работать и без него.';
+  return `<div class="notice notice--offline">${ICON.off}<span>${text}</span>${has?'<span class="notice-badge">Офлайн-копия</span>':''}</div>`;
  }
- if(S.slow&&MIRROR_URL&&!IS_MIRROR){
-  return `<div class="notice mirror">${ICON.off}<span>Сайт грузится медленно — домен на Render часто «засыпает». Можно подождать или открыть зеркало, оно работает без VPN.</span><a class="notice-go" href="${MIRROR_URL}">Открыть зеркало</a></div>`;
- }
- const t=NEEDS_API?'Сервер расписания ещё не подключён. Требуется настройка адреса API.':!S.online?'Нет связи с сервером — показаны данные, сохранённые на устройстве':esc(S.meta.error||'Таблица сейчас недоступна');
+ if(S.slow)return `<div class="notice">${ICON.clock}<span>Сервер отвечает медленно — показываем сохранённое расписание, обновление продолжится в фоне.</span></div>`;
+ const t=NEEDS_API?'Сервер расписания ещё не подключён. Требуется настройка адреса API.':esc(S.meta.error||'Таблица сейчас недоступна — показаны сохранённые данные');
  return `<div class="notice">${ICON.off}<span>${t}</span><button data-act="retry">Повторить</button></div>`;
 }
 function dayHTML(iso,n){
  const d=S.days[iso],items=prep(d);
  if(!S.loaded&&!d)return'<div class="list" role="list"><div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>';
  if(!d&&!S.online&&!Object.keys(S.days).length){
-  if(MIRROR_URL&&!IS_MIRROR)return emptyHTML(ICON.off,'Сайт не отвечает','Похоже, этот домен не открывается без VPN. На зеркале расписание доступно всегда.')+`<a class="btn primary" href="${MIRROR_URL}">Перейти на зеркало</a>`;
-  return emptyHTML(ICON.off,'Сайт не отвечает','Нет связи с сервером и нет сохранённых данных. Проверьте интернет и попробуйте ещё раз.')+'<button class="btn" data-act="retry">Повторить</button>';
+  return emptyHTML(ICON.off,'Пока нет сохранённого расписания','Один раз откройте сайт с интернетом — он сохранит расписание на устройство, и дальше будет работать без сети.');
  }
  if(!d)return emptyHTML(ICON.cal,'Расписание ещё не опубликовано','Когда этот день появится в таблице, он сразу покажется здесь.');
  if(!items.length)return emptyHTML(ICON.moon,'В этот день уроков нет','В таблице для '+esc(S.meta.cls)+' на эту дату пусто. Возможно, это выходной.');
@@ -1342,13 +1468,20 @@ function renderHead(){
 }
 function renderFoot(){
  const u=S.meta.updated,parts=[];
- if(u){const p=schoolParts(u),n=schoolParts(Math.floor(Date.now()/1000)),same=n.day===p.day&&n.month===p.month;
+ if(!S.online){
+   const p=S.savedAt?schoolParts(S.savedAt):null;
+   parts.push(`<span class="foot-net">Офлайн${p?' · сохранено '+p.day+'.'+p.month+' в '+p.hour+':'+p.minute:''}</span>`);
+ }else if(u){const p=schoolParts(u),n=schoolParts(Math.floor(Date.now()/1000)),same=n.day===p.day&&n.month===p.month;
    parts.push(`<span>Таблица проверена ${same?'':p.day+'.'+p.month+' '}в ${p.hour}:${p.minute}</span>`)}
  if(S.meta.sheet)parts.push(`<a href="${esc(S.meta.sheet)}" target="_blank" rel="noopener">Открыть таблицу</a>`);
- if(MIRROR_URL&&!IS_MIRROR)parts.push(`<a href="${MIRROR_URL}" rel="noopener" title="Зеркало на PythonAnywhere — открывается без VPN">Зеркало без VPN</a>`);
- else if(IS_MIRROR)parts.push('<span>Зеркало · работает без VPN</span>');
-  parts.push('<span>версия '+APP_VER+'</span>');
-$('#foot').innerHTML=parts.join(' <span class="sep" aria-hidden="true"></span> ');
+ parts.push('<span class="foot-net foot-net--ok">Работает без интернета</span>');
+ parts.push('<span>версия '+APP_VER+'</span>');
+ $('#foot').innerHTML=parts.join(' <span class="sep" aria-hidden="true"></span> ');
+}
+function paintOfflineInfo(){
+ const el=$('#offlineInfo');if(!el)return;
+ const n=Object.keys(S.days).length;
+ el.innerHTML=`Офлайн-копия: <b>${n} ${plural(n,'день','дня','дней')}</b> · ${S.online?'данные обновлены':'работаем без сети'}`;
 }
 function renderHero(st,n){
  const key=st.t+'|'+((st.cur&&st.cur.n)||(st.next&&st.next.n)||'')+'|'+n.iso+'|'+(S.loaded?1:0)+'|'+S.meta.cls+'|'+(prefs.rooms?1:0);
@@ -1392,7 +1525,7 @@ function render(){
   if(!S.sel)S.sel=pickDefault();
   renderHead();renderRail();renderMain();
   const n=nowSchool(),st=statusNow(n);
-  renderHero(st,n);liveTick(st,n);setDayProgress(st,n);renderFoot();
+  renderHero(st,n);liveTick(st,n);setDayProgress(st,n);renderFoot();paintOfflineInfo();
   S.enter=false;
  }catch(e){
   console.error('render failed',e);
@@ -1402,36 +1535,48 @@ function render(){
 }
 
 /* ---------- данные ---------- */
-function persist(){store.set('sch.data',{days:S.days,meta:S.meta})}
+function persist(){store.set('sch.data',{days:S.days,meta:S.meta,savedAt:Math.floor(Date.now()/1000)})}
 function merge(j){
  (j.days||[]).forEach(d=>{S.days[d.date]=d});
  const lim=isoAdd(nowSchool().iso,-21);
  Object.keys(S.days).forEach(k=>{if(k<lim)delete S.days[k]});
- Object.assign(S.meta,{ok:j.ok,error:j.error||'',updated:j.updated||S.meta.updated,sheet:j.sheet_url||S.meta.sheet,cls:j.class||S.meta.cls});
+ Object.assign(S.meta,{ok:j.ok!==false,error:j.error||'',updated:j.updated||S.meta.updated,sheet:j.sheet_url||S.meta.sheet,cls:j.class||S.meta.cls});
+ S.source='network';S.savedAt=j.updated||Math.floor(Date.now()/1000);
  railSig='';
 }
 let toastT;
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)}
 let loadTry=0,slowT=0;
 async function load(force){
- const btn=$('#refreshBtn');btn.classList.add('spin');
+ const btn=$('#refreshBtn');
+ /* Ключевое для офлайна: не делаем сетевой запрос вообще, если сети нет.
+    Раньше сайт висел 15 секунд, пытаясь достучаться до внешнего API. */
+ if(isOffline()||FILE_MODE){
+   S.online=false;S.slow=false;S.loaded=true;S.lastFetch=Date.now();
+   btn.classList.remove('spin');
+   if(!S.picked)S.sel=pickDefault();
+   render();
+   return;
+ }
+ btn.classList.add('spin');
  S.slow=false;
  clearTimeout(slowT);
- /* если ответа нет 6 секунд — показываем плашку про зеркало, но продолжаем ждать */
- slowT=setTimeout(()=>{S.slow=true;render()},6000);
+ slowT=setTimeout(()=>{S.slow=true;render()},4500);
  const ctl=typeof AbortController!=='undefined'?new AbortController():null;
- const timer=ctl?setTimeout(()=>ctl.abort(),15000):0;
+ const timer=ctl?setTimeout(()=>ctl.abort(),7000):0;
  try{
    if(NEEDS_API)throw new Error('API is not configured');
    const r=await fetch(API_BASE+'/api/schedule'+(force?'?force=1':''),{cache:'no-store',signal:ctl?ctl.signal:undefined});
    if(!r.ok)throw new Error('HTTP '+r.status);
-   merge(await r.json());S.online=true;loadTry=0;S.lastFetch=Date.now();
+   const j=await r.json();
+   if(!j||!Array.isArray(j.days))throw new Error('bad payload');
+   merge(j);S.online=true;loadTry=0;S.lastFetch=Date.now();
    if(force)toast(S.meta.ok?'Расписание обновлено':(S.meta.error||'Не удалось обновить'));
  }catch(e){
    S.online=false;
-   if(force||!S.loaded)toast('Нет связи. Показаны сохранённые данные');
-   /* домен мог «заснуть» — сами пробуем ещё пару раз */
-   if(loadTry<2&&!IS_MIRROR&&!NEEDS_API){loadTry++;setTimeout(()=>{if(!S.online)load(false)},12000)}
+   if(force)toast('Нет связи — расписание с устройства');
+   /* один повтор только когда браузер уверен, что сеть есть */
+   if(loadTry<1&&!isOffline()){loadTry++;setTimeout(()=>{if(!S.online&&!isOffline())load(false)},20000)}
  }finally{
    clearTimeout(timer);clearTimeout(slowT);S.slow=false;
    if(!S.loaded)S.enter=true;
@@ -1440,6 +1585,9 @@ async function load(force){
    render();
  }
 }
+/* Мгновенная реакция на пропажу/появление сети без ожидания таймеров. */
+addEventListener('offline',()=>{S.online=false;S.slow=false;clearTimeout(slowT);$('#refreshBtn').classList.remove('spin');render()});
+addEventListener('online',()=>{loadTry=0;load(false)});
 
 /* ---------- тема ---------- */
 function applyTheme(t){
@@ -1490,7 +1638,7 @@ function dayText(iso){
    if(it.kind==='w')lines.push(`${it.n}. — окно`);
    else lines.push(`${it.n}. ${it.tm?it.tm.a+'–'+it.tm.b+' ':''}${it.title}${it.room&&prefs.rooms?' · '+roomText(it.room):''}`);
  });
- lines.push('','Расписание '+S.meta.cls+': '+new URL('?day='+iso,SITE_BASE).href);
+ lines.push('',FILE_MODE?'Расписание '+S.meta.cls:'Расписание '+S.meta.cls+': '+new URL('?day='+iso,SITE_BASE).href);
  return lines.join('\n');
 }
 async function copyText(txt){
@@ -1544,7 +1692,10 @@ dlg.querySelectorAll('[data-pref]').forEach(i=>i.addEventListener('change',()=>{
 }));
 $('#resetBtn').addEventListener('click',()=>{
  store.del('sch.data');store.del('sch.seen');Object.keys(seen).forEach(k=>delete seen[k]);
- S.days={};S.picked=false;S.sel=null;railSig='';closeDlg();toast('Данные сброшены, загружаю заново');load(true);
+ S.days={};S.meta={ok:true,error:'',updated:0,sheet:'',cls:'8Г'};S.picked=false;S.sel=null;railSig='';heroKey='';
+ /* сброс не должен оставлять пустой экран офлайн — сразу поднимаем встроенную копию */
+ if(SNAPSHOT)adoptDays(SNAPSHOT,'snapshot');
+ closeDlg();toast('Сохранённые данные сброшены');load(true);render();
 });
 /* ---------- установка на телефон ---------- */
 let deferred=null;
@@ -1599,6 +1750,7 @@ async function paintPushState(){
  try{const reg=await pushReg();const sub=reg?await reg.pushManager.getSubscription():null;paintPush(!!sub)}catch(e){paintPush(false)}
 }
 async function pushSync(){
+ if(isOffline()||FILE_MODE)return false;
  if(!pushSupported||!prefs.push||Notification.permission!=='granted')return false;
  const key=await pushKey();if(!key)return false;
  const reg=await pushReg();if(!reg)return false;
@@ -1722,16 +1874,18 @@ setInterval(()=>{
    if(n.iso!==lastDay){lastDay=n.iso;if(!S.picked)S.sel=null;railSig='';heroKey='';render()}
    else if(!S.picked){const p=pickDefault();if(p!==S.sel){S.sel=p;railSig='';render()}}
    renderFoot();
-   if(Date.now()-S.lastFetch>5*60*1000)load(false);
+   if(!isOffline()&&!FILE_MODE&&Date.now()-S.lastFetch>5*60*1000)load(false);
  }
 },1000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){syncTopbar();if(Date.now()-S.lastFetch>60*1000)load(false)}});
-if('serviceWorker' in navigator)window.addEventListener('load',async()=>{
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){syncTopbar();if(!isOffline()&&!FILE_MODE&&Date.now()-S.lastFetch>60*1000)load(false)}});
+if('serviceWorker' in navigator&&!FILE_MODE)window.addEventListener('load',async()=>{
+  /* controllerchange при первой установке — не повод перезагружать страницу */
+  const hadController=!!navigator.serviceWorker.controller;
   try{
     await navigator.serviceWorker.register('./sw.js');
     let refreshing=false;
     navigator.serviceWorker.addEventListener('controllerchange',()=>{
-      if(refreshing)return;
+      if(!hadController||refreshing)return;
       refreshing=true;
       if(document.visibilityState==='visible'){
         toast('Загружена новая версия — обновляю…');
@@ -1755,7 +1909,6 @@ if('serviceWorker' in navigator)window.addEventListener('load',async()=>{
  m.innerHTML='<div style="padding:18px 16px;border-radius:16px;background:#fff;border:1px solid rgba(99,102,241,.18);font:600 15px/1.5 system-ui,-apple-system,sans-serif;color:#0a0e1a">'
   +'<b style="display:block;font-size:17px;margin-bottom:6px">Браузер слишком старый</b>'
   +'Расписание не загрузилось: этот браузер не поддерживает часть кода сайта. Обновите Safari (Настройки → Основные → Обновление ПО) или откройте сайт в Chrome.'
-  +'<div style="margin-top:10px">Зеркало: <a href="https://nassda.pythonanywhere.com/" style="color:#4f46e5;display:inline-block;padding:10px 0">nassda.pythonanywhere.com</a></div>'
   +'<button onclick="location.reload()" style="margin-top:12px;padding:10px 16px;border-radius:12px;border:0;background:#4f46e5;color:#fff;font:700 15px system-ui,-apple-system,sans-serif">Перезагрузить</button>'
   +'</div>';
 })();

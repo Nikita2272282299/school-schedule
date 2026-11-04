@@ -140,17 +140,36 @@ def day_header(cells, today):
     return None
 
 
+ROOM_WORDS = ("спортзал", "стадион", "актовый зал", "библиотека", "столовая",
+              "мастерская", "бассейн")
+# хвост-кабинет: «313», «319/221», «210а», «305, 407»
+ROOM_TAIL = re.compile(r"^(.*[A-Za-zА-Яа-яЁё].*?)\s*(?:каб\.?\s*)?"
+                       r"(\d{2,3}[A-Za-zА-Яа-яЁё]?(?:\s*[/,]\s*\d{1,3}[A-Za-zА-Яа-яЁё]?)*)$")
+
+
 def split_lesson(text):
-    """«Физика, Алг (305(2),407)» → («Физика, Алг», «305(2),407»)."""
+    """Разделяет предмет и кабинет.
+
+    «Физика, Алг (305(2),407)» → («Физика, Алг», «305(2),407»)
+    «Англ 319/221» → («Англ», «319/221»)
+    «Физкультура спортзал» → («Физкультура», «спортзал»)
+    """
     text = re.sub(r"\s+", " ", text or "").strip()
     i = text.find("(")
-    if i == -1:
-        return text, ""
-    subject = text[:i].strip()
-    room = text[i:].strip()
-    if room.startswith("(") and room.endswith(")"):
-        room = room[1:-1]
-    return subject, room.strip()
+    if i > -1:
+        subject = text[:i].strip()
+        room = text[i:].strip()
+        if room.startswith("(") and room.endswith(")"):
+            room = room[1:-1]
+        return subject, room.strip()
+    low = text.lower()
+    for word in ROOM_WORDS:
+        if low.endswith(" " + word) and len(text) > len(word) + 2:
+            return text[:-len(word)].strip(" ,-"), text[-len(word):].strip()
+    m = ROOM_TAIL.match(text)
+    if m and len(m.group(1).strip(" ,-")) >= 3:
+        return m.group(1).strip(" ,-"), m.group(2).strip()
+    return text, ""
 
 
 def clean_time(t):
@@ -584,6 +603,9 @@ def build_payload(force=False):
 
 STATIC = {
     "/config.js": ("config.js", "application/javascript; charset=utf-8", "no-cache"),
+    "/offline-data.js": ("offline-data.js", "application/javascript; charset=utf-8", "no-cache"),
+    "/assets/fonts/manrope-cyrillic-400-800-normal.woff2": ("assets/fonts/manrope-cyrillic-400-800-normal.woff2", "font/woff2", "public, max-age=31536000, immutable"),
+    "/assets/fonts/manrope-latin-400-800-normal.woff2": ("assets/fonts/manrope-latin-400-800-normal.woff2", "font/woff2", "public, max-age=31536000, immutable"),
     "/": ("index.html", "text/html; charset=utf-8", "no-cache"),
     "/index.html": ("index.html", "text/html; charset=utf-8", "no-cache"),
     "/sw.js": ("sw.js", "application/javascript; charset=utf-8", "no-cache"),
