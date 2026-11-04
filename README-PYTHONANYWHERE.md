@@ -129,3 +129,27 @@ git add index.html && git commit -m "зеркало: адрес" && git push
 2. Открыть основной сайт Render — в подвале ссылка «Зеркало без VPN».
 3. Остановить основной сайт (или дождаться, пока он заснёт) и открыть его:
    появится сообщение про VPN и кнопка перехода на зеркало.
+
+---
+
+## Обновление до актуальной версии (офлайн без интернета)
+
+`pa_update.sh` в корне репозитория обновляет файлы веб-приложения прямо из
+GitHub и перезапускает его. В **Consoles → Bash** на PythonAnywhere достаточно
+одной строки:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/Nikita2272282299/school-schedule/main/pa_update.sh)
+```
+
+Скрипт сам находит каталог приложения по WSGI-конфигу, скачивает `index.html`,
+`sw.js`, `config.js`, `offline-data.js`, `manifest.json`, `app.py`, `pa_wsgi.py`,
+`cors.py` и оба шрифта Manrope, затем делает `touch` WSGI-файла (аналог кнопки
+Reload). Папка `data/` с историей дней, VAPID-ключами и подписками не трогается.
+
+Проверка: `/healthz` → `ok`, `/offline-data.js` → `200`, версия в заголовке
+страницы `266`, в исходниках нет `fonts.googleapis.com`. Обновление можно
+повторять сколько угодно: оно всегда берёт последнюю версию из ветки `main`.
+
+Если консоль недоступна: `cd ~/school-schedule && git pull --ff-only`, затем
+кнопка **Reload** на странице Web.
