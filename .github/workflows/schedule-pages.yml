@@ -1,0 +1,37 @@
+name: Schedule GitHub Pages
+on:
+  push:
+    branches: [main]
+    paths: ['school-schedule/**', '.github/workflows/schedule-pages.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: schedule-pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s school-schedule/tests
+      - run: node school-schedule/check_js.cjs
+      - name: Require configured production API
+        run: node school-schedule/check_api.cjs
+      - run: python school-schedule/build_pages.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: school-schedule/pages-dist
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

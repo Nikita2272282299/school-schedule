@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+data/
+days_store.json
+vapid.json
+push_subs.json
+.env
+pages-dist/
