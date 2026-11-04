@@ -18,7 +18,8 @@ py app.py
 ## API вне Render
 
 GitHub Pages не запускает Python. Нужен отдельный HTTPS-сервер с постоянным диском.
-Адрес schedule8g.pythonanywhere.com на момент проверки возвращал заглушку 404: это НЕ рабочее зеркало.
+Рабочее зеркало API: https://nassda.pythonanywhere.com (проверено 2026-11-04: `/healthz` → ok, `/api/schedule` → ok:true, CORS для github.io включён).
+Старый адрес schedule8g.pythonanywhere.com возвращал заглушку 404: это НЕ рабочее зеркало.
 На PythonAnywhere настройте веб-приложение WSGI, виртуальное окружение с requirements.txt и путь к этой папке. Пример WSGI:
 
 ```python
@@ -36,7 +37,7 @@ from pa_wsgi import application
 
 ## Подключение Pages
 
-В `config.js` указать реальный адрес API, например `https://USERNAME.pythonanywhere.com` (без `/api`). Не указывать выдуманный или неработающий адрес. Пустая строка предназначена для совместного локального размещения.
+В `config.js` для Pages указан реальный адрес API `https://nassda.pythonanywhere.com` (без `/api`). Не указывать выдуманный или неработающий адрес. Пустая строка предназначена для совместного локального размещения.
 Сервер API должен использовать `pa_wsgi.application` с ограниченным CORS.
 В репозитории `Nikita2272282299/school-schedule`: Settings → Pages → Source → GitHub Actions.
 Workflow `.github/workflows/schedule-pages.yml` проверяет код, собирает только 8 разрешённых публичных файлов и развёртывает Pages.
