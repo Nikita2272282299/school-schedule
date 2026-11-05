@@ -4,7 +4,7 @@ on:
     branches: [main]
     paths: ['school-schedule/**', '.github/workflows/schedule-pages.yml']
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 permissions:
   contents: write

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Расписание 8Г · версия 268</title>
+<title>Расписание 8Г · версия 269</title>
 <meta name="description" content="Живое расписание 8Г: что идёт сейчас, сколько осталось до звонка, кабинеты и уроки на неделю.">
 <meta name="theme-color" content="#f0f4ff" id="themeColor">
 <meta name="color-scheme" content="light dark">
@@ -1210,7 +1210,7 @@ const prefs=sanitizePrefs(savedPrefs);
 store.set('sch.prefs',prefs);
 if(transfer)try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
 if(prefs.vibrant)document.body.classList.add('vibrant');
-const APP_VER='268';
+const APP_VER='269';
 const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:!isOffline(),slow:false,lastFetch:0,enter:false,source:'',savedAt:0};
 /* Единая точка приёма данных: массив дней из API/снимка или объект из localStorage. */
 function adoptDays(j,source){
@@ -1669,8 +1669,112 @@ function dataSig(){
  return Object.keys(S.days).sort().map(k=>k+':'+(S.days[k].lessons||[]).length+':'+(S.days[k].changed||0)).join('|')
    +'|'+S.meta.updated+'|'+S.meta.cls+'|'+(S.online?1:0)+'|'+(S.picked?1:0);
 }
+/* Прямой опрос Google-таблицы через gviz JSONP — раз в минуту.
+   Браузер грузит <script src="gviz">, Google отдаёт JSONP-обёртку,
+   мы перехватываем google.visualization.Query.setResponse.
+   Так расписание обновляется без сервера и без CORS. */
+const SHEET_ID='1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE';
+const CLASS_COL_TARGET='8г'; /* norm() от "8Г" */
+let gvizBusy=false;
+function loadSheet(){
+ if(isOffline()||FILE_MODE||gvizBusy)return;
+ gvizBusy=true;
+ const s=document.createElement('script');
+ s.onerror=()=>{gvizBusy=false;s.remove()};
+ const cleanup=()=>{gvizBusy=false;s.remove();delete window.google};
+ s.onload=()=>{setTimeout(cleanup,200)};
+ const old=window.google;
+ window.google={visualization:{Query:{setResponse:(resp)=>{
+   cleanup();
+   try{
+    if(!resp||resp.status!=='ok'||!resp.table||!resp.table.rows)return;
+    const rows=resp.table.rows.map(r=>(r.c||[]).map(c=>c?String(c.v!=null?c.v:c.f||''):''));
+    /* Парсим как CSV-строки — reuse логику из app.py на стороне клиента */
+    const parsed=parseSheetJS(rows,CLASS_COL_TARGET);
+    if(parsed.days&&Object.keys(parsed.days).length){
+     const j={class:'8Г',ok:true,error:'',updated:Math.floor(Date.now()/1000),
+              sheet_url:'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/edit',
+              days:Object.values(parsed.days)};
+     merge(j);S.online=true;S.lastFetch=Date.now();persist();
+     if(dataSig()!==dataSigBefore)render();
+     else renderFoot();
+    }
+   }catch(e){}
+ }}}};
+ s.src='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json';
+ s.async=true;
+ document.head.appendChild(s);
+}
+let dataSigBefore='';
+/* Минималистичный парсер таблицы на JS — та же логика, что в app.py.parse_sheet */
+function normJS(s){return (s||'').replace(/\s+/g,'').toLowerCase().replace(/[aeocpxymthb]/g,c=>({a:'а',e:'е',o:'о',c:'с',p:'р',x:'х',y:'у',m:'м',t:'т',h:'н',b:'в'})[c]||c)}
+function parseSheetJS(rows,target){
+ const DATE_RE=/(\d{1,2})\s+(января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)/i;
+ const WD={понедельник:0,вторник:1,среда:2,четверг:3,пятница:4,суббота:5,воскресенье:6};
+ const TIME_RE=/(\d{1,2})[:.](\d{2})\s*[-–—]\s*(\d{1,2})[:.](\d{2})/;
+ const BELLS={1:'8:00-8:40',2:'8:50-9:30',3:'9:45-10:25',4:'10:40-11:20',5:'11:35-12:15',6:'12:25-13:05',7:'13:15-13:55',8:'14:00-14:40',9:'14:55-15:35'};
+ const MONTHS={января:1,февраля:2,марта:3,апреля:4,мая:5,июня:6,июля:7,августа:8,сентября:9,октября:10,ноября:11,декабря:12};
+ const WD_NAMES=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
+ const CLASS_RE=/^\d{1,2}[а-яёa-z]$/;
+ const today=new Date();
+ const todayStr=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+ function closestDate(day,month){
+  const best={d:null,diff:Infinity};
+  for(const y of [today.getFullYear()-1,today.getFullYear(),today.getFullYear()+1]){
+   try{const d=new Date(y,month-1,day);const diff=Math.abs(d-today);if(diff<best.diff){best.d=d;best.diff=diff}}catch(e){}
+  }
+  return best.d;
+ }
+ function dayHeader(cells){
+  if(cells.slice(0,4).some(c=>TIME_RE.test(c)))return null;
+  let fd=null,fw=null;
+  for(const c of cells){
+   const low=c.toLowerCase().trim();if(!low||low.length>40)continue;
+   const m=low.match(DATE_RE);if(m&&!fd){fd=closestDate(+m[1],MONTHS[m[2]])}
+   for(const[n,i]of Object.entries(WD)){if(low===n||low.startsWith(n+',')){fw=i}}
+  }
+  if(fd)return fd;
+  if(fw!=null){const d=new Date(today);for(const off of[0,1,-1,2,-2,3,-3]){const dd=new Date(d);dd.setDate(dd.getDate()+off);if(dd.getDay()===(fw+1)%7)return dd}}
+  return null;
+ }
+ let cur=null,col=null,firstClassCol=3,days={},found=false;
+ function finish(day){
+  if(!day||!day.hasClass)return;
+  const lessons=Object.values(day.lessons).sort((a,b)=>a.n-b.n);
+  while(lessons.length&&!lessons[lessons.length-1].raw)lessons.pop();
+  if(!lessons.some(l=>l.raw))return;
+  const iso=day.date.getFullYear()+'-'+String(day.date.getMonth()+1).padStart(2,'0')+'-'+String(day.date.getDate()).padStart(2,'0');
+  days[iso]={date:iso,weekday:WD_NAMES[day.date.getDay()===0?6:day.date.getDay()-1],lessons:lessons};
+ }
+ for(const row of rows){
+  const cells=row.map(c=>c.trim());
+  if(!cells.some(c=>c))continue;
+  const dh=dayHeader(cells);
+  if(dh){finish(cur);cur={date:dh,hasClass:false,lessons:{}};col=null;continue}
+  const nc=cells.map(normJS);
+  const classCols=nc.map((c,i)=>CLASS_RE.test(c)?i:-1).filter(i=>i>=0);
+  if(classCols.length>=3){
+   if(!cur)cur={date:today,hasClass:false,lessons:{}};
+   firstClassCol=classCols[0];
+   const ti=nc.indexOf(target);
+   if(ti>=0){col=ti;cur.hasClass=true;found=true}else{col=null}
+   continue;
+  }
+  if(!cur||col==null)continue;
+  const left=cells.slice(0,firstClassCol);
+  const num=left.find(c=>/^\d{1,2}$/.test(c));
+  if(!num)continue;
+  const timeStr=left.find(c=>TIME_RE.test(c))||BELLS[+num]||'';
+  const text=cells[col]||'';
+  if(num in cur.lessons&&cur.lessons[num].raw)continue;
+  cur.lessons[+num]={n:+num,time:timeStr,raw:text};
+ }
+ finish(cur);
+ return{days,found};
+}
 async function load(force){
- const btn=$('#refreshBtn'),wasLoaded=S.loaded,before=dataSig();
+ const btn=$('#refreshBtn'),wasLoaded=S.loaded;
+ dataSigBefore=dataSig();
  /* Ключевое для офлайна: не делаем сетевой запрос вообще, если сети нет.
     Раньше сайт висел 15 секунд, пытаясь достучаться до внешнего API. */
  if(isOffline()||FILE_MODE){
@@ -1704,7 +1808,7 @@ async function load(force){
    if(!S.loaded)S.enter=true;
    S.loaded=true;btn.classList.remove('spin');persist();
    if(!S.picked)S.sel=pickDefault();
-   if(!wasLoaded||dataSig()!==before)render();
+   if(!wasLoaded||dataSig()!==dataSigBefore)render();
    else renderFoot();
  }
 }
@@ -2008,10 +2112,10 @@ setInterval(()=>{
    if(n.iso!==lastDay){lastDay=n.iso;if(!S.picked)S.sel=null;railSig='';heroKey='';render()}
    else if(!S.picked){const p=pickDefault();if(p!==S.sel){S.sel=p;railSig='';render()}}
    renderFoot();
-   if(!isOffline()&&!FILE_MODE&&Date.now()-S.lastFetch>5*60*1000)load(false);
+   if(!isOffline()&&!FILE_MODE)loadSheet();
  }
 },1000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){syncTopbar();if(!isOffline()&&!FILE_MODE&&Date.now()-S.lastFetch>60*1000)load(false)}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){syncTopbar();if(!isOffline()&&!FILE_MODE)loadSheet()}});
 if('serviceWorker' in navigator&&!FILE_MODE)window.addEventListener('load',async()=>{
   /* controllerchange при первой установке — не повод перезагружать страницу */
   const hadController=!!navigator.serviceWorker.controller;
