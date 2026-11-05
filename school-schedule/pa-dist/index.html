@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Расписание 8Г · версия 267</title>
+<title>Расписание 8Г · версия 268</title>
 <meta name="description" content="Живое расписание 8Г: что идёт сейчас, сколько осталось до звонка, кабинеты и уроки на неделю.">
 <meta name="theme-color" content="#f0f4ff" id="themeColor">
 <meta name="color-scheme" content="light dark">
@@ -16,9 +16,6 @@
 <!-- Шрифт лежит рядом с сайтом: никаких внешних запросов, одинаковый вид онлайн и офлайн. -->
 <link rel="preload" href="assets/fonts/manrope-cyrillic-400-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/manrope-latin-400-800-normal.woff2" as="font" type="font/woff2" crossorigin>
-<!-- Данные и конфиг начинают грузиться сразу, а не после парсинга 120 КБ HTML. -->
-<link rel="preload" href="offline-data.js" as="script">
-<link rel="preload" href="config.js" as="script">
 <script>
 /* Тема применяется до первой отрисовки. Читаем и localStorage, и cookie-бэкап:
    если браузер почистил одно хранилище, настройки всё равно восстановятся. */
@@ -1057,8 +1054,11 @@ html{scroll-behavior:smooth}
 </dialog>
 <div id="toast" role="status"></div>
 
-<script src="offline-data.js"></script>
-<script src="config.js"></script>
+<!-- Конфиг и офлайн-копия встроены: на хостинге с дорогим запросом (PythonAnywhere)
+     это убирает два блокирующих запроса из первого экрана. Файлы config.js и
+     offline-data.js остаются на диске для Service Worker и проверок сборки. -->
+<script>/*BOOT:CONFIG*/self.SCHEDULE_CONFIG={apiBase:location.hostname.endsWith('.github.io')?'https://nassda.pythonanywhere.com':''};/*BOOT:CONFIG:END*/</script>
+<script>/*BOOT:SNAPSHOT*/self.SCHEDULE_SNAPSHOT = {"class":"8Г","ok":true,"error":"","updated":1793795365,"sheet_url":"https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit","days":[{"date":"2026-11-05","weekday":"Четверг","lessons":[{"n":1,"time":"8:00-8:40","subject":"","room":"","raw":""},{"n":2,"time":"8:50-9:30","subject":"физкульт","room":"","raw":"физкульт"},{"n":3,"time":"9:45-10:25","subject":"алгебр 313","room":"","raw":"алгебр 313"},{"n":4,"time":"10:40-11:20","subject":"англ319/221","room":"","raw":"англ319/221"},{"n":5,"time":"11:35-12:15","subject":"географ326","room":"","raw":"географ326"},{"n":6,"time":"12:25-13:05","subject":"истор 305","room":"","raw":"истор 305"}],"live":true,"first":1793781763,"changed":0}],"saved_at":1793795399};/*BOOT:SNAPSHOT:END*/</script>
 <script>
 (()=>{
 'use strict';
@@ -1210,7 +1210,7 @@ const prefs=sanitizePrefs(savedPrefs);
 store.set('sch.prefs',prefs);
 if(transfer)try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
 if(prefs.vibrant)document.body.classList.add('vibrant');
-const APP_VER='267';
+const APP_VER='268';
 const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:!isOffline(),slow:false,lastFetch:0,enter:false,source:'',savedAt:0};
 /* Единая точка приёма данных: массив дней из API/снимка или объект из localStorage. */
 function adoptDays(j,source){

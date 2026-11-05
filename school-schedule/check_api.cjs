@@ -3,6 +3,9 @@ const vm=require('node:vm');
 const ctx={self:{}};
 vm.runInNewContext(fs.readFileSync(__dirname+'/config.js','utf8'),ctx);
 const base=ctx.self.SCHEDULE_CONFIG.apiBase;
+/* Встроенный конфиг в HTML должен указывать туда же, куда config.js (им пользуется и SW). */
+const html=fs.readFileSync(__dirname+'/index.html','utf8');
+if(!html.includes("'"+base+"'"))throw Error('Embedded API base is out of sync with config.js');
 (async()=>{
  if(!base||!base.startsWith('https://'))throw Error('Configure a working HTTPS API in school-schedule/config.js before publishing.');
  const origin='https://nikita2272282299.github.io';

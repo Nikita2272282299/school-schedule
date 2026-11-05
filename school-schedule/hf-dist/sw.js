@@ -3,10 +3,12 @@ importScripts('./config.js');
 const BASE = new URL('./', self.location.href);
 const API = ((self.SCHEDULE_CONFIG && self.SCHEDULE_CONFIG.apiBase) || self.location.origin).replace(/\/$/, '');
 const PREFIX = 'schedule8g-' + BASE.pathname + '-';
-const V = PREFIX + 'v27';
+const V = PREFIX + 'v28';
 const asset = p => new URL(p, BASE).href;
 const STATIC = [
-  './', 'index.html', 'config.js', 'offline-data.js', 'manifest.json',
+  /* config.js нужен importScripts; offline-data.js теперь встроен в HTML и
+     страницей не запрашивается — лишний фоновый запрос на медленном хостинге не нужен. */
+  './', 'index.html', 'config.js', 'manifest.json',
   'icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png',
   'assets/fonts/manrope-cyrillic-400-800-normal.woff2',
   'assets/fonts/manrope-latin-400-800-normal.woff2'

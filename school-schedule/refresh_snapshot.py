@@ -12,8 +12,12 @@
 import argparse
 import json
 import pathlib
+import re
 import time
 import urllib.request
+
+# Встроенная копия в index.html (между маркерами) обновляется вместе с файлом.
+BOOT_RE = re.compile(r"/\*BOOT:SNAPSHOT\*/.*?/\*BOOT:SNAPSHOT:END\*/", re.S)
 
 BASE = pathlib.Path(__file__).resolve().parent
 DEFAULT_API = "https://nassda.pythonanywhere.com/api/schedule"
@@ -62,12 +66,20 @@ def main():
               "   скриптом refresh_snapshot.py. Файл нужен, чтобы сайт показывал расписание\n"
               "   даже при первом запуске без интернета, в том числе с file://. */\n")
     text = header + "self.SCHEDULE_SNAPSHOT = " + json.dumps(snap, ensure_ascii=False, indent=2) + ";\n"
+    inline = "/*BOOT:SNAPSHOT*/self.SCHEDULE_SNAPSHOT = " + json.dumps(snap, ensure_ascii=False) + ";/*BOOT:SNAPSHOT:END*/"
     for rel in TARGETS:
         folder = BASE / rel
         if rel != "." and not folder.exists():
             continue
         (folder / "offline-data.js").write_text(text, encoding="utf-8")
         print("обновлён", (folder / "offline-data.js").relative_to(BASE))
+        html = folder / "index.html"
+        if html.is_file():
+            src = html.read_text(encoding="utf-8")
+            out, n = BOOT_RE.subn(lambda _: inline, src, count=1)
+            if n:
+                html.write_text(out, encoding="utf-8")
+                print("обновлён встроенный снимок", html.relative_to(BASE))
     print("Источник:", source, "| дней:", len(snap["days"]))
 
 
