@@ -6,7 +6,7 @@ self.SCHEDULE_SNAPSHOT = {
   "class": "8Г",
   "ok": true,
   "error": "",
-  "updated": 1793875311,
+  "updated": 1793904045,
   "sheet_url": "https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit",
   "days": [
     {
@@ -58,7 +58,57 @@ self.SCHEDULE_SNAPSHOT = {
       ],
       "first": 0,
       "changed": 0
+    },
+    {
+      "date": "2026-11-06",
+      "weekday": "Пятница",
+      "lessons": [
+        {
+          "n": 1,
+          "time": "8:00-8:40",
+          "subject": "инф/труд",
+          "room": "423",
+          "raw": "инф/труд 423"
+        },
+        {
+          "n": 2,
+          "time": "8:50-9:30",
+          "subject": "биолог",
+          "room": "323",
+          "raw": "биолог 323"
+        },
+        {
+          "n": 3,
+          "time": "9:45-10:25",
+          "subject": "геометр",
+          "room": "209",
+          "raw": "геометр 209"
+        },
+        {
+          "n": 4,
+          "time": "10:40-11:20",
+          "subject": "инф/труд",
+          "room": "423",
+          "raw": "инф/труд 423"
+        },
+        {
+          "n": 5,
+          "time": "11:35-12:15",
+          "subject": "РМГ",
+          "room": "323",
+          "raw": "РМГ 323"
+        },
+        {
+          "n": 6,
+          "time": "12:25-13:05",
+          "subject": "физика",
+          "room": "303",
+          "raw": "физика 303"
+        }
+      ],
+      "first": 0,
+      "changed": 0
     }
   ],
-  "saved_at": 1793875311
+  "saved_at": 1793904045
 };
