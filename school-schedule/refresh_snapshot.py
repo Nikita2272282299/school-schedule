@@ -1,15 +1,18 @@
-"""Обновляет встроенную офлайн-копию расписания (offline-data.js).
+"""Обновляет встроенную офлайн-копию расписания (offline-data.js и блок в index.html).
 
 Запуск (из папки school-schedule):
 
-    py refresh_snapshot.py
-    py refresh_snapshot.py --api http://127.0.0.1:8000
+    py refresh_snapshot.py              # по умолчанию: напрямую из Google-таблицы
+    py refresh_snapshot.py --api URL    # из API (например http://127.0.0.1:8000/api/schedule)
+    py refresh_snapshot.py --sheet      # явно из Google-таблицы (для GitHub Actions)
 
 Без сети скрипт возьмёт данные из data/days_store.json. Файл offline-data.js
 обновляется в корне и во всех дистрибутивах, чтобы расписание было доступно
-при первом запуске сайта без интернета.
+при первом запуске сайта без интернета, в том числе с file://.
 """
 import argparse
+import csv
+import io
 import json
 import pathlib
 import re
@@ -33,6 +36,39 @@ def from_api(url):
     return {k: j.get(k) for k in ("class", "ok", "error", "updated", "sheet_url", "days")}
 
 
+def from_sheet():
+    """Скачивает Google-таблицу напрямую и парсит через app.parse_sheet."""
+    import app  # локальный модуль
+    today = app.now_perm().date()
+    found_any = False
+    errors = []
+    updates = {}
+    for gid in [None] + app.EXTRA_GIDS:
+        try:
+            rows = app.fetch_csv(gid)
+            days, found = app.parse_sheet(rows, app.CLASS_CODE, today)
+            found_any = found_any or found
+            updates.update(days)
+        except Exception as e:
+            errors.append(f"{type(e).__name__}: {e}")
+    if not found_any:
+        raise ValueError("Класс не найден в таблице. Ошибки: " + "; ".join(errors))
+    days_list = []
+    for iso, d in sorted(updates.items()):
+        d = dict(d)
+        d["first"] = 0
+        d["changed"] = 0
+        days_list.append(d)
+    return {
+        "class": app.CLASS_CODE.upper(),
+        "ok": True,
+        "error": "",
+        "updated": int(time.time()),
+        "sheet_url": app.SHEET_URL,
+        "days": days_list,
+    }
+
+
 def from_store():
     store = json.loads((BASE / "data/days_store.json").read_text(encoding="utf-8"))
     meta = store.get("meta", {})
@@ -51,15 +87,46 @@ def from_store():
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--api", default=DEFAULT_API, help="адрес /api/schedule")
+    ap.add_argument("--api", default=None, help="адрес /api/schedule (если задан, берёт оттуда)")
+    ap.add_argument("--sheet", action="store_true", help="скачать напрямую из Google-таблицы")
     args = ap.parse_args()
-    try:
-        snap = from_api(args.api)
-        source = args.api
-    except Exception as e:
-        print("API недоступен ({}), беру локальный архив".format(e))
-        snap = from_store()
-        source = "data/days_store.json"
+
+    source = None
+    snap = None
+
+    # Режим --sheet: напрямую из Google-таблицы (для GitHub Actions)
+    if args.sheet:
+        try:
+            snap = from_sheet()
+            source = "Google Sheets (direct)"
+        except Exception as e:
+            print("Google-таблица недоступна ({}), fallback".format(e))
+
+    # Режим по умолчанию: сначала пробуем напрямую из таблицы, потом API, потом локальный архив
+    if snap is None and not args.api:
+        try:
+            snap = from_sheet()
+            source = "Google Sheets (direct)"
+        except Exception as e:
+            print("Google-таблица недоступна ({}), пробую API".format(e))
+            try:
+                snap = from_api(DEFAULT_API)
+                source = DEFAULT_API
+            except Exception as e2:
+                print("API недоступен ({}), беру локальный архив".format(e2))
+                snap = from_store()
+                source = "data/days_store.json"
+
+    # Режим --api: только из указанного API
+    if snap is None and args.api:
+        try:
+            snap = from_api(args.api)
+            source = args.api
+        except Exception as e:
+            print("API недоступен ({}), беру локальный архив".format(e))
+            snap = from_store()
+            source = "data/days_store.json"
+
     snap["saved_at"] = int(time.time())
     header = ("/* Встроенная офлайн-копия расписания 8Г.\n"
               "   Обновляется при каждой успешной загрузке с API (в localStorage) и в репозитории\n"

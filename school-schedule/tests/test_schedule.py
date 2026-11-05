@@ -24,6 +24,16 @@ class ScheduleTests(unittest.TestCase):
         self.assertTrue(found)
         self.assertEqual(days['2026-11-04']['lessons'][0]['room'], '305')
 
+    def test_room_without_brackets(self):
+        # в таблице кабинет часто записан в той же ячейке: «Англ319/221»
+        self.assertEqual(app.split_lesson('Англ319/221'), ('Англ', '319/221'))
+        self.assertEqual(app.split_lesson('истор 305'), ('истор', '305'))
+        self.assertEqual(app.split_lesson('Физкультура спортзал'), ('Физкультура', 'спортзал'))
+        self.assertEqual(app.split_lesson('Алг (305)'), ('Алг', '305'))
+        # предмет без кабинета не должен пострадать
+        self.assertEqual(app.split_lesson('Русский язык'), ('Русский язык', ''))
+        self.assertEqual(app.split_lesson('Математика 2'), ('Математика 2', ''))
+
     def test_history_and_source_failure(self):
         iso = app.now_perm().date().isoformat()
         app._store = {iso: {'date': iso, 'lessons': []}}

@@ -6,7 +6,7 @@ self.SCHEDULE_SNAPSHOT = {
   "class": "8Г",
   "ok": true,
   "error": "",
-  "updated": 1793795365,
+  "updated": 1793874800,
   "sheet_url": "https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit",
   "days": [
     {
@@ -30,36 +30,35 @@ self.SCHEDULE_SNAPSHOT = {
         {
           "n": 3,
           "time": "9:45-10:25",
-          "subject": "алгебр 313",
-          "room": "",
-          "raw": "алгебр 313"
+          "subject": "алгебр",
+          "room": "209",
+          "raw": "алгебр 209"
         },
         {
           "n": 4,
           "time": "10:40-11:20",
-          "subject": "англ319/221",
-          "room": "",
+          "subject": "англ",
+          "room": "319/221",
           "raw": "англ319/221"
         },
         {
           "n": 5,
           "time": "11:35-12:15",
-          "subject": "географ326",
-          "room": "",
+          "subject": "географ",
+          "room": "326",
           "raw": "географ326"
         },
         {
           "n": 6,
           "time": "12:25-13:05",
           "subject": "истор 305",
-          "room": "",
-          "raw": "истор 305"
+          "room": "1",
+          "raw": "истор 305(1)"
         }
       ],
-      "live": true,
-      "first": 1793781763,
+      "first": 0,
       "changed": 0
     }
   ],
-  "saved_at": 1793795399
+  "saved_at": 1793874800
 };

@@ -35,9 +35,15 @@ py app.py
 Обновить встроенную копию вручную (в корне и во всех `*-dist`):
 
 ```text
-py refresh_snapshot.py
-py refresh_snapshot.py --api http://127.0.0.1:8000/api/schedule
+py refresh_snapshot.py --sheet     # напрямую из Google-таблицы (рекомендуется)
+py refresh_snapshot.py             # авто: таблица -> API -> локальный архив
+py refresh_snapshot.py --api URL   # из указанного API
 ```
+
+**Автоматическое обновление:** workflow `.github/workflows/refresh-schedule.yml`
+каждые 30 минут скачивает Google-таблицу, обновляет снимок в `index.html` и
+коммитит изменения. После коммита Pages-сборка запускается автоматически.
+Для PythonAnywhere обновление тоже подтянется через `pa_update.sh`.
 
 Без сети скрипт возьмёт дни из `data/days_store.json`. Открытый как файл сайт
 не обращается к API (у `file://` нет CORS): чтобы подтянуть свежую таблицу,
