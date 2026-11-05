@@ -3,7 +3,7 @@ importScripts('./config.js');
 const BASE = new URL('./', self.location.href);
 const API = ((self.SCHEDULE_CONFIG && self.SCHEDULE_CONFIG.apiBase) || self.location.origin).replace(/\/$/, '');
 const PREFIX = 'schedule8g-' + BASE.pathname + '-';
-const V = PREFIX + 'v26';
+const V = PREFIX + 'v27';
 const asset = p => new URL(p, BASE).href;
 const STATIC = [
   './', 'index.html', 'config.js', 'offline-data.js', 'manifest.json',
@@ -105,19 +105,23 @@ self.addEventListener('fetch', e => {
   const same = u.origin === BASE.origin && u.pathname.startsWith(BASE.pathname);
   if (!same) return;
 
-  /* Страница и конфиги: свежее из сети, офлайн — из кэша. */
+  /* Сам скрипт воркера всегда берём из сети: иначе браузер не заметит обновление. */
+  if (/\/(sw\.js)$/.test(u.pathname)) {
+    e.respondWith(withTimeout(fetch(r), 5000).then(resp => {
+      put(r, resp); return resp;
+    }).catch(async () => await fromCache(r) || Response.error()));
+    return;
+  }
+
+  /* Страница и конфиги: мгновенно из кэша, свежая версия подтягивается в фоне.
+     HTML меняется редко, а данные приходят с API, поэтому ждать сеть смысла нет. */
   const navig = r.mode === 'navigate';
-  const freshFirst = navig || /\/(index\.html|config\.js|offline-data\.js|manifest\.json|sw\.js)$/.test(u.pathname) || u.pathname === BASE.pathname;
-  if (freshFirst) {
+  const core = navig || /\/(index\.html|config\.js|offline-data\.js|manifest\.json)$/.test(u.pathname) || u.pathname === BASE.pathname;
+  if (core) {
     e.respondWith((async () => {
-      try {
-        const resp = await withTimeout(fetch(r), 5000);
-        put(r, resp);
-        return resp;
-      } catch (_) {
-        const hit = await fromCache(r);
-        return hit || (navig ? await caches.match(asset('./')) : null) || Response.error();
-      }
+      const hit = await fromCache(r);
+      const net = fetch(r).then(resp => { put(r, resp); return resp; }).catch(() => null);
+      return hit || await net || (navig ? await caches.match(asset('./')) : null) || Response.error();
     })());
     return;
   }

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Расписание 8Г · версия 266</title>
+<title>Расписание 8Г · версия 267</title>
 <meta name="description" content="Живое расписание 8Г: что идёт сейчас, сколько осталось до звонка, кабинеты и уроки на неделю.">
 <meta name="theme-color" content="#f0f4ff" id="themeColor">
 <meta name="color-scheme" content="light dark">
@@ -16,11 +16,25 @@
 <!-- Шрифт лежит рядом с сайтом: никаких внешних запросов, одинаковый вид онлайн и офлайн. -->
 <link rel="preload" href="assets/fonts/manrope-cyrillic-400-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/manrope-latin-400-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<!-- Данные и конфиг начинают грузиться сразу, а не после парсинга 120 КБ HTML. -->
+<link rel="preload" href="offline-data.js" as="script">
+<link rel="preload" href="config.js" as="script">
 <script>
+/* Тема применяется до первой отрисовки. Читаем и localStorage, и cookie-бэкап:
+   если браузер почистил одно хранилище, настройки всё равно восстановятся. */
 try{
-  var p=JSON.parse(localStorage.getItem('sch.prefs')||'{}');
+  var p={};
+  try{p=JSON.parse(localStorage.getItem('sch.prefs')||'{}')||{}}catch(e){}
+  if(!p||!Object.keys(p).length){
+    var m=document.cookie.match(/(?:^|;\s*)sch_prefs=([^;]*)/);
+    if(m)try{p=JSON.parse(decodeURIComponent(m[1]))||{}}catch(e){}
+  }
+  /* Ссылка-перенос ?s=... нужна, чтобы забрать настройки с другого адреса/устройства. */
+  var s=new URLSearchParams(location.search).get('s');
+  if(s)try{p=Object.assign(p,JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/'))))))}catch(e){}
   var t=p.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
   document.documentElement.dataset.theme=t;
+  document.documentElement.dataset.prefs=p.theme?'saved':'';
 }catch(e){}
 </script>
 <style>
@@ -842,6 +856,65 @@ html{background:var(--bg);min-height:100%}
 html[data-theme=light] .grain,html[data-theme=ocean] .grain{opacity:.015}
 .foot{margin-top:24px;padding-top:2px;gap:5px 11px}
 :focus-visible{outline-offset:3px}
+
+/* ================= плавность и проработка, ноябрь 2026 ================= */
+:root{--tap:cubic-bezier(.2,.8,.2,1);--dur:.2s}
+/* Один общий ритм для всех кнопок: без дёрганий и разнобоя в скорости. */
+button,a.btn{
+  transition:transform .16s var(--tap),background-color var(--dur) ease,color var(--dur) ease,
+             border-color var(--dur) ease,box-shadow .26s var(--tap),filter var(--dur) ease,opacity var(--dur) ease}
+button:not(:disabled):active{transform:scale(.955)}
+button:disabled{opacity:.5;cursor:default}
+.ibtn,.set-close{width:40px;height:40px}
+@media (max-width:400px){.ibtn,.set-close{width:38px;height:38px}}
+@media (hover:hover){
+  .ibtn:hover,.set-close:hover{transform:translateY(-1px);box-shadow:0 6px 16px -12px color-mix(in srgb,var(--accent) 85%,transparent)}
+  .todaybtn:hover,.btn:hover,.dayfoot .share:hover,.hero .cta:hover{
+    transform:translateY(-1px);
+    box-shadow:0 10px 24px -16px color-mix(in srgb,var(--accent) 85%,transparent)}
+  .pill:hover:not(.active){transform:translateY(-2px)}
+  .pop-i:hover{background:var(--surface-2)}
+  .themecard:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .wcard:hover{transform:translateY(-3px)}
+  .les:hover{transform:translateY(-2px)}
+}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;box-shadow:0 0 0 5px var(--accent-soft)}
+/* Переключатель с лёгкой «пружинкой» при нажатии. */
+.sw{transition:background .24s var(--tap),border-color .24s var(--tap)}
+.sw::after{transition:transform .28s var(--tap),width .2s var(--tap)}
+.sw:active::after{width:26px}
+.sw:checked:active::after{transform:translateX(14px)}
+/* Мягкая смена темы: colours текут, а не прыгают. */
+html.theme-fade,html.theme-fade body,html.theme-fade .topbar,html.theme-fade .hero,
+html.theme-fade .les,html.theme-fade .wcard,html.theme-fade .dayfoot,html.theme-fade .dstrip,
+html.theme-fade .pill,html.theme-fade .pop,html.theme-fade .set-card,html.theme-fade .empty,
+html.theme-fade .ctrl .ibtn,html.theme-fade .todaybtn,html.theme-fade .foot{
+  transition:background-color .34s ease,color .34s ease,border-color .34s ease,box-shadow .34s ease}
+/* При смене дня содержимое не «вспыхивает», а мягко проявляется. */
+.ctrl{animation:softIn .26s var(--ease) both}
+@keyframes softIn{from{opacity:.4;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.list.enter .les,.week.enter .wcard{animation-duration:.36s}
+/* Скругления и тени становятся чуть мягче на больших экранах. */
+@media (min-width:960px){
+  .hero,.wcard{border-radius:22px}
+  .les,.dstrip,.dayfoot,.empty{border-radius:18px}
+  .hero{box-shadow:0 8px 28px -18px color-mix(in srgb,var(--accent) 55%,transparent),var(--shadow-1)}
+  /* В узкой боковой колонке длинный статус больше не ломает чип на две строки. */
+  .hero .chip{font-size:10.5px;letter-spacing:.01em;padding:5px 10px 5px 8px}
+  .hero .glyph,.hero .ring{width:60px;height:60px}
+  .hero .glyph{border-radius:18px}
+  .hero .glyph svg{width:26px;height:26px}
+  .hero h2{font-size:21px}
+}
+.hero .chip{white-space:nowrap}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  button,a.btn,.sw,.sw::after{transition:none}
+  button:not(:disabled):active{transform:none}
+  .ctrl{animation:none}
+  html.theme-fade,html.theme-fade body,html.theme-fade *{transition:none}
+}
 </style>
 </head>
 <body>
@@ -965,9 +1038,12 @@ html[data-theme=light] .grain,html[data-theme=ocean] .grain{opacity:.015}
       <h3 class="set-h">Приложение</h3>
       <div class="set-stack">
         <button class="btn primary" id="installBtn" hidden>Установить как приложение</button>
-        <button class="btn quiet" id="resetBtn">Сбросить сохранённые данные</button>
+        <button class="btn quiet" id="sharePrefsBtn">Скопировать мои настройки</button>
+        <button class="btn quiet" id="resetBtn">Обновить расписание с сервера</button>
       </div>
       <p class="set-note" id="offlineInfo"></p>
+      <p class="set-note">Тема и переключатели сохраняются на устройстве. На другом адресе сайта
+        откройте скопированную ссылку — настройки перенесутся.</p>
     </section>
 
     <section class="set-sec set-sec--keys">
@@ -1089,15 +1165,52 @@ const SUBJ_COLOR=[
 ];
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* Настройки пишутся в localStorage и дублируются в cookie: браузеры иногда
+   чистят одно хранилище, второе при этом остаётся. Плюс перенос ссылкой ?s=. */
+function readCookie(name){
+ try{const m=document.cookie.match(new RegExp('(?:^|;\\s*)'+name+'=([^;]*)'));return m?decodeURIComponent(m[1]):''}catch(e){return ''}
+}
+function writeCookie(name,val){
+ try{document.cookie=name+'='+encodeURIComponent(val)+';path=/;max-age='+(val?31536000:0)+';SameSite=Lax'}catch(e){}
+}
 const store={
- get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
- set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
- del(k){try{localStorage.removeItem(k)}catch(e){}}};
-
-const prefs=Object.assign({theme:null,full:true,rooms:true,dim:true,colors:true,vibrant:false,view:'day',icon:'class',push:false,strip:false},store.get('sch.prefs',{}));
-delete prefs.progress;
+ get(k,d){
+  let v=null;
+  try{v=localStorage.getItem(k)}catch(e){}
+  if(!v&&k==='sch.prefs')v=readCookie('sch_prefs')||null;
+  if(!v)return d;
+  try{const j=JSON.parse(v);return j&&typeof j==='object'?j:d}catch(e){return d}
+ },
+ set(k,v){
+  const s=JSON.stringify(v);
+  try{localStorage.setItem(k,s)}catch(e){}
+  if(k==='sch.prefs')writeCookie('sch_prefs',s);
+ },
+ del(k){try{localStorage.removeItem(k)}catch(e){}if(k==='sch.prefs')writeCookie('sch_prefs','')}
+};
+const PREF_DEFAULTS={theme:null,full:true,rooms:true,dim:true,colors:true,vibrant:false,view:'day',icon:'class',push:false,strip:false};
+function sanitizePrefs(p){
+ const out={};
+ Object.keys(PREF_DEFAULTS).forEach(k=>{
+  const d=PREF_DEFAULTS[k],v=p?p[k]:undefined;
+  if(v===undefined||v===null){out[k]=d;return}
+  if(typeof d==='boolean')out[k]=!!v;
+  else if(k==='theme')out[k]=THEME_NAME[v]?v:null;
+  else if(k==='view')out[k]=v==='week'?'week':'day';
+  else out[k]=String(v).slice(0,24);
+ });
+ return out;
+}
+let savedPrefs=store.get('sch.prefs',{})||{};
+const transfer=new URLSearchParams(location.search).get('s');
+if(transfer)try{
+ savedPrefs=Object.assign(savedPrefs,JSON.parse(decodeURIComponent(escape(atob(transfer.replace(/-/g,'+').replace(/_/g,'/'))))));
+}catch(e){}
+const prefs=sanitizePrefs(savedPrefs);
+store.set('sch.prefs',prefs);
+if(transfer)try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
 if(prefs.vibrant)document.body.classList.add('vibrant');
-const APP_VER='266';
+const APP_VER='267';
 const S={days:{},meta:{ok:true,error:'',updated:0,sheet:'',cls:'8Г'},sel:null,picked:false,loaded:false,online:!isOffline(),slow:false,lastFetch:0,enter:false,source:'',savedAt:0};
 /* Единая точка приёма данных: массив дней из API/снимка или объект из localStorage. */
 function adoptDays(j,source){
@@ -1550,8 +1663,14 @@ function merge(j){
 let toastT;
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)}
 let loadTry=0,slowT=0;
+/* Сигнатура данных: если ответ сервера ничего не изменил, не перестраиваем DOM —
+   так обновление в фоне не вызывает мигания и лишней работы. */
+function dataSig(){
+ return Object.keys(S.days).sort().map(k=>k+':'+(S.days[k].lessons||[]).length+':'+(S.days[k].changed||0)).join('|')
+   +'|'+S.meta.updated+'|'+S.meta.cls+'|'+(S.online?1:0)+'|'+(S.picked?1:0);
+}
 async function load(force){
- const btn=$('#refreshBtn');
+ const btn=$('#refreshBtn'),wasLoaded=S.loaded,before=dataSig();
  /* Ключевое для офлайна: не делаем сетевой запрос вообще, если сети нет.
     Раньше сайт висел 15 секунд, пытаясь достучаться до внешнего API. */
  if(isOffline()||FILE_MODE){
@@ -1564,9 +1683,9 @@ async function load(force){
  btn.classList.add('spin');
  S.slow=false;
  clearTimeout(slowT);
- slowT=setTimeout(()=>{S.slow=true;render()},4500);
+ slowT=setTimeout(()=>{S.slow=true;render()},3500);
  const ctl=typeof AbortController!=='undefined'?new AbortController():null;
- const timer=ctl?setTimeout(()=>ctl.abort(),7000):0;
+ const timer=ctl?setTimeout(()=>ctl.abort(),5000):0;
  try{
    if(NEEDS_API)throw new Error('API is not configured');
    const r=await fetch(API_BASE+'/api/schedule'+(force?'?force=1':''),{cache:'no-store',signal:ctl?ctl.signal:undefined});
@@ -1585,7 +1704,8 @@ async function load(force){
    if(!S.loaded)S.enter=true;
    S.loaded=true;btn.classList.remove('spin');persist();
    if(!S.picked)S.sel=pickDefault();
-   render();
+   if(!wasLoaded||dataSig()!==before)render();
+   else renderFoot();
  }
 }
 /* Мгновенная реакция на пропажу/появление сети без ожидания таймеров. */
@@ -1605,7 +1725,7 @@ function applyTheme(t){
  });
  setSegIndicator($('#themePick'),THEME_ORDER.indexOf(t));
 }
-const themeSwitch=t=>{const r=document.documentElement;r.classList.add('theme-swap');applyTheme(t);const off=()=>r.classList.remove('theme-swap');requestAnimationFrame(()=>requestAnimationFrame(off));setTimeout(off,140)};function setSegIndicator(seg,index){
+const themeSwitch=t=>{const r=document.documentElement;r.classList.add('theme-fade');applyTheme(t);setTimeout(()=>r.classList.remove('theme-fade'),420)};function setSegIndicator(seg,index){
  if(!seg)return;
  const b=seg.querySelectorAll('button')[index],ind=seg.querySelector('.ind');
  if(!b||!ind)return;
@@ -1698,7 +1818,16 @@ $('#resetBtn').addEventListener('click',()=>{
  S.days={};S.meta={ok:true,error:'',updated:0,sheet:'',cls:'8Г'};S.picked=false;S.sel=null;railSig='';heroKey='';
  /* сброс не должен оставлять пустой экран офлайн — сразу поднимаем встроенную копию */
  if(SNAPSHOT)adoptDays(SNAPSHOT,'snapshot');
- closeDlg();toast('Сохранённые данные сброшены');load(true);render();
+ closeDlg();toast('Расписание обновляем, настройки не тронуты');load(true);render();
+});
+/* Перенос настроек между адресами/устройствами одной ссылкой. */
+$('#sharePrefsBtn').addEventListener('click',async()=>{
+ try{
+  const raw=JSON.stringify(prefs);
+  const b64=btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  const u=new URL('./',location.href);u.search='?s='+b64;
+  toast(await copyText(u.href)?'Ссылка с настройками скопирована':'Не удалось скопировать ссылку');
+ }catch(e){toast('Не удалось скопировать ссылку')}
 });
 /* ---------- установка на телефон ---------- */
 let deferred=null;
@@ -1863,7 +1992,9 @@ paintIconPicker();
 applyIcon(prefs.icon);
 syncTopbar();
 render();
-load(false);
+/* Сначала отдаём первый экран из встроенной копии, сеть подключаем после кадра. */
+if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>setTimeout(()=>load(false),0));
+else setTimeout(()=>load(false),0);
 let lastMin=-1,lastDay=nowSchool().iso;
 setInterval(()=>{
  if(document.hidden)return;
