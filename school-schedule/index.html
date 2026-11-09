@@ -440,6 +440,7 @@ a.row{color:inherit;text-decoration:none}.apk-ic{display:grid;place-items:center
 
 <div class="toast glass" id="toast"></div>
 
+<script>/*BOOT:SNAPSHOT*/self.SCHEDULE_SNAPSHOT = {"class":"8Г","ok":true,"error":"","updated":1794217399,"sheet_url":"https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit","days":[{"date":"2026-11-09","weekday":"Понедельник","lessons":[{"n":1,"time":"8:00-8:40","subject":"химия","room":"205","raw":"химия 205"},{"n":2,"time":"8:50-9:30","subject":"истор","room":"326","raw":"истор 326"},{"n":3,"time":"9:45-10:25","subject":"алгебр","room":"409","raw":"алгебр 409"},{"n":4,"time":"10:40-11:20","subject":"англ","room":"319/307","raw":"англ319/307"},{"n":5,"time":"11:35-12:15","subject":"алгебр","room":"409","raw":"алгебр 409"},{"n":6,"time":"12:25-13:05","subject":"","room":"","raw":""},{"n":7,"time":"13:15-13:55","subject":"РоВ","room":"323","raw":"РоВ 323"}],"first":0,"changed":0},{"date":"2026-11-10","weekday":"Вторник","lessons":[],"first":0,"changed":0}],"saved_at":1794217399};/*BOOT:SNAPSHOT:END*/</script>
 <script>
 (function(){
 const SHEET_ID='1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE';
@@ -496,25 +497,43 @@ function parseCell(raw){
   return{title:subs.join(' / ')||s,rooms,groups,note:notes.join(' '),ci:first.ci||0,icon:first.icon||'📘',raw:s};
 }
 
-function parseSheet(rows){
-  let date=null;
-  for(const r of rows.slice(0,5))for(const c of r){if(date)break;const m=(c||'').toLowerCase().match(/(\d{1,2})\s+(января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)/);if(m)date={day:+m[1],month:MONTHS.indexOf(m[2])};}
+const MON_RE=/(\d{1,2})\s+(января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)/;
+const DOT_RE=/^(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?$/;
+const TIME_RE=/(\d{1,2})[:.](\d{2})\s*[-–—]\s*(\d{1,2})[:.](\d{2})/;
+const WD_LC=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+const BELLS={1:'8:00-8:40',2:'8:50-9:30',3:'9:45-10:25',4:'10:40-11:20',5:'11:35-12:15',6:'12:25-13:05',7:'13:15-13:55',8:'14:00-14:40',9:'14:55-15:35',10:'15:50-16:30'};
+function closestDate(day,month){const t=now();const t0=new Date(t.getFullYear(),t.getMonth(),t.getDate());let best=null;for(const y of[t.getFullYear()-1,t.getFullYear(),t.getFullYear()+1]){const x=new Date(y,month,day);if(x.getMonth()!==month)continue;if(!best||Math.abs(x-t0)<Math.abs(best-t0))best=x;}return best;}
+function closestWeekday(wd){const t=now();for(const o of[0,1,-1,2,-2,3,-3]){const x=new Date(t.getFullYear(),t.getMonth(),t.getDate()+o);if(x.getDay()===wd)return x;}return null;}
+function dayHeader(r){if(!r||r.slice(0,4).some(c=>TIME_RE.test(c||'')))return null;let fd=null,fw=-1;
+  for(const c of r){const low=(c||'').toLowerCase().trim();if(!low||low.length>40)continue;
+    let m=low.match(MON_RE);if(m&&!fd)fd=closestDate(+m[1],MONTHS.indexOf(m[2]));
+    m=low.match(DOT_RE);if(m&&!fd&&+m[2]>=1&&+m[2]<=12&&+m[1]>=1&&+m[1]<=31)fd=closestDate(+m[1],+m[2]-1);
+    for(let i=0;i<7;i++){const n=WD_LC[i];if(low===n||low.startsWith(n+','))fw=i;}}
+  return fd||(fw>=0?closestWeekday(fw):null);}
+/* таблица может содержать несколько дней подряд (сегодня + завтра) — разбираем все */
+function parseSheetDays(rows){
   const isHeader=r=>r.filter(c=>CLASS_RE.test(norm(c))).length>=3;
-  const classes={};
-  for(let i=0;i<rows.length;i++){
-    if(!isHeader(rows[i]))continue;
-    const cols={};rows[i].forEach((c,j)=>{const n=norm(c);if(CLASS_RE.test(n)&&!(n in cols))cols[n]=j;});
+  const out=[];let cur=null;
+  for(let i=0;i<rows.length;i++){const r=rows[i];
+    const dh=dayHeader(r);if(dh){cur={d:dh,classes:{}};out.push(cur);}
+    if(!isHeader(r))continue;
+    if(!cur){cur={d:null,classes:{}};out.push(cur);}
+    const cols={};let fc=r.length;r.forEach((c,j)=>{const n=norm(c);if(CLASS_RE.test(n)){if(j<fc)fc=j;if(!(n in cols))cols[n]=j;}});
     const lr=[];
-    for(let k=i+1;k<rows.length&&!isHeader(rows[k]);k++){const r=rows[k];const t=parseTime(r[1]);const num=(r[0]||'').trim();
-      if(!t&&!/^\d+$/.test(num)){if(lr.length&&r.every(c=>!(c||'').trim()))break;continue;}
-      lr.push({num,time:t,r});}
-    for(const[name,j]of Object.entries(cols)){if(classes[name])continue;
-      let ls=lr.map(x=>({num:x.num,time:x.time,info:parseCell((x.r[j]||'').trim())}));
+    for(let k=i+1;k<rows.length;k++){const q=rows[k];if(isHeader(q)||dayHeader(q))break;
+      const left=q.slice(0,Math.max(1,fc)).map(c=>(c||'').trim());
+      const num=left.find(c=>/^\d{1,2}$/.test(c))||'';
+      let tm=null;for(const c of left){tm=parseTime(c);if(tm)break;}
+      if(!tm&&!num){if(lr.length&&q.every(c=>!(c||'').trim()))break;continue;}
+      if(!tm&&BELLS[+num])tm=parseTime(BELLS[+num]);
+      lr.push({num,time:tm,r:q});}
+    for(const name in cols){const j=cols[name];
+      const ls=lr.map(x=>({num:x.num,time:x.time,info:parseCell((x.r[j]||'').trim())}));
       while(ls.length&&!ls[ls.length-1].info)ls.pop();
       while(ls.length&&!ls[0].info)ls.shift();
-      classes[name]=ls;}
+      const old=cur.classes[name];if(!old||(!old.length&&ls.length))cur.classes[name]=ls;}
   }
-  return{date,classes};
+  return out.filter(x=>Object.values(x.classes).some(ls=>ls.length));
 }
 function sheetDateObj(d){if(!d||d.month<0)return null;const t=now();let best=null;for(const y of[t.getFullYear()-1,t.getFullYear(),t.getFullYear()+1]){const x=new Date(y,d.month,d.day);if(!best||Math.abs(x-t)<Math.abs(best-t))best=x;}return best;}
 function dayDiff(a){const t=now();const t0=new Date(t.getFullYear(),t.getMonth(),t.getDate());return Math.round((a-t0)/864e5);}
@@ -524,20 +543,43 @@ function dur(m){m=Math.max(0,Math.round(m));if(m<1)return 'меньше мину
 const col=ci=>(CUR_THEME.dark?PAL_D:PAL_L)[ci%8];
 
 /* ---------- storage ---------- */
-const LS_DAYS='sched-days-v2',LS_LAST='sched-last',LS_CLS='sched-class';
+const LS_DAYS='sched-days-v3',LS_LAST='sched-last',LS_CLS='sched-class';
 let DAYS={};try{DAYS=JSON.parse(localStorage.getItem(LS_DAYS)||'{}')||{};}catch(e){}
+if(!DAYS||typeof DAYS!=='object')DAYS={};
+for(const k of Object.keys(DAYS))if(!/^\d{4}-\d{2}-\d{2}$/.test(k)||!DAYS[k]||!DAYS[k].c)delete DAYS[k];
 let PARSED={};
-function saveDays(){const keys=Object.keys(DAYS).sort();while(keys.length>21)delete DAYS[keys.shift()];try{localStorage.setItem(LS_DAYS,JSON.stringify(DAYS));}catch(e){}}
-let CSV_CHANGED=false;
-function addCsv(txt,at){const p=parseSheet(parseCSV(txt));if(!Object.keys(p.classes).length)return null;const d=sheetDateObj(p.date);const k=d?iso(d):iso(now());const old=DAYS[k]?JSON.stringify(getDay(k)):'';CSV_CHANGED=old!==JSON.stringify(p);DAYS[k]={txt,at};if(CSV_CHANGED||!PARSED[k])PARSED[k]=p;saveDays();return k;}
-function getDay(k){if(!k||!DAYS[k])return null;if(!PARSED[k])PARSED[k]=parseSheet(parseCSV(DAYS[k].txt));return PARSED[k];}
+function saveDays(){const keys=Object.keys(DAYS).sort();while(keys.length>30)delete DAYS[keys.shift()];try{localStorage.setItem(LS_DAYS,JSON.stringify(DAYS));}catch(e){}}
+let CHANGED=false;
+const packCls=cl=>{const o={};for(const n in cl)o[n]=cl[n].map(l=>[l.num,l.time?l.time.start:-1,l.time?l.time.end:-1,l.info?l.info.raw:'']);return o;};
+/* mode: replace — свежая таблица; merge — зеркало (только если новее); seed — только если дня ещё нет */
+function putDay(k,cl,at,mode){const old=DAYS[k];
+  if(old&&mode==='seed')return false;
+  if(old&&mode==='merge'&&(old.at||0)>at)return false;
+  const c=packCls(cl);const nc=(old&&mode==='merge')?Object.assign({},old.c,c):c;
+  const ch=!old||JSON.stringify(old.c)!==JSON.stringify(nc);
+  DAYS[k]={c:nc,at:Math.max(at||0,old?old.at||0:0)};
+  if(ch){delete PARSED[k];CHANGED=true;}return ch;}
+function addCsv(txt,at,mode){let ds;try{ds=parseSheetDays(parseCSV(txt));}catch(e){return 0;}
+  const by={};for(const x of ds){const k=x.d?iso(x.d):iso(now());const o=by[k]||(by[k]={});for(const n in x.classes)if(!o[n]||(!o[n].length&&x.classes[n].length))o[n]=x.classes[n];}
+  let n=0;for(const k in by){putDay(k,by[k],at,mode||'replace');n++;}if(n)saveDays();return n;}
+function jsonLessons(ls){const a=(ls||[]).map(l=>({num:String(l.n==null?'':l.n),time:parseTime(l.time||''),info:parseCell(l.raw||((l.subject||'')+' '+(l.room||'')))}));while(a.length&&!a[a.length-1].info)a.pop();while(a.length&&!a[0].info)a.shift();return a;}
+function addJson(j,mode){if(!j||!Array.isArray(j.days))return 0;const at=(+j.updated||+j.saved_at||0)*1000;const cls=norm(j['class']||DEFAULT_CLASS);let n=0;
+  for(const d of j.days){if(!d||!/^\d{4}-\d{2}-\d{2}$/.test(d.date||''))continue;const ls=jsonLessons(d.lessons);if(!ls.length)continue;const o={};o[cls]=ls;putDay(d.date,o,at,mode);n++;}
+  if(n)saveDays();return n;}
+function getDay(k){const o=k&&DAYS[k];if(!o)return null;if(!PARSED[k]){const c={};for(const n in o.c)c[n]=o.c[n].map(a=>({num:a[0],time:a[1]>=0?{start:a[1],end:a[2]}:null,info:parseCell(a[3])}));PARSED[k]={classes:c};}return PARSED[k];}
 const keysSorted=()=>Object.keys(DAYS).sort();
 const latestKey=()=>keysSorted().pop();
-function seedSnapshot(){const p=parseSheet(parseCSV(SNAPSHOT));const d=sheetDateObj(p.date);const k=d?iso(d):null;if(k&&!DAYS[k]){DAYS[k]={txt:SNAPSHOT,at:0};PARSED[k]=p;}}
-try{const old=JSON.parse(localStorage.getItem('sched-cache')||'null');if(old&&old.txt){addCsv(old.txt,old.at);localStorage.removeItem('sched-cache');}}catch(e){}
-seedSnapshot();
+function seedAll(){addCsv(SNAPSHOT,0,'seed');try{addJson(self.SCHEDULE_SNAPSHOT,'merge');}catch(e){}}
+try{const v2=JSON.parse(localStorage.getItem('sched-days-v2')||'null');if(v2&&typeof v2==='object'){Object.values(v2).filter(o=>o&&o.txt).sort((a,b)=>(a.at||0)-(b.at||0)).forEach(o=>addCsv(o.txt,o.at||0,'merge'));}localStorage.removeItem('sched-days-v2');localStorage.removeItem('sched-cache');}catch(e){}
+seedAll();
 
 let SEL=latestKey(),LIVE=false,LOADING=false,DIR='';
+let USER_PICK=false,SRC_AT=0,LAST_TRY=0,HIDDEN_AT=0;
+function dayEnd(k){const d=getDay(k);if(!d)return -1;const ls=(d.classes[CLS]||d.classes[DEFAULT_CLASS]||[]).filter(l=>l.info&&l.time);return ls.length?ls[ls.length-1].time.end:-1;}
+function autoKey(){const ks=keysSorted();if(!ks.length)return null;const t=now();const tk=iso(t);const mins=t.getHours()*60+t.getMinutes();const fut=ks.find(k=>k>tk);
+  if(DAYS[tk]){const e=dayEnd(tk);if(!fut||(e>=0&&mins<e))return tk;}
+  return fut||ks[ks.length-1];}
+function autoSel(){if(USER_PICK&&DAYS[SEL])return;const a=autoKey();if(a&&a!==SEL){DIR=SEL&&a<SEL?'l':'r';SEL=a;HERO_SIG=LIST_SIG='';}}
 let LAST=+localStorage.getItem(LS_LAST)||0;
 let CLS=(location.hash?decodeURIComponent(location.hash.slice(1)):'')||localStorage.getItem(LS_CLS)||DEFAULT_CLASS;
 let CUR_LS=[],HERO_SIG='',LIST_SIG='',WEEK_READY=false;
@@ -675,7 +717,8 @@ function renderList(st){
 function lastTxt(){return LAST?new Date(LAST).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'ещё не было';}
 function renderMeta(){
   const m=$('meta');const sp=m.lastChild;
-  if(LIVE){m.className='sync glass';sp.textContent='Таблица проверена в '+new Date(LAST).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
+  if(LIVE===true){m.className='sync glass';sp.textContent='Таблица проверена в '+new Date(LAST).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
+  else if(LIVE==='mirror'&&!LOADING){m.className='sync glass';sp.textContent=SRC_AT?'Обновлено '+new Date(SRC_AT).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'Данные с сервера';}
   else if(LOADING){m.className='sync glass warn';sp.textContent='Загружаю таблицу…';}
   else if(LAST){m.className='sync glass warn';sp.textContent='Нет связи · сохранено '+lastTxt();}
   else{m.className='sync glass warn';sp.textContent='Нет связи · встроенная копия';}
@@ -720,7 +763,7 @@ document.querySelectorAll('[data-set]').forEach(i=>i.onchange=()=>{S[i.dataset.s
 $('seg').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.size=b.dataset.size;saveS();applyPrefs();syncSwitches();buzz();requestAnimationFrame(placeInd);};
 $('setBtn').onclick=$('setBtn2').onclick=()=>{renderThemes();syncSwitches();renderMeta();openSheet('settings');};
 $('setRefresh').onclick=()=>{load(true);toast('🔄 Проверяю таблицу…');};
-$('setClear').onclick=()=>{if(!confirm('Удалить сохранённые дни? Настройки останутся.'))return;DAYS={};PARSED={};try{localStorage.removeItem(LS_DAYS);localStorage.removeItem(LS_LAST);}catch(e){}LAST=0;seedSnapshot();SEL=latestKey();HERO_SIG=LIST_SIG='';render();toast('🧹 Готово');load(true);};
+$('setClear').onclick=()=>{if(!confirm('Удалить сохранённые дни? Настройки останутся.'))return;DAYS={};PARSED={};try{localStorage.removeItem(LS_DAYS);localStorage.removeItem(LS_LAST);}catch(e){}LAST=0;seedAll();USER_PICK=false;SEL=autoKey();HERO_SIG=LIST_SIG='';render();toast('🧹 Готово');load(true);};
 function pickClass(v){CLS=v;try{localStorage.setItem(LS_CLS,v);}catch(e){}history.replaceState(null,'','#'+encodeURIComponent(v));render();}
 $('cls').onchange=e=>pickClass(e.target.value);
 $('cls2').onchange=e=>pickClass(e.target.value);
@@ -749,7 +792,7 @@ $('shareBtn').onclick=async()=>{buzz();const st=state();const d=st.d;
 };
 
 /* ---------- week / swipe ---------- */
-function go(k){if(!k||k===SEL||!DAYS[k])return;DIR=k>SEL?'r':'l';SEL=k;buzz();render();}
+function go(k){if(!k||k===SEL||!DAYS[k])return;DIR=k>SEL?'r':'l';SEL=k;USER_PICK=true;buzz();render();}
 $('week').onclick=e=>{const b=e.target.closest('.wd');if(b&&!b.disabled)go(b.dataset.k);};
 function step(n){const ks=keysSorted();const i=ks.indexOf(SEL)+n;if(i>=0&&i<ks.length)go(ks[i]);}
 (()=>{let x0=null,y0=0;const v=$('dayView');
@@ -821,27 +864,44 @@ function cfLoop(){cctx.clearRect(0,0,FW,FH);CP=CP.filter(p=>p.life>0&&p.y<FH+30)
 
 /* ---------- loading ---------- */
 async function fetchT(url,ms){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(url,{cache:'no-store',signal:c.signal});if(!r.ok)throw new Error(r.status);return await r.text();}finally{clearTimeout(t);}}
+async function fetchJ(u,ms){const x=await fetchT(u,ms);const a=x.indexOf('{'),b=x.lastIndexOf('}');if(a<0||b<a)throw new Error('bad');return JSON.parse(x.slice(a,b+1));}
 async function load(manual){
-  if(OFFLINE||LOADING)return;LOADING=true;renderMeta();const rb=$('refresh');rb.classList.add('spin');
-  const base='https://docs.google.com/spreadsheets/d/'+SHEET_ID;const urls=[base+'/export?format=csv&t='+Date.now(),base+'/gviz/tq?tqx=out:csv&headers=0&t='+Date.now()];
-  let ok=false;
-  for(const u of urls){try{const txt=await fetchT(u,9000);if(/^\s*</.test(txt))continue;const wasLatest=SEL===latestKey();const prevSel=SEL;const k=addCsv(txt,Date.now());if(k){ok=true;LAST=Date.now();try{localStorage.setItem(LS_LAST,LAST);}catch(e){}if(wasLatest||!DAYS[SEL])SEL=k;if(CSV_CHANGED||SEL!==prevSel){HERO_SIG=LIST_SIG='';}break;}}catch(e){}}
-  LIVE=ok;LOADING=false;rb.classList.remove('spin');render();
-  if(manual)toast(ok?'✅ Расписание свежее':'📡 Нет связи — показываю сохранённое');
+  if(OFFLINE||LOADING)return;LOADING=true;LAST_TRY=Date.now();CHANGED=false;
+  const rb=$('refresh');let ok=false,mirror=false;
+  try{
+    rb.classList.add('spin');renderMeta();
+    const base='https://docs.google.com/spreadsheets/d/'+SHEET_ID;const ts=Date.now();
+    const urls=[base+'/export?format=csv&t='+ts,base+'/gviz/tq?tqx=out:csv&headers=0&t='+ts];
+    for(const u of urls){try{const txt=await fetchT(u,9000);if(/^\s*</.test(txt))continue;if(addCsv(txt,Date.now(),'replace')){ok=true;break;}}catch(e){}}
+    if(ok){LAST=Date.now();try{localStorage.setItem(LS_LAST,LAST);}catch(e){}}
+    else{
+      const srcs=[];if(/^https?:/.test(location.protocol))srcs.push('offline-data.js?t='+ts);srcs.push(API_BASE+'/api/schedule?t='+ts);
+      const rs=await Promise.all(srcs.map(u=>fetchJ(u,8000).catch(()=>null)));
+      for(const j of rs){if(j&&addJson(j,'merge')){mirror=true;const at=(+j.updated||+j.saved_at||0)*1000;if(at>SRC_AT)SRC_AT=at;}}
+    }
+  }catch(e){}
+  finally{
+    LIVE=ok?true:(mirror?'mirror':false);LOADING=false;rb.classList.remove('spin');
+    if(CHANGED)HERO_SIG=LIST_SIG='';
+    try{autoSel();render();}catch(e){}
+  }
+  if(manual)toast(ok?'✅ Расписание свежее':mirror?'✅ Обновлено с сервера':'📡 Нет связи — показываю сохранённое');
 }
 $('refresh').onclick=()=>{buzz();load(true);};
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){render();if(Date.now()-LAST>60e3)load();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){HIDDEN_AT=Date.now();return;}if(HIDDEN_AT&&Date.now()-HIDDEN_AT>5*60e3)USER_PICK=false;autoSel();render();if(Date.now()-LAST_TRY>30e3)load();});
+window.addEventListener('online',()=>load());
+window.addEventListener('pageshow',e=>{if(e.persisted)load();});
 
 /* ---------- init ---------- */
 $('sheetLink').href='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/edit';
 if(/Raspisanie8GApp/.test(navigator.userAgent)||window.AndroidApp){const ag=$('appGrp');if(ag)ag.parentNode.removeChild(ag);}
 sizeFx();
-if(!SEL){seedSnapshot();SEL=latestKey();}
-const tk=iso(now());if(DAYS[tk])SEL=tk;
+if(!SEL)seedAll();
+SEL=autoKey()||SEL;
 render();startFx();
 document.documentElement.dataset.app='ok';setTimeout(function(){document.documentElement.classList.add('settled');},1900);
-setInterval(render,20000);setInterval(tickClock,10000);
-setInterval(()=>load(),10*60e3);
+setInterval(()=>{autoSel();render();},20000);setInterval(tickClock,10000);
+setInterval(()=>{if(!document.hidden)load();},3*60e3);
 load();
 if(QA_OPEN==='settings')$('setBtn').click();
 if(QA_OPEN==='detail'){const b=document.querySelector('.ls.now .card,.ls .card');if(b)b.click();}
