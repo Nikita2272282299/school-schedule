@@ -49,7 +49,7 @@ if(QA_THEME)S.theme=QA_THEME;
 function saveS(){try{localStorage.setItem(SET_KEY,JSON.stringify(S));}catch(e){}}
 function themeById(id){if(id==='auto')return themeById(matchMedia('(prefers-color-scheme: light)').matches?'ice':'aurora');return THEMES.find(t=>t.id===id)||THEMES[0];}
 let CUR_THEME=THEMES[0];
-function applyTheme(){const t=themeById(S.theme);CUR_THEME=t;const r=document.documentElement;const v=Object.assign({},t.dark?DARK:LIGHT,t.v);for(const k in v)r.style.setProperty('--'+k,v[k]);r.dataset.mode=t.dark?'dark':'light';r.classList.toggle('ny',t.id==='newyear');r.style.colorScheme=t.dark?'dark':'light';const m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t.v.bg);if(window.AndroidApp&&window.AndroidApp.setBars){try{window.AndroidApp.setBars(String(t.v.bg),!t.dark);}catch(e){}}}
+function applyTheme(){const t=themeById(S.theme);CUR_THEME=t;const r=document.documentElement;const v=Object.assign({},t.dark?DARK:LIGHT,t.v);for(const k in v)r.style.setProperty('--'+k,v[k]);r.dataset.mode=t.dark?'dark':'light';r.classList.toggle('ny',t.id==='newyear');r.style.colorScheme=t.dark?'dark':'light';const m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t.v.bg);if(window.AndroidApp&&window.AndroidApp.setBars){try{window.AndroidApp.setBars(String(t.v.bg),!t.dark);}catch(e){}}if(window.AndroidApp&&window.AndroidApp.setIcon){try{window.AndroidApp.setIcon(String(t.id));}catch(e){}}}
 function applyPrefs(){const r=document.documentElement;r.classList.toggle('noanim',!S.anim);r.classList.toggle('compact',!!S.compact);r.classList.toggle('nobreaks',!S.breaks);r.style.setProperty('--zoom',{s:.92,m:1,l:1.1}[S.size]||1);}
 applyTheme();applyPrefs();
 </script>
@@ -425,7 +425,8 @@ a.row{color:inherit;text-decoration:none}.apk-ic{display:grid;place-items:center
     <div class="row"><span>Размер</span><div class="seg" id="seg"><span class="si"></span><button data-size="s">Мельче</button><button data-size="m">Обычный</button><button data-size="l">Крупнее</button></div></div>
   </div></div>
   <div class="grp" id="appGrp" style="--g:4"><div class="gl">📲 Приложение</div><div class="box"><a class="row" id="apkLink" href="https://github.com/Nikita2272282299/school-schedule/releases/download/app/raspisanie-8g.apk" rel="noopener"><span>Скачать для Android<small>APK · на весь экран, своя иконка, работает без интернета</small></span><span class="apk-ic">⬇️</span></a></div></div>
-  <div class="grp" style="--g:5"><div class="gl">🔄 Данные</div><div class="box">
+  <div class="grp" id="notifGrp" style="--g:5"><div class="gl">🔔 Уведомления</div><div class="box"><div id="notifApp" style="display:none"><label class="row"><span>Новое расписание<small>Когда вышло или изменилось</small></span><input type="checkbox" class="sw" id="nNew"></label><label class="row"><span>Перед уроком<small>За 5 минут до начала</small></span><input type="checkbox" class="sw" id="nLes"></label><a class="row" id="nTest" href="#"><span>Проверить<small id="nState">Пришлём тестовое уведомление</small></span><span class="apk-ic">🔔</span></a></div><div class="row" id="notifWeb"><span>Работают в приложении<small>Скачай APK выше — и будут приходить уведомления о новом расписании и за 5 минут до урока</small></span></div></div></div>
+   <div class="grp" style="--g:6"><div class="gl">🔄 Данные</div><div class="box">
     <div class="row"><span>Последняя проверка</span><span class="val" id="setLast">—</span></div>
     <div class="row"><span>Сохранено дней</span><span class="val" id="setDays">—</span></div>
   </div>
@@ -764,9 +765,31 @@ $('seg').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.size=b.da
 $('setBtn').onclick=$('setBtn2').onclick=()=>{renderThemes();syncSwitches();renderMeta();openSheet('settings');};
 $('setRefresh').onclick=()=>{load(true);toast('🔄 Проверяю таблицу…');};
 $('setClear').onclick=()=>{if(!confirm('Удалить сохранённые дни? Настройки останутся.'))return;DAYS={};PARSED={};try{localStorage.removeItem(LS_DAYS);localStorage.removeItem(LS_LAST);}catch(e){}LAST=0;seedAll();USER_PICK=false;SEL=autoKey();HERO_SIG=LIST_SIG='';render();toast('🧹 Готово');load(true);};
-function pickClass(v){CLS=v;try{localStorage.setItem(LS_CLS,v);}catch(e){}history.replaceState(null,'','#'+encodeURIComponent(v));render();}
+function pickClass(v){CLS=v;try{localStorage.setItem(LS_CLS,v);}catch(e){}history.replaceState(null,'','#'+encodeURIComponent(v));render();pushNative();}
 $('cls').onchange=e=>pickClass(e.target.value);
 $('cls2').onchange=e=>pickClass(e.target.value);
+
+ /* ---------- связь с приложением: уведомления ---------- */
+ let NATIVE_SIG='';
+ function pushNative(){const A=window.AndroidApp;if(!A||!A.setDays)return;try{
+   const o={};const today=iso(now());
+   for(const k of Object.keys(DAYS).sort()){if(k<today)continue;const c=DAYS[k]&&DAYS[k].c&&DAYS[k].c[CLS];if(!c)continue;
+     const a=c.slice();while(a.length&&!String(a[a.length-1][3]||'').trim())a.pop();while(a.length&&!String(a[0][3]||'').trim())a.shift();
+     if(a.length)o[k]=a.map(x=>[String(x[0]||''),+x[1],+x[2],String(x[3]||'')]);}
+   const j=JSON.stringify(o);const sig=CLS+'|'+j;if(sig===NATIVE_SIG)return;NATIVE_SIG=sig;
+   if(A.setClass)A.setClass(String(CLS));A.setDays(j);}catch(e){}}
+ (function(){const A=window.AndroidApp;if(!A||!A.getNotify)return;
+   $('notifApp').style.display='contents';$('notifWeb').style.display='none';
+   const sync=()=>{try{const s=JSON.parse(A.getNotify());$('nNew').checked=!!s.n;$('nLes').checked=!!s.l;
+     $('nState').textContent=s.ok?'Пришлём тестовое уведомление':'⚠️ Выключены в Android — нажми, чтобы разрешить';}catch(e){}};
+   sync();
+   const set=()=>{try{A.setNotify(!!$('nNew').checked,!!$('nLes').checked);}catch(e){}try{buzz();}catch(e){}setTimeout(sync,900);};
+   $('nNew').onchange=set;$('nLes').onchange=set;
+   $('nTest').onclick=e=>{e.preventDefault();try{buzz();}catch(x){}let ok=false;try{ok=A.testNotify();}catch(x){}
+     toast(ok?'🔔 Отправил тестовое уведомление':'Разреши уведомления в окне Android');setTimeout(sync,1500);};
+   document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(sync,300);});
+   setTimeout(pushNative,1500);
+ })();
 
 /* ---------- detail ---------- */
 $('lessons').onclick=e=>{const b=e.target.closest('.card');if(!b)return;const l=CUR_LS[+b.dataset.i];if(!l)return;
@@ -884,6 +907,7 @@ async function load(manual){
     LIVE=ok?true:(mirror?'mirror':false);LOADING=false;rb.classList.remove('spin');
     if(CHANGED)HERO_SIG=LIST_SIG='';
     try{autoSel();render();}catch(e){}
+    pushNative();
   }
   if(manual)toast(ok?'✅ Расписание свежее':mirror?'✅ Обновлено с сервера':'📡 Нет связи — показываю сохранённое');
 }

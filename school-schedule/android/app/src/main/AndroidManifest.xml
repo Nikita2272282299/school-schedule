@@ -2,9 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <application
         android:label="@string/app_name"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_t_aurora"
+        android:roundIcon="@mipmap/ic_t_aurora"
         android:theme="@style/AppTheme"
         android:hardwareAccelerated="true"
         android:allowBackup="true"
@@ -14,11 +19,134 @@
             android:exported="true"
             android:launchMode="singleTask"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|uiMode|density"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize" />
+        <activity-alias
+            android:name=".T_aurora"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_t_aurora"
+            android:roundIcon="@mipmap/ic_t_aurora"
+            android:label="@string/app_name"
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+        <activity-alias
+            android:name=".T_sunset"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_t_sunset"
+            android:roundIcon="@mipmap/ic_t_sunset"
+            android:label="@string/app_name"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".T_ocean"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_t_ocean"
+            android:roundIcon="@mipmap/ic_t_ocean"
+            android:label="@string/app_name"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".T_mint"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_t_mint"
+            android:roundIcon="@mipmap/ic_t_mint"
+            android:label="@string/app_name"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".T_cosmos"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_t_cosmos"
+            android:roundIcon="@mipmap/ic_t_cosmos"
+            android:label="@string/app_name"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".T_neon"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_t_neon"
+            android:roundIcon="@mipmap/ic_t_neon"
+            android:label="@string/app_name"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".T_sakura"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_t_sakura"
+            android:roundIcon="@mipmap/ic_t_sakura"
+            android:label="@string/app_name"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".T_ice"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_t_ice"
+            android:roundIcon="@mipmap/ic_t_ice"
+            android:label="@string/app_name"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".T_newyear"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_t_newyear"
+            android:roundIcon="@mipmap/ic_t_newyear"
+            android:label="@string/app_name"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <service
+            android:name=".CheckJob"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false" />
+        <receiver android:name=".AlarmRx" android:exported="false" />
+        <receiver android:name=".BootRx" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

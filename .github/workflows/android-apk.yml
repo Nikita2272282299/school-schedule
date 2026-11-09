@@ -41,6 +41,7 @@ jobs:
           done
           mkdir -p $A/res/mipmap-xxxhdpi
           cp icon-192.png $A/res/mipmap-xxxhdpi/ic_launcher.png
+          for t in aurora sunset ocean mint cosmos neon sakura ice newyear; do cp icon-192.png $A/res/mipmap-xxxhdpi/ic_t_$t.png; done
 
       - name: Signing key (created once, then reused)
         working-directory: school-schedule/android

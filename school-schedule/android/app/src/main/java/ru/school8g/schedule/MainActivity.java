@@ -1,8 +1,12 @@
 package ru.school8g.schedule;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
@@ -18,6 +22,7 @@ public class MainActivity extends Activity {
     private static final String HOST = "nikita2272282299.github.io";
     private static final String SITE = "https://" + HOST + "/school-schedule/?app=1";
     private static final String LOCAL = "file:///android_asset/site/index.html?app=1";
+    static final String[] THEMES = {"aurora", "sunset", "ocean", "mint", "cosmos", "neon", "sakura", "ice", "newyear"};
     private WebView web;
     private boolean usedFallback = false;
 
@@ -43,7 +48,7 @@ public class MainActivity extends Activity {
         s.setSupportZoom(false);
         s.setBuiltInZoomControls(false);
         s.setTextZoom(100);
-        s.setUserAgentString(s.getUserAgentString() + " Raspisanie8GApp/1");
+        s.setUserAgentString(s.getUserAgentString() + " Raspisanie8GApp/2");
 
         web.addJavascriptInterface(new Bridge(), "AndroidApp");
         web.setWebViewClient(new WebViewClient() {
@@ -67,6 +72,54 @@ public class MainActivity extends Activity {
         setContentView(web);
         if (state != null) web.restoreState(state);
         else web.loadUrl(SITE);
+
+        final android.content.Context app = getApplicationContext();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Notif.channels(app);
+                    Notif.scheduleJob(app);
+                    Notif.scheduleNext(app);
+                } catch (Throwable ignored) { }
+            }
+        }).start();
+        web.postDelayed(new Runnable() {
+            @Override
+            public void run() { askNotifPermission(false); }
+        }, 2500);
+    }
+
+    private void askNotifPermission(boolean force) {
+        if (Build.VERSION.SDK_INT < 33) return;
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return;
+        SharedPreferences p = Notif.p(this);
+        if (!force && p.getBoolean("asked", false)) return;
+        p.edit().putBoolean("asked", true).apply();
+        try { requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 7); } catch (Throwable ignored) { }
+    }
+
+    /** Меняем иконку под тему, когда пользователь уходит из приложения (так ничего не дёргается). */
+    private void applyIcon() {
+        try {
+            SharedPreferences p = Notif.p(this);
+            String want = p.getString("icon", "aurora");
+            boolean ok = false;
+            for (String t : THEMES) if (t.equals(want)) ok = true;
+            if (!ok) want = "aurora";
+            String cur = p.getString("icon_applied", "aurora");
+            if (want.equals(cur)) return;
+            PackageManager pm = getPackageManager();
+            String pkg = getPackageName();
+            pm.setComponentEnabledSetting(new ComponentName(pkg, pkg + ".T_" + want),
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+            for (String t : THEMES) {
+                if (t.equals(want)) continue;
+                pm.setComponentEnabledSetting(new ComponentName(pkg, pkg + ".T_" + t),
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+            }
+            p.edit().putString("icon_applied", want).apply();
+        } catch (Throwable ignored) { }
     }
 
     private class Bridge {
@@ -94,6 +147,69 @@ public class MainActivity extends Activity {
                 }
             });
         }
+
+        @JavascriptInterface
+        public void setIcon(String id) {
+            if (id == null) return;
+            Notif.p(MainActivity.this).edit().putString("icon", id.trim()).apply();
+        }
+
+        @JavascriptInterface
+        public String getNotify() {
+            SharedPreferences p = Notif.p(MainActivity.this);
+            return "{\"n\":" + p.getBoolean("on_new", true) + ",\"l\":" + p.getBoolean("on_lessons", true)
+                    + ",\"ok\":" + Notif.canPost(MainActivity.this) + "}";
+        }
+
+        @JavascriptInterface
+        public void setNotify(boolean news, boolean lessons) {
+            final android.content.Context c = getApplicationContext();
+            Notif.p(c).edit().putBoolean("on_new", news).putBoolean("on_lessons", lessons).commit();
+            if (news || lessons) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() { askNotifPermission(true); }
+                });
+            }
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Notif.scheduleJob(c);
+                        Notif.scheduleNext(c);
+                    } catch (Throwable ignored) { }
+                }
+            }).start();
+        }
+
+        @JavascriptInterface
+        public boolean testNotify() {
+            if (!Notif.canPost(MainActivity.this)) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() { askNotifPermission(true); }
+                });
+                return false;
+            }
+            Notif.test(getApplicationContext());
+            return true;
+        }
+
+        @JavascriptInterface
+        public void setClass(String cls) {
+            Notif.setClass(getApplicationContext(), cls);
+        }
+
+        @JavascriptInterface
+        public void setDays(String json) {
+            if (json == null || json.length() > 200000) return;
+            final android.content.Context c = getApplicationContext();
+            try {
+                new org.json.JSONObject(json);
+                Notif.p(c).edit().putString("days", json).commit();
+                Notif.scheduleNext(c);
+            } catch (Throwable ignored) { }
+        }
     }
 
     @Override
@@ -113,4 +229,10 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onResume() { super.onResume(); web.onResume(); }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        applyIcon();
+    }
 }
