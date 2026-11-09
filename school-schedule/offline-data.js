@@ -6,7 +6,7 @@ self.SCHEDULE_SNAPSHOT = {
   "class": "8Г",
   "ok": true,
   "error": "",
-  "updated": 1794189842,
+  "updated": 1794217399,
   "sheet_url": "https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit",
   "days": [
     {
@@ -65,7 +65,14 @@ self.SCHEDULE_SNAPSHOT = {
       ],
       "first": 0,
       "changed": 0
+    },
+    {
+      "date": "2026-11-10",
+      "weekday": "Вторник",
+      "lessons": [],
+      "first": 0,
+      "changed": 0
     }
   ],
-  "saved_at": 1794189842
+  "saved_at": 1794217399
 };
