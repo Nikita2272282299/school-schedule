@@ -1,0 +1,39 @@
+plugins {
+    id 'com.android.application'
+}
+
+def vc = Integer.parseInt(System.getenv('VERSION_CODE') ?: '1')
+
+android {
+    namespace 'ru.school8g.schedule'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'ru.school8g.schedule'
+        minSdk 21
+        targetSdk 34
+        versionCode vc
+        versionName '1.' + vc
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('sign.jks')
+            storePassword 'school8g'
+            keyAlias 'app'
+            keyPassword 'school8g'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

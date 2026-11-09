@@ -1,0 +1,80 @@
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'school-schedule/android/**'
+      - 'school-schedule/index.html'
+      - '.github/workflows/android-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Bundle offline copy and icons
+        working-directory: school-schedule
+        run: |
+          A=android/app/src/main
+          mkdir -p $A/assets/site
+          for f in index.html config.js offline-data.js manifest.json icon-192.png icon-512.png apple-touch-icon.png; do
+            [ -f "$f" ] && cp "$f" $A/assets/site/ || true
+          done
+          mkdir -p $A/res/mipmap-xxxhdpi
+          cp icon-192.png $A/res/mipmap-xxxhdpi/ic_launcher.png
+
+      - name: Signing key (created once, then reused)
+        working-directory: school-schedule/android
+        run: |
+          if [ ! -f app/sign.jks ]; then
+            keytool -genkeypair -keystore app/sign.jks -storepass school8g -keypass school8g -alias app -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Raspisanie 8G"
+            echo "NEW_KEY=1" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build APK
+        working-directory: school-schedule/android
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+        run: gradle --no-daemon assembleRelease
+
+      - name: Keep signing key in repo
+        if: env.NEW_KEY == '1'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -f school-schedule/android/app/sign.jks
+          git commit -m "android: signing key [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Publish APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp school-schedule/android/app/build/outputs/apk/release/app-release.apk raspisanie-8g.apk
+          NOTES="Сборка ${{ github.run_number }}. Скачай raspisanie-8g.apk и установи."
+          if gh release view app >/dev/null 2>&1; then
+            gh release upload app raspisanie-8g.apk --clobber
+            gh release edit app --notes "$NOTES"
+          else
+            gh release create app raspisanie-8g.apk --title "Приложение «Расписание 8Г»" --notes "$NOTES" --latest
+          fi

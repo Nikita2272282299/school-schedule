@@ -49,7 +49,7 @@ if(QA_THEME)S.theme=QA_THEME;
 function saveS(){try{localStorage.setItem(SET_KEY,JSON.stringify(S));}catch(e){}}
 function themeById(id){if(id==='auto')return themeById(matchMedia('(prefers-color-scheme: light)').matches?'ice':'aurora');return THEMES.find(t=>t.id===id)||THEMES[0];}
 let CUR_THEME=THEMES[0];
-function applyTheme(){const t=themeById(S.theme);CUR_THEME=t;const r=document.documentElement;const v=Object.assign({},t.dark?DARK:LIGHT,t.v);for(const k in v)r.style.setProperty('--'+k,v[k]);r.dataset.mode=t.dark?'dark':'light';r.classList.toggle('ny',t.id==='newyear');r.style.colorScheme=t.dark?'dark':'light';const m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t.v.bg);}
+function applyTheme(){const t=themeById(S.theme);CUR_THEME=t;const r=document.documentElement;const v=Object.assign({},t.dark?DARK:LIGHT,t.v);for(const k in v)r.style.setProperty('--'+k,v[k]);r.dataset.mode=t.dark?'dark':'light';r.classList.toggle('ny',t.id==='newyear');r.style.colorScheme=t.dark?'dark':'light';const m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t.v.bg);if(window.AndroidApp&&window.AndroidApp.setBars){try{window.AndroidApp.setBars(String(t.v.bg),!t.dark);}catch(e){}}}
 function applyPrefs(){const r=document.documentElement;r.classList.toggle('noanim',!S.anim);r.classList.toggle('compact',!!S.compact);r.classList.toggle('nobreaks',!S.breaks);r.style.setProperty('--zoom',{s:.92,m:1,l:1.1}[S.size]||1);}
 applyTheme();applyPrefs();
 </script>
@@ -363,6 +363,7 @@ html.noanim .garland i,html.noanim .mini-g u{animation:none!important}
 .settled .ls,.settled .br,.settled .h-chips span,.settled .h-next,.settled footer,.settled .ring .fg{animation:none}
 .settled .h-in{animation:fadeOnly .35s ease both}
 @keyframes fadeOnly{from{opacity:0}}
+a.row{color:inherit;text-decoration:none}.apk-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--sel);font-size:18px;flex:none}
 </style>
 </head>
 <body>
@@ -423,7 +424,8 @@ html.noanim .garland i,html.noanim .mini-g u{animation:none!important}
     <label class="row"><span>Приветствие и часы</span><input type="checkbox" class="sw" data-set="greet"></label>
     <div class="row"><span>Размер</span><div class="seg" id="seg"><span class="si"></span><button data-size="s">Мельче</button><button data-size="m">Обычный</button><button data-size="l">Крупнее</button></div></div>
   </div></div>
-  <div class="grp" style="--g:4"><div class="gl">🔄 Данные</div><div class="box">
+  <div class="grp" id="appGrp" style="--g:4"><div class="gl">📲 Приложение</div><div class="box"><a class="row" id="apkLink" href="https://github.com/Nikita2272282299/school-schedule/releases/download/app/raspisanie-8g.apk" rel="noopener"><span>Скачать для Android<small>APK · на весь экран, своя иконка, работает без интернета</small></span><span class="apk-ic">⬇️</span></a></div></div>
+  <div class="grp" style="--g:5"><div class="gl">🔄 Данные</div><div class="box">
     <div class="row"><span>Последняя проверка</span><span class="val" id="setLast">—</span></div>
     <div class="row"><span>Сохранено дней</span><span class="val" id="setDays">—</span></div>
   </div>
@@ -758,8 +760,8 @@ $('hero').addEventListener('click',e=>{const t=e.target.closest('[data-party]');
 addEventListener('resize',()=>{placeInd();sizeFx();buildGarland();});
 
 /* ---------- live background FX ---------- */
-const FX=$('fx'),fctx=FX.getContext('2d');let P=[],SHOOT=[],FX_RAF=0,FW=0,FH=0,DPR=1;
-function sizeFx(){DPR=Math.min(2,devicePixelRatio||1);FW=innerWidth;FH=innerHeight;for(const c of[FX,CF]){c.width=FW*DPR;c.height=FH*DPR;c.style.width=FW+'px';c.style.height=FH+'px';}fctx.setTransform(DPR,0,0,DPR,0,0);cctx.setTransform(DPR,0,0,DPR,0,0);}
+const FX=$('fx'),fctx=FX.getContext('2d');let P=[],SHOOT=[],FX_RAF=0,FW=0,FH=0,DPR=1,LOWDPR=false;
+function sizeFx(){DPR=LOWDPR?1:Math.min(2,devicePixelRatio||1);FW=innerWidth;FH=innerHeight;for(const c of[FX,CF]){c.width=FW*DPR;c.height=FH*DPR;c.style.width=FW+'px';c.style.height=FH+'px';}fctx.setTransform(DPR,0,0,DPR,0,0);cctx.setTransform(DPR,0,0,DPR,0,0);}
 const COUNTS={stars:90,embers:45,bubbles:30,fireflies:28,petals:24,snow:70,neon:40,ny:75};
 function mk(type,init){const p={x:R(0,FW),y:init?R(0,FH):0,t:R(0,6.28)};
   switch(type){
@@ -778,7 +780,7 @@ function startFx(){cancelAnimationFrame(FX_RAF);fctx.clearRect(0,0,FW,FH);P=[];S
   let last=performance.now();
   const t0=last;let fc=0,fsum=0,tuned=false;
   const loop=now2=>{FX_RAF=requestAnimationFrame(loop);const raw=(now2-last)/16.7;const dt=Math.min(3,raw);last=now2;if(document.hidden)return;
-    if(!tuned&&now2-t0>1500){fc++;fsum+=Math.min(raw,6);if(fc>=60){tuned=true;if(fsum/fc>1.45){P.length=Math.round(P.length*.55);document.documentElement.classList.add('lowfx');}}}
+    if(!tuned&&now2-t0>1500){fc++;fsum+=Math.min(raw,6);if(fc>=60){tuned=true;if(fsum/fc>1.45){P.length=Math.round(P.length*.55);document.documentElement.classList.add('lowfx');if(!LOWDPR&&DPR>1){LOWDPR=true;sizeFx();}}}}
     drawFx(t,dt,now2/1000);};
   FX_RAF=requestAnimationFrame(loop);}
 const SPR={};
@@ -832,6 +834,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){render();
 
 /* ---------- init ---------- */
 $('sheetLink').href='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/edit';
+if(/Raspisanie8GApp/.test(navigator.userAgent)||window.AndroidApp){const ag=$('appGrp');if(ag)ag.parentNode.removeChild(ag);}
 sizeFx();
 if(!SEL){seedSnapshot();SEL=latestKey();}
 const tk=iso(now());if(DAYS[tk])SEL=tk;
