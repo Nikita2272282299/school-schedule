@@ -38,6 +38,7 @@ import urllib.request
 from datetime import date, datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from html.parser import HTMLParser
 from urllib.parse import parse_qs, urlparse
 
 try:
@@ -140,17 +141,36 @@ def day_header(cells, today):
     return None
 
 
+ROOM_WORDS = ("спортзал", "стадион", "актовый зал", "библиотека", "столовая",
+              "мастерская", "бассейн")
+# хвост-кабинет: «313», «319/221», «210а», «305, 407»
+ROOM_TAIL = re.compile(r"^(.*[A-Za-zА-Яа-яЁё].*?)\s*(?:каб\.?\s*)?"
+                       r"(\d{2,3}[A-Za-zА-Яа-яЁё]?(?:\s*[/,]\s*\d{1,3}[A-Za-zА-Яа-яЁё]?)*)$")
+
+
 def split_lesson(text):
-    """«Физика, Алг (305(2),407)» → («Физика, Алг», «305(2),407»)."""
+    """Разделяет предмет и кабинет.
+
+    «Физика, Алг (305(2),407)» → («Физика, Алг», «305(2),407»)
+    «Англ 319/221» → («Англ», «319/221»)
+    «Физкультура спортзал» → («Физкультура», «спортзал»)
+    """
     text = re.sub(r"\s+", " ", text or "").strip()
-    i = text.find("(")
-    if i == -1:
-        return text, ""
-    subject = text[:i].strip()
-    room = text[i:].strip()
-    if room.startswith("(") and room.endswith(")"):
-        room = room[1:-1]
-    return subject, room.strip()
+    # Only numeric parenthesized suffixes are rooms, not «химия (пр)».
+    m = re.match(r"^(.*?)\s*\((\d{2,4}[\dА-Яа-яA-Za-z(),/\s]*)\)$", text)
+    if m:
+        return m.group(1).strip(), m.group(2).strip()
+    m = re.match(r"^(.*?)\s*(?:каб\.?\s*)?(\d{2,4}[А-Яа-яA-Za-z]?(?:\(\d+\))?(?:\s*[/,]\s*\d{2,4}[А-Яа-яA-Za-z]?(?:\(\d+\))?)*)$", text, re.I)
+    if m and len(m.group(1).strip()) >= 3:
+        return m.group(1).strip(' ,;-'), m.group(2).strip()
+    low = text.lower()
+    for word in ROOM_WORDS:
+        if low.endswith(" " + word) and len(text) > len(word) + 2:
+            return text[:-len(word)].strip(" ,-"), text[-len(word):].strip()
+    m = ROOM_TAIL.match(text)
+    if m and len(m.group(1).strip(" ,-")) >= 3:
+        return m.group(1).strip(" ,-"), m.group(2).strip()
+    return text, ""
 
 
 def clean_time(t):
@@ -179,6 +199,16 @@ def parse_sheet(rows, class_code, today):
             lessons = []
         iso = day["date"].isoformat()
         old = days.get(iso)
+        if old is not None:
+            by = {l["n"]: l for l in old["lessons"]}
+            for l in lessons:
+                prev = by.get(l["n"])
+                if prev and prev["raw"] and l["raw"] and prev["raw"] != l["raw"]:
+                    l = dict(l, raw=prev["raw"] + " / " + l["raw"])
+                    l["subject"], l["room"] = split_lesson(l["raw"])
+                if l["raw"] or not prev:
+                    by[l["n"]] = l
+            lessons = [by[n] for n in sorted(by)]
         if old is None or lessons or not old["lessons"]:
             days[iso] = {
                 "date": iso,
@@ -222,7 +252,10 @@ def parse_sheet(rows, class_code, today):
         time_str = next((clean_time(c) for c in left if TIME_RE.search(c)), "") or BELLS.get(num, "")
         text = cells[col] if col < len(cells) else ""
         if num in cur["lessons"] and cur["lessons"][num]["raw"]:
-            continue
+            previous = cur["lessons"][num]["raw"]
+            if not text or text == previous:
+                continue
+            text = previous + " / " + text
         subject, room = split_lesson(text)
         cur["lessons"][num] = {"n": num, "time": time_str, "subject": subject, "room": room, "raw": text}
 
@@ -364,7 +397,7 @@ def broadcast(events):
                 _send_push(sub, ev)
             except WebPushException as e:
                 code = getattr(getattr(e, "response", None), "status_code", None)
-                if code in (401, 403, 404, 410):  # подписка мертва или ключ сменился
+                if code in (401, 403, 404, 410):  # подписка мертва или кл��ч сменился
                     dead.append(sub.get("endpoint"))
                 else:
                     print(f"[push] {code}: {str(e)[:200]}")
@@ -457,14 +490,79 @@ def save_store():
             print(f"[warn] не удалось сохранить {STORE_FILE}: {e}")
 
 
+class SheetHTMLParser(HTMLParser):
+    """Expand only explicit colspan/rowspan: never guess from adjacent CSV cells."""
+    def __init__(self):
+        super().__init__()
+        self.tables = []
+        self.grid = None
+        self.ri = -1
+        self.ci = 0
+        self.capture = False
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == 'table':
+            self.grid = []
+            self.ri = -1
+        elif self.grid is not None and tag == 'tr':
+            self.ri += 1
+            self.ci = 0
+            while len(self.grid) <= self.ri:
+                self.grid.append({})
+        elif self.grid is not None and self.ri >= 0 and tag == 'td':
+            while self.ci in self.grid[self.ri]:
+                self.ci += 1
+            self.cs = min(200, max(1, int(attrs.get('colspan', 1))))
+            self.rs = min(200, max(1, int(attrs.get('rowspan', 1))))
+            self.text = []
+            self.capture = True
+        elif self.capture and tag == 'br':
+            self.text.append(' ')
+
+    def handle_data(self, data):
+        if self.capture:
+            self.text.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == 'td' and self.capture:
+            value = re.sub(r'\s+', ' ', ''.join(self.text)).strip()
+            for y in range(self.rs):
+                while len(self.grid) <= self.ri + y:
+                    self.grid.append({})
+                for x in range(self.cs):
+                    self.grid[self.ri + y][self.ci + x] = value
+            self.ci += self.cs
+            self.capture = False
+        elif tag == 'table' and self.grid is not None:
+            rows = [[r.get(i, '') for i in range(max(r, default=-1) + 1)] for r in self.grid]
+            if any(sum(bool(CLASS_RE.match(norm(c))) for c in r) >= 3 for r in rows):
+                self.tables.extend(rows)
+            self.grid = None
+
+
+def parse_sheet_html(text):
+    parser = SheetHTMLParser()
+    parser.feed(text)
+    return parser.tables
+
+
 def fetch_csv(gid=None):
-    url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/export?format=csv"
-    if gid:
-        url += f"&gid={gid}"
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (school-schedule)"})
-    with urllib.request.urlopen(req, timeout=12) as r:
-        data = r.read().decode("utf-8-sig", errors="replace")
-    return list(csv.reader(io.StringIO(data)))
+    # Keep the public function name for scripts; prefer HTML with merge metadata.
+    base = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}"
+    suffix = f"&gid={gid}" if gid else ""
+    for path in ("/htmlview?widget=true", "/export?format=csv"):
+        try:
+            req = urllib.request.Request(base + path + suffix, headers={"User-Agent": "Mozilla/5.0 (school-schedule)"})
+            with urllib.request.urlopen(req, timeout=12) as r:
+                data = r.read().decode("utf-8-sig", errors="replace")
+            rows = parse_sheet_html(data) if data.lstrip().startswith('<') else list(csv.reader(io.StringIO(data)))
+            if any(sum(bool(CLASS_RE.match(norm(c))) for c in row) >= 3 for row in rows):
+                return rows
+        except Exception:
+            if path.endswith('csv'):
+                raise
+    raise ValueError('В ответе Google нет таблицы с классами')
 
 
 def _needs_refresh(force):
@@ -730,7 +828,7 @@ class Handler(BaseHTTPRequestHandler):
                 if not valid_subscription(sub):
                     return self._json(400, {"ok": False, "error": "bad subscription"})
                 try:
-                    _send_push(sub, {"title": "8Г · Уведомления включены",
+                    _send_push(sub, {"title": "Расписание · Уведомления включены",
                                      "body": "Изменения расписания придут на этот телефон.",
                                      "tag": "test", "url": "/"})
                 except Exception as e:

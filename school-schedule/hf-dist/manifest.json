@@ -1,1 +1,29 @@
-{"name":"Расписание 8Г","short_name":"8Г","description":"Живое расписание 8Г","lang":"ru","start_url":"./","scope":"./","display":"standalone","background_color":"#eef1f8","theme_color":"#eef1f8","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"},{"src":"icon.svg","sizes":"any","type":"image/svg+xml"}]}
+{
+  "name": "Расписание",
+  "short_name": "Расписание",
+  "description": "Уроки, кабинеты и изменения расписания",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0A0814",
+  "theme_color": "#0A0814",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

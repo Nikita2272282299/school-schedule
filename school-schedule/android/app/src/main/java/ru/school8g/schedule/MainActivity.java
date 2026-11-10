@@ -17,6 +17,8 @@ import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceError;
 
 public class MainActivity extends Activity {
     private static final String HOST = "nikita2272282299.github.io";
@@ -55,14 +57,24 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 Uri u = Uri.parse(url);
-                if (url.startsWith("file:") || HOST.equals(u.getHost())) return false;
+                if (url.startsWith("file:///android_asset/site/") || ("https".equals(u.getScheme()) && HOST.equals(u.getHost()) && u.getPath().startsWith("/school-schedule/"))) return false;
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception ignored) { }
                 return true;
             }
 
             @Override
+            public void onPageFinished(WebView view, String url) {
+                view.evaluateJavascript("window.dispatchEvent(new Event('native-ready'));", null);
+            }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                if (request.isForMainFrame()) onReceivedError(view, -1, "", request.getUrl().toString());
+            }
+
+            @Override
             public void onReceivedError(WebView view, int code, String desc, String failingUrl) {
-                if (!usedFallback && failingUrl != null && failingUrl.startsWith("http")) {
+                if (!usedFallback && failingUrl != null && failingUrl.equals(view.getUrl())) {
                     usedFallback = true;
                     view.loadUrl(LOCAL);
                 }
@@ -81,6 +93,7 @@ public class MainActivity extends Activity {
                     Notif.channels(app);
                     Notif.scheduleJob(app);
                     Notif.scheduleNext(app);
+                    Notif.check(app);
                 } catch (Throwable ignored) { }
             }
         }).start();
@@ -91,6 +104,15 @@ public class MainActivity extends Activity {
     }
 
     private void askNotifPermission(boolean force) {
+        if (force && !Notif.canPost(this) && (Build.VERSION.SDK_INT < 33 || checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED || (Notif.p(this).getBoolean("asked", false) && !shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)))) {
+            Intent settings = new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+            settings.putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, getPackageName());
+            if (Build.VERSION.SDK_INT < 26) {
+                settings = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()));
+            }
+            try { startActivity(settings); } catch (Exception ignored) { }
+            return;
+        }
         if (Build.VERSION.SDK_INT < 33) return;
         if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return;
         SharedPreferences p = Notif.p(this);
@@ -158,7 +180,7 @@ public class MainActivity extends Activity {
         public String getNotify() {
             SharedPreferences p = Notif.p(MainActivity.this);
             return "{\"n\":" + p.getBoolean("on_new", true) + ",\"l\":" + p.getBoolean("on_lessons", true)
-                    + ",\"ok\":" + Notif.canPost(MainActivity.this) + "}";
+                    + ",\"ok\":" + Notif.canPost(MainActivity.this) + ",\"exact\":" + Notif.exactAllowed(MainActivity.this) + "}";
         }
 
         @JavascriptInterface
@@ -196,6 +218,15 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void openAlarmSettings() {
+            runOnUiThread(() -> {
+                if (Build.VERSION.SDK_INT >= 31 && !Notif.exactAllowed(MainActivity.this)) {
+                    try { startActivity(new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + getPackageName()))); } catch (Exception ignored) { }
+                }
+            });
+        }
+
+        @JavascriptInterface
         public void setClass(String cls) {
             Notif.setClass(getApplicationContext(), cls);
         }
@@ -228,7 +259,19 @@ public class MainActivity extends Activity {
     protected void onPause() { web.onPause(); super.onPause(); }
 
     @Override
-    protected void onResume() { super.onResume(); web.onResume(); }
+    protected void onResume() {
+        super.onResume();
+        if (web != null) { web.onResume(); web.evaluateJavascript("window.dispatchEvent(new Event('native-ready'));", null); }
+        final android.content.Context c = getApplicationContext();
+        new Thread(() -> { try { Notif.scheduleJob(c); Notif.scheduleNext(c); } catch (Throwable ignored) { } }).start();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+        super.onRequestPermissionsResult(requestCode, permissions, results);
+        if (web != null) web.evaluateJavascript("window.dispatchEvent(new Event('native-ready'));", null);
+        Notif.scheduleNext(getApplicationContext());
+    }
 
     @Override
     protected void onStop() {

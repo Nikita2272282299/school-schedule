@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 /** Разбор Google-таблицы (та же логика, что и на сайте). */
@@ -40,6 +41,8 @@ final class Sheet {
     static final Pattern DIG_RE = Pattern.compile("\\d{2,4}");
     static final Locale RU = Locale.forLanguageTag("ru");
 
+    static Calendar schoolNow() { return Calendar.getInstance(TimeZone.getTimeZone("Asia/Yekaterinburg")); }
+
     static String norm(String c) {
         return c == null ? "" : c.replaceAll("\\s+", "").toUpperCase(RU);
     }
@@ -71,6 +74,48 @@ final class Sheet {
         return rows;
     }
 
+    static int span(String attrs, String name) {
+        Matcher m = Pattern.compile(name + "\\s*=\\s*['\"]?(\\d+)", Pattern.CASE_INSENSITIVE).matcher(attrs);
+        return m.find() ? Math.min(200, Math.max(1, Integer.parseInt(m.group(1)))) : 1;
+    }
+
+    @SuppressWarnings("deprecation")
+    static List<List<String>> html(String text) {
+        List<List<String>> result = new ArrayList<>();
+        Matcher tables = Pattern.compile("<table\\b[^>]*>(.*?)</table>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL).matcher(text);
+        while (tables.find()) {
+            List<Map<Integer,String>> grid = new ArrayList<>();
+            Matcher rows = Pattern.compile("<tr\\b[^>]*>(.*?)</tr>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL).matcher(tables.group(1));
+            int ri = 0;
+            while (rows.find()) {
+                while (grid.size() <= ri) grid.add(new LinkedHashMap<>());
+                int ci = 0;
+                Matcher cells = Pattern.compile("<td\\b([^>]*)>(.*?)</td>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL).matcher(rows.group(1));
+                while (cells.find()) {
+                    while (grid.get(ri).containsKey(ci)) ci++;
+                    int cs = span(cells.group(1), "colspan"), rs = span(cells.group(1), "rowspan");
+                    String value = android.text.Html.fromHtml(cells.group(2)).toString().replaceAll("\\s+", " ").trim();
+                    for (int y = 0; y < rs; y++) {
+                        while (grid.size() <= ri+y) grid.add(new LinkedHashMap<>());
+                        for (int x = 0; x < cs; x++) grid.get(ri+y).put(ci+x, value);
+                    }
+                    ci += cs;
+                }
+                ri++;
+            }
+            List<List<String>> expanded = new ArrayList<>(); boolean valid = false;
+            for (Map<Integer,String> r : grid) {
+                List<String> row = new ArrayList<>(); int max = -1;
+                for (int k : r.keySet()) if (k > max) max = k;
+                for (int k = 0; k <= max; k++) row.add(r.containsKey(k) ? r.get(k) : "");
+                if (isHeader(row)) valid = true;
+                expanded.add(row);
+            }
+            if (valid) result.addAll(expanded);
+        }
+        return result;
+    }
+
     static int[] time(String s) {
         if (s == null) return null;
         Matcher m = TIME_RE.matcher(s);
@@ -83,7 +128,7 @@ final class Sheet {
     }
 
     static Calendar midnight(Calendar now) {
-        Calendar c = Calendar.getInstance();
+        Calendar c = schoolNow();
         c.clear();
         c.set(now.get(Calendar.YEAR), now.get(Calendar.MONTH), now.get(Calendar.DAY_OF_MONTH));
         return c;
@@ -94,7 +139,7 @@ final class Sheet {
         Calendar best = null;
         int y0 = now.get(Calendar.YEAR);
         for (int y = y0 - 1; y <= y0 + 1; y++) {
-            Calendar x = Calendar.getInstance();
+            Calendar x = schoolNow();
             x.clear();
             x.set(y, month, day);
             if (x.get(Calendar.MONTH) != month) continue;
@@ -155,7 +200,7 @@ final class Sheet {
     }
 
     static Map<String, Day> parse(String text, String cls, Calendar now) {
-        List<List<String>> rows = csv(text);
+        List<List<String>> rows = text.trim().startsWith("<") ? html(text) : csv(text);
         Map<String, Day> out = new LinkedHashMap<>();
         String target = norm(cls);
         String cur = null;
@@ -186,7 +231,7 @@ final class Sheet {
                     if (tm == null) tm = time(c);
                 }
                 if (tm == null && num.isEmpty()) {
-                    if (!day.lessons.isEmpty() && blank(q)) break;
+                    // Empty spacer rows do not end the lesson block.
                     continue;
                 }
                 if (tm == null) {
@@ -204,7 +249,18 @@ final class Sheet {
             while (!day.lessons.isEmpty() && day.lessons.get(day.lessons.size() - 1).raw.isEmpty()) day.lessons.remove(day.lessons.size() - 1);
             while (!day.lessons.isEmpty() && day.lessons.get(0).raw.isEmpty()) day.lessons.remove(0);
             Day old = out.get(cur);
-            if (!day.lessons.isEmpty() && (old == null || old.lessons.isEmpty())) out.put(cur, day);
+            if (old != null) {
+                for (Lesson l : day.lessons) {
+                    Lesson same = null;
+                    for (Lesson v : old.lessons) if (v.num.equals(l.num) && v.start == l.start) { same = v; break; }
+                    if (same == null) old.lessons.add(l);
+                    else if (!l.raw.isEmpty() && !l.raw.equals(same.raw)) {
+                        same.raw = same.raw.isEmpty() ? l.raw : same.raw + " / " + l.raw;
+                        pretty(same);
+                    }
+                }
+                java.util.Collections.sort(old.lessons, (a,b) -> Integer.compare(a.start,b.start));
+            } else if (!day.lessons.isEmpty()) out.put(cur, day);
         }
         return out;
     }
@@ -212,7 +268,13 @@ final class Sheet {
     static void pretty(Lesson l) {
         String s = l.raw;
         if (s.isEmpty()) return;
-        if (s.length() > 30 || s.contains("(") || s.contains(")") || s.contains(",")) { l.title = s; return; }
+        l.title = s;
+        l.room = "";
+        Matcher tail = Pattern.compile("^(.*?)\\s*(?:каб\\.?\\s*)?(\\d{2,4}[а-яa-z]?(?:\\(\\d+\\))?(?:\\s*[/,]\\s*\\d{2,4}[а-яa-z]?(?:\\(\\d+\\))?)*)$", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(s);
+        if (tail.matches() && !tail.group(1).matches(".*\\d.*")) {
+            l.title = tail.group(1).trim(); l.room = tail.group(2).trim(); return;
+        }
+        if (s.contains("(") || s.contains(")") || s.contains(",") || s.length() > 70) return;
         String first = s.split("/")[0].trim();
         Matcher m = ROOM_RE.matcher(first);
         String word = first;

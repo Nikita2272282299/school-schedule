@@ -60,6 +60,11 @@ final class Notif {
         nm.createNotificationChannel(b);
     }
 
+    static boolean exactAllowed(Context c) {
+        AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
+        return Build.VERSION.SDK_INT < 31 || (am != null && am.canScheduleExactAlarms());
+    }
+
     static boolean canPost(Context c) {
         if (Build.VERSION.SDK_INT >= 33 && c.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return false;
         if (Build.VERSION.SDK_INT >= 24) {
@@ -101,7 +106,7 @@ final class Notif {
     static String fetch() {
         String base = "https://docs.google.com/spreadsheets/d/" + SHEET;
         long ts = System.currentTimeMillis();
-        String[] urls = {base + "/export?format=csv&t=" + ts, base + "/gviz/tq?tqx=out:csv&headers=0&t=" + ts};
+        String[] urls = {base + "/htmlview?t=" + ts, base + "/export?format=csv&t=" + ts, base + "/gviz/tq?tqx=out:csv&headers=0&t=" + ts};
         for (String u : urls) {
             HttpURLConnection h = null;
             try {
@@ -118,7 +123,7 @@ final class Notif {
                 while ((n = in.read(buf)) > 0) o.write(buf, 0, n);
                 in.close();
                 String t = o.toString("UTF-8");
-                if (t.trim().startsWith("<")) continue;
+                if (t.trim().startsWith("<") && Sheet.html(t).isEmpty()) continue;
                 if (t.length() > 50) return t;
             } catch (Throwable ignored) {
             } finally {
@@ -163,7 +168,7 @@ final class Notif {
         SharedPreferences sp = p(c);
         String txt = fetch();
         if (txt == null) return;
-        Calendar now = Calendar.getInstance();
+        Calendar now = Sheet.schoolNow();
         String cls = sp.getString("cls", "8Г");
         Map<String, Sheet.Day> days = Sheet.parse(txt, cls, now);
         if (days.isEmpty()) return;
@@ -225,7 +230,7 @@ final class Notif {
     static Calendar parseIso(String s) {
         try {
             String[] a = s.split("-");
-            Calendar c = Calendar.getInstance();
+            Calendar c = Sheet.schoolNow();
             c.clear();
             c.set(Integer.parseInt(a[0]), Integer.parseInt(a[1]) - 1, Integer.parseInt(a[2]));
             return c;
@@ -235,7 +240,7 @@ final class Notif {
     }
 
     /** Ставит будильник на ближайший урок (за 5 минут). */
-    static void scheduleNext(Context c) {
+    static synchronized void scheduleNext(Context c) {
         AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;
         Intent i = new Intent(c, AlarmRx.class);
@@ -257,7 +262,7 @@ final class Notif {
                 if (l == null) continue;
                 int st = l.optInt(1, -1);
                 String raw = l.optString(3, "");
-                if (st < 0 || raw.trim().isEmpty()) continue;
+                if (st < 0 || raw.trim().isEmpty() || (date + "|" + st).equals(p(c).getString("last_lesson", ""))) continue;
                 long at = base.getTimeInMillis() + (st - 5) * 60000L;
                 if (at > nowMs + 5000 && at < best) {
                     best = at;
@@ -285,7 +290,9 @@ final class Notif {
         Calendar base = parseIso(date);
         if (ls == null || base == null) return;
         long startMs = base.getTimeInMillis() + start * 60000L;
-        if (System.currentTimeMillis() > startMs + 60000L) return;
+        long current = System.currentTimeMillis();
+        String delivery = date + "|" + start;
+        if (current < startMs - 5 * 60000L - 5000L || current > startMs + 60000L || delivery.equals(p(c).getString("last_lesson", ""))) return;
         for (int j = 0; j < ls.length(); j++) {
             JSONArray a = ls.optJSONArray(j);
             if (a == null || a.optInt(1, -1) != start) continue;
@@ -297,7 +304,9 @@ final class Notif {
             if (l.raw.isEmpty()) return;
             Sheet.pretty(l);
             String text = (l.num.isEmpty() ? "" : l.num + " урок · ") + hm(l.start) + (l.end > 0 ? "–" + hm(l.end) : "") + (l.room.isEmpty() ? "" : " · каб. " + l.room);
-            post(c, CH_LES, 2000, "⏰ Через 5 минут: " + (l.title.isEmpty() ? l.raw : l.title), text);
+            p(c).edit().putString("last_lesson", delivery).commit();
+            long mins = Math.max(0, (startMs - current + 59999L) / 60000L);
+            post(c, CH_LES, 2000, (mins > 0 ? "⏰ Через " + mins + " мин: " : "⏰ Начинается: ") + (l.title.isEmpty() ? l.raw : l.title), text);
             return;
         }
     }
@@ -326,6 +335,7 @@ final class Notif {
         for (String k : sp.getAll().keySet()) if (k.startsWith("sig_")) e.remove(k);
         e.putString("cls", cls.trim());
         e.putBoolean("seeded", false);
+        e.remove("last_lesson");
         e.putString("days", "{}");
         e.commit();
     }

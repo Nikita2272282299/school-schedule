@@ -29,8 +29,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Refresh schedule from Google Sheets (schedule trigger only)
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+      - name: Restore public icons and fonts
+        working-directory: school-schedule
+        run: python materialize_assets.py
+      - name: Refresh schedule from Google Sheets
         working-directory: school-schedule
         run: python refresh_snapshot.py --sheet
       - name: Commit refreshed snapshot
@@ -50,8 +52,18 @@ jobs:
             git commit -m "Auto-refresh schedule: $(date -u '+%Y-%m-%d %H:%M UTC')"
             git push
           fi
+      - name: Save generated public assets
+        run: |
+          git add -- icon-192.png icon-512.png apple-touch-icon.png assets/ school-schedule/icon-192.png school-schedule/icon-512.png school-schedule/apple-touch-icon.png school-schedule/pa-dist/icon-192.png school-schedule/pa-dist/icon-512.png school-schedule/pa-dist/apple-touch-icon.png school-schedule/hf-dist/icon-192.png school-schedule/hf-dist/icon-512.png school-schedule/hf-dist/apple-touch-icon.png
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git commit -m "Update schedule app icons and offline fonts [skip ci]"
+            git push
+          fi
       - run: python -m unittest discover -s school-schedule/tests
       - run: node school-schedule/check_js.cjs
+      - run: node school-schedule/check_fixes.cjs
       - name: Require configured production API
         run: node school-schedule/check_api.cjs
       - run: python school-schedule/build_pages.py

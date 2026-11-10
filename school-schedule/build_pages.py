@@ -12,6 +12,8 @@ BASE = Path(__file__).resolve().parent
 OUT = BASE / 'pages-dist'
 
 if __name__ == '__main__':
+    import materialize_assets
+    materialize_assets.main()
     # Чистим артефакт по файлам, а не rmtree: предыдущая сборка не теряется
     # целиком, если один файл занят, и не требует прав на удаление каталога.
     OUT.mkdir(parents=True, exist_ok=True)

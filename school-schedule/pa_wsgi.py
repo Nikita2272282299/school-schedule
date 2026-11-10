@@ -189,7 +189,7 @@ def _dispatch(method, environ, start_response):
                     return _json(start_response, {"ok": False, "error": "bad subscription"},
                                  400, environ)
                 try:
-                    app._send_push(sub, {"title": "8Г · Уведомления включены",
+                    app._send_push(sub, {"title": "Расписание · Уведомления включены",
                                          "body": "Изменения расписания придут на этот телефон.",
                                          "tag": "test", "url": "/"})
                 except Exception as e:

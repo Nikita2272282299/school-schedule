@@ -10,7 +10,7 @@ import subprocess
 BASE = Path(__file__).resolve().parent
 ROOT = BASE.parent
 
-TITLE_RE = re.compile(r'<title>Расписание 8Г[^<]*</title>')
+TITLE_RE = re.compile(r'<title>Расписание[^<]*</title>')
 VER_RE = re.compile(r"const APP_VER='\d+'")
 
 TARGETS = ('index.html', 'school-schedule/index.html', 'school-schedule/pa-dist/index.html')
@@ -33,7 +33,7 @@ def stamp(path, number):
     """Пишет номер сборки в <title> и APP_VER. True, если файл изменился."""
     p = Path(path)
     src = p.read_text(encoding='utf-8')
-    out = TITLE_RE.sub('<title>Расписание 8Г · версия %d</title>' % number, src)
+    out = TITLE_RE.sub('<title>Расписание</title>', src)
     out = VER_RE.sub("const APP_VER='%d'" % number, out)
     if out == src:
         return False
