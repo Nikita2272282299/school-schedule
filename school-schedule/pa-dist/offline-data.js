@@ -6,66 +6,9 @@ self.SCHEDULE_SNAPSHOT = {
   "class": "8Г",
   "ok": true,
   "error": "",
-  "updated": 1794278807,
+  "updated": 1794306656,
   "sheet_url": "https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit",
   "days": [
-    {
-      "date": "2026-11-09",
-      "weekday": "Понедельник",
-      "lessons": [
-        {
-          "n": 1,
-          "time": "8:00-8:40",
-          "subject": "химия",
-          "room": "205",
-          "raw": "химия 205"
-        },
-        {
-          "n": 2,
-          "time": "8:50-9:30",
-          "subject": "истор",
-          "room": "326",
-          "raw": "истор 326"
-        },
-        {
-          "n": 3,
-          "time": "9:45-10:25",
-          "subject": "алгебр",
-          "room": "409",
-          "raw": "алгебр 409"
-        },
-        {
-          "n": 4,
-          "time": "10:40-11:20",
-          "subject": "англ",
-          "room": "319/307",
-          "raw": "англ319/307"
-        },
-        {
-          "n": 5,
-          "time": "11:35-12:15",
-          "subject": "алгебр",
-          "room": "409",
-          "raw": "алгебр 409"
-        },
-        {
-          "n": 6,
-          "time": "12:25-13:05",
-          "subject": "",
-          "room": "",
-          "raw": ""
-        },
-        {
-          "n": 7,
-          "time": "13:15-13:55",
-          "subject": "РоВ",
-          "room": "323",
-          "raw": "РоВ 323"
-        }
-      ],
-      "first": 0,
-      "changed": 0
-    },
     {
       "date": "2026-11-10",
       "weekday": "Вторник",
@@ -108,7 +51,50 @@ self.SCHEDULE_SNAPSHOT = {
       ],
       "first": 0,
       "changed": 0
+    },
+    {
+      "date": "2026-11-11",
+      "weekday": "Среда",
+      "lessons": [
+        {
+          "n": 1,
+          "time": "8:00-8:40",
+          "subject": "англ319/308",
+          "room": "1",
+          "raw": "англ319/308(1)"
+        },
+        {
+          "n": 2,
+          "time": "8:50-9:30",
+          "subject": "музык",
+          "room": "106",
+          "raw": "музык 106"
+        },
+        {
+          "n": 3,
+          "time": "9:45-10:25",
+          "subject": "биолог",
+          "room": "323",
+          "raw": "биолог 323"
+        },
+        {
+          "n": 4,
+          "time": "10:40-11:20",
+          "subject": "история",
+          "room": "303",
+          "raw": "история 303"
+        },
+        {
+          "n": 5,
+          "time": "11:35-12:15",
+          "subject": "химия",
+          "room": "205",
+          "raw": "химия 205"
+        }
+      ],
+      "first": 0,
+      "changed": 0
     }
   ],
-  "saved_at": 1794278807
+  "saved_at": 1794306656
 };
