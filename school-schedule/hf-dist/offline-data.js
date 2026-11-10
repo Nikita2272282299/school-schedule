@@ -6,7 +6,7 @@ self.SCHEDULE_SNAPSHOT = {
   "class": "8Г",
   "ok": true,
   "error": "",
-  "updated": 1794306656,
+  "updated": 1794334381,
   "sheet_url": "https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit",
   "days": [
     {
@@ -59,9 +59,9 @@ self.SCHEDULE_SNAPSHOT = {
         {
           "n": 1,
           "time": "8:00-8:40",
-          "subject": "англ319/308",
-          "room": "1",
-          "raw": "англ319/308(1)"
+          "subject": "англ",
+          "room": "319/113",
+          "raw": "англ319/113"
         },
         {
           "n": 2,
@@ -81,8 +81,8 @@ self.SCHEDULE_SNAPSHOT = {
           "n": 4,
           "time": "10:40-11:20",
           "subject": "история",
-          "room": "303",
-          "raw": "история 303"
+          "room": "313",
+          "raw": "история 313"
         },
         {
           "n": 5,
@@ -96,5 +96,5 @@ self.SCHEDULE_SNAPSHOT = {
       "changed": 0
     }
   ],
-  "saved_at": 1794306656
+  "saved_at": 1794334381
 };
