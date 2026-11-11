@@ -36,7 +36,7 @@ def from_api(url):
     return {k: j.get(k) for k in ("class", "ok", "error", "updated", "sheet_url", "days")}
 
 
-def from_sheet():
+def from_sheet(primary_rows=None):
     """Скачивает Google-таблицу напрямую и парсит через app.parse_sheet."""
     import app  # локальный модуль
     today = app.now_perm().date()
@@ -45,7 +45,7 @@ def from_sheet():
     updates = {}
     for gid in [None] + app.EXTRA_GIDS:
         try:
-            rows = app.fetch_csv(gid)
+            rows = primary_rows if gid is None and primary_rows is not None else app.fetch_csv(gid)
             days, found = app.parse_sheet(rows, app.CLASS_CODE, today)
             found_any = found_any or found
             updates.update(days)
@@ -94,10 +94,19 @@ def main():
     source = None
     snap = None
 
+    # Build a merge-aware all-class snapshot. Do not overwrite it on failure.
+    if args.sheet:
+        import app
+        from sheet_export import fetch_rows, write_data
+        rows = fetch_rows(app.SPREADSHEET_ID)
+        if not any(sum(bool(app.CLASS_RE.match(app.norm(c))) for c in row) >= 3 for row in rows):
+            raise ValueError('В XLSX не найдена строка классов')
+        write_data(BASE / 'sheet-data.json', rows)
+
     # Режим --sheet: напрямую из Google-таблицы (для GitHub Actions)
     if args.sheet:
         try:
-            snap = from_sheet()
+            snap = from_sheet(rows)
             source = "Google Sheets (direct)"
         except Exception as e:
             print("Google-таблица недоступна ({}), fallback".format(e))

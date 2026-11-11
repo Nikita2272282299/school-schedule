@@ -29,6 +29,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Apply client fixes
+        run: |
+          if git apply --check school-schedule/client-fixes.patch; then
+            git apply school-schedule/client-fixes.patch
+          elif git apply --reverse --check school-schedule/client-fixes.patch; then
+            echo "Client fixes already applied."
+          else
+            echo "Client patch no longer matches index.html." >&2
+            exit 1
+          fi
+      - name: Install spreadsheet reader
+        run: python -m pip install "openpyxl>=3.1,<4"
       - name: Restore public icons and fonts
         working-directory: school-schedule
         run: python materialize_assets.py
@@ -36,14 +48,14 @@ jobs:
         working-directory: school-schedule
         run: python refresh_snapshot.py --sheet
       - name: Commit refreshed snapshot
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: |
           if git diff --quiet -- school-schedule/; then
             echo "No changes in schedule."
           else
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add school-schedule/offline-data.js \
+            git add school-schedule/sheet-data.json \
+                    school-schedule/offline-data.js \
                     school-schedule/index.html \
                     school-schedule/pa-dist/offline-data.js \
                     school-schedule/pa-dist/index.html \

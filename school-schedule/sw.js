@@ -1,5 +1,5 @@
-const CACHE='schedule-v304';
-const FILES=['./','index.html','manifest.json','icon-192.png','icon-512.png','offline-data.js','config.js','assets/fonts/manrope-cyrillic-400-800-normal.woff2','assets/fonts/manrope-latin-400-800-normal.woff2'];
+const CACHE='schedule-v305';
+const FILES=['./','index.html','manifest.json','icon-192.png','icon-512.png','offline-data.js','sheet-data.json','config.js','assets/fonts/manrope-cyrillic-400-800-normal.woff2','assets/fonts/manrope-latin-400-800-normal.woff2'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE&&/^schedule|^sch[-_]/.test(k)).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(e.request.method!=='GET'||u.origin!==self.location.origin||u.pathname.indexOf('/api/')!==-1)return;

@@ -17,3 +17,11 @@ assert(!html.includes('<b>NEW</b>'));
 const handlers={},shown=[];const scope='https://example.com/school-schedule/';
 const worker={URL,Response,self:{registration:{scope,showNotification:async(t,o)=>shown.push({t,o})},addEventListener:(k,fn)=>handlers[k]=fn,clients:{matchAll:async()=>[],openWindow:async u=>u}}};vm.createContext(worker);vm.runInContext(fs.readFileSync(__dirname+'/sw.js','utf8'),worker);
 (async()=>{let done;handlers.push({data:{json:()=>({title:'Расписание',body:'Тест',url:'/'})},waitUntil:p=>done=p});await done;assert.equal(shown[0].o.data.url,scope);handlers.push({data:{json:()=>({url:'https://evil.example/'})},waitUntil:p=>done=p});await done;assert.equal(shown[1].o.data.url,scope);console.log('Parser and push-handler regressions OK');})().catch(e=>{console.error(e);process.exitCode=1});
+// Fixed regression fixture: merged lesson expanded for four classes, blank neighbours stay blank.
+ctx.exportedRows=[['11 ноября'],['','','8А','8Б','8В','8Г'],['7','13:15-13:55',...Array(4).fill('химия (профиль) 205')],['8','14:00-14:40','история 313','','','']];
+for(const cls of ['8А','8Б','8В','8Г']){
+  ctx.testClass=cls;
+  const lessons=vm.runInContext('parseSheetDays(exportedRows)[0].classes[testClass]',ctx);
+  assert.equal(lessons[0].info.raw,'химия (профиль) 205');
+  if(cls!=='8А')assert.equal(lessons.length,1);
+}

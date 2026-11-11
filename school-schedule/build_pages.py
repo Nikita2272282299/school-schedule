@@ -4,7 +4,7 @@ import shutil
 
 import version_stamp
 
-PUBLIC = ('index.html', 'config.js', 'offline-data.js', 'sw.js', 'manifest.json',
+PUBLIC = ('index.html', 'config.js', 'offline-data.js', 'sheet-data.json', 'sw.js', 'manifest.json',
           'icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png',
           'assets/fonts/manrope-cyrillic-400-800-normal.woff2',
           'assets/fonts/manrope-latin-400-800-normal.woff2')
