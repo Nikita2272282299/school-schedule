@@ -445,7 +445,7 @@ a.row{color:inherit;text-decoration:none}.apk-ic{display:grid;place-items:center
 
 <div class="toast glass" id="toast"></div>
 
-<script>/*BOOT:SNAPSHOT*/self.SCHEDULE_SNAPSHOT = {"class": "8Г", "ok": true, "error": "", "updated": 1794365945, "sheet_url": "https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit", "days": [{"date": "2026-11-10", "weekday": "Вторник", "lessons": [{"n": 1, "time": "8:00-8:40", "subject": "", "room": "", "raw": ""}, {"n": 2, "time": "8:50-9:30", "subject": "физика", "room": "310", "raw": "физика 310"}, {"n": 3, "time": "9:45-10:25", "subject": "ОБЗР", "room": "302", "raw": "ОБЗР 302"}, {"n": 4, "time": "10:40-11:20", "subject": "географ", "room": "326", "raw": "географ326"}, {"n": 5, "time": "11:35-12:15", "subject": "физкульт", "room": "", "raw": "физкульт"}], "first": 0, "changed": 0}, {"date": "2026-11-11", "weekday": "Среда", "lessons": [{"n": 1, "time": "8:00-8:40", "subject": "англ", "room": "319/113", "raw": "англ319/113"}, {"n": 2, "time": "8:50-9:30", "subject": "музык", "room": "106", "raw": "музык 106"}, {"n": 3, "time": "9:45-10:25", "subject": "биолог", "room": "323", "raw": "биолог 323"}, {"n": 4, "time": "10:40-11:20", "subject": "история", "room": "313", "raw": "история 313"}, {"n": 5, "time": "11:35-12:15", "subject": "химия", "room": "205", "raw": "химия 205"}], "first": 0, "changed": 0}], "saved_at": 1794365945};/*BOOT:SNAPSHOT:END*/</script>
+<script>/*BOOT:SNAPSHOT*/self.SCHEDULE_SNAPSHOT = {"class": "8Г", "ok": true, "error": "", "updated": 1794384720, "sheet_url": "https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit", "days": [{"date": "2026-11-11", "weekday": "Среда", "lessons": [{"n": 1, "time": "8:00-8:40", "subject": "англ", "room": "319/113", "raw": "англ319/113"}, {"n": 2, "time": "8:50-9:30", "subject": "музык", "room": "106", "raw": "музык 106"}, {"n": 3, "time": "9:45-10:25", "subject": "биолог", "room": "323", "raw": "биолог 323"}, {"n": 4, "time": "10:40-11:20", "subject": "история", "room": "313", "raw": "история 313"}, {"n": 5, "time": "11:35-12:15", "subject": "химия", "room": "205", "raw": "химия 205"}, {"n": 6, "time": "12:25-13:05", "subject": "", "room": "", "raw": ""}, {"n": 7, "time": "13:15-13:55", "subject": "химия (профиль)", "room": "205", "raw": "химия (профиль) 205"}, {"n": 8, "time": "14:00-14:40", "subject": "химия (профиль)", "room": "205", "raw": "химия (профиль) 205"}], "first": 0, "changed": 0}], "saved_at": 1794384720};/*BOOT:SNAPSHOT:END*/</script>
 <script>
 (function(){
 const SHEET_ID='1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE';
@@ -590,7 +590,7 @@ function putDay(k,cl,at,mode){const old=DAYS[k];
   const ch=!old||JSON.stringify(old.c)!==JSON.stringify(nc);
   DAYS[k]={c:nc,at:Math.max(at||0,old?old.at||0:0)};
   if(ch){delete PARSED[k];CHANGED=true;}return ch;}
-function addCsv(txt,at,mode){let ds;try{ds=parseSheetDays(/^\s*</.test(txt)?parseSheetHTML(txt):parseCSV(txt));}catch(e){return 0;}
+function addCsv(txt,at,mode){let ds;try{ds=parseSheetDays(Array.isArray(txt)?txt:(/^\s*</.test(txt)?parseSheetHTML(txt):parseCSV(txt)));}catch(e){return 0;}
   const by={};for(const x of ds){const k=x.d?iso(x.d):iso(now());const o=by[k]||(by[k]={});for(const n in x.classes)o[n]=mergeLessons(o[n]||[],x.classes[n]);}
   let n=0;for(const k in by){putDay(k,by[k],at,mode||'replace');n++;}if(n)saveDays();return n;}
 function jsonLessons(ls){const a=(ls||[]).map(l=>({num:String(l.n==null?'':l.n),time:parseTime(l.time||''),info:parseCell(l.raw||((l.subject||'')+' '+(l.room||'')))}));while(a.length&&!a[a.length-1].info)a.pop();while(a.length&&!a[0].info)a.shift();return a;}
@@ -644,7 +644,7 @@ function buildGarland(){const g=$('garland');if(CUR_THEME.id!=='newyear'){G_SIG=
 function nyText(){const t=now();if(t.getMonth()===0&&t.getDate()<=8)return '🎆 С Новым годом!';const ny=new Date(t.getFullYear()+1,0,1);const t0=new Date(t.getFullYear(),t.getMonth(),t.getDate());const n=Math.round((ny-t0)/864e5);return '🎄 '+n+' '+plural(n,'день','дня','дней')+' до НГ';}
 function tickClock(){const t=now();$('clock').textContent=pad(t.getHours())+':'+pad(t.getMinutes());const g=greeting();$('greet').textContent=g[0];if($('greetE').textContent!==g[1])$('greetE').textContent=g[1];$('nyTag').textContent=nyText();$('greetRow').style.display=S.greet?'':'none';}
 
-function classList(day){return Object.keys(day.classes).sort((a,b)=>parseInt(a)-parseInt(b)||a.localeCompare(b,'ru'));}
+function classList(day){const names=new Set();for(const k of keysSorted())for(const n of Object.keys(getDay(k).classes))names.add(n);return Array.from(names).sort((a,b)=>parseInt(a)-parseInt(b)||a.localeCompare(b,'ru'));}
 function fillSelect(sel,list){const k=list.join();if(sel.dataset.k!==k){sel.innerHTML=list.map(c=>'<option value="'+esc(c)+'">'+esc(c)+' класс</option>').join('');sel.dataset.k=k;}sel.value=CLS;}
 
 function state(){
@@ -660,7 +660,7 @@ function render(){
   applyDeco();
   const day=getDay(SEL);if(!day)return;
   const list=classList(day);
-  if(!day.classes[CLS])CLS=day.classes[DEFAULT_CLASS]?DEFAULT_CLASS:list[0];
+  if(!list.includes(CLS))CLS=list.includes(DEFAULT_CLASS)?DEFAULT_CLASS:list[0];
   fillSelect($('cls'),list);fillSelect($('cls2'),list);
   $('clsLabel').textContent=CLS;document.title='Расписание';
   const st=state();const{d,diff}=st;CUR_LS=st.ls;
@@ -700,7 +700,8 @@ function renderHero(st){
   const box=$('heroIn');let html='',sig='',upd=null;
   const roomTxt=l=>l.info.rooms.length?'каб. <b>'+esc(l.info.rooms.join(' / '))+'</b>':'';
   const em=l=>S.emoji?l.info.icon:'📚';
-  if(!real.length){sig='none'+CLS;html='<span class="h-lab">'+esc(CLS)+'</span><div class="h-grid"><div><div class="h-big">Уроков нет</div><div class="h-sub">В таблице для этого класса пусто — можно отдыхать</div></div><div class="h-emoji" data-party>🌴</div></div>';}
+  if(!getDay(SEL).classes[CLS]){sig='missing'+SEL+CLS;html='<span class="h-lab">'+esc(CLS)+'</span><div class="h-grid"><div><div class="h-big">Нет данных</div><div class="h-sub">Расписание этого класса за выбранный день не сохранено</div></div><div class="h-emoji">📋</div></div>';}
+  else if(!real.length){sig='none'+CLS;html='<span class="h-lab">'+esc(CLS)+'</span><div class="h-grid"><div><div class="h-big">Уроков нет</div><div class="h-sub">В таблице для этого класса пусто — можно отдыхать</div></div><div class="h-emoji" data-party>🌴</div></div>';}
   else if(diff<0){sig='past'+SEL+isLatest;html='<span class="h-lab">'+(isLatest?'⏳ Ждём новое расписание':'🗂️ Архив')+'</span><div class="h-grid"><div><div class="h-big">'+(isLatest?'Новое расписание ещё не выложили':'Расписание за '+d.getDate()+' '+MONTHS[d.getMonth()])+'</div><div class="h-sub">'+(isLatest?'Как только его выложат, оно появится здесь само':'Сохранённая версия дня · '+lessonsWord(real.length))+'</div></div><div class="h-emoji" data-party>'+(isLatest?'☕':'📚')+'</div></div>';}
   else if(diff>0){const when=diff===1?'Завтра':WEEKDAYS[d.getDay()];const f=first||real[0];sig='fut'+SEL+CLS+S.emoji;
     html='<span class="h-lab">🗓️ '+when+' · '+lessonsWord(real.length)+'</span><div class="h-grid"><div><div class="h-big">'+(first?'К '+fmt(first.time.start)+' — '+esc(first.info.title):esc(f.info.title))+'</div><div class="h-sub">'+(first?roomTxt(first):'')+'</div></div><div class="h-emoji" data-party>'+em(f)+'</div></div>'+(first?'<div class="h-chips"><span style="--k:0">🔔 '+fmt(first.time.start)+' – '+fmt(last.time.end)+'</span><span style="--k:1">🎒 '+lessonsWord(real.length)+'</span>'+(ls.some(l=>!l.info)?'<span style="--k:2">☕ есть окно</span>':'')+'</div>':'');}
@@ -725,7 +726,7 @@ function renderList(st){
   const ol=$('lessons');
   if(LIST_SIG===sig){const pg=$('pgNow');if(pg&&cur>=0){const l=ls[cur];pg.style.width=(Math.min(1,Math.max(0,(nm-l.time.start)/(l.time.end-l.time.start)))*100).toFixed(1)+'%';}return;}
   LIST_SIG=sig;
-  if(!ls.length){ol.innerHTML='<li class="empty glass"><div>🌴</div><b>Уроков нет</b>Для '+esc(CLS)+' в таблице пусто</li>';return;}
+  if(!ls.length){ol.innerHTML=!getDay(SEL).classes[CLS]?'<li class="empty glass"><div>📋</div><b>Нет данных</b>Для '+esc(CLS)+' за этот день расписание не сохранено</li>':'<li class="empty glass"><div>🌴</div><b>Уроков нет</b>Для '+esc(CLS)+' в таблице пусто</li>';return;}
   let out='',n=0;
   ls.forEach((l,i)=>{
     if(i>0){const p=ls[i-1];if(p.time&&l.time){const g=l.time.start-p.time.end;if(g>0)out+='<li class="br'+(g>=15?' big':'')+'" style="--i:'+n+'" aria-hidden="true"><span></span><span class="bt">'+(g>=15?'🥪 перемена '+g+' мин':'перемена '+g+' мин')+'</span></li>';}}
@@ -749,6 +750,7 @@ function lastTxt(){return LAST?new Date(LAST).toLocaleString('ru-RU',{day:'numer
 function renderMeta(){
   const m=$('meta');const sp=m.lastChild;
   if(LIVE===true){m.className='sync glass';sp.textContent='Таблица проверена в '+new Date(LAST).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
+  else if(LIVE==='partial'&&!LOADING){m.className='sync glass warn';sp.textContent='Неполные данные: объединённые уроки могут отсутствовать';}
   else if(LIVE==='mirror'&&!LOADING){m.className='sync glass';sp.textContent=SRC_AT?'Обновлено '+new Date(SRC_AT).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'Данные с сервера';}
   else if(LOADING){m.className='sync glass warn';sp.textContent='Загружаю таблицу…';}
   else if(LAST){m.className='sync glass warn';sp.textContent='Нет связи · сохранено '+lastTxt();}
@@ -916,7 +918,7 @@ function startFx(){cancelAnimationFrame(FX_RAF);fctx.clearRect(0,0,FW,FH);P=[];S
   const t=CUR_THEME.fx,n=Math.round(COUNTS[t]*(FW<420?1:1.4));for(let i=0;i<n;i++)P.push(mk(t,true));
   let last=performance.now();
   const t0=last;let fc=0,fsum=0,tuned=false;
-  const loop=now2=>{FX_RAF=requestAnimationFrame(loop);const raw=(now2-last)/16.7;const dt=Math.min(3,raw);last=now2;if(document.hidden)return;
+  const loop=now2=>{if(document.hidden){FX_RAF=0;return;}FX_RAF=requestAnimationFrame(loop);const raw=(now2-last)/16.7;const dt=Math.min(3,raw);last=now2;
     if(!tuned&&now2-t0>1500){fc++;fsum+=Math.min(raw,6);if(fc>=60){tuned=true;if(fsum/fc>1.45){P.length=Math.round(P.length*.55);document.documentElement.classList.add('lowfx');if(!LOWDPR&&DPR>1){LOWDPR=true;sizeFx();}}}}
     drawFx(t,dt,now2/1000);};
   FX_RAF=requestAnimationFrame(loop);}
@@ -965,25 +967,31 @@ async function load(manual){
   try{
     rb.classList.add('spin');renderMeta();
     const base='https://docs.google.com/spreadsheets/d/'+SHEET_ID;const ts=Date.now();
-    const urls=[base+'/htmlview?t='+ts,base+'/export?format=csv&t='+ts,base+'/gviz/tq?tqx=out:csv&headers=0&t='+ts];
-    for(const u of urls){try{const txt=await fetchT(u,9000);if(addCsv(txt,Date.now(),'replace')){ok=true;break;}}catch(e){}}
-    if(ok){LAST=Date.now();try{localStorage.setItem(LS_LAST,LAST);}catch(e){}}
-    else{
+    // Same-origin artifact is generated from XLSX with merge ranges by GitHub Actions.
+    try{const data=await fetchJ('sheet-data.json?t='+ts,8000);
+      if(data&&Array.isArray(data.rows)&&data.updated&&addCsv(data.rows,+data.updated*1000,'replace')){
+        ok=true;SRC_AT=+data.updated*1000;LAST=SRC_AT;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}
+      }}catch(e){}
+    if(!ok){
       const srcs=[];if(/^https?:/.test(location.protocol))srcs.push('offline-data.js?t='+ts);srcs.push(API_BASE+'/api/schedule?t='+ts);
       const rs=await Promise.all(srcs.map(u=>fetchJ(u,8000).catch(()=>null)));
       for(const j of rs){if(j&&addJson(j,'merge')){mirror=true;const at=(+j.updated||+j.saved_at||0)*1000;if(at>SRC_AT)SRC_AT=at;}}
+      // CSV is a last resort only: it cannot carry merge information.
+      if(!mirror)for(const u of [base+'/export?format=csv&t='+ts,base+'/gviz/tq?tqx=out:csv&headers=0&t='+ts]){
+        try{if(addCsv(await fetchT(u,9000),Date.now(),'replace')){mirror='partial';break;}}catch(e){}
+      }
     }
   }catch(e){}
   finally{
-    LIVE=ok?true:(mirror?'mirror':false);LOADING=false;rb.classList.remove('spin');
+    LIVE=ok?'mirror':(mirror==='partial'?'partial':(mirror?'mirror':false));LOADING=false;rb.classList.remove('spin');
     if(CHANGED)HERO_SIG=LIST_SIG='';
     try{autoSel();render();}catch(e){}
     pushNative();
   }
-  if(manual)toast(ok?'✅ Расписание свежее':mirror?'✅ Обновлено с сервера':'📡 Нет связи — показываю сохранённое');
+  if(manual)toast(ok?'✅ Загружена копия таблицы':mirror==='partial'?'⚠️ Данные могут быть неполными':mirror?'✅ Обновлено с сервера':'📡 Нет связи — показываю сохранённое');
 }
 $('refresh').onclick=()=>{buzz();load(true);};
-document.addEventListener('visibilitychange',()=>{if(document.hidden){HIDDEN_AT=Date.now();return;}if(HIDDEN_AT&&Date.now()-HIDDEN_AT>5*60e3)USER_PICK=false;autoSel();render();if(Date.now()-LAST_TRY>30e3)load();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){HIDDEN_AT=Date.now();return;}if(!FX_RAF)startFx();if(HIDDEN_AT&&Date.now()-HIDDEN_AT>5*60e3)USER_PICK=false;autoSel();render();if(Date.now()-LAST_TRY>30e3)load();});
 window.addEventListener('online',()=>load());
 window.addEventListener('pageshow',e=>{if(e.persisted)load();});
 
