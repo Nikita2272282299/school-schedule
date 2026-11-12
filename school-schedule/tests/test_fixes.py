@@ -1,5 +1,11 @@
+import sys
 import unittest
 from datetime import date
+from pathlib import Path
+
+# Тестируем именно отправляемую копию, а не одноимённый legacy-файл в корне.
+BASE = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(BASE))
 import app
 
 class FixTests(unittest.TestCase):
