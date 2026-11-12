@@ -749,7 +749,7 @@ function renderList(st){
 function lastTxt(){return LAST?new Date(LAST).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'ещё не было';}
 function renderMeta(){
   const m=$('meta');const sp=m.lastChild;
-  if(LIVE===true){m.className='sync glass';sp.textContent='Таблица проверена в '+new Date(LAST).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
+  if(LIVE===true||LIVE==='live'){m.className='sync glass';sp.textContent='Таблица проверена в '+new Date(LAST).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
   else if(LIVE==='partial'&&!LOADING){m.className='sync glass warn';sp.textContent='Неполные данные: объединённые уроки могут отсутствовать';}
   else if(LIVE==='mirror'&&!LOADING){m.className='sync glass';sp.textContent=SRC_AT?'Обновлено '+new Date(SRC_AT).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'Данные с сервера';}
   else if(LOADING){m.className='sync glass warn';sp.textContent='Загружаю таблицу…';}
@@ -961,17 +961,132 @@ function cfLoop(){cctx.clearRect(0,0,FW,FH);CP=CP.filter(p=>p.life>0&&p.y<FH+30)
 /* ---------- loading ---------- */
 async function fetchT(url,ms){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(url,{cache:'no-store',signal:c.signal});if(!r.ok)throw new Error(r.status);return await r.text();}finally{clearTimeout(t);}}
 async function fetchJ(u,ms){const x=await fetchT(u,ms);const a=x.indexOf('{'),b=x.lastIndexOf('}');if(a<0||b<a)throw new Error('bad');return JSON.parse(x.slice(a,b+1));}
+
+/* XLSX прямо из Google: единственный формат, где видны объединённые ячейки.
+   Читается в браузере, поэтому свежий день появляется сразу после правки таблицы. */
+const XL_BUILTIN={14:'d mmmm',15:'d mmm',16:'d mmmm',17:'d mmm',22:'d mmmm'};
+function xlCol(s){let n=0;for(let i=0;i<s.length;i++)n=n*26+(s.charCodeAt(i)-64);return n;}
+function xlIndex(u8){
+  const dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength);let eo=-1;
+  for(let i=u8.length-22;i>=Math.max(0,u8.length-66000);i--)if(dv.getUint32(i,true)===0x06054b50){eo=i;break;}
+  if(eo<0)throw new Error('zip');
+  const n=dv.getUint16(eo+10,true);let p=dv.getUint32(eo+16,true);const idx={};
+  for(let i=0;i<n;i++){
+    const method=dv.getUint16(p+10,true),size=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true);
+    const ex=dv.getUint16(p+30,true),cm=dv.getUint16(p+32,true),lho=dv.getUint32(p+42,true);
+    const name=new TextDecoder().decode(u8.subarray(p+46,p+46+nl));
+    const lnl=dv.getUint16(lho+26,true),lex=dv.getUint16(lho+28,true);
+    idx[name]={m:method,at:lho+30+lnl+lex,size};p+=46+nl+ex+cm;}
+  return idx;
+}
+async function xlEntry(u8,e){
+  if(!e)return '';
+  const raw=u8.subarray(e.at,e.at+e.size);
+  if(e.m===0)return new TextDecoder().decode(raw);
+  const st=new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new TextDecoder().decode(await new Response(st).arrayBuffer());
+}
+function xlSheetXml(xml,shared,fmtOf){
+  const cell={};let maxR=0,maxC=0;
+  for(const rm of xml.matchAll(/<row\b[^>]*\br="(\d+)"[^>]*>([\s\S]*?)<\/row>/g)){
+    const rn=+rm[1];
+    for(const cm of rm[2].matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)){
+      const ref=(cm[1].match(/\br="([A-Z]+\d+)"/)||[])[1];if(!ref)continue;
+      const type=(cm[1].match(/\bt="([^"]+)"/)||[])[1]||'n';
+      const si=+((cm[1].match(/\bs="(\d+)"/)||[])[1]||0);
+      const v=((cm[2]||'').match(/<v>([\s\S]*?)<\/v>/)||[])[1];let val='';
+      if(type==='s')val=v==null?'':(shared[+v]||'');
+      else if(type==='inlineStr')val=(((cm[2]||'').match(/<is>[\s\S]*?<t[^>]*>([\s\S]*?)<\/t>/)||[])[1])||'';
+      else if(type==='str')val=v||'';
+      else if(type==='e'||type==='b')val='';
+      else if(v!=null&&v!==''){
+        const num=+v;
+        if(!isFinite(num))val=String(v);
+        else{const code=fmtOf(si);
+          if(/[dmy]/i.test(code)&&num>20000&&num<80000){
+            const dt=new Date(Date.UTC(1899,11,30)+Math.round(num*86400000));
+            val=code.replace(/\s+/g,'').toLowerCase()==='dm'?dt.getUTCDate()+' '+(dt.getUTCMonth()+1):dt.getUTCDate()+' '+MONTHS[dt.getUTCMonth()];
+          }else val=num===Math.trunc(num)?String(Math.trunc(num)):String(num);}
+      }
+      if(val==='')continue;
+      const c=xlCol(ref.replace(/\d+/g,'')),r=+ref.replace(/[A-Z]/g,'');
+      cell[r+','+c]=val;if(r>maxR)maxR=r;if(c>maxC)maxC=c;}
+  }
+  const block=(xml.match(/<mergeCells[\s\S]*?<\/mergeCells>/)||[''])[0];
+  for(const m of block.matchAll(/ref="([^"]+)"/g)){
+    const mm=m[1].match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/);if(!mm)continue;
+    const c1=xlCol(mm[1]),r1=+mm[2],c2=xlCol(mm[3]),r2=+mm[4];const val=cell[r1+','+c1];
+    if(!val)continue;
+    if(r2>maxR)maxR=r2;if(c2>maxC)maxC=c2;
+    for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)cell[r+','+c]=val;}
+  const rows=[];
+  for(let r=1;r<=maxR;r++){const row=[];for(let c=1;c<=maxC;c++)row.push(cell[r+','+c]||'');rows.push(row);}
+  return rows;
+}
+async function xlsxRows(u8){
+  const idx=xlIndex(u8);
+  const [wb,rels,ssXml,styles]=await Promise.all([
+    xlEntry(u8,idx['xl/workbook.xml']),xlEntry(u8,idx['xl/_rels/workbook.xml.rels']),
+    xlEntry(u8,idx['xl/sharedStrings.xml']),xlEntry(u8,idx['xl/styles.xml'])]);
+  const shared=[];
+  for(const m of ssXml.matchAll(/<si>([\s\S]*?)<\/si>/g)){let s='';for(const t of m[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g))s+=t[1];shared.push(s);}
+  const custom={};for(const m of styles.matchAll(/<numFmt\b[^>]*numFmtId="(\d+)"[^>]*formatCode="([^"]*)"/g))custom[m[1]]=m[2];
+  const xfBlock=(styles.match(/<cellXfs[\s\S]*?<\/cellXfs>/)||[''])[0];const xf=[];
+  for(const m of xfBlock.matchAll(/<xf\b([^>]*?)\/?>/g))xf.push((m[1].match(/numFmtId="(\d+)"/)||[])[1]||'0');
+  const fmtOf=i=>custom[xf[i]||'0']||XL_BUILTIN[xf[i]||'0']||'';
+  const active=+((wb.match(/activeTab="(\d+)"/)||[])[1]||0);
+  const target=rid=>(rels.match(new RegExp('Id="'+rid+'"[^>]*Target="([^"]+)"'))||[])[1];
+  const sheets=[];
+  for(const m of wb.matchAll(/<sheet\b([^>]*)\/>/g)){
+    if(/state="hidden"/.test(m[1]))continue;
+    const t=target((m[1].match(/r:id="([^"]*)"/)||[])[1]);if(!t)continue;
+    sheets.push({name:(m[1].match(/name="([^"]*)"/)||[])[1]||'',file:'xl/'+t.replace(/^\//,'')});}
+  if(active>0&&sheets[active])sheets.unshift(sheets.splice(active,1)[0]);
+  // Листов в книге несколько; расписание — тот, где есть и классы в шапке, и дата дня.
+  const DAY_RE=/\d{1,2}\s+(января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)/i;
+  let firstAny=null,firstHead=null;
+  for(const s of sheets){
+    const xml=await xlEntry(u8,idx[s.file]);if(!xml)continue;
+    const rows=xlSheetXml(xml,shared,fmtOf);if(!rows.length)continue;
+    if(!firstAny)firstAny=rows;
+    const head=rows.some(r=>r.filter(c=>CLASS_RE.test(norm(c))).length>=3);
+    if(head){
+      if(!firstHead)firstHead=rows;
+      if(rows.some(r=>(r||[]).some(c=>DAY_RE.test(String(c||'')))))return rows;
+    }
+  }
+  if(firstHead)return firstHead;
+  if(!firstAny)throw new Error('no sheet');
+  return firstAny;
+}
+async function fetchXlsx(ms){
+  if(typeof DecompressionStream!=='function')throw new Error('unsupported');
+  const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);
+  try{
+    const url='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/export?format=xlsx&t='+Date.now();
+    const r=await fetch(url,{cache:'no-store',signal:c.signal});
+    if(!r.ok)throw new Error(r.status);
+    return await xlsxRows(new Uint8Array(await r.arrayBuffer()));
+  }finally{clearTimeout(t);}
+}
+
 async function load(manual){
   if(OFFLINE||LOADING)return;LOADING=true;LAST_TRY=Date.now();CHANGED=false;
   const rb=$('refresh');let ok=false,mirror=false;
   try{
     rb.classList.add('spin');renderMeta();
     const base='https://docs.google.com/spreadsheets/d/'+SHEET_ID;const ts=Date.now();
-    // Same-origin artifact is generated from XLSX with merge ranges by GitHub Actions.
-    try{const data=await fetchJ('sheet-data.json?t='+ts,8000);
-      if(data&&Array.isArray(data.rows)&&data.updated&&addCsv(data.rows,+data.updated*1000,'replace')){
-        ok=true;SRC_AT=+data.updated*1000;LAST=SRC_AT;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}
-      }}catch(e){}
+    // 1. Живая таблица в XLSX: свежие дни и объединённые ячейки, без ожидания cron и кэша Pages.
+    try{const rows=await fetchXlsx(12000);
+      if(rows&&rows.length&&addCsv(rows,ts,'replace')){ok=true;LAST=ts;SRC_AT=ts;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}}
+    }catch(e){}
+    // 2. Готовый артефакт Pages (обновляет GitHub Actions) — если Google недоступен.
+    if(!ok){
+      try{const data=await fetchJ('sheet-data.json?t='+ts,8000);
+        if(data&&Array.isArray(data.rows)&&data.updated&&addCsv(data.rows,+data.updated*1000,'replace')){
+          ok=true;SRC_AT=+data.updated*1000;LAST=SRC_AT;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}
+        }}catch(e){}
+    }
     if(!ok){
       const srcs=[];if(/^https?:/.test(location.protocol))srcs.push('offline-data.js?t='+ts);srcs.push(API_BASE+'/api/schedule?t='+ts);
       const rs=await Promise.all(srcs.map(u=>fetchJ(u,8000).catch(()=>null)));
@@ -983,15 +1098,15 @@ async function load(manual){
     }
   }catch(e){}
   finally{
-    LIVE=ok?'mirror':(mirror==='partial'?'partial':(mirror?'mirror':false));LOADING=false;rb.classList.remove('spin');
+    LIVE=ok?'live':(mirror==='partial'?'partial':(mirror?'mirror':false));LOADING=false;rb.classList.remove('spin');
     if(CHANGED)HERO_SIG=LIST_SIG='';
     try{autoSel();render();}catch(e){}
     pushNative();
   }
-  if(manual)toast(ok?'✅ Загружена копия таблицы':mirror==='partial'?'⚠️ Данные могут быть неполными':mirror?'✅ Обновлено с сервера':'📡 Нет связи — показываю сохранённое');
+  if(manual)toast(ok?'✅ Расписание из таблицы':mirror==='partial'?'⚠️ Данные могут быть неполными':mirror?'✅ Обновлено с сервера':'📡 Нет связи — показываю сохранённое');
 }
 $('refresh').onclick=()=>{buzz();load(true);};
-document.addEventListener('visibilitychange',()=>{if(document.hidden){HIDDEN_AT=Date.now();return;}if(!FX_RAF)startFx();if(HIDDEN_AT&&Date.now()-HIDDEN_AT>5*60e3)USER_PICK=false;autoSel();render();if(Date.now()-LAST_TRY>30e3)load();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){HIDDEN_AT=Date.now();return;}if(!FX_RAF)startFx();if(HIDDEN_AT&&Date.now()-HIDDEN_AT>5*60e3)USER_PICK=false;autoSel();render();if(Date.now()-LAST_TRY>20e3)load();});
 window.addEventListener('online',()=>load());
 window.addEventListener('pageshow',e=>{if(e.persisted)load();});
 

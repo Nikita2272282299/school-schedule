@@ -29,16 +29,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Apply client fixes
-        run: |
-          if git apply --check school-schedule/client-fixes.patch; then
-            git apply school-schedule/client-fixes.patch
-          elif git apply --reverse --check school-schedule/client-fixes.patch; then
-            echo "Client fixes already applied."
-          else
-            echo "Client patch no longer matches index.html." >&2
-            exit 1
-          fi
       - name: Install spreadsheet reader
         run: python -m pip install "openpyxl>=3.1,<4"
       - name: Restore public icons and fonts
