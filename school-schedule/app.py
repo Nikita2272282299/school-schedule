@@ -221,13 +221,9 @@ def parse_sheet(rows, class_code, today):
         if not any(cells):
             continue
 
-        dh = day_header(cells, today)
-        if dh:
-            finish(cur)
-            cur = {"date": dh, "has_class": False, "lessons": {}}
-            col = None
-            continue
-
+        # Шапку с классами проверяем раньше даты: под датой в той же строке
+        # часто стоит день недели («12 ноября | ЧЕТВЕРГ»), и раньше такая
+        # строка ошибочно считалась заголовком дня — весь блок пропускался.
         norm_cells = [norm(c) for c in cells]
         class_cols = [i for i, c in enumerate(norm_cells) if CLASS_RE.match(c)]
         if len(class_cols) >= 3:  # строка-шапка с названиями классов
@@ -240,6 +236,13 @@ def parse_sheet(rows, class_code, today):
                 class_found = True
             else:
                 col = None
+            continue
+
+        dh = day_header(cells, today)
+        if dh:
+            finish(cur)
+            cur = {"date": dh, "has_class": False, "lessons": {}}
+            col = None
             continue
 
         if cur is None or col is None:

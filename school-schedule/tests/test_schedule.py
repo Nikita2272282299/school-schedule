@@ -24,6 +24,18 @@ class ScheduleTests(unittest.TestCase):
         self.assertTrue(found)
         self.assertEqual(days['2026-11-04']['lessons'][0]['room'], '305')
 
+    def test_parser_weekday_beside_date(self):
+        # В шапке дня рядом с датой стоит день недели; шапка классов идёт
+        # следующей строкой и не должна приниматься за новую дату.
+        rows = [['', '', '', '', '12 ноября'],
+                ['', 'ЧЕТВЕРГ', '8а', '8б', '8г'],
+                ['1', '8:00-8:40', '', '', 'Алг (305)'],
+                ['2', '8:50-9:30', '', '', 'Физра']]
+        days, found = app.parse_sheet(rows, '8г', app.date(2026, 11, 12))
+        self.assertTrue(found)
+        self.assertEqual(days['2026-11-12']['weekday'], 'Четверг')
+        self.assertEqual([l['raw'] for l in days['2026-11-12']['lessons']], ['Алг (305)', 'Физра'])
+
     def test_room_without_brackets(self):
         # в таблице кабинет часто записан в той же ячейке: «Англ319/221»
         self.assertEqual(app.split_lesson('Англ319/221'), ('Англ', '319/221'))
