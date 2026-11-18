@@ -6,66 +6,9 @@ self.SCHEDULE_SNAPSHOT = {
   "class": "8Г",
   "ok": true,
   "error": "",
-  "updated": 1794962402,
+  "updated": 1794988714,
   "sheet_url": "https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit",
   "days": [
-    {
-      "date": "2026-11-17",
-      "weekday": "Вторник",
-      "lessons": [
-        {
-          "n": 1,
-          "time": "8:00-8:40",
-          "subject": "",
-          "room": "",
-          "raw": ""
-        },
-        {
-          "n": 2,
-          "time": "8:50-9:30",
-          "subject": "физика",
-          "room": "303",
-          "raw": "физика 303"
-        },
-        {
-          "n": 3,
-          "time": "9:45-10:25",
-          "subject": "ОБЗР",
-          "room": "302",
-          "raw": "ОБЗР 302"
-        },
-        {
-          "n": 4,
-          "time": "10:40-11:20",
-          "subject": "географ",
-          "room": "326",
-          "raw": "географ326"
-        },
-        {
-          "n": 5,
-          "time": "11:35-12:15",
-          "subject": "литер",
-          "room": "410",
-          "raw": "литер 410"
-        },
-        {
-          "n": 6,
-          "time": "12:25-13:05",
-          "subject": "физкульт",
-          "room": "",
-          "raw": "физкульт"
-        },
-        {
-          "n": 7,
-          "time": "13:15-13:55",
-          "subject": "литер",
-          "room": "409",
-          "raw": "литер 409"
-        }
-      ],
-      "first": 0,
-      "changed": 0
-    },
     {
       "date": "2026-11-18",
       "weekday": "Среда",
@@ -131,5 +74,5 @@ self.SCHEDULE_SNAPSHOT = {
       "changed": 0
     }
   ],
-  "saved_at": 1794962402
+  "saved_at": 1794988714
 };
