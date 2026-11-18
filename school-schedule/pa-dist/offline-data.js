@@ -6,7 +6,7 @@ self.SCHEDULE_SNAPSHOT = {
   "class": "8Г",
   "ok": true,
   "error": "",
-  "updated": 1794988714,
+  "updated": 1795021866,
   "sheet_url": "https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit",
   "days": [
     {
@@ -72,7 +72,64 @@ self.SCHEDULE_SNAPSHOT = {
       ],
       "first": 0,
       "changed": 0
+    },
+    {
+      "date": "2026-11-19",
+      "weekday": "Четверг",
+      "lessons": [
+        {
+          "n": 1,
+          "time": "8:00-8:40",
+          "subject": "",
+          "room": "",
+          "raw": ""
+        },
+        {
+          "n": 2,
+          "time": "8:50-9:30",
+          "subject": "",
+          "room": "",
+          "raw": ""
+        },
+        {
+          "n": 3,
+          "time": "9:45-10:25",
+          "subject": "алгебр",
+          "room": "144",
+          "raw": "алгебр 144"
+        },
+        {
+          "n": 4,
+          "time": "10:40-11:20",
+          "subject": "англ319 (Пер.Н.)",
+          "room": "",
+          "raw": "англ319 (Пер.Н.)"
+        },
+        {
+          "n": 5,
+          "time": "11:35-12:15",
+          "subject": "географ",
+          "room": "326",
+          "raw": "географ326"
+        },
+        {
+          "n": 6,
+          "time": "12:25-13:05",
+          "subject": "Т Р Е Н И Н Г (актовый зал)",
+          "room": "",
+          "raw": "Т Р Е Н И Н Г (актовый зал)"
+        },
+        {
+          "n": 7,
+          "time": "13:15-13:55",
+          "subject": "литер",
+          "room": "409",
+          "raw": "литер 409"
+        }
+      ],
+      "first": 0,
+      "changed": 0
     }
   ],
-  "saved_at": 1794988714
+  "saved_at": 1795021866
 };
