@@ -13,8 +13,6 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-
-
 <script>
 /* ---------- themes & settings (run before paint) ---------- */
 const DARK={text:'#F6F5FB',muted:'rgba(236,234,248,.70)',dim:'rgba(236,234,248,.44)',card:'rgba(255,255,255,.075)',hl:'rgba(255,255,255,.06)',cardhi:'rgba(255,255,255,.12)',line:'rgba(255,255,255,.11)',bo:'.6',ok:'#A7F3D0',dotc:'rgba(255,255,255,.07)',sheet:'rgba(22,18,32,.94)',pill:'rgba(255,255,255,.08)',shadow:'0 10px 30px -18px rgba(0,0,0,.9)',scrim:'rgba(0,0,0,.5)'};
@@ -81,7 +79,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
 
 /* ---------- layout ---------- */
-.app{zoom:var(--zoom,1);max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 14px) 18px calc(env(safe-area-inset-bottom) + 34px)}
+.app{zoom:var(--zoom,1);max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 14px) 18px calc(env(safe-area-inset-bottom) + 92px)}
 .top{display:flex;align-items:center;justify-content:space-between;gap:10px;animation:fadeDown .7s var(--ease) both}
 @keyframes fadeDown{from{opacity:0;transform:translateY(-14px)}}
 .glass{background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow),inset 0 1px 0 var(--hl)}
@@ -312,7 +310,7 @@ footer p{margin:2px 0 0;font-size:12px;color:var(--dim);font-weight:600}
 .dt-box b{display:block;margin-top:5px;font-size:20px;font-weight:800;letter-spacing:-.02em}
 .dt-raw{margin-top:10px;padding:12px 14px;border-radius:16px;background:var(--pill);border:1px dashed var(--line);font-size:13px;color:var(--muted);font-weight:600;animation:fadeUp .5s var(--ease) both .25s}
 .dt-raw code{display:block;margin-top:4px;font-size:14px;color:var(--text);font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-word}
-.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);z-index:60;transform:translate(-50%,40px) scale(.9);opacity:0;transition:transform .45s var(--spring),opacity .3s;padding:12px 18px;border-radius:16px;font-size:14px;font-weight:800;pointer-events:none;white-space:nowrap}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 84px);z-index:60;transform:translate(-50%,40px) scale(.9);opacity:0;transition:transform .45s var(--spring),opacity .3s;padding:12px 18px;border-radius:16px;font-size:14px;font-weight:800;pointer-events:none;white-space:nowrap}
 .toast.on{opacity:1;transform:translate(-50%,0) scale(1)}
 @media (min-width:600px){.app{padding-top:40px}.title{font-size:48px}}
 html.noanim *,html.noanim *::before,html.noanim *::after{animation:none!important;transition-duration:0s!important}
@@ -368,6 +366,23 @@ html.noanim .garland i,html.noanim .mini-g u{animation:none!important}
 .settled .h-in{animation:fadeOnly .35s ease both}
 @keyframes fadeOnly{from{opacity:0}}
 a.row{color:inherit;text-decoration:none}.apk-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--sel);font-size:18px;flex:none}
+
+/* ---------- AI Assistant ---------- */
+.ai-fab{position:fixed;right:18px;bottom:calc(env(safe-area-inset-bottom) + 18px);z-index:18;display:inline-flex;align-items:center;gap:8px;padding:13px 18px;border-radius:999px;background:var(--sel);color:#fff;font-weight:800;font-size:14px;box-shadow:0 12px 28px -8px var(--glow),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .25s var(--spring)}
+.ai-fab:active{transform:scale(.92)}
+.ai-msgs{display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow-y:auto;padding:4px 2px 12px;scroll-behavior:smooth}
+.ai-msg{max-width:86%;padding:11px 14px;border-radius:18px;font-size:14.5px;line-height:1.45;font-weight:600;white-space:pre-wrap;word-break:break-word;animation:fadeUp .35s var(--ease) both}
+.ai-msg.bot{align-self:flex-start;background:var(--pill);border:1px solid var(--line);border-bottom-left-radius:6px;color:var(--text)}
+.ai-msg.usr{align-self:flex-end;background:var(--sel);color:#fff;border-bottom-right-radius:6px;box-shadow:0 6px 16px -8px var(--glow)}
+.ai-chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.ai-chips::-webkit-scrollbar{display:none}
+.ai-chip{flex:none;font-size:12.5px;font-weight:700;padding:7px 12px;border-radius:999px;background:var(--pill);border:1px solid var(--line);color:var(--muted);transition:transform .2s var(--spring)}
+.ai-chip:active{transform:scale(.94)}
+.ai-form{display:flex;gap:8px;align-items:center;padding-top:4px;border-top:1px solid var(--line)}
+.ai-form input{flex:1;min-width:0;padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--pill);color:var(--text);font:inherit;font-size:15px;font-weight:600}
+.ai-form button{flex:none;width:44px;height:44px;border-radius:16px;background:var(--sel);color:#fff;font-weight:800;font-size:18px;display:grid;place-items:center;box-shadow:0 8px 18px -8px var(--glow);transition:transform .2s var(--spring)}
+.ai-form button:active{transform:scale(.9)}
+.ai-form button:disabled{opacity:.5}
 </style>
 </head>
 <body>
@@ -410,7 +425,27 @@ a.row{color:inherit;text-decoration:none}.apk-ic{display:grid;place-items:center
   </footer>
 </div>
 
+<button class="ai-fab" id="aiBtn" aria-label="ИИ-помощник">✨ Спросить ИИ</button>
+
 <div class="scrim" id="scrim"></div>
+
+<section class="sheet" id="aiSheet" role="dialog" aria-modal="true" aria-label="ИИ-помощник">
+  <div class="grab"></div>
+  <div class="sh-head"><h3>✨ ИИ-помощник</h3><button class="x" data-close aria-label="Закрыть">×</button></div>
+  <div class="ai-msgs" id="aiMsgs">
+    <div class="ai-msg bot">Привет! Я вижу актуальное расписание из таблицы школы. Спроси про уроки 8Г, других классов или про любой предмет/кабинет.</div>
+  </div>
+  <div class="ai-chips" id="aiChips">
+    <button type="button" class="ai-chip">Уроки 8Г сегодня</button>
+    <button type="button" class="ai-chip">Какие уроки у русского?</button>
+    <button type="button" class="ai-chip">Что у 8Г завтра?</button>
+    <button type="button" class="ai-chip">Расписание звонков</button>
+  </div>
+  <form class="ai-form" id="aiForm">
+    <input id="aiInput" type="text" placeholder="Спроси про уроки или кабинет…" autocomplete="off" required>
+    <button id="aiSend" type="submit" aria-label="Отправить">→</button>
+  </form>
+</section>
 
 <section class="sheet" id="settings" role="dialog" aria-modal="true" aria-label="Настройки">
   <div class="grab"></div>
@@ -450,6 +485,7 @@ a.row{color:inherit;text-decoration:none}.apk-ic{display:grid;place-items:center
 (function(){
 const SHEET_ID='1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE';
 const DEFAULT_CLASS='8Г';
+const WORKER_URL='https://school-ai.nikitapazdnikov29-d7e.workers.dev';
 const SNAPSHOT=",,,,9 ноября,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n,,5А,5Б,5В,5Г,5Д,5Е,5 3,7Ф,8А,8Б,8В,8Г,8Ф,9А,9Б,9В,9Г,9Ф,10А,10Е,10Ф,11А,11Ф,,,,,,,,,,,,\n1,8.00-8.40,РоВ 305,,РоВ 309,РоВ 326,матем 144,РоВ 144,РоВ 308,ВиС 407,,музык 106,,химия 205,русск 307,русск 410,РоВ 409,РоВ 313,РоВ 423,РоВ 128,ВиС Б 408,Всероссийский,РоВ   305,алгебр П,информ Б,1,,,,,,,,,,,\n2,8.50-9.30,русск 308,РоВ  207,русск 307,музык 106,англ113/128,матем 144,физкульт,физ310/алг 407,биолог 323,инф/труд 423,алгебр 409,истор 326,физ305/алг 209,англ221/208,русск 410,инф/труд,истор 313,русский 309,РоВ   305,налоговый,химия 205,алгебр П Б,,2,,,,,,,,,,,\n3,9.45-10.25,литер 308,литер 307,матем 207,истор 326,биолог 323,географ 323,матем 144,физ310/алг 407,алгебра 408,инф/труд 423,физкульт,алгебр 409,физ305/алг 209,литер 410,англ201/308,инф/труд,физкульт,истор 313,англ208/319,марафон,алгебр 208,истор П Б,русск 309,3 4Б,,,,,,,,,,,\n4,10.40-11.20,труд144/---,матем 207,ш.Ньют 313,физкульт,истор 326,биолог 323,русск 308,англ 113/308,англ221/208,алгебр 409,географ326,англ319/307,проект 310,инф/труд,литер 410,алгебра 408,алгебр 209,физ305/алг 407,географ 323,химия 205,алгебр 208,истор П Б,русск 309,4 4Г,,,,,,,,,,,\n5,11.35-12.15,матем 208,русск 410,труд144/---,матем 207,русск 308,русск 307,биолог 323,физкульт,истор 306,русск 243,инф/труд 423,алгебр 409,географ326,инф/труд,истор 313,англ201/308,географ 323,физ305/алг 407,физкульт,англ208/319,история 305,русск 309,химия 205,5 4Д,,,,,,,,,,,\n6,12.25-13.05,труд144/---,биолог 323,труд144/---,русск 307,РоВ 308,англ128/207,истор 326,русск 243,ВиС 408,ОБЗР 302,инф/труд 423,,англ113/319,алгебр 407,физика 324,истор 313,русск 410,географ 323,химия 205,физкульт,история 305,русск 309,алгебр 208,6,,,,,,,,,,,\n7,13.15-13.55,алгорит405,англ128/207,,,,,литер 308,РоВ 306,РоВ 106,РоВ 303,РоВ   302,РоВ 323,РоВ   204,истор 313,алгебр 407,,литер 410,ОБЗР 302,история П,РоВ 323/ВиС Б,физкульт,англП/химП,алгебр 208,7,,,,,,,,,,,\n8,14.00-14.40,,,,,,,,,,,,,,\"В/Д  география (9А, 9Б, 9Ф), физика (9А, 9Б, 9В, 9Г) 323, 324\",,,,,история П,химия (эл) 205,,англ П 208,,8,,,,,,,,,,,\n9,,,,,,,,,,,,,,,,,,,,,,,,,9,,,,,,,,,,,\n,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n,,6А,6Б,6В,6Г,6Д,6Е,7А,7Б,7В,7Г,,,,,,,,,,,,,,,,,,,,,,,,,\n0,13.15-13.55,,алгорит 114,РоВ 307,РоВ 113,русск 243,труд 144,англ221/308,,русский 409,,7,,,,,,,,,,,,,,,,,,,,,,,,\n1,14.00-14.40,РоВ 305,РоВ 302,англ221/128,русск 308,РоВ 209,труд 144,РоВ 306,англ303/308,РоВ 408,РоВ 113,1,,,,,,,,,,,,,,,,,,,,,,,, \n2,14.55-15.35,русск 309,музыка 106,русск 243,истор 306,матем 209,англ221/128,русск 308,русский 410,англ303/инф,русский 307,2 2А,,,,,,,,,,,,,,,,,,,,,,,,\n3,15.50-16.30,англ113/128,истор 306,литерат 243,литерат 308,история 326,матем 209,ИЗО 117,истор 408,англ308/инф,физика 305,3 2Д,,,,,,,,,,,,,,,,,,,,,,,,\n4,16.45-17.25,литерат 309,матем 208,физкульт,англ113/128,литерат 243,эврика 209,истор 306,литерат 410,ИЗО 117,истор 408,4 2В,,,,,,,,,,,,,,,,,,,,,,,,\n5,17.35-18.15,матем 208,,,матем 209,музыка 106,,физкульт,хим П 205,,ИЗО 117,5 3А,,,,,,,,,,,,,,,,,,,,,,,,\n6,18.20-19.00,истор 306,,,,,,хим П 205,ИЗО 117,,,6,,,,,,,,,,,,,,,,,,,,,,,,\n";
 const API_BASE=(self.SCHEDULE_CONFIG&&self.SCHEDULE_CONFIG.apiBase)||'https://nassda.pythonanywhere.com';
 const MONTHS=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
@@ -483,7 +519,6 @@ function lookup(word){const w=word.toLowerCase();for(const[k,v,c,e]of SUBJECTS)i
 function parseCell(raw){
   const s=(raw||'').replace(/\s+/g,' ').trim();
   if(!s||/^[-–—\s]+$/.test(s))return null;
-  // Extract room annotations before splitting subgroups: англ319/308(1).
   const complex=s.match(/^(.*?)\s*(?:каб\.?\s*)?(\d{2,4}[а-яa-z]?(?:\(\d+\))?(?:\s*[/,]\s*\d{2,4}[а-яa-z]?(?:\(\d+\))?)*)$/i);
   const bracket=s.match(/^(.*?)\s*\((\d{2,4}[\dа-яa-z(),/\s]*)\)$/i);
   const cm=complex||bracket;
@@ -523,7 +558,7 @@ function dayHeader(r){if(!r||r.slice(0,4).some(c=>TIME_RE.test(c||'')))return nu
     m=low.match(DOT_RE);if(m&&!fd&&+m[2]>=1&&+m[2]<=12&&+m[1]>=1&&+m[1]<=31)fd=closestDate(+m[1],+m[2]-1);
     for(let i=0;i<7;i++){const n=WD_LC[i];if(low===n||low.startsWith(n+','))fw=i;}}
   return fd||(fw>=0?closestWeekday(fw):null);}
-/* таблица может содержать несколько дней подряд (сегодня + завтра) — разбираем все */
+
 function parseSheetDays(rows){
   const isHeader=r=>r.filter(c=>CLASS_RE.test(norm(c))).length>=3;
   const out=[];let cur=null;
@@ -548,9 +583,7 @@ function parseSheetDays(rows){
   }
   return out.filter(x=>Object.values(x.classes).some(ls=>ls.length));
 }
-// Combine repeated blocks of the same class without discarding later lessons.
 function mergeLessons(a,b){const out=a.slice();for(const l of b){const x=out.find(v=>v.num===l.num&&JSON.stringify(v.time)===JSON.stringify(l.time));if(!x)out.push(l);else if(l.info&&(!x.info||x.info.raw!==l.info.raw)){x.info=x.info?parseCell(x.info.raw+' / '+l.info.raw):l.info;}}return out.sort((x,y)=>(x.time?x.time.start:9999)-(y.time?y.time.start:9999)||(+x.num)-(+y.num));}
-// HTML retains real merged-cell spans; CSV cannot represent them.
 function parseSheetHTML(text){
  const doc=new DOMParser().parseFromString(text,'text/html');
  const tables=Array.from(doc.querySelectorAll('table.waffle'));const ts=tables.length?tables:Array.from(doc.querySelectorAll('table'));
@@ -566,7 +599,6 @@ function parseSheetHTML(text){
  }
  return all;
 }
-function sheetDateObj(d){if(!d||d.month<0)return null;const t=now();let best=null;for(const y of[t.getFullYear()-1,t.getFullYear(),t.getFullYear()+1]){const x=new Date(y,d.month,d.day);if(!best||Math.abs(x-t)<Math.abs(best-t))best=x;}return best;}
 function dayDiff(a){const t=now();const t0=new Date(t.getFullYear(),t.getMonth(),t.getDate());return Math.round((a-t0)/864e5);}
 function plural(n,a,b,c){const m10=n%10,m100=n%100;if(m10===1&&m100!==11)return a;if(m10>=2&&m10<=4&&(m100<12||m100>14))return b;return c;}
 const lessonsWord=n=>n+' '+plural(n,'урок','урока','уроков');
@@ -582,7 +614,6 @@ let PARSED={};
 function saveDays(){const keys=Object.keys(DAYS).sort();while(keys.length>30)delete DAYS[keys.shift()];try{localStorage.setItem(LS_DAYS,JSON.stringify(DAYS));}catch(e){}}
 let CHANGED=false;
 const packCls=cl=>{const o={};for(const n in cl)o[n]=cl[n].map(l=>[l.num,l.time?l.time.start:-1,l.time?l.time.end:-1,l.info?l.info.raw:'']);return o;};
-/* mode: replace — свежая таблица; merge — зеркало (только если новее); seed — только если дня ещё нет */
 function putDay(k,cl,at,mode){const old=DAYS[k];
   if(old&&mode==='seed')return false;
   if(old&&mode==='merge'&&(old.at||0)>at)return false;
@@ -614,6 +645,74 @@ function autoSel(){if(USER_PICK&&DAYS[SEL])return;const a=autoKey();if(a&&a!==SE
 let LAST=+localStorage.getItem(LS_LAST)||0;
 let CLS=(location.hash?decodeURIComponent(location.hash.slice(1)):'')||localStorage.getItem(LS_CLS)||DEFAULT_CLASS;
 let CUR_LS=[],HERO_SIG='',LIST_SIG='',WEEK_READY=false;
+
+/* ---------- AI Context Builder (автоматически собирает расписание из DAYS) ---------- */
+function buildScheduleContext(){
+  const ks=keysSorted().slice(-4);
+  if(!ks.length)return 'Расписание пока не загружено.';
+  const lines=['Звонки: 1) 8:00-8:40, 2) 8:50-9:30, 3) 9:45-10:25, 4) 10:40-11:20, 5) 11:35-12:15, 6) 12:25-13:05, 7) 13:15-13:55, 8) 14:00-14:40.'];
+  for(const k of ks){
+    const d=getDay(k);if(!d)continue;
+    const dt=fromIso(k);
+    lines.push('\n=== '+k+' ('+WEEKDAYS[dt.getDay()]+', '+dt.getDate()+' '+MONTHS[dt.getMonth()]+') ===');
+    const classes=Object.keys(d.classes).sort((a,b)=>parseInt(a)-parseInt(b)||a.localeCompare(b,'ru'));
+    for(const c of classes){
+      const ls=(d.classes[c]||[]).filter(l=>l.info);
+      if(!ls.length)continue;
+      const items=ls.map(l=>l.num+'. '+(l.time?fmt(l.time.start)+'-'+fmt(l.time.end)+' ':'')+l.info.title+(l.info.rooms.length?' (каб. '+l.info.rooms.join('/')+')':'')+(l.info.raw!==l.info.title?' ['+l.info.raw+']':''));
+      lines.push(c+': '+items.join('; '));
+    }
+  }
+  return lines.join('\n');
+}
+
+function appendAiMsg(text,who){
+  const box=$('aiMsgs');
+  const div=document.createElement('div');
+  div.className='ai-msg '+who;
+  div.textContent=text;
+  box.appendChild(div);
+  box.scrollTop=box.scrollHeight;
+  return div;
+}
+
+async function askAi(text){
+  const q=(text||'').trim();if(!q)return;
+  const input=$('aiInput'),btn=$('aiSend');
+  input.value='';
+  appendAiMsg(q,'usr');
+  const botEl=appendAiMsg('Думаю…','bot');
+  input.disabled=true;btn.disabled=true;
+
+  const permTime=new Date().toLocaleString('ru-RU',{
+    timeZone:'Asia/Yekaterinburg',
+    weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'
+  });
+
+  try{
+    const res=await fetch(WORKER_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        userMessage:q,
+        scheduleContext:buildScheduleContext(),
+        currentTime:permTime
+      })
+    });
+    const data=await res.json();
+    botEl.textContent=data.reply||'Пустой ответ от сервера.';
+  }catch(err){
+    botEl.textContent='Ошибка связи с ИИ. Проверь интернет или настройки воркера.';
+  }finally{
+    input.disabled=false;btn.disabled=false;
+    $('aiMsgs').scrollTop=$('aiMsgs').scrollHeight;
+    input.focus();
+  }
+}
+
+$('aiBtn').onclick=()=>{openSheet('aiSheet');setTimeout(()=>$('aiInput').focus(),150);};
+$('aiForm').onsubmit=e=>{e.preventDefault();askAi($('aiInput').value);};
+$('aiChips').onclick=e=>{const b=e.target.closest('.ai-chip');if(b){buzz();askAi(b.textContent);}};
 
 /* ---------- render ---------- */
 function greeting(){const h=now().getHours();const g=CUR_THEME.tg||['☀️','🌤️','✨','🌙'];if(h>=5&&h<12)return['Доброе утро',g[0]];if(h>=12&&h<18)return['Добрый день',g[1]];if(h>=18&&h<23)return['Добрый вечер',g[2]];return['Доброй ночи',g[3]];}
@@ -799,36 +898,35 @@ function pickClass(v){CLS=v;try{localStorage.setItem(LS_CLS,v);}catch(e){}histor
 $('cls').onchange=e=>pickClass(e.target.value);
 $('cls2').onchange=e=>pickClass(e.target.value);
 
- /* ---------- связь с приложением: уведомления ---------- */
- let NATIVE_SIG='';
- function pushNative(){const A=window.AndroidApp;if(!A||!A.setDays)return;try{
-   const o={};const today=iso(now());
-   for(const k of Object.keys(DAYS).sort()){if(k<today)continue;const c=DAYS[k]&&DAYS[k].c&&DAYS[k].c[CLS];if(!c)continue;
-     const a=c.slice();while(a.length&&!String(a[a.length-1][3]||'').trim())a.pop();while(a.length&&!String(a[0][3]||'').trim())a.shift();
-     if(a.length)o[k]=a.map(x=>[String(x[0]||''),+x[1],+x[2],String(x[3]||'')]);}
-   const j=JSON.stringify(o);const sig=CLS+'|'+j;if(sig===NATIVE_SIG)return;
-   if(A.setClass)A.setClass(String(CLS));A.setDays(j);NATIVE_SIG=sig;}catch(e){}}
- let nativeBound=false;
- function initNative(){const A=window.AndroidApp;if(!A||!A.getNotify)return false;if(nativeBound){if(window.syncNativeNotify)window.syncNativeNotify();return true;}nativeBound=true;
-   $('notifApp').style.display='contents';$('notifWeb').style.display='none';
-   const sync=()=>{try{const s=JSON.parse(A.getNotify());$('nNew').checked=!!s.n;$('nLes').checked=!!s.l;
-     $('nState').textContent=s.ok?'Пришлём тестовое уведомление':'⚠️ Выключены в Android — нажми, чтобы разрешить';
-     let hint=$('exactAlarmHint');if(!hint){hint=document.createElement('button');hint.id='exactAlarmHint';hint.className='row';$('notifApp').appendChild(hint);hint.onclick=()=>{if(A.openAlarmSettings)A.openAlarmSettings();};}
-     hint.style.display=s.exact===false?'flex':'none';hint.textContent='Разрешить точные напоминания — без этого Android может задерживать их';}catch(e){}};
-   window.syncNativeNotify=sync;sync();
-   const set=()=>{try{A.setNotify(!!$('nNew').checked,!!$('nLes').checked);}catch(e){}try{buzz();}catch(e){}setTimeout(sync,900);};
-   $('nNew').onchange=set;$('nLes').onchange=set;
-   $('nTest').onclick=e=>{e.preventDefault();try{buzz();}catch(x){}let ok=false;try{ok=A.testNotify();}catch(x){}
-     toast(ok?'🔔 Отправил тестовое уведомление':'Разреши уведомления в окне Android');setTimeout(sync,1500);};
-   document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(sync,300);});
-   setTimeout(pushNative,100);return true;
- }
- initNative();
- window.addEventListener('native-ready',()=>{initNative();applyTheme();pushNative();});
- window.addEventListener('pageshow',()=>{initNative();pushNative();});
- let bridgeTries=0;const bridgeTimer=setInterval(()=>{if(initNative()||++bridgeTries>20)clearInterval(bridgeTimer);},250);
+/* ---------- связь с приложением: уведомления ---------- */
+let NATIVE_SIG='';
+function pushNative(){const A=window.AndroidApp;if(!A||!A.setDays)return;try{
+  const o={};const today=iso(now());
+  for(const k of Object.keys(DAYS).sort()){if(k<today)continue;const c=DAYS[k]&&DAYS[k].c&&DAYS[k].c[CLS];if(!c)continue;
+    const a=c.slice();while(a.length&&!String(a[a.length-1][3]||'').trim())a.pop();while(a.length&&!String(a[0][3]||'').trim())a.shift();
+    if(a.length)o[k]=a.map(x=>[String(x[0]||''),+x[1],+x[2],String(x[3]||'')]);}
+  const j=JSON.stringify(o);const sig=CLS+'|'+j;if(sig===NATIVE_SIG)return;
+  if(A.setClass)A.setClass(String(CLS));A.setDays(j);NATIVE_SIG=sig;}catch(e){}}
+let nativeBound=false;
+function initNative(){const A=window.AndroidApp;if(!A||!A.getNotify)return false;if(nativeBound){if(window.syncNativeNotify)window.syncNativeNotify();return true;}nativeBound=true;
+  $('notifApp').style.display='contents';$('notifWeb').style.display='none';
+  const sync=()=>{try{const s=JSON.parse(A.getNotify());$('nNew').checked=!!s.n;$('nLes').checked=!!s.l;
+    $('nState').textContent=s.ok?'Пришлём тестовое уведомление':'⚠️ Выключены в Android — нажми, чтобы разрешить';
+    let hint=$('exactAlarmHint');if(!hint){hint=document.createElement('button');hint.id='exactAlarmHint';hint.className='row';$('notifApp').appendChild(hint);hint.onclick=()=>{if(A.openAlarmSettings)A.openAlarmSettings();};}
+    hint.style.display=s.exact===false?'flex':'none';hint.textContent='Разрешить точные напоминания — без этого Android может задерживать их';}catch(e){}};
+  window.syncNativeNotify=sync;sync();
+  const set=()=>{try{A.setNotify(!!$('nNew').checked,!!$('nLes').checked);}catch(e){}try{buzz();}catch(e){}setTimeout(sync,900);};
+  $('nNew').onchange=set;$('nLes').onchange=set;
+  $('nTest').onclick=e=>{e.preventDefault();try{buzz();}catch(x){}let ok=false;try{ok=A.testNotify();}catch(x){}
+    toast(ok?'🔔 Отправил тестовое уведомление':'Разреши уведомления в окне Android');setTimeout(sync,1500);};
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(sync,300);});
+  setTimeout(pushNative,100);return true;
+}
+initNative();
+window.addEventListener('native-ready',()=>{initNative();applyTheme();pushNative();});
+window.addEventListener('pageshow',()=>{initNative();pushNative();});
+let bridgeTries=0;const bridgeTimer=setInterval(()=>{if(initNative()||++bridgeTries>20)clearInterval(bridgeTimer);},250);
 
-/* Web Push for the installed web app / supported browsers. Lesson alarms remain native. */
 let webReg=null;
 const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 async function pushPost(path,data){const c=new AbortController();const t=setTimeout(()=>c.abort(),12000);try{const r=await fetch(API_BASE+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),signal:c.signal});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||'Сервер недоступен');return j;}finally{clearTimeout(t);}}
