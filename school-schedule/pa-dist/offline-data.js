@@ -6,7 +6,7 @@ self.SCHEDULE_SNAPSHOT = {
   "class": "8Г",
   "ok": true,
   "error": "",
-  "updated": 1795096071,
+  "updated": 1795125231,
   "sheet_url": "https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit",
   "days": [
     {
@@ -109,8 +109,8 @@ self.SCHEDULE_SNAPSHOT = {
           "n": 6,
           "time": "12:25-13:05",
           "subject": "физика",
-          "room": "303",
-          "raw": "физика 303"
+          "room": "310",
+          "raw": "физика 310"
         },
         {
           "n": 7,
@@ -124,5 +124,5 @@ self.SCHEDULE_SNAPSHOT = {
       "changed": 0
     }
   ],
-  "saved_at": 1795096071
+  "saved_at": 1795125231
 };
