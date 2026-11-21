@@ -326,3 +326,78 @@ def compile_schedule(rows, out_path, today=None, force=False):
     )
     print(f"[ai] Скомпилирован {out_path.name}: дней={len(days)}, источник={source}")
     return result
+
+
+ASK_SYSTEM_PROMPT = (
+    "Ты дружелюбный ИИ-помощник школьного расписания. Отвечай на русском языке, кратко и по делу.\n"
+    "Используй ТОЛЬКО переданные данные расписания — не выдумывай уроки, классы и кабинеты.\n"
+    "Если спрашивает учитель (по предмету или кабинету) — просматривай ВСЕ классы и группируй по кабинетам/времени, если их несколько.\n"
+    "Если запрошенного дня (например, завтра) ещё нет в расписании — прямо скажи об этом и при необходимости приведи данные за последний доступный день."
+)
+
+
+def _resolve_ai_endpoint():
+    api_url = os.getenv("AI_API_URL", "").strip()
+    api_key = os.getenv("AI_API_KEY", "").strip()
+    groq_key = os.getenv("GROQ_API_KEY", "").strip()
+    gh_token = os.getenv("GITHUB_TOKEN", "").strip()
+    model = os.getenv("AI_MODEL", "").strip()
+
+    if api_url:
+        return api_url, (api_key or groq_key or gh_token), (model or DEFAULT_MODEL)
+    if groq_key:
+        return "https://api.groq.com/openai/v1/chat/completions", groq_key, (model or "llama-3.1-8b-instant")
+    if api_key or gh_token:
+        return GITHUB_MODELS_URL, (api_key or gh_token), (model or DEFAULT_MODEL)
+    return "", "", ""
+
+
+def ask_ai(question, schedule_text="", class_code="", today_str=""):
+    """Отвечает на свободный вопрос пользователя по расписанию через реальную нейросеть."""
+    q = re.sub(r"\s+", " ", str(question or "")).strip()[:600]
+    if not q:
+        return None, "empty"
+    url, token, model = _resolve_ai_endpoint()
+    if not url or not token:
+        return None, "no_token"
+
+    ctx_parts = []
+    if today_str:
+        ctx_parts.append(f"Сейчас: {today_str}")
+    if class_code:
+        ctx_parts.append(f"Выбранный класс пользователя: {class_code}")
+    if schedule_text:
+        ctx_parts.append("Расписание:\n" + str(schedule_text)[:24000])
+    user_msg = "\n\n".join(ctx_parts) + f"\n\nВопрос: {q}"
+
+    payload = {
+        "model": model,
+        "temperature": 0.2,
+        "max_tokens": 700,
+        "messages": [
+            {"role": "system", "content": ASK_SYSTEM_PROMPT},
+            {"role": "user", "content": user_msg},
+        ],
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": f"Bearer {token}",
+        "User-Agent": "school-schedule-ai/1.0",
+    }
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        headers=headers,
+        method="POST",
+    )
+    timeout = int(os.getenv("AI_TIMEOUT", "25"))
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+        ans = (body["choices"][0]["message"]["content"] or "").strip()
+        if not ans:
+            return None, "empty_answer"
+        return ans, model
+    except (urllib.error.URLError, urllib.error.HTTPError, KeyError, IndexError, ValueError, TimeoutError) as e:
+        return None, f"error:{type(e).__name__}"

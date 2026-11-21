@@ -866,6 +866,25 @@ class Handler(BaseHTTPRequestHandler):
                     print(f"[push] test: {type(e).__name__}: {str(e)[:200]}")
                     return self._json(502, {"ok": False, "error": f"push {code or 'error'}"})
                 return self._json(200, {"ok": True})
+            if path == "/api/ask":
+                data = self._read_json() or {}
+                q = str(data.get("question") or "").strip()
+                if not q:
+                    return self._json(400, {"ok": False, "error": "empty question"})
+                try:
+                    import ai_schedule
+                    ans, info = ai_schedule.ask_ai(
+                        q,
+                        schedule_text=str(data.get("schedule_text") or ""),
+                        class_code=str(data.get("class_code") or ""),
+                        today_str=str(data.get("today") or ""),
+                    )
+                except Exception:
+                    return self._json(503, {"ok": False, "error": "ai unavailable"})
+                if not ans:
+                    code = 503 if info == "no_token" else 502
+                    return self._json(code, {"ok": False, "error": info})
+                return self._json(200, {"ok": True, "answer": ans, "model": info})
             return self._send(404, "Не найдено".encode("utf-8"), "text/plain; charset=utf-8")
         except Exception:
             try:

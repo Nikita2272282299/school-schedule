@@ -486,16 +486,10 @@ a.row{color:inherit;text-decoration:none}.apk-ic{display:grid;place-items:center
 
 <section class="sheet" id="askSheet" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Спросить расписание">
   <div class="grab"></div>
-  <div class="sh-head"><h3>💬 Спросить</h3><button class="x" data-close aria-label="Закрыть">×</button></div>
-  <div class="ask-chips" id="askChips">
-    <button type="button" class="ask-chip">Я учитель русского на завтра</button>
-    <button type="button" class="ask-chip">Что в 409 кабинете?</button>
-    <button type="button" class="ask-chip">Сколько уроков у меня?</button>
-    <button type="button" class="ask-chip">Когда конец уроков?</button>
-  </div>
+  <div class="sh-head"><h3>💬 ИИ-помощник</h3><button class="x" data-close aria-label="Закрыть">×</button></div>
   <div class="ask-log" id="askLog"></div>
   <form class="ask-form" id="askForm" autocomplete="off">
-    <input id="askInput" type="text" placeholder="Например: я учитель русского на завтра…" aria-label="Ваш вопрос">
+    <input id="askInput" type="text" placeholder="Задай вопрос по расписанию…" aria-label="Ваш вопрос">
     <button type="submit" class="btn pri" aria-label="Отправить">→</button>
   </form>
 </section>
@@ -1356,19 +1350,51 @@ function answerQuestion(rawQ){
   ls.forEach(l=>lines.push('  '+l.num+'. '+(l.time?fmt(l.time.start)+' ':'')+(l.info?l.info.title+(l.info.rooms.length?' ('+l.info.rooms.join('/')+')':''):'— окно')));
   return lines.join('\n');
 }
-function pushAsk(q){
-  const log=$('askLog');if(!log||!q.trim())return;
+function buildScheduleContext(){
+  const ks=keysSorted().slice(-4);
+  const out=[];
+  for(const k of ks){
+    const d=getDay(k);if(!d)continue;
+    const dt=fromIso(k);
+    out.push('=== '+k+' ('+WEEKDAYS[dt.getDay()]+', '+dt.getDate()+' '+MONTHS[dt.getMonth()]+') ===');
+    for(const cn of Object.keys(d.classes).sort((a,b)=>parseInt(a)-parseInt(b)||a.localeCompare(b,'ru'))){
+      const ls=d.classes[cn].filter(l=>l.info);
+      const nts=(d.notes&&d.notes[cn])||[];
+      if(!ls.length&&!nts.length)continue;
+      const parts=ls.map(l=>l.num+'('+(l.time?fmt(l.time.start)+'-'+fmt(l.time.end):'')+') '+l.info.title+(l.info.rooms.length?' ['+l.info.rooms.join('/')+']':''));
+      if(nts.length)parts.push('Заметка: '+nts.join('; '));
+      out.push(cn+': '+parts.join(' | '));
+    }
+  }
+  return out.join('\n');
+}
+let ASK_BUSY=false;
+async function pushAsk(q){
+  const log=$('askLog');if(!log||!q.trim()||ASK_BUSY)return;
+  ASK_BUSY=true;
   const u=document.createElement('div');u.className='ask-msg u';u.textContent=q.trim();log.appendChild(u);
-  const a=document.createElement('div');a.className='ask-msg a';a.textContent=answerQuestion(q);log.appendChild(a);
+  const a=document.createElement('div');a.className='ask-msg a';a.textContent='Думаю…';log.appendChild(a);
   log.scrollTop=log.scrollHeight;
+  try{
+    const t=now();
+    const todayStr=iso(t)+' ('+WEEKDAYS[t.getDay()]+', '+pad(t.getHours())+':'+pad(t.getMinutes())+')';
+    const c=new AbortController();const tm=setTimeout(()=>c.abort(),20000);
+    let aiAns='';
+    try{
+      const r=await fetch(API_BASE+'/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({question:q.trim(),schedule_text:buildScheduleContext(),class_code:CLS,today:todayStr}),signal:c.signal});
+      const j=await r.json();
+      if(r.ok&&j&&j.ok&&j.answer)aiAns=String(j.answer);
+    }catch(e){}finally{clearTimeout(tm);}
+    a.textContent=aiAns||answerQuestion(q);
+  }finally{ASK_BUSY=false;log.scrollTop=log.scrollHeight;}
 }
 if($('askBtn'))$('askBtn').onclick=()=>{
   const log=$('askLog');
-  if(log&&!log.childElementCount){const g=document.createElement('div');g.className='ask-msg a';g.textContent='Привет! Спроси про расписание — для учителя, кабинета или класса.\nНапример: «Сколько уроков у меня, я учитель русского на завтра?» или «Что в 409 кабинете?»';log.appendChild(g);}
+  if(log&&!log.childElementCount){const g=document.createElement('div');g.className='ask-msg a';g.textContent='Привет! Спроси что угодно про расписание.';log.appendChild(g);}
   openSheet('askSheet');setTimeout(()=>{const inp=$('askInput');if(inp&&!IS_MOBILE)inp.focus();},250);
 };
 if($('askForm'))$('askForm').onsubmit=e=>{e.preventDefault();const inp=$('askInput');if(!inp)return;const v=inp.value.trim();if(!v)return;inp.value='';buzz();pushAsk(v);};
-if($('askChips'))$('askChips').onclick=e=>{const b=e.target.closest('.ask-chip');if(!b)return;buzz();pushAsk(b.textContent);};
 
 /* ---------- init ---------- */
 $('sheetLink').href='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/edit';

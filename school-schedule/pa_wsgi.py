@@ -198,6 +198,25 @@ def _dispatch(method, environ, start_response):
                     return _json(start_response, {"ok": False, "error": f"push {code or 'error'}"},
                                  502, environ)
                 return _json(start_response, {"ok": True}, environ=environ)
+            if path == "/api/ask":
+                data = _read_json(environ) or {}
+                q = str(data.get("question") or "").strip()
+                if not q:
+                    return _json(start_response, {"ok": False, "error": "empty question"}, 400, environ)
+                try:
+                    import ai_schedule
+                    ans, info = ai_schedule.ask_ai(
+                        q,
+                        schedule_text=str(data.get("schedule_text") or ""),
+                        class_code=str(data.get("class_code") or ""),
+                        today_str=str(data.get("today") or ""),
+                    )
+                except Exception:
+                    return _json(start_response, {"ok": False, "error": "ai unavailable"}, 503, environ)
+                if not ans:
+                    code = 503 if info == "no_token" else 502
+                    return _json(start_response, {"ok": False, "error": info}, code, environ)
+                return _json(start_response, {"ok": True, "answer": ans, "model": info}, environ=environ)
             return _respond(start_response, 404, "Не найдено".encode("utf-8"),
                             "text/plain; charset=utf-8", environ=environ)
 
