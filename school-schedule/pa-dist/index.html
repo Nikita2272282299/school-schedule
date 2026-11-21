@@ -394,19 +394,6 @@ a.row{color:inherit;text-decoration:none}.apk-ic{display:grid;place-items:center
   .seg{min-width:165px}
   .sheet{padding:8px 14px calc(env(safe-area-inset-bottom) + 18px)}
 }
-/* ---------- assistant sheet ---------- */
-.ask-chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
-.ask-chip{font-size:12.5px;font-weight:700;padding:7px 11px;border-radius:12px;background:var(--pill);border:1px solid var(--line);color:var(--text);transition:transform .2s var(--spring)}
-.ask-chip:active{transform:scale(.95)}
-.ask-log{display:flex;flex-direction:column;gap:10px;max-height:48vh;overflow-y:auto;padding:2px 0 10px}
-.ask-msg{padding:11px 13px;border-radius:16px;font-size:14px;line-height:1.45;font-weight:600;white-space:pre-line;word-break:break-word}
-.ask-msg.u{align-self:flex-end;max-width:86%;background:var(--sel);color:#fff;border-bottom-right-radius:5px}
-.ask-msg.a{align-self:flex-start;max-width:96%;background:var(--pill);border:1px solid var(--line);color:var(--text);border-bottom-left-radius:5px}
-.ask-msg.a b{font-weight:800}
-.ask-form{display:flex;gap:8px;margin-top:8px;position:sticky;bottom:0;background:var(--sheet);padding:8px 0 2px}
-.ask-form input{flex:1;min-width:0;font:inherit;font-size:15px;font-weight:600;color:var(--text);background:var(--pill);border:1px solid var(--line);border-radius:14px;padding:11px 13px;outline:none}
-.ask-form input:focus{border-color:var(--acc)}
-.ask-form .btn{flex:none;padding:11px 16px}
 </style>
 </head>
 <body>
@@ -421,7 +408,6 @@ a.row{color:inherit;text-decoration:none}.apk-ic{display:grid;place-items:center
       <select id="cls"></select>
     </label>
     <div class="actions">
-      <button class="ib glass" id="askBtn" aria-label="Спросить расписание"><svg viewBox="0 0 24 24"><path d="M21 12a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-2.9-.4-4.1-1L3 21l1.5-5.4A8.5 8.5 0 1 1 21 12z"/><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01"/></svg></button>
       <button class="ib glass" id="shareBtn" aria-label="Поделиться"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 13v5a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-5"/></svg></button>
       <button class="ib glass" id="refresh" aria-label="Обновить"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
       <button class="ib glass" id="setBtn" aria-label="Настройки"><svg viewBox="0 0 24 24"><path d="M4 7h9M19 7h1M4 17h3M13 17h7"/><circle cx="16" cy="7" r="2.6"/><circle cx="10" cy="17" r="2.6"/></svg></button>
@@ -484,16 +470,6 @@ a.row{color:inherit;text-decoration:none}.apk-ic{display:grid;place-items:center
   <div id="dtBody"></div>
 </section>
 
-<section class="sheet" id="askSheet" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Спросить расписание">
-  <div class="grab"></div>
-  <div class="sh-head"><h3>💬 ИИ-помощник</h3><button class="x" data-close aria-label="Закрыть">×</button></div>
-  <div class="ask-log" id="askLog"></div>
-  <form class="ask-form" id="askForm" autocomplete="off">
-    <input id="askInput" type="text" placeholder="Задай вопрос по расписанию…" aria-label="Ваш вопрос">
-    <button type="submit" class="btn pri" aria-label="Отправить">→</button>
-  </form>
-</section>
-
 <div class="toast glass" id="toast"></div>
 
 <script>/*BOOT:SNAPSHOT*/self.SCHEDULE_SNAPSHOT = {"class": "8Г", "ok": true, "error": "", "updated": 1795275061, "sheet_url": "https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit", "days": [{"date": "2026-11-20", "weekday": "Пятница", "lessons": [{"n": 1, "time": "8:00-8:40", "subject": "инф/труд", "room": "423", "raw": "инф/труд 423"}, {"n": 2, "time": "8:50-9:30", "subject": "биолог", "room": "323", "raw": "биолог 323"}, {"n": 3, "time": "9:45-10:25", "subject": "геометр", "room": "410", "raw": "геометр 410"}, {"n": 4, "time": "10:40-11:20", "subject": "труд 423/ ----", "room": "", "raw": "труд 423/ ----"}, {"n": 5, "time": "11:35-12:15", "subject": "русск", "room": "409", "raw": "русск 409"}, {"n": 6, "time": "12:25-13:05", "subject": "физика", "room": "310", "raw": "физика 310"}, {"n": 7, "time": "13:15-13:55", "subject": "химия (профиль)", "room": "205", "raw": "химия (профиль) 205"}], "first": 0, "changed": 0}], "saved_at": 1795275061};/*BOOT:SNAPSHOT:END*/</script>
@@ -503,7 +479,6 @@ const SHEET_ID='1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE';
 const DEFAULT_CLASS='8Г';
 const SNAPSHOT=",,,,9 ноября,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n,,5А,5Б,5В,5Г,5Д,5Е,5 3,7Ф,8А,8Б,8В,8Г,8Ф,9А,9Б,9В,9Г,9Ф,10А,10Е,10Ф,11А,11Ф,,,,,,,,,,,,\n1,8.00-8.40,РоВ 305,,РоВ 309,РоВ 326,матем 144,РоВ 144,РоВ 308,ВиС 407,,музык 106,,химия 205,русск 307,русск 410,РоВ 409,РоВ 313,РоВ 423,РоВ 128,ВиС Б 408,Всероссийский,РоВ   305,алгебр П,информ Б,1,,,,,,,,,,,\n2,8.50-9.30,русск 308,РоВ  207,русск 307,музык 106,англ113/128,матем 144,физкульт,физ310/алг 407,биолог 323,инф/труд 423,алгебр 409,истор 326,физ305/алг 209,англ221/208,русск 410,инф/труд,истор 313,русский 309,РоВ   305,налоговый,химия 205,алгебр П Б,,2,,,,,,,,,,,\n3,9.45-10.25,литер 308,литер 307,матем 207,истор 326,биолог 323,географ 323,матем 144,физ310/алг 407,алгебра 408,инф/труд 423,физкульт,алгебр 409,физ305/алг 209,литер 410,англ201/308,инф/труд,физкульт,истор 313,англ208/319,марафон,алгебр 208,истор П Б,русск 309,3 4Б,,,,,,,,,,,\n4,10.40-11.20,труд144/---,матем 207,ш.Ньют 313,физкульт,истор 326,биолог 323,русск 308,англ 113/308,англ221/208,алгебр 409,географ326,англ319/307,проект 310,инф/труд,литер 410,алгебра 408,алгебр 209,физ305/алг 407,географ 323,химия 205,алгебр 208,истор П Б,русск 309,4 4Г,,,,,,,,,,,\n5,11.35-12.15,матем 208,русск 410,труд144/---,матем 207,русск 308,русск 307,биолог 323,физкульт,истор 306,русск 243,инф/труд 423,алгебр 409,географ326,инф/труд,истор 313,англ201/308,географ 323,физ305/алг 407,физкульт,англ208/319,история 305,русск 309,химия 205,5 4Д,,,,,,,,,,,\n6,12.25-13.05,труд144/---,биолог 323,труд144/---,русск 307,РоВ 308,англ128/207,истор 326,русск 243,ВиС 408,ОБЗР 302,инф/труд 423,,англ113/319,алгебр 407,физика 324,истор 313,русск 410,географ 323,химия 205,физкульт,история 305,русск 309,алгебр 208,6,,,,,,,,,,,\n7,13.15-13.55,алгорит405,англ128/207,,,,,литер 308,РоВ 306,РоВ 106,РоВ 303,РоВ   302,РоВ 323,РоВ   204,истор 313,алгебр 407,,литер 410,ОБЗР 302,история П,РоВ 323/ВиС Б,физкульт,англП/химП,алгебр 208,7,,,,,,,,,,,\n8,14.00-14.40,,,,,,,,,,,,,,\"В/Д  география (9А, 9Б, 9Ф), физика (9А, 9Б, 9В, 9Г) 323, 324\",,,,,история П,химия (эл) 205,,англ П 208,,8,,,,,,,,,,,\n9,,,,,,,,,,,,,,,,,,,,,,,,,9,,,,,,,,,,,\n,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n,,6А,6Б,6В,6Г,6Д,6Е,7А,7Б,7В,7Г,,,,,,,,,,,,,,,,,,,,,,,,,\n0,13.15-13.55,,алгорит 114,РоВ 307,РоВ 113,русск 243,труд 144,англ221/308,,русский 409,,7,,,,,,,,,,,,,,,,,,,,,,,,\n1,14.00-14.40,РоВ 305,РоВ 302,англ221/128,русск 308,РоВ 209,труд 144,РоВ 306,англ303/308,РоВ 408,РоВ 113,1,,,,,,,,,,,,,,,,,,,,,,,, \n2,14.55-15.35,русск 309,музыка 106,русск 243,истор 306,матем 209,англ221/128,русск 308,русский 410,англ303/инф,русский 307,2 2А,,,,,,,,,,,,,,,,,,,,,,,,\n3,15.50-16.30,англ113/128,истор 306,литерат 243,литерат 308,история 326,матем 209,ИЗО 117,истор 408,англ308/инф,физика 305,3 2Д,,,,,,,,,,,,,,,,,,,,,,,,\n4,16.45-17.25,литерат 309,матем 208,физкульт,англ113/128,литерат 243,эврика 209,истор 306,литерат 410,ИЗО 117,истор 408,4 2В,,,,,,,,,,,,,,,,,,,,,,,,\n5,17.35-18.15,матем 208,,,матем 209,музыка 106,,физкульт,хим П 205,,ИЗО 117,5 3А,,,,,,,,,,,,,,,,,,,,,,,,\n6,18.20-19.00,истор 306,,,,,,хим П 205,ИЗО 117,,,6,,,,,,,,,,,,,,,,,,,,,,,,\n";
 const API_BASE=(self.SCHEDULE_CONFIG&&self.SCHEDULE_CONFIG.apiBase)||'https://nassda.pythonanywhere.com';
-const AI_API_BASE=(self.SCHEDULE_CONFIG&&self.SCHEDULE_CONFIG.aiApiBase)||API_BASE;
 const MONTHS=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const WEEKDAYS=['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 const WD_SHORT=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
@@ -1217,185 +1192,6 @@ $('refresh').onclick=()=>{buzz();load(true);};
 document.addEventListener('visibilitychange',()=>{if(document.hidden){HIDDEN_AT=Date.now();return;}if(!FX_RAF)startFx();if(HIDDEN_AT&&Date.now()-HIDDEN_AT>5*60e3)USER_PICK=false;autoSel();render();if(Date.now()-LAST_TRY>20e3)load();});
 window.addEventListener('online',()=>load());
 window.addEventListener('pageshow',e=>{if(e.persisted)load();});
-
-/* ---------- schedule assistant ---------- */
-const ASK_SUBJ=[
-  ['русск','Русский язык',/русск/i],['литер','Литература',/литер/i],
-  ['алгебр','Алгебра',/алг(?!ор)/i],['геометр','Геометрия',/геом/i],['матем','Математика',/матем/i],
-  ['англ','Английский',/англ|аргл/i],['физкул','Физкультура',/физк|физ-?р/i],['физик','Физика',/физик|^физ\b/i],
-  ['хим','Химия',/хим/i],['биолог','Биология',/биол/i],['географ','География',/геог/i],
-  ['истор','История',/ист/i],['обществ','Обществознание',/общ/i],['информ','Информатика',/инф/i],
-  ['труд','Труд',/труд|технолог/i],['музык','Музыка',/муз/i],['изо','ИЗО',/\bизо\b/i],
-  ['обзр','ОБЗР',/обзр|обж/i],['вероятн','Вероятность и статистика',/вис|вероятн|статист/i],
-  ['разговор','Разговоры о важном',/ров|разговор/i],['алгоритм','Алгоритмика',/алгор/i],['проект','Проект',/проект/i]
-];
-const ASK_WD=[['воскрес',0],['понед',1],['вторн',2],['сред',3],['четвер',4],['пятниц',5],['суббот',6]];
-function pickAskDay(q){
-  const t=now(),t0=new Date(t.getFullYear(),t.getMonth(),t.getDate());
-  let want=null,label='';
-  if(/послезавтра/i.test(q)){want=new Date(t0);want.setDate(t0.getDate()+2);label='послезавтра';}
-  else if(/завтра/i.test(q)){want=new Date(t0);want.setDate(t0.getDate()+1);label='завтра';}
-  else if(/вчера/i.test(q)){want=new Date(t0);want.setDate(t0.getDate()-1);label='вчера';}
-  else if(/сегодня|сейчас/i.test(q)){want=t0;label='сегодня';}
-  else{
-    for(const[stem,wd]of ASK_WD){if(new RegExp(stem,'i').test(q)){
-      const ks=keysSorted().filter(k=>fromIso(k).getDay()===wd);
-      if(ks.length)return{k:ks[ks.length-1],note:''};
-      const diff=(wd-t0.getDay()+7)%7||7;want=new Date(t0);want.setDate(t0.getDate()+diff);label=WEEKDAYS[wd];break;
-    }}
-  }
-  if(want){
-    const wk=iso(want);
-    if(DAYS[wk])return{k:wk,note:''};
-    const fb=latestKey()||SEL;
-    const fd=fb?fromIso(fb):null;
-    const ftxt=fd?(WEEKDAYS[fd.getDay()]+', '+fd.getDate()+' '+MONTHS[fd.getMonth()]):'';
-    return{k:fb,note:'На '+label+' ('+want.getDate()+' '+MONTHS[want.getMonth()]+') расписание ещё не выложили.'+(ftxt?' Показываю последний доступный день — '+ftxt+':':'')};
-  }
-  return{k:SEL||latestKey(),note:''};
-}
-function answerQuestion(rawQ){
-  const q=(rawQ||'').trim();if(!q)return'Напиши вопрос — например, «я учитель русского на завтра» или «что в 409 кабинете».';
-  const{k,note}=pickAskDay(q);const day=k&&getDay(k);
-  if(!day)return'Пока нет загруженного расписания. Нажми «Обновить».';
-  const dd=fromIso(k),dLabel=WEEKDAYS[dd.getDay()]+', '+dd.getDate()+' '+MONTHS[dd.getMonth()];
-  const prefix=note?note+'\n\n':'';
-  // Detect subject, room, class, lesson number
-  let subj=null;for(const s of ASK_SUBJ){if(s[2].test(q)){subj=s;break;}}
-  const rmM=q.match(/каб(?:инет[еа]?)?\.?\s*(\d{2,3}[а-яa-z]?)/i)||q.match(/\b(\d{2,3}[а-яa-z]?)\s*каб/i)||q.match(/\bв\s+(\d{2,3}[а-яa-z]?)\b/i);
-  const roomQ=rmM?rmM[1].toLowerCase():'';
-  const clsM=q.match(/(?:^|\s)(\d{1,2})\s*([а-яё])(?=\s|$|[?!.,])/i);
-  const clsQ=clsM?norm(clsM[1]+clsM[2]):'';
-  const lesM=q.match(/(?:на\s+)?(\d{1,2})\s*(?:-?[йм]?\s*)?урок/i);
-  const lesNum=lesM?lesM[1]:'';
-  const isTeacher=/учител|преподавател|веду|у\s+кого|какие\s+классы|где\s+/i.test(q)||(!!subj&&!clsQ);
-
-  // 1. Teacher / Subject search across all classes
-  if(subj&&isTeacher){
-    const hits=[];
-    for(const cName of Object.keys(day.classes).sort((a,b)=>parseInt(a)-parseInt(b)||a.localeCompare(b,'ru'))){
-      for(const l of day.classes[cName]){
-        if(!l.info)continue;
-        const matchSubj=l.info.title===subj[1]||subj[2].test(l.info.title)||subj[2].test(l.info.raw);
-        if(!matchSubj)continue;
-        if(roomQ&&!l.info.rooms.some(r=>r.toLowerCase().startsWith(roomQ)))continue;
-        if(lesNum&&String(l.num)!==lesNum)continue;
-        hits.push({cls:cName,l,rooms:l.info.rooms.length?l.info.rooms:['без каб.']});
-      }
-    }
-    if(!hits.length)return prefix+'По предмету «'+subj[1]+'»'+(roomQ?' (каб. '+roomQ+')':'')+' за '+dLabel+' уроков не найдено.';
-    hits.sort((a,b)=>(a.l.time?a.l.time.start:9999)-(b.l.time?b.l.time.start:9999)||(+a.l.num)-(+b.l.num)||a.cls.localeCompare(b.cls,'ru'));
-    const byRoom={};
-    for(const h of hits){const rk=h.rooms.join('/');(byRoom[rk]||(byRoom[rk]=[])).push(h);}
-    const roomKeys=Object.keys(byRoom).sort();
-    const lines=[prefix+'👩‍🏫 '+subj[1]+(roomQ?' · каб. '+roomQ:'')+' ('+dLabel+')'];
-    if(roomKeys.length>1&&!roomQ){
-      lines.push('Всего по школе: '+lessonsWord(hits.length)+' (в '+roomKeys.length+' каб. — выбери свой кабинет или напиши «в 409 кабинете»):');
-      for(const rk of roomKeys){
-        const arr=byRoom[rk];
-        const t1=arr[0].l.time?fmt(arr[0].l.time.start):'';
-        const t2=arr[arr.length-1].l.time?fmt(arr[arr.length-1].l.time.end):'';
-        lines.push('\n🚪 Каб. '+rk+' — '+lessonsWord(arr.length)+(t1?' ('+t1+'–'+t2+')':'')+':');
-        arr.forEach(h=>lines.push('  • '+h.l.num+' ур.'+(h.l.time?' '+fmt(h.l.time.start):'')+' — '+h.cls));
-      }
-    }else{
-      const t1=hits[0].l.time?fmt(hits[0].l.time.start):'';
-      const t2=hits[hits.length-1].l.time?fmt(hits[hits.length-1].l.time.end):'';
-      lines.push('Найдено: '+lessonsWord(hits.length)+(t1?' · с '+t1+' до '+t2:'')+':');
-      hits.forEach(h=>lines.push('  • '+h.l.num+' ур.'+(h.l.time?' ('+fmt(h.l.time.start)+'–'+fmt(h.l.time.end)+')':'')+' — '+h.cls+(h.l.info.rooms.length?' · каб. '+h.l.info.rooms.join('/'):'')));
-    }
-    return lines.join('\n');
-  }
-
-  // 2. Room search across all classes
-  if(roomQ&&!clsQ){
-    const hits=[];
-    for(const cName of Object.keys(day.classes)){
-      for(const l of day.classes[cName]){
-        if(!l.info)continue;
-        if(l.info.rooms.some(r=>r.toLowerCase().startsWith(roomQ))){
-          if(!lesNum||String(l.num)===lesNum)hits.push({cls:cName,l});
-        }
-      }
-    }
-    hits.sort((a,b)=>(a.l.time?a.l.time.start:9999)-(b.l.time?b.l.time.start:9999)||(+a.l.num)-(+b.l.num));
-    if(!hits.length)return prefix+'🚪 Кабинет '+roomQ+(lesNum?' на '+lesNum+' уроке':'')+' ('+dLabel+') — свободен (уроков не найдено).';
-    const lines=[prefix+'🚪 Кабинет '+roomQ+' ('+dLabel+') — '+lessonsWord(hits.length)+':'];
-    hits.forEach(h=>lines.push('  • '+h.l.num+' ур.'+(h.l.time?' '+fmt(h.l.time.start):'')+' — '+h.cls+' · '+h.l.info.title));
-    return lines.join('\n');
-  }
-
-  // 3. Class / student answer
-  const targetCls=clsQ||CLS;
-  const ls=day.classes[targetCls]||[];const real=ls.filter(l=>l.info),timed=real.filter(l=>l.time);
-  if(!real.length)return prefix+'У '+targetCls+' на '+dLabel+' уроков нет (или класс не указан в таблице).';
-  const first=timed[0],last=timed[timed.length-1];
-  const wins=ls.filter(l=>!l.info);
-  const notes=(day.notes&&day.notes[targetCls])||[];
-  if(/сейчас|идёт|идет/i.test(q)&&k===iso(now())){
-    const nm=now().getHours()*60+now().getMinutes();
-    const cur=ls.find(l=>l.info&&l.time&&nm>=l.time.start&&nm<l.time.end);
-    if(cur)return'🟢 Сейчас у '+targetCls+' идёт '+cur.num+' урок: '+cur.info.title+(cur.info.rooms.length?' (каб. '+cur.info.rooms.join('/')+')':'')+', до '+fmt(cur.time.end)+'.';
-    const nxt=ls.find(l=>l.info&&l.time&&nm<l.time.start);
-    if(nxt)return'⏳ Сейчас перемена / до уроков. Следующий у '+targetCls+': '+nxt.num+' урок — '+nxt.info.title+' в '+fmt(nxt.time.start)+'.';
-    return'🎉 У '+targetCls+' уроки сегодня уже закончились (в '+(last?fmt(last.time.end):'')+').';
-  }
-  if(/конец|заканчива|до\s+скольк|когда\s+домой/i.test(q)&&last)
-    return prefix+'🏁 У '+targetCls+' ('+dLabel+') уроки заканчиваются в '+fmt(last.time.end)+' (последний — '+last.num+' ур., '+last.info.title+').';
-  if(/начал|ко\s+скольк|во\s+сколько\s+приход|первый/i.test(q)&&first)
-    return prefix+'🔔 У '+targetCls+' ('+dLabel+') первый урок в '+fmt(first.time.start)+' — '+first.info.title+(first.info.rooms.length?' (каб. '+first.info.rooms.join('/')+')':'')+'.';
-  if(/окн/i.test(q))
-    return prefix+(wins.length?'☕ У '+targetCls+' ('+dLabel+') есть окна: '+wins.map(w=>w.num+' урок').join(', ')+'.':'У '+targetCls+' ('+dLabel+') окон нет.');
-  const lines=[prefix+'🎒 '+targetCls+' ('+dLabel+') — '+lessonsWord(real.length)+(first?' · '+fmt(first.time.start)+'–'+fmt(last.time.end):'')+':'];
-  if(notes.length)notes.forEach(nt=>lines.push('  📌 '+nt));
-  ls.forEach(l=>lines.push('  '+l.num+'. '+(l.time?fmt(l.time.start)+' ':'')+(l.info?l.info.title+(l.info.rooms.length?' ('+l.info.rooms.join('/')+')':''):'— окно')));
-  return lines.join('\n');
-}
-function buildScheduleContext(){
-  const ks=keysSorted().slice(-4);
-  const out=[];
-  for(const k of ks){
-    const d=getDay(k);if(!d)continue;
-    const dt=fromIso(k);
-    out.push('=== '+k+' ('+WEEKDAYS[dt.getDay()]+', '+dt.getDate()+' '+MONTHS[dt.getMonth()]+') ===');
-    for(const cn of Object.keys(d.classes).sort((a,b)=>parseInt(a)-parseInt(b)||a.localeCompare(b,'ru'))){
-      const ls=d.classes[cn].filter(l=>l.info);
-      const nts=(d.notes&&d.notes[cn])||[];
-      if(!ls.length&&!nts.length)continue;
-      const parts=ls.map(l=>l.num+'('+(l.time?fmt(l.time.start)+'-'+fmt(l.time.end):'')+') '+l.info.title+(l.info.rooms.length?' ['+l.info.rooms.join('/')+']':''));
-      if(nts.length)parts.push('Заметка: '+nts.join('; '));
-      out.push(cn+': '+parts.join(' | '));
-    }
-  }
-  return out.join('\n');
-}
-let ASK_BUSY=false;
-async function pushAsk(q){
-  const log=$('askLog');if(!log||!q.trim()||ASK_BUSY)return;
-  ASK_BUSY=true;
-  const u=document.createElement('div');u.className='ask-msg u';u.textContent=q.trim();log.appendChild(u);
-  const a=document.createElement('div');a.className='ask-msg a';a.textContent='Думаю…';log.appendChild(a);
-  log.scrollTop=log.scrollHeight;
-  try{
-    const t=now();
-    const todayStr=iso(t)+' ('+WEEKDAYS[t.getDay()]+', '+pad(t.getHours())+':'+pad(t.getMinutes())+')';
-    const c=new AbortController();const tm=setTimeout(()=>c.abort(),20000);
-    let aiAns='';
-    try{
-      const r=await fetch(AI_API_BASE+'/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({question:q.trim(),schedule_text:buildScheduleContext(),class_code:CLS,today:todayStr}),signal:c.signal});
-      const j=await r.json();
-      if(r.ok&&j&&j.ok&&j.answer)aiAns=String(j.answer);
-    }catch(e){}finally{clearTimeout(tm);}
-    a.textContent=aiAns||answerQuestion(q);
-  }finally{ASK_BUSY=false;log.scrollTop=log.scrollHeight;}
-}
-if($('askBtn'))$('askBtn').onclick=()=>{
-  const log=$('askLog');
-  if(log&&!log.childElementCount){const g=document.createElement('div');g.className='ask-msg a';g.textContent='Привет! Спроси что угодно про расписание.';log.appendChild(g);}
-  openSheet('askSheet');setTimeout(()=>{const inp=$('askInput');if(inp&&!IS_MOBILE)inp.focus();},250);
-};
-if($('askForm'))$('askForm').onsubmit=e=>{e.preventDefault();const inp=$('askInput');if(!inp)return;const v=inp.value.trim();if(!v)return;inp.value='';buzz();pushAsk(v);};
 
 /* ---------- init ---------- */
 $('sheetLink').href='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/edit';
