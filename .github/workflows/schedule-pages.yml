@@ -39,6 +39,7 @@ jobs:
         working-directory: school-schedule
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           AI_MODEL: ${{ vars.AI_MODEL || 'openai/gpt-4o-mini' }}
         run: python refresh_snapshot.py --sheet
       - name: Commit refreshed snapshot
