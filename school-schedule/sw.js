@@ -1,13 +1,38 @@
-const CACHE='schedule-v306';
-const FILES=['./','index.html','manifest.json','icon-192.png','icon-512.png','offline-data.js','config.js','assets/fonts/manrope-cyrillic-400-800-normal.woff2','assets/fonts/manrope-latin-400-800-normal.woff2'];
-self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()));});
+const CACHE='schedule-v307';
+const FILES=['./','index.html','manifest.json','icon.svg','icon-192.png','icon-512.png','apple-touch-icon.png','offline-data.js','config.js','ai-schedule.json','sheet-data.json','assets/fonts/manrope-cyrillic-400-800-normal.woff2','assets/fonts/manrope-latin-400-800-normal.woff2'];
+self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>Promise.allSettled(FILES.map(f=>c.add(f)))).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE&&/^schedule|^sch[-_]/.test(k)).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
-/* Свежесть важнее скорости: сначала сеть, кэш — только как запасной вариант.
-   Сама страница и данные расписания никогда не должны «залипать» в кэше. */
-const NEVER_CACHE=/\/index\.html$|\/(sheet-data\.json|offline-data\.js|config\.js)$/;
-self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(e.request.method!=='GET'||u.origin!==self.location.origin||u.pathname.indexOf('/api/')!==-1)return;
- const fresh=e.request.mode==='navigate'||NEVER_CACHE.test(u.pathname);
- e.respondWith(fetch(e.request,{cache:'no-store'}).then(r=>{if(r.ok&&!fresh){const copy=r.clone();e.waitUntil(caches.open(CACHE).then(c=>c.put(e.request,copy)));}return r;}).catch(()=>caches.match(e.request,{ignoreSearch:true}).then(r=>r||(e.request.mode==='navigate'?caches.match('index.html'):Response.error()))));
+/* Работает даже при глушении/отключении мобильного интернета (БПЛА-атака):
+   - статика (шрифты, иконки) отдаётся мгновенно из кэша;
+   - страница и данные расписания ждут сеть не больше 1.5 сек, затем мгновенно
+     отдают сохранённую копию из кэша, а при появлении сети обновляют кэш в фоне. */
+const DYNAMIC=/\/index\.html$|\/(ai-schedule\.json|sheet-data\.json|offline-data\.js|config\.js)$/;
+function cleanReq(req){const u=new URL(req.url);u.search='';return new Request(u.href,{method:'GET'});}
+function netWithTimeout(req,ms){
+  return new Promise((resolve,reject)=>{
+    const c=typeof AbortController==='function'?new AbortController():null;
+    const t=setTimeout(()=>{if(c)try{c.abort();}catch(e){}reject(new Error('timeout'));},ms);
+    fetch(req,{cache:'no-store',signal:c?c.signal:undefined}).then(r=>{clearTimeout(t);resolve(r);},err=>{clearTimeout(t);reject(err);});
+  });
+}
+self.addEventListener('fetch',e=>{
+  const u=new URL(e.request.url);
+  if(e.request.method!=='GET'||u.origin!==self.location.origin||u.pathname.indexOf('/api/')!==-1)return;
+  const isNav=e.request.mode==='navigate';
+  const isDyn=isNav||DYNAMIC.test(u.pathname);
+  const key=isNav?new Request(new URL('index.html',self.registration.scope).href):cleanReq(e.request);
+  if(!isDyn){
+    e.respondWith(caches.match(key,{ignoreSearch:true}).then(cached=>{
+      const bg=fetch(e.request).then(r=>{if(r.ok){const cp=r.clone();caches.open(CACHE).then(c=>c.put(key,cp));}return r;}).catch(()=>null);
+      if(cached){e.waitUntil(bg);return cached;}
+      return bg.then(r=>r||Response.error());
+    }));
+    return;
+  }
+  e.respondWith(netWithTimeout(e.request,1500).then(r=>{
+    if(r&&r.ok){const cp=r.clone();e.waitUntil(caches.open(CACHE).then(c=>c.put(key,cp)));}
+    return r;
+  }).catch(()=>caches.match(key,{ignoreSearch:true}).then(r=>r||(isNav?caches.match('index.html'):Response.error()))));
 });
 self.addEventListener('push',e=>{let d={};try{d=e.data.json();}catch(x){d={body:e.data?e.data.text():''};}
  const home=new URL('./',self.registration.scope);let target=new URL(d.url||'./',home);if(target.origin!==home.origin||!target.pathname.startsWith(home.pathname))target=home;

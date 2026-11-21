@@ -650,10 +650,32 @@ seedAll();
 let SEL=latestKey(),LIVE=false,LOADING=false,DIR='';
 let USER_PICK=false,SRC_AT=0,LAST_TRY=0,HIDDEN_AT=0;
 function dayEnd(k){const d=getDay(k);if(!d)return -1;const ls=(d.classes[CLS]||d.classes[DEFAULT_CLASS]||[]).filter(l=>l.info&&l.time);return ls.length?ls[ls.length-1].time.end:-1;}
+function pruneOldWeeks(){
+  const ks=keysSorted();if(ks.length<2)return false;
+  const t=now(),tk=iso(t),mins=t.getHours()*60+t.getMinutes();
+  let monKey=null;
+  for(let i=ks.length-1;i>=0;i--){
+    const k=ks[i];
+    if(fromIso(k).getDay()===1){
+      const day=getDay(k);
+      if(day&&Object.values(day.classes).some(ls=>ls.some(l=>l.info))){monKey=k;break;}
+    }
+  }
+  if(!monKey)return false;
+  const oldKeys=ks.filter(k=>k<monKey);
+  if(!oldKeys.length)return false;
+  if(tk<monKey){
+    if(oldKeys.some(k=>k>tk))return false;
+    if(DAYS[tk]){const e=dayEnd(tk);if(e>=0&&mins<e)return false;}
+  }
+  for(const k of oldKeys){delete DAYS[k];delete PARSED[k];}
+  if(SEL&&SEL<monKey){SEL=monKey;USER_PICK=false;HERO_SIG=LIST_SIG='';}
+  saveDays();CHANGED=true;return true;
+}
 function autoKey(){const ks=keysSorted();if(!ks.length)return null;const t=now();const tk=iso(t);const mins=t.getHours()*60+t.getMinutes();const fut=ks.find(k=>k>tk);
   if(DAYS[tk]){const e=dayEnd(tk);if(!fut||(e>=0&&mins<e))return tk;}
   return fut||ks[ks.length-1];}
-function autoSel(){if(USER_PICK&&DAYS[SEL])return;const a=autoKey();if(a&&a!==SEL){DIR=SEL&&a<SEL?'l':'r';SEL=a;HERO_SIG=LIST_SIG='';}}
+function autoSel(){pruneOldWeeks();if(USER_PICK&&DAYS[SEL])return;const a=autoKey();if(a&&a!==SEL){DIR=SEL&&a<SEL?'l':'r';SEL=a;HERO_SIG=LIST_SIG='';}}
 let LAST=+localStorage.getItem(LS_LAST)||0;
 let CLS=(location.hash?decodeURIComponent(location.hash.slice(1)):'')||localStorage.getItem(LS_CLS)||DEFAULT_CLASS;
 let CUR_LS=[],HERO_SIG='',LIST_SIG='',WEEK_READY=false;
@@ -1139,44 +1161,46 @@ async function fetchXlsx(ms){
 }
 
 async function load(manual){
-  if(OFFLINE||LOADING)return;LOADING=true;LAST_TRY=Date.now();CHANGED=false;
+  if(OFFLINE||LOADING)return;
+  if(navigator.onLine===false){LIVE=false;renderMeta();if(manual)toast('📡 Нет связи — показываю сохранённое');return;}
+  LOADING=true;LAST_TRY=Date.now();CHANGED=false;
   const rb=$('refresh');let ok=false,mirror=false;
   try{
     rb.classList.add('spin');renderMeta();
     const base='https://docs.google.com/spreadsheets/d/'+SHEET_ID;const ts=Date.now();
     // 1. Готовое расписание от ИИ-парсера на GitHub Actions (быстро, без CORS, с заметками).
     if(!manual){
-      try{const ai=await fetchJ('ai-schedule.json?t='+ts,5000);
+      try{const ai=await fetchJ('ai-schedule.json?t='+ts,3500);
         if(ai&&ai.days&&ai.updated&&addAiJson(ai,'replace')){
           ok=true;SRC_AT=+ai.updated*1000;LAST=SRC_AT;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}
         }}catch(e){}
     }
     // 2. Живая таблица в XLSX: свежие дни и объединённые ячейки сразу после правки таблицы.
     if(!ok||manual){
-      try{const rows=await fetchXlsx(8000);
+      try{const rows=await fetchXlsx(5500);
         if(rows&&rows.length&&addCsv(rows,ts,'replace')){ok=true;LAST=ts;SRC_AT=ts;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}}
       }catch(e){}
     }
     // 3. Резерв: ИИ-снимок (при ручном обновлении) или сырой sheet-data.json с GitHub Pages.
     if(!ok){
-      try{const ai=await fetchJ('ai-schedule.json?t='+ts,6000);
+      try{const ai=await fetchJ('ai-schedule.json?t='+ts,3500);
         if(ai&&ai.days&&ai.updated&&addAiJson(ai,'replace')){
           ok=true;SRC_AT=+ai.updated*1000;LAST=SRC_AT;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}
         }}catch(e){}
     }
     if(!ok){
-      try{const data=await fetchJ('sheet-data.json?t='+ts,8000);
+      try{const data=await fetchJ('sheet-data.json?t='+ts,3500);
         if(data&&Array.isArray(data.rows)&&data.updated&&addCsv(data.rows,+data.updated*1000,'replace')){
           ok=true;SRC_AT=+data.updated*1000;LAST=SRC_AT;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}
         }}catch(e){}
     }
     if(!ok){
       const srcs=[];if(/^https?:/.test(location.protocol))srcs.push('offline-data.js?t='+ts);srcs.push(API_BASE+'/api/schedule?t='+ts);
-      const rs=await Promise.all(srcs.map(u=>fetchJ(u,8000).catch(()=>null)));
+      const rs=await Promise.all(srcs.map(u=>fetchJ(u,4500).catch(()=>null)));
       for(const j of rs){if(j&&addJson(j,'merge')){mirror=true;const at=(+j.updated||+j.saved_at||0)*1000;if(at>SRC_AT)SRC_AT=at;}}
       // CSV is a last resort only: it cannot carry merge information.
       if(!mirror)for(const u of [base+'/export?format=csv&t='+ts,base+'/gviz/tq?tqx=out:csv&headers=0&t='+ts]){
-        try{if(addCsv(await fetchT(u,9000),Date.now(),'replace')){mirror='partial';break;}}catch(e){}
+        try{if(addCsv(await fetchT(u,4500),Date.now(),'replace')){mirror='partial';break;}}catch(e){}
       }
     }
   }catch(e){}
@@ -1194,10 +1218,12 @@ window.addEventListener('online',()=>load());
 window.addEventListener('pageshow',e=>{if(e.persisted)load();});
 
 /* ---------- init ---------- */
+if('serviceWorker' in navigator&&window.isSecureContext){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 $('sheetLink').href='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/edit';
 if(/Raspisanie8GApp/.test(navigator.userAgent)||window.AndroidApp){const ag=$('appGrp');if(ag)ag.parentNode.removeChild(ag);}
 sizeFx();
 if(!SEL)seedAll();
+pruneOldWeeks();
 SEL=autoKey()||SEL;
 render();startFx();
 document.documentElement.dataset.app='ok';setTimeout(function(){document.documentElement.classList.add('settled');},1900);
