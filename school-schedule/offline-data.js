@@ -6,66 +6,66 @@ self.SCHEDULE_SNAPSHOT = {
   "class": "8Г",
   "ok": true,
   "error": "",
-  "updated": 1795275911,
+  "updated": 1795295572,
   "sheet_url": "https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit",
   "days": [
     {
-      "date": "2026-11-20",
-      "weekday": "Пятница",
+      "date": "2026-11-23",
+      "weekday": "Понедельник",
       "lessons": [
         {
           "n": 1,
           "time": "8:00-8:40",
-          "subject": "инф/труд",
-          "room": "423",
-          "raw": "инф/труд 423"
+          "subject": "",
+          "room": "",
+          "raw": ""
         },
         {
           "n": 2,
           "time": "8:50-9:30",
-          "subject": "биолог",
-          "room": "323",
-          "raw": "биолог 323"
+          "subject": "история",
+          "room": "303",
+          "raw": "история 303"
         },
         {
           "n": 3,
           "time": "9:45-10:25",
-          "subject": "геометр",
-          "room": "410",
-          "raw": "геометр 410"
+          "subject": "алгебра",
+          "room": "409",
+          "raw": "алгебра 409"
         },
         {
           "n": 4,
           "time": "10:40-11:20",
-          "subject": "труд 423/ ----",
-          "room": "",
-          "raw": "труд 423/ ----"
+          "subject": "англ",
+          "room": "319/209",
+          "raw": "англ319/209"
         },
         {
           "n": 5,
           "time": "11:35-12:15",
-          "subject": "русск",
-          "room": "409",
-          "raw": "русск 409"
+          "subject": "алгебра",
+          "room": "407",
+          "raw": "алгебра 407"
         },
         {
           "n": 6,
           "time": "12:25-13:05",
-          "subject": "физика",
-          "room": "310",
-          "raw": "физика 310"
+          "subject": "русский",
+          "room": "409",
+          "raw": "русский 409"
         },
         {
           "n": 7,
           "time": "13:15-13:55",
-          "subject": "химия (профиль)",
-          "room": "205",
-          "raw": "химия (профиль) 205"
+          "subject": "РоВ",
+          "room": "323",
+          "raw": "РоВ   323"
         }
       ],
       "first": 0,
       "changed": 0
     }
   ],
-  "saved_at": 1795275911
+  "saved_at": 1795295572
 };
