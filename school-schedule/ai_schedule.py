@@ -140,22 +140,12 @@ def compact_rows_for_prompt(rows, today):
 
 
 def call_ai(rows, today):
-    """Вызывает GitHub Models или кастомный OpenAI-совместимый API. Возвращает (data, source) или (None, reason)."""
+    """Вызывает Groq, GitHub Models или кастомный OpenAI-совместимый API. Возвращает (data, source) или (None, reason)."""
     if os.getenv("AI_DISABLED", "").strip() in ("1", "true", "yes"):
         return None, "disabled"
 
-    api_url = os.getenv("AI_API_URL", "").strip()
-    api_key = os.getenv("AI_API_KEY", "").strip()
-    gh_token = os.getenv("GITHUB_TOKEN", "").strip()
-    model = os.getenv("AI_MODEL", "").strip() or DEFAULT_MODEL
-
-    if api_url:
-        url = api_url
-        token = api_key or gh_token
-    elif gh_token or api_key:
-        url = GITHUB_MODELS_URL
-        token = api_key or gh_token
-    else:
+    url, token, model = _resolve_ai_endpoint()
+    if not url or not token:
         return None, "no_token"
 
     prompt_text = compact_rows_for_prompt(rows, today)
