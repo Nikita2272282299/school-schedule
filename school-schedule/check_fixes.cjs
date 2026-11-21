@@ -25,3 +25,7 @@ for(const cls of ['8А','8Б','8В','8Г']){
   assert.equal(lessons[0].info.raw,'химия (профиль) 205');
   if(cls!=='8А')assert.equal(lessons.length,1);
 }
+// Announcement cells such as "с 8.50 в 405 кабинете" must go to notes, not lessons.
+ctx.noteRows=[['20 ноября'],['','','11А','11Б','11Ф'],['1','8:00-8:40','алгебра 407','физика 310','химия 205'],['9','14:55-15:35','с  8.50 в 405 кабинете','','']];
+assert.equal(vm.runInContext("parseSheetDays(noteRows)[0].classes['11А'].length",ctx),1);
+assert.equal(vm.runInContext("parseSheetDays(noteRows)[0].notes['11А'][0]",ctx),'С 8:50 в 405 кабинете');

@@ -180,6 +180,19 @@ def clean_time(t):
     return f"{int(m.group(1))}:{m.group(2)}-{int(m.group(3))}:{m.group(4)}"
 
 
+NOTE_CELL_RE = (
+    re.compile(r"^\s*с\s+\d{1,2}[:.]\d{2}\b", re.I),
+    re.compile(r"^\s*к\s+\d{1,2}[:.]\d{2}\b", re.I),
+    re.compile(r"^\s*(приходить|приходим|сбор|линейка|медосмотр|экскурси|собрание|родительск)", re.I),
+    re.compile(r"\bв\s+\d{2,3}\s*каб(?:инет[еа]?)?\.?\s*$", re.I),
+)
+
+
+def is_note_cell(text):
+    s = re.sub(r"\s+", " ", (text or "")).strip()
+    return bool(s and any(p.search(s) for p in NOTE_CELL_RE))
+
+
 def parse_sheet(rows, class_code, today):
     """Возвращает (days, class_found). days: {iso: {...}}."""
     target = norm(class_code)
@@ -197,6 +210,7 @@ def parse_sheet(rows, class_code, today):
             lessons.pop()
         if not any(l["raw"] for l in lessons):
             lessons = []
+        notes = list(day.get("notes", []))
         iso = day["date"].isoformat()
         old = days.get(iso)
         if old is not None:
@@ -209,12 +223,18 @@ def parse_sheet(rows, class_code, today):
                 if l["raw"] or not prev:
                     by[l["n"]] = l
             lessons = [by[n] for n in sorted(by)]
-        if old is None or lessons or not old["lessons"]:
-            days[iso] = {
+            for nt in old.get("notes", []):
+                if nt not in notes:
+                    notes.append(nt)
+        if old is None or lessons or notes or not old["lessons"]:
+            entry = {
                 "date": iso,
                 "weekday": WD_NAMES[day["date"].weekday()],
                 "lessons": lessons,
             }
+            if notes:
+                entry["notes"] = notes
+            days[iso] = entry
 
     for row in rows:
         cells = [(c or "").strip() for c in row]
@@ -228,7 +248,7 @@ def parse_sheet(rows, class_code, today):
         class_cols = [i for i, c in enumerate(norm_cells) if CLASS_RE.match(c)]
         if len(class_cols) >= 3:  # строка-шапка с названиями классов
             if cur is None:
-                cur = {"date": today, "has_class": False, "lessons": {}}
+                cur = {"date": today, "has_class": False, "lessons": {}, "notes": []}
             first_class_col = class_cols[0]
             if target in norm_cells:
                 col = norm_cells.index(target)
@@ -241,7 +261,7 @@ def parse_sheet(rows, class_code, today):
         dh = day_header(cells, today)
         if dh:
             finish(cur)
-            cur = {"date": dh, "has_class": False, "lessons": {}}
+            cur = {"date": dh, "has_class": False, "lessons": {}, "notes": []}
             col = None
             continue
 
@@ -254,6 +274,13 @@ def parse_sheet(rows, class_code, today):
             continue
         time_str = next((clean_time(c) for c in left if TIME_RE.search(c)), "") or BELLS.get(num, "")
         text = cells[col] if col < len(cells) else ""
+        if is_note_cell(text):
+            nt = re.sub(r"\s+", " ", text).strip()
+            nt = re.sub(r"\b(\d{1,2})\.(\d{2})\b", r"\1:\2", nt)
+            nt = nt[0].upper() + nt[1:]
+            if nt not in cur["notes"]:
+                cur["notes"].append(nt)
+            continue
         if num in cur["lessons"] and cur["lessons"][num]["raw"]:
             previous = cur["lessons"][num]["raw"]
             if not text or text == previous:

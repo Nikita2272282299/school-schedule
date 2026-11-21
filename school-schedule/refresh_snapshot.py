@@ -97,11 +97,16 @@ def main():
     # Build a merge-aware all-class snapshot. Do not overwrite it on failure.
     if args.sheet:
         import app
+        import ai_schedule
         from sheet_export import fetch_rows, write_data
         rows = fetch_rows(app.SPREADSHEET_ID)
         if not any(sum(bool(app.CLASS_RE.match(app.norm(c))) for c in row) >= 3 for row in rows):
             raise ValueError('В XLSX не найдена строка классов')
         write_data(BASE / 'sheet-data.json', rows)
+        try:
+            ai_schedule.compile_schedule(rows, BASE / 'ai-schedule.json')
+        except Exception as e:
+            print("AI-компиляция расписания пропущена ({})".format(e))
 
     # Режим --sheet: напрямую из Google-таблицы (для GitHub Actions)
     if args.sheet:

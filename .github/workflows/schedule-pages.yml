@@ -18,6 +18,7 @@ jobs:
       pages: write
       id-token: write
       contents: write
+      models: read
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -36,6 +37,9 @@ jobs:
         run: python materialize_assets.py
       - name: Refresh schedule from Google Sheets
         working-directory: school-schedule
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AI_MODEL: ${{ vars.AI_MODEL || 'openai/gpt-4o-mini' }}
         run: python refresh_snapshot.py --sheet
       - name: Commit refreshed snapshot
         run: |
@@ -45,6 +49,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add school-schedule/sheet-data.json \
+                    school-schedule/ai-schedule.json \
                     school-schedule/offline-data.js \
                     school-schedule/index.html \
                     school-schedule/pa-dist/offline-data.js \

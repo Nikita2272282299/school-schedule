@@ -17,8 +17,8 @@
 
 <script>
 /* ---------- themes & settings (run before paint) ---------- */
-const DARK={text:'#F6F5FB',muted:'rgba(236,234,248,.70)',dim:'rgba(236,234,248,.44)',card:'rgba(255,255,255,.075)',hl:'rgba(255,255,255,.06)',cardhi:'rgba(255,255,255,.12)',line:'rgba(255,255,255,.11)',bo:'.6',ok:'#A7F3D0',dotc:'rgba(255,255,255,.07)',sheet:'rgba(22,18,32,.94)',pill:'rgba(255,255,255,.08)',shadow:'0 10px 30px -18px rgba(0,0,0,.9)',scrim:'rgba(0,0,0,.5)'};
-const LIGHT={text:'#1B1430',muted:'rgba(27,20,48,.66)',dim:'rgba(27,20,48,.44)',card:'rgba(255,255,255,.82)',hl:'rgba(255,255,255,.9)',cardhi:'rgba(255,255,255,.95)',line:'rgba(40,20,90,.09)',bo:'.95',ok:'#047857',dotc:'rgba(40,20,90,.06)',sheet:'rgba(255,255,255,.96)',pill:'rgba(40,20,90,.05)',shadow:'0 10px 26px -16px rgba(60,30,110,.35)',scrim:'rgba(30,20,60,.25)'};
+const DARK={text:'#F6F5FB',muted:'rgba(236,234,248,.70)',dim:'rgba(236,234,248,.44)',card:'rgba(255,255,255,.075)',hl:'rgba(255,255,255,.06)',cardhi:'rgba(255,255,255,.12)',line:'rgba(255,255,255,.11)',bo:'.6',ok:'#A7F3D0',dotc:'rgba(255,255,255,.07)',sheet:'rgba(18,14,28,.985)',pill:'rgba(255,255,255,.08)',shadow:'0 10px 30px -18px rgba(0,0,0,.9)',scrim:'rgba(0,0,0,.62)'};
+const LIGHT={text:'#1B1430',muted:'rgba(27,20,48,.66)',dim:'rgba(27,20,48,.44)',card:'rgba(255,255,255,.82)',hl:'rgba(255,255,255,.9)',cardhi:'rgba(255,255,255,.95)',line:'rgba(40,20,90,.09)',bo:'.95',ok:'#047857',dotc:'rgba(40,20,90,.06)',sheet:'rgba(255,255,255,.985)',pill:'rgba(40,20,90,.05)',shadow:'0 10px 26px -16px rgba(60,30,110,.35)',scrim:'rgba(20,14,42,.38)'};
 const THEMES=[
  {id:'aurora',tg:['🌅','✨','🌌','🌙'],name:'Аврора',e:'🌌',dark:1,fx:'stars',fxc:'#FFFFFF',conf:['#8B7CFF','#E356B5','#4FC3FF','#FFC857','#86EFAC'],
   v:{orb:'rgba(165,243,252,.38)',acc:'#A5F3FC',live:'#A78BFA',bg:'#0A0814',b1:'#6E50FF',b2:'#0EA5E9',b3:'#DB2777',hero:'linear-gradient(120deg,#5B47F5,#8B45E8,#D9468F,#7A4BF0,#5B47F5)',glow:'rgba(140,70,255,.75)',sel:'linear-gradient(150deg,#8B7CFF,#E356B5)',title:'linear-gradient(90deg,#FFFFFF,#E4DDFF,#FFC6E6,#C9F1FF,#FFFFFF)',tag:'linear-gradient(90deg,#A5F3FC,#C4B5FD)'}},
@@ -62,8 +62,9 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 :root{--r:22px;--ease:cubic-bezier(.2,.8,.2,1);--spring:cubic-bezier(.34,1.45,.55,1);--tagtext:#1A1030}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{background:var(--bg);transition:background .5s}
-body{margin:0;min-height:100vh;color:var(--text);font-family:Manrope,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{margin:0;min-height:100vh;min-height:100dvh;background:var(--bg);color:var(--text);font-family:Manrope,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;touch-action:manipulation;overscroll-behavior-y:none}
 body.lock{overflow:hidden}
+button,a,select{touch-action:manipulation}
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
 ::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
 
@@ -118,11 +119,11 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 @keyframes pop{from{opacity:0;transform:scale(.6)}}
 
 /* ---------- week ---------- */
-.weekwrap{position:relative;padding:5px;border-radius:24px;margin-bottom:18px;animation:fadeUp .7s var(--ease) both .18s}
-.wk-ind{position:absolute;top:5px;bottom:5px;left:0;border-radius:19px;background:var(--sel);box-shadow:0 10px 24px -10px var(--glow);opacity:0}
+.weekwrap{position:relative;overflow:hidden;padding:5px;border-radius:24px;margin-bottom:18px;animation:fadeUp .7s var(--ease) both .18s}
+.wk-ind{position:absolute;top:5px;bottom:5px;left:0;border-radius:19px;background:var(--sel);box-shadow:0 10px 24px -10px var(--glow);opacity:0;pointer-events:none}
 .wk-ind.ready{transition:transform .55s var(--spring),width .55s var(--spring),opacity .3s}
-.week{position:static;display:grid;grid-template-columns:repeat(var(--n,5),1fr);gap:4px}
-.wd{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0 8px;border-radius:19px;transition:color .3s,transform .2s var(--spring)}
+.week{position:static;display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:4px}
+.wd{position:relative;z-index:1;min-width:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0 8px;border-radius:19px;transition:color .3s,transform .2s var(--spring)}
 .wd:active{transform:scale(.92)}
 .wd small{font-size:10.5px;font-weight:800;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;transition:color .3s}
 .wd b{font-size:19px;font-weight:800}
@@ -134,7 +135,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .wd.sel small,.wd.sel i{color:rgba(255,255,255,.88)}
 
 /* ---------- hero ---------- */
-.hero{position:relative;overflow:hidden;border-radius:30px;padding:20px;color:#fff;background:var(--b1);animation:heroIn .8s var(--spring) both .15s;transform:translateZ(0);box-shadow:0 26px 54px -26px var(--glow),inset 0 1px 0 rgba(255,255,255,.28);isolation:isolate}
+.hero{position:relative;overflow:hidden;contain:paint;border-radius:30px;padding:20px;color:#fff;background:var(--b1);animation:heroIn .8s var(--spring) both .15s;transform:translateZ(0);box-shadow:0 26px 54px -26px var(--glow),inset 0 1px 0 rgba(255,255,255,.28);isolation:isolate}
 @keyframes heroShift{0%,100%{background-position:0% 40%}50%{background-position:100% 60%}}
 @keyframes heroIn{from{opacity:0;transform:scale(.94) translateY(10px)}}
 .hero .shine{position:absolute;inset:0;z-index:-1;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.22) 50%,transparent 65%);transform:translateX(-120%);animation:shine 6.5s ease-in-out infinite 1.4s}
@@ -258,12 +259,15 @@ footer p{margin:2px 0 0;font-size:12px;color:var(--dim);font-weight:600}
 /* ---------- sheets ---------- */
 .scrim{position:fixed;inset:0;z-index:20;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .35s;}
 .scrim.on{opacity:1;pointer-events:auto}
-.sheet{zoom:var(--zoom,1);position:fixed;left:0;right:0;bottom:0;margin:0 auto;z-index:30;width:100%;max-width:540px;max-height:88vh;overflow-y:auto;overscroll-behavior:contain;border-radius:30px 30px 0 0;background:var(--sheet);border:1px solid var(--line);border-bottom:0;box-shadow:0 -20px 60px -20px rgba(0,0,0,.5);padding:8px 18px calc(env(safe-area-inset-bottom) + 22px);transform:translateY(110%);transition:transform .5s cubic-bezier(.22,1.1,.36,1);visibility:hidden}
-.sheet.on{transform:translateY(0);visibility:visible}
+.sheet{zoom:var(--zoom,1);position:fixed;left:0;right:0;bottom:0;margin:0 auto;z-index:30;width:100%;max-width:540px;max-height:88vh;overflow-y:auto;overscroll-behavior:contain;border-radius:30px 30px 0 0;background:var(--sheet);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:1px solid var(--line);border-bottom:0;box-shadow:0 -20px 60px -20px rgba(0,0,0,.5);padding:8px 18px calc(env(safe-area-inset-bottom) + 22px);transform:translateY(110%);transition:transform .4s cubic-bezier(.22,1.1,.36,1),visibility .4s;visibility:hidden;pointer-events:none}
+.sheet.on{transform:translateY(0);visibility:visible;pointer-events:auto}
 .sheet.drag{transition:none}
-.grab{width:42px;height:5px;border-radius:5px;background:var(--line);margin:4px auto 10px;filter:contrast(2)}
-.sh-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;touch-action:none}
+.grab{width:42px;height:5px;border-radius:5px;background:var(--line);margin:4px auto 6px;filter:contrast(2)}
+.sh-head{position:sticky;top:-8px;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:8px 0 12px;margin:0 0 8px;background:var(--sheet);border-bottom:1px solid var(--line);touch-action:none}
 .sh-head h3{margin:0;font-size:24px;font-weight:800;letter-spacing:-.03em}
+.day-notes{display:flex;flex-direction:column;gap:8px;margin:0 0 12px}
+.day-note{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:16px;font-size:14px;font-weight:700;color:var(--text)}
+.day-note span{font-size:18px;line-height:1}
 .x{width:36px;height:36px;border-radius:50%;background:var(--pill);display:grid;place-items:center;font-size:20px;line-height:1;color:var(--muted);transition:transform .25s var(--spring)}
 .x:active{transform:scale(.85) rotate(90deg)}
 .grp{margin-top:16px}
@@ -350,7 +354,7 @@ html.noanim .garland i,html.noanim .mini-g u{animation:none!important}
 
 /* ---------- v4: perf + theme decor ---------- */
 @keyframes nowGlow{from{opacity:.35}to{opacity:1}}
-.hbg{position:absolute;top:0;bottom:0;left:0;width:320%;z-index:-3;background:var(--hero);animation:hpan 16s ease-in-out infinite alternate;will-change:transform;pointer-events:none}
+.hbg{position:absolute;top:0;bottom:0;left:0;width:320%;z-index:-3;background:var(--hero);animation:hpan 16s ease-in-out infinite alternate;pointer-events:none}
 @keyframes hpan{to{transform:translateX(-68.75%)}}
 .hdeco{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden;border-radius:inherit}
 .hdeco svg{position:absolute;overflow:visible}
@@ -368,6 +372,28 @@ html.noanim .garland i,html.noanim .mini-g u{animation:none!important}
 .settled .h-in{animation:fadeOnly .35s ease both}
 @keyframes fadeOnly{from{opacity:0}}
 a.row{color:inherit;text-decoration:none}.apk-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--sel);font-size:18px;flex:none}
+.card{contain:layout style}
+.web-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.web-btns .btn{padding:8px 12px;font-size:13px;background:var(--card);border:1px solid var(--line)}
+.row.clickable{width:100%;text-align:left;cursor:pointer}
+@media (max-width:420px){
+  .app{padding:calc(env(safe-area-inset-top) + 10px) 14px calc(env(safe-area-inset-bottom) + 28px)}
+  .head{margin:18px 2px 14px}
+  .title{font-size:34px}
+  .hero{padding:16px;border-radius:26px}
+  .h-big{font-size:22px;margin-top:10px}
+  .h-sub{font-size:14px}
+  .ring{width:78px;height:78px}
+  .h-emoji{font-size:44px}
+  .ls,.br{grid-template-columns:42px 1fr;gap:8px}
+  .card{padding:10px 11px 10px 10px;gap:9px;grid-template-columns:42px 1fr auto}
+  .ic{width:42px;height:42px;border-radius:13px;font-size:21px}
+  .sj{font-size:15.5px}
+  .rm{min-width:48px;padding:5px 6px}
+  .rm b{font-size:17px}
+  .seg{min-width:165px}
+  .sheet{padding:8px 14px calc(env(safe-area-inset-bottom) + 18px)}
+}
 </style>
 </head>
 <body>
@@ -400,6 +426,7 @@ a.row{color:inherit;text-decoration:none}.apk-ic{display:grid;place-items:center
   <main id="dayView">
     <section class="hero" id="hero" aria-live="polite"><span class="hbg"></span><span class="hdeco" id="hdeco"></span><span class="snowcap"></span><span class="shine"></span><span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span><span class="orb o4"></span><div id="heroIn"></div></section>
     <div class="sec"><h2>Уроки</h2><span id="summary"></span></div>
+    <div id="dayNotes"></div>
     <ol id="lessons"></ol>
   </main>
 
@@ -412,7 +439,7 @@ a.row{color:inherit;text-decoration:none}.apk-ic{display:grid;place-items:center
 
 <div class="scrim" id="scrim"></div>
 
-<section class="sheet" id="settings" role="dialog" aria-modal="true" aria-label="Настройки">
+<section class="sheet" id="settings" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Настройки">
   <div class="grab"></div>
   <div class="sh-head"><h3>Настройки</h3><button class="x" data-close aria-label="Закрыть">×</button></div>
   <div class="grp" style="--g:0"><div class="gl">🎨 Тема</div><div class="themes" id="themes"></div></div>
@@ -428,7 +455,7 @@ a.row{color:inherit;text-decoration:none}.apk-ic{display:grid;place-items:center
     <label class="row"><span>Приветствие и часы</span><input type="checkbox" class="sw" data-set="greet"></label>
     <div class="row"><span>Размер</span><div class="seg" id="seg"><span class="si"></span><button data-size="s">Мельче</button><button data-size="m">Обычный</button><button data-size="l">Крупнее</button></div></div>
   </div></div>
-  <div class="grp" id="appGrp" style="--g:4"><div class="gl">📲 Приложение</div><div class="box"><a class="row" id="apkLink" href="https://github.com/Nikita2272282299/school-schedule/releases/download/app/raspisanie-8g.apk" rel="noopener"><span>Скачать для Android<small>APK · на весь экран, своя иконка, работает без интернета</small></span><span class="apk-ic">⬇️</span></a></div></div>
+  <div class="grp" id="appGrp" style="--g:4"><div class="gl">📲 Ярлык на экран</div><div class="box"><button type="button" class="row clickable" id="pwaInstallBtn"><span>Добавить ярлык<small id="pwaInstallHint">На весь экран, своя иконка, работает без интернета</small></span><span class="apk-ic" id="pwaInstallIc">📲</span></button></div></div>
   <div class="grp" id="notifGrp" style="--g:5"><div class="gl">🔔 Уведомления</div><div class="box"><div id="notifApp" style="display:none"><label class="row"><span>Новое расписание<small>Когда вышло или изменилось</small></span><input type="checkbox" class="sw" id="nNew"></label><label class="row"><span>Перед уроком<small>За 5 минут до начала</small></span><input type="checkbox" class="sw" id="nLes"></label><a class="row" id="nTest" href="#"><span>Проверить<small id="nState">Пришлём тестовое уведомление</small></span><span class="apk-ic">🔔</span></a></div><div class="row" id="notifWeb"><span>Уведомления<small>Проверяем возможности этого устройства…</small></span></div></div></div>
    <div class="grp" style="--g:6"><div class="gl">🔄 Данные</div><div class="box">
     <div class="row"><span>Последняя проверка</span><span class="val" id="setLast">—</span></div>
@@ -437,7 +464,7 @@ a.row{color:inherit;text-decoration:none}.apk-ic{display:grid;place-items:center
   <div class="sh-btns"><button class="btn pri" id="setRefresh">Обновить сейчас</button><button class="btn" id="setClear">Очистить</button></div></div>
 </section>
 
-<section class="sheet" id="detail" role="dialog" aria-modal="true" aria-label="Урок">
+<section class="sheet" id="detail" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Урок">
   <div class="grab"></div>
   <div class="sh-head"><h3 id="dtHead">Урок</h3><button class="x" data-close aria-label="Закрыть">×</button></div>
   <div id="dtBody"></div>
@@ -523,14 +550,17 @@ function dayHeader(r){if(!r||r.slice(0,4).some(c=>TIME_RE.test(c||'')))return nu
     m=low.match(DOT_RE);if(m&&!fd&&+m[2]>=1&&+m[2]<=12&&+m[1]>=1&&+m[1]<=31)fd=closestDate(+m[1],+m[2]-1);
     for(let i=0;i<7;i++){const n=WD_LC[i];if(low===n||low.startsWith(n+','))fw=i;}}
   return fd||(fw>=0?closestWeekday(fw):null);}
+const NOTE_CELL_RES=[/^\s*с\s+\d{1,2}[:.]\d{2}\b/i,/^\s*к\s+\d{1,2}[:.]\d{2}\b/i,/^\s*(приходить|приходим|сбор|линейка|медосмотр|экскурси|собрание|родительск)/i,/\bв\s+\d{2,3}\s*каб(?:инет[еа]?)?\.?\s*$/i];
+function isNoteText(s){const t=(s||'').replace(/\s+/g,' ').trim();return !!t&&NOTE_CELL_RES.some(r=>r.test(t));}
+function normNote(s){const t=(s||'').replace(/\s+/g,' ').trim().replace(/\b(\d{1,2})\.(\d{2})\b/g,'$1:$2');return t?t.charAt(0).toUpperCase()+t.slice(1):'';}
 /* таблица может содержать несколько дней подряд (сегодня + завтра) — разбираем все */
 function parseSheetDays(rows){
   const isHeader=r=>r.filter(c=>CLASS_RE.test(norm(c))).length>=3;
   const out=[];let cur=null;
   for(let i=0;i<rows.length;i++){const r=rows[i];
-    const dh=dayHeader(r);if(dh){cur={d:dh,classes:{}};out.push(cur);}
+    const dh=dayHeader(r);if(dh){cur={d:dh,classes:{},notes:{}};out.push(cur);}
     if(!isHeader(r))continue;
-    if(!cur){cur={d:null,classes:{}};out.push(cur);}
+    if(!cur){cur={d:null,classes:{},notes:{}};out.push(cur);}
     const cols={};let fc=r.length;r.forEach((c,j)=>{const n=norm(c);if(CLASS_RE.test(n)){if(j<fc)fc=j;if(!(n in cols))cols[n]=j;}});
     const lr=[];
     for(let k=i+1;k<rows.length;k++){const q=rows[k];if(isHeader(q)||dayHeader(q))break;
@@ -541,12 +571,16 @@ function parseSheetDays(rows){
       if(!tm&&BELLS[+num])tm=parseTime(BELLS[+num]);
       lr.push({num,time:tm,r:q});}
     for(const name in cols){const j=cols[name];
-      const ls=lr.map(x=>({num:x.num,time:x.time,info:parseCell((x.r[j]||'').trim())}));
+      const nts=cur.notes[name]||(cur.notes[name]=[]);
+      const ls=[];
+      for(const x of lr){const raw=(x.r[j]||'').trim();
+        if(raw&&isNoteText(raw)){const nt=normNote(raw);if(nt&&!nts.includes(nt))nts.push(nt);continue;}
+        ls.push({num:x.num,time:x.time,info:parseCell(raw)});}
       while(ls.length&&!ls[ls.length-1].info)ls.pop();
       while(ls.length&&!ls[0].info)ls.shift();
       cur.classes[name]=mergeLessons(cur.classes[name]||[],ls);}
   }
-  return out.filter(x=>Object.values(x.classes).some(ls=>ls.length));
+  return out.filter(x=>Object.values(x.classes).some(ls=>ls.length)||Object.values(x.notes||{}).some(ns=>ns.length));
 }
 // Combine repeated blocks of the same class without discarding later lessons.
 function mergeLessons(a,b){const out=a.slice();for(const l of b){const x=out.find(v=>v.num===l.num&&JSON.stringify(v.time)===JSON.stringify(l.time));if(!x)out.push(l);else if(l.info&&(!x.info||x.info.raw!==l.info.raw)){x.info=x.info?parseCell(x.info.raw+' / '+l.info.raw):l.info;}}return out.sort((x,y)=>(x.time?x.time.start:9999)-(y.time?y.time.start:9999)||(+x.num)-(+y.num));}
@@ -583,21 +617,30 @@ function saveDays(){const keys=Object.keys(DAYS).sort();while(keys.length>30)del
 let CHANGED=false;
 const packCls=cl=>{const o={};for(const n in cl)o[n]=cl[n].map(l=>[l.num,l.time?l.time.start:-1,l.time?l.time.end:-1,l.info?l.info.raw:'']);return o;};
 /* mode: replace — свежая таблица; merge — зеркало (только если новее); seed — только если дня ещё нет */
-function putDay(k,cl,at,mode){const old=DAYS[k];
+function putDay(k,cl,at,mode,notes){const old=DAYS[k];
   if(old&&mode==='seed')return false;
   if(old&&mode==='merge'&&(old.at||0)>at)return false;
   const c=packCls(cl);const nc=(old&&mode==='merge')?Object.assign({},old.c,c):c;
-  const ch=!old||JSON.stringify(old.c)!==JSON.stringify(nc);
-  DAYS[k]={c:nc,at:Math.max(at||0,old?old.at||0:0)};
+  const nn=(old&&mode==='merge')?Object.assign({},old.n||{},notes||{}):(notes||{});
+  const ch=!old||JSON.stringify(old.c)!==JSON.stringify(nc)||JSON.stringify(old.n||{})!==JSON.stringify(nn);
+  DAYS[k]={c:nc,n:nn,at:Math.max(at||0,old?old.at||0:0)};
   if(ch){delete PARSED[k];CHANGED=true;}return ch;}
 function addCsv(txt,at,mode){let ds;try{ds=parseSheetDays(Array.isArray(txt)?txt:(/^\s*</.test(txt)?parseSheetHTML(txt):parseCSV(txt)));}catch(e){return 0;}
-  const by={};for(const x of ds){const k=x.d?iso(x.d):iso(now());const o=by[k]||(by[k]={});for(const n in x.classes)o[n]=mergeLessons(o[n]||[],x.classes[n]);}
-  let n=0;for(const k in by){putDay(k,by[k],at,mode||'replace');n++;}if(n)saveDays();return n;}
+  const by={},bn={};for(const x of ds){const k=x.d?iso(x.d):iso(now());const o=by[k]||(by[k]={});const no=bn[k]||(bn[k]={});for(const n in x.classes)o[n]=mergeLessons(o[n]||[],x.classes[n]);for(const n in (x.notes||{})){const a=no[n]||(no[n]=[]);for(const nt of x.notes[n])if(!a.includes(nt))a.push(nt);}}
+  let n=0;for(const k in by){putDay(k,by[k],at,mode||'replace',bn[k]);n++;}if(n)saveDays();return n;}
 function jsonLessons(ls){const a=(ls||[]).map(l=>({num:String(l.n==null?'':l.n),time:parseTime(l.time||''),info:parseCell(l.raw||((l.subject||'')+' '+(l.room||'')))}));while(a.length&&!a[a.length-1].info)a.pop();while(a.length&&!a[0].info)a.shift();return a;}
 function addJson(j,mode){if(!j||!Array.isArray(j.days))return 0;const at=(+j.updated||+j.saved_at||0)*1000;const cls=norm(j['class']||DEFAULT_CLASS);let n=0;
-  for(const d of j.days){if(!d||!/^\d{4}-\d{2}-\d{2}$/.test(d.date||''))continue;const ls=jsonLessons(d.lessons);if(!ls.length)continue;const o={};o[cls]=ls;putDay(d.date,o,at,mode);n++;}
+  for(const d of j.days){if(!d||!/^\d{4}-\d{2}-\d{2}$/.test(d.date||''))continue;const ls=jsonLessons(d.lessons);if(!ls.length&&!(d.notes&&d.notes.length))continue;const o={};o[cls]=ls;const no={};if(d.notes&&d.notes.length)no[cls]=d.notes;putDay(d.date,o,at,mode,no);n++;}
   if(n)saveDays();return n;}
-function getDay(k){const o=k&&DAYS[k];if(!o)return null;if(!PARSED[k]){const c={};for(const n in o.c)c[n]=o.c[n].map(a=>({num:a[0],time:a[1]>=0?{start:a[1],end:a[2]}:null,info:parseCell(a[3])}));PARSED[k]={classes:c};}return PARSED[k];}
+function addAiJson(j,mode){if(!j||!j.days||typeof j.days!=='object')return 0;const at=(+j.updated||0)*1000;let n=0;
+  const list=Array.isArray(j.days)?j.days:Object.values(j.days);
+  for(const d of list){if(!d||!/^\d{4}-\d{2}-\d{2}$/.test(d.date||'')||!d.classes)continue;const cl={},no={};
+    for(const rawCls in d.classes){const cls=norm(rawCls);const e=d.classes[rawCls];if(!e)continue;
+      const ls=jsonLessons(e.lessons||[]);if(ls.length)cl[cls]=ls;
+      if(Array.isArray(e.notes)&&e.notes.length)no[cls]=e.notes.map(String);}
+    if(Object.keys(cl).length||Object.keys(no).length){putDay(d.date,cl,at,mode||'replace',no);n++;}}
+  if(n)saveDays();return n;}
+function getDay(k){const o=k&&DAYS[k];if(!o)return null;if(!PARSED[k]){const c={};for(const n in o.c)c[n]=o.c[n].map(a=>({num:a[0],time:a[1]>=0?{start:a[1],end:a[2]}:null,info:parseCell(a[3])}));PARSED[k]={classes:c,notes:o.n||{}};}return PARSED[k];}
 const keysSorted=()=>Object.keys(DAYS).sort();
 const latestKey=()=>keysSorted().pop();
 function seedAll(){addCsv(SNAPSHOT,0,'seed');try{addJson(self.SCHEDULE_SNAPSHOT,'merge');}catch(e){}}
@@ -626,7 +669,7 @@ const DECO={
  mint:'<svg class="d-tr" viewBox="0 0 160 160"><g fill="#ECFCCB"><path d="M162 -4C112 6 86 44 98 88C132 80 160 44 162 -4Z" opacity=".22"/><path d="M164 52C134 58 118 88 126 118C152 110 166 84 164 52Z" opacity=".16"/><path d="M118 -6C92 0 76 22 80 46C102 42 118 20 118 -6Z" opacity=".18"/></g><g fill="none" stroke="#ECFCCB" stroke-width="1.4" opacity=".35" stroke-linecap="round"><path d="M160 -2C128 26 108 54 98 88"/><path d="M163 54C142 76 130 96 126 118"/><path d="M117 -4C100 14 86 30 80 46"/></g></svg>',
  cosmos:'<svg class="d-tr" viewBox="0 0 160 160"><defs><linearGradient id="dgp" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F5D0FE"/><stop offset="1" stop-color="#6366F1"/></linearGradient><clipPath id="dcf"><rect x="40" y="46" width="150" height="40"/></clipPath></defs><g transform="rotate(-20 110 46)"><ellipse cx="110" cy="46" rx="46" ry="10" fill="none" stroke="#E0E7FF" stroke-opacity=".3" stroke-width="2.5"/></g><circle cx="110" cy="46" r="24" fill="url(#dgp)" opacity=".72"/><g transform="rotate(-20 110 46)"><ellipse cx="110" cy="46" rx="46" ry="10" fill="none" stroke="#E0E7FF" stroke-opacity=".75" stroke-width="2.5" clip-path="url(#dcf)"/></g><g fill="#fff"><circle cx="58" cy="18" r="1.3"/><circle cx="148" cy="104" r="1.6"/><circle cx="82" cy="92" r="1"/></g></svg>',
  neon:'<svg class="d-grid" viewBox="0 0 300 64" preserveAspectRatio="none"><g stroke="#00F5D4" stroke-opacity=".4" fill="none"><path vector-effect="non-scaling-stroke" d="M0 10H300M0 22H300M0 38H300M0 60H300"/><path vector-effect="non-scaling-stroke" d="M150 -30L-150 64M150 -30L-50 64M150 -30L50 64M150 -30L150 64M150 -30L250 64M150 -30L350 64M150 -30L450 64"/></g></svg><svg class="d-tr" viewBox="0 0 160 160"><circle cx="114" cy="44" r="30" fill="none" stroke="#00F5D4" stroke-width="2.5" opacity=".75"/><circle cx="122" cy="50" r="30" fill="none" stroke="#FEE440" stroke-width="1.5" opacity=".45"/></svg>',
- sakura:'<svg class="d-tr" viewBox="0 0 160 160"><defs><g id="dfl"><g fill="#FFE4F1"><circle cx="0" cy="-6" r="5.5"/><circle cx="5.7" cy="-1.9" r="5.5"/><circle cx="3.5" cy="4.9" r="5.5"/><circle cx="-3.5" cy="4.9" r="5.5"/><circle cx="-5.7" cy="-1.9" r="5.5"/></g><circle r="2.6" fill="#FFD166"/></g></defs><path d="M168 8C140 18 120 30 96 58M128 26C122 40 124 52 118 64M150 14C150 26 156 34 150 46" fill="none" stroke="#5B1730" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/><g opacity=".85"><use href="#dfl" transform="translate(98 56) scale(1.1)"/><use href="#dfl" transform="translate(119 66) scale(.85)"/><use href="#dfl" transform="translate(150 48) scale(.9)"/><use href="#dfl" transform="translate(132 24) scale(.7)"/></g></svg>',
+ sakura:'<svg class="d-tr" viewBox="0 0 160 160"><defs><g id="dfl"><g fill="#FFE4F1"><circle cx="0" cy="-6" r="5.5"/><circle cx="5.7" cy="-1.9" r="5.5"/><circle cx="3.5" cy="4.9" r="5.5"/><circle cx="-3.5" cy="4.9" r="5.5"/><circle cx="-5.7" cy="-1.9" r="5.5"/></g><circle r="2.6" fill="#FFD166"/></g></defs><path d="M158 10C138 20 120 30 96 58M128 26C122 40 124 52 118 64M150 14C150 26 156 34 150 46" fill="none" stroke="#5B1730" stroke-opacity=".28" stroke-width="3" stroke-linecap="round"/><g opacity=".85"><use href="#dfl" transform="translate(98 56) scale(1.1)"/><use href="#dfl" transform="translate(119 66) scale(.85)"/><use href="#dfl" transform="translate(150 48) scale(.9)"/><use href="#dfl" transform="translate(132 24) scale(.7)"/></g></svg>',
  ice:'<svg class="d-flake" viewBox="0 0 160 160"><defs><path id="dar" d="M0 0V-62M0 -22L-13 -35M0 -22L13 -35M0 -42L-10 -52M0 -42L10 -52"/></defs><g transform="translate(80 80)" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".45"><use href="#dar"/><use href="#dar" transform="rotate(60)"/><use href="#dar" transform="rotate(120)"/><use href="#dar" transform="rotate(180)"/><use href="#dar" transform="rotate(240)"/><use href="#dar" transform="rotate(300)"/><circle r="7"/></g></svg>',
  newyear:'<svg class="d-tr d-swing" viewBox="0 0 160 160"><defs><radialGradient id="dgb" cx=".35" cy=".35" r=".75"><stop offset="0" stop-color="#FFE9A8"/><stop offset=".45" stop-color="#F5B82E"/><stop offset="1" stop-color="#9A5B00"/></radialGradient></defs><path d="M118 0V40" stroke="#FFE8A3" stroke-opacity=".6" stroke-width="1.3"/><rect x="112" y="38" width="12" height="7" rx="2" fill="#E5E7EB" opacity=".9"/><circle cx="118" cy="62" r="18" fill="url(#dgb)"/><path d="M101 59Q118 68 135 59" stroke="#B91C1C" stroke-width="3" fill="none" opacity=".7"/><ellipse cx="111" cy="55" rx="4" ry="6" fill="#fff" opacity=".45" transform="rotate(30 111 55)"/><path d="M84 0V20" stroke="#FFE8A3" stroke-opacity=".45" stroke-width="1.1"/><circle cx="84" cy="28" r="8" fill="#DC2626" opacity=".9"/><circle cx="81" cy="25" r="2.2" fill="#fff" opacity=".5"/></svg>'
 };
@@ -693,7 +736,7 @@ function renderWeek(d){
   if(w.dataset.h!==html){w.innerHTML=html;w.dataset.h=html;}
   requestAnimationFrame(placeInd);
 }
-function placeInd(){const b=$('week').querySelector('.wd.sel');const ind=$('wkInd');if(!b){ind.style.opacity=0;return;}ind.style.width=b.offsetWidth+'px';ind.style.transform='translateX('+b.offsetLeft+'px)';ind.style.opacity=1;if(!WEEK_READY){WEEK_READY=true;requestAnimationFrame(()=>ind.classList.add('ready'));}}
+function placeInd(){const w=$('week');const b=w.querySelector('.wd.sel');const ind=$('wkInd');if(!b){ind.style.opacity=0;return;}const wrap=w.parentElement;const maxW=Math.max(0,wrap.clientWidth-10);const left=Math.max(5,Math.min(b.offsetLeft,5+maxW-b.offsetWidth));const wid=Math.min(b.offsetWidth,maxW);ind.style.width=wid+'px';ind.style.transform='translateX('+left+'px)';ind.style.opacity=1;if(!WEEK_READY){WEEK_READY=true;requestAnimationFrame(()=>ind.classList.add('ready'));}}
 
 function renderHero(st){
   const{ls,real,first,last,diff,d,cur,nxt,nm,isLatest}=st;
@@ -721,8 +764,11 @@ function renderHero(st){
 
 function renderList(st){
   const{ls,live,cur,nxt,nm}=st;
+  const notes=(st.day.notes&&st.day.notes[CLS])||[];
+  const nb=$('dayNotes');
+  if(nb){nb.className=notes.length?'day-notes':'';nb.innerHTML=notes.map(nt=>'<div class="day-note glass"><span>📌</span><div>'+esc(nt)+'</div></div>').join('');}
   const doneN=live?ls.filter(l=>l.time&&nm>=l.time.end).length:-1;
-  const sig=[SEL,CLS,cur,nxt,doneN,S.emoji,CUR_THEME.id,live].join('|');
+  const sig=[SEL,CLS,cur,nxt,doneN,S.emoji,CUR_THEME.id,live,notes.join('|')].join('|');
   const ol=$('lessons');
   if(LIST_SIG===sig){const pg=$('pgNow');if(pg&&cur>=0){const l=ls[cur];pg.style.width=(Math.min(1,Math.max(0,(nm-l.time.start)/(l.time.end-l.time.start)))*100).toFixed(1)+'%';}return;}
   LIST_SIG=sig;
@@ -760,10 +806,10 @@ function renderMeta(){
 
 /* ---------- sheets ---------- */
 let OPEN=null;
-function openSheet(id){closeSheet(true);const s=$(id);OPEN=s;s.style.transform='';s.classList.add('on');$('scrim').classList.add('on');document.body.style.overflow='hidden';buzz();}
-function closeSheet(quiet){if(!OPEN)return;OPEN.style.transform='';OPEN.classList.remove('on','drag');OPEN=null;$('scrim').classList.remove('on');document.body.style.overflow='';}
+function openSheet(id){closeSheet(true);const s=$(id);OPEN=s;s.style.transform='';s.setAttribute('aria-hidden','false');s.classList.add('on');$('scrim').classList.add('on');document.body.style.overflow='hidden';buzz();}
+function closeSheet(quiet){if(!OPEN)return;OPEN.style.transform='';OPEN.classList.remove('on','drag');OPEN.setAttribute('aria-hidden','true');OPEN=null;$('scrim').classList.remove('on');document.body.style.overflow='';}
 $('scrim').onclick=()=>closeSheet();
-document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeSheet());
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();closeSheet();}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();});
 document.querySelectorAll('.sheet').forEach(s=>{let y0=null,dy=0;
   const start=e=>{if(s.scrollTop>0&&!e.target.closest('.grab'))return;y0=e.touches[0].clientY;dy=0;};
@@ -786,7 +832,7 @@ function setTheme(id,x,y){
   if(S.theme===id)return;buzz();
   const go=()=>{S.theme=id;saveS();applyTheme();HERO_SIG='';LIST_SIG='';renderThemes();render();startFx();};
   if(!document.startViewTransition||!S.anim){go();return;}
-  const r=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));
+  const r=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y))+8;
   const vt=document.startViewTransition(go);
   vt.ready.then(()=>{document.documentElement.animate({clipPath:['circle(0px at '+x+'px '+y+'px)','circle('+r+'px at '+x+'px '+y+'px)']},{duration:700,easing:'cubic-bezier(.2,.8,.2,1)',pseudoElement:'::view-transition-new(root)'});}).catch(()=>{});
 }
@@ -836,10 +882,10 @@ const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator
 async function pushPost(path,data){const c=new AbortController();const t=setTimeout(()=>c.abort(),12000);try{const r=await fetch(API_BASE+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),signal:c.signal});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||'Сервер недоступен');return j;}finally{clearTimeout(t);}}
 function webStatus(msg){const el=$('webState');if(el)el.textContent=msg;}
 async function webSubscribe(){
- if(CLS!==DEFAULT_CLASS)throw new Error('Сервер Web Push настроен только для '+DEFAULT_CLASS+'. Для других классов используй APK.');
+ if(CLS!==DEFAULT_CLASS)throw new Error('Сервер Web Push настроен только для '+DEFAULT_CLASS+'.');
  if(Notification.permission==='denied')throw new Error('Уведомления заблокированы — разреши их в настройках браузера.');
  const permission=await Notification.requestPermission();if(permission!=='granted')throw new Error('Разрешение на уведомления не получено.');
- const key=await fetchJ(API_BASE+'/api/push/key',10000);if(!key.supported||!key.key)throw new Error('На сервере не настроен Web Push. Уведомления в APK работают отдельно.');
+ const key=await fetchJ(API_BASE+'/api/push/key',10000);if(!key.supported||!key.key)throw new Error('На сервере сейчас не настроен Web Push.');
  if(!webReg)throw new Error('Служба уведомлений ещё запускается. Попробуй снова.');
  const bytes=Uint8Array.from(atob(key.key.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-key.key.length%4)%4)),c=>c.charCodeAt(0));
  let sub=await webReg.pushManager.getSubscription();
@@ -853,16 +899,36 @@ async function initWeb(){
  const box=$('notifWeb');
  const installed=standalone();
  if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)||!window.isSecureContext){
-  box.innerHTML='<span>'+(installed?'Веб-приложение установлено':'Этот браузер не поддерживает Web Push')+'<small>Для напоминаний перед уроками используй Android APK. На iPhone Web Push доступен в установленном веб-приложении на iOS 16.4 и новее.</small></span>';return;
+  box.innerHTML='<span>'+(installed?'Веб-приложение установлено':'Этот браузер не поддерживает Web Push')+'<small>Добавь сайт ярлыком на главный экран. На iPhone уведомления работают в установленном ярлыке на iOS 16.4+.</small></span>';return;
  }
- box.innerHTML='<span>'+(installed?'Веб-приложение установлено':'Уведомления браузера')+'<small id="webState">Новое расписание — Web Push. Напоминания за 5 минут — в Android APK.</small><button class="btn" id="webEnable">Включить</button> <button class="btn" id="webTest">Тест</button> <button class="btn" id="webDisable">Выключить</button></span>';
- try{await navigator.serviceWorker.register('sw.js');webReg=await navigator.serviceWorker.ready;const sub=await webReg.pushManager.getSubscription();if(sub){await pushPost('/api/push/subscribe',{subscription:sub.toJSON()});webStatus('Подписка восстановлена. Напоминания перед уроками доступны в APK.');}}
+ box.innerHTML='<span>'+(installed?'Веб-приложение установлено':'Уведомления браузера')+'<small id="webState">Сообщим, когда появится новое расписание.</small><div class="web-btns"><button class="btn" id="webEnable">Включить</button><button class="btn" id="webTest">Тест</button><button class="btn" id="webDisable">Выключить</button></div></span>';
+ try{await navigator.serviceWorker.register('sw.js');webReg=await navigator.serviceWorker.ready;const sub=await webReg.pushManager.getSubscription();if(sub){await pushPost('/api/push/subscribe',{subscription:sub.toJSON()});webStatus('Подписка активна — пришлём уведомление о новом расписании.');}}
  catch(e){webStatus('Не удалось восстановить подписку: '+e.message);}
  $('webEnable').onclick=async()=>{try{await webSubscribe();webStatus('Подписка сохранена. Нажми «Тест», чтобы проверить доставку.');}catch(e){webStatus(e.message);}};
  $('webTest').onclick=async()=>{try{const sub=await webSubscribe();await pushPost('/api/push/test',{subscription:sub.toJSON()});webStatus('Сервер принял тест. Проверь системные уведомления.');}catch(e){webStatus(e.message);}};
  $('webDisable').onclick=async()=>{try{const sub=webReg&&await webReg.pushManager.getSubscription();if(sub){await pushPost('/api/push/unsubscribe',{endpoint:sub.endpoint});await sub.unsubscribe();}webStatus('Web Push выключен на этом устройстве.');}catch(e){webStatus(e.message);}};
 }
 initWeb();
+let DEFERRED_INSTALL=null;
+function syncInstallUi(){
+ const btn=$('pwaInstallBtn'),hint=$('pwaInstallHint'),ic=$('pwaInstallIc');
+ if(!btn||!hint)return;
+ if(standalone()){hint.textContent='Уже открыто через ярлык на главном экране';if(ic)ic.textContent='✅';return;}
+ const isIos=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ if(DEFERRED_INSTALL){hint.textContent='Нажми, чтобы добавить ярлык на главный экран';if(ic)ic.textContent='📲';}
+ else if(isIos){hint.textContent='Safari: нажми «Поделиться» (↑) → «На экран „Домой“»';if(ic)ic.textContent='⬆️';}
+ else{hint.textContent='Меню браузера (⋮) → «Добавить на главный экран»';if(ic)ic.textContent='📲';}
+}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();DEFERRED_INSTALL=e;syncInstallUi();});
+window.addEventListener('appinstalled',()=>{DEFERRED_INSTALL=null;syncInstallUi();toast('✅ Ярлык добавлен на экран');});
+if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=async()=>{
+ buzz();
+ if(standalone()){toast('✅ Ярлык уже установлен');return;}
+ if(DEFERRED_INSTALL){try{DEFERRED_INSTALL.prompt();await DEFERRED_INSTALL.userChoice;}catch(e){}DEFERRED_INSTALL=null;syncInstallUi();return;}
+ const isIos=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ toast(isIos?'Нажми «Поделиться» → «На экран „Домой“»':'Меню браузера (⋮) → «Добавить на главный экран»');
+};
+syncInstallUi();
 
 /* ---------- detail ---------- */
 $('lessons').onclick=e=>{const b=e.target.closest('.card');if(!b)return;const l=CUR_LS[+b.dataset.i];if(!l)return;
@@ -895,12 +961,13 @@ function step(n){const ks=keysSorted();const i=ks.indexOf(SEL)+n;if(i>=0&&i<ks.l
   v.addEventListener('touchstart',e=>{x0=e.touches[0].clientX;y0=e.touches[0].clientY;},{passive:true});
   v.addEventListener('touchend',e=>{if(x0===null)return;const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;x0=null;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)step(dx<0?1:-1);},{passive:true});
 })();
-$('hero').addEventListener('click',e=>{const t=e.target.closest('[data-party]');if(!t)return;const r=t.getBoundingClientRect();confetti(r.left+r.width/2,r.top+r.height/2,90);buzz();t.style.animation='none';void t.offsetWidth;t.style.animation='';});
+$('hero').addEventListener('click',e=>{const t=e.target.closest('[data-party]');if(!t)return;const r=t.getBoundingClientRect();confetti(r.left+r.width/2,r.top+r.height/2,90);buzz();if(S.anim&&t.animate)t.animate([{transform:'scale(1)'},{transform:'scale(1.22) rotate(-10deg)'},{transform:'scale(1)'}],{duration:420,easing:'cubic-bezier(.34,1.45,.55,1)'});});
 addEventListener('resize',()=>{placeInd();sizeFx();buildGarland();});
 
 /* ---------- live background FX ---------- */
+const IS_MOBILE=matchMedia('(pointer: coarse)').matches||innerWidth<520;
 const FX=$('fx'),fctx=FX.getContext('2d');let P=[],SHOOT=[],FX_RAF=0,FW=0,FH=0,DPR=1,LOWDPR=false;
-function sizeFx(){DPR=LOWDPR?1:Math.min(2,devicePixelRatio||1);FW=innerWidth;FH=innerHeight;for(const c of[FX,CF]){c.width=FW*DPR;c.height=FH*DPR;c.style.width=FW+'px';c.style.height=FH+'px';}fctx.setTransform(DPR,0,0,DPR,0,0);cctx.setTransform(DPR,0,0,DPR,0,0);}
+function sizeFx(){const maxDpr=IS_MOBILE?1.5:2;DPR=LOWDPR?1:Math.min(maxDpr,devicePixelRatio||1);FW=innerWidth;FH=innerHeight;for(const c of[FX,CF]){c.width=Math.round(FW*DPR);c.height=Math.round(FH*DPR);c.style.width=FW+'px';c.style.height=FH+'px';}fctx.setTransform(DPR,0,0,DPR,0,0);cctx.setTransform(DPR,0,0,DPR,0,0);}
 const COUNTS={stars:90,embers:45,bubbles:30,fireflies:28,petals:24,snow:70,neon:40,ny:75};
 function mk(type,init){const p={x:R(0,FW),y:init?R(0,FH):0,t:R(0,6.28)};
   switch(type){
@@ -915,10 +982,11 @@ function mk(type,init){const p={x:R(0,FW),y:init?R(0,FH):0,t:R(0,6.28)};
   }return p;}
 function startFx(){cancelAnimationFrame(FX_RAF);fctx.clearRect(0,0,FW,FH);P=[];SHOOT=[];
   const show=S.fx&&S.anim;FX.style.opacity=show?1:0;if(!show)return;
-  const t=CUR_THEME.fx,n=Math.round(COUNTS[t]*(FW<420?1:1.4));for(let i=0;i<n;i++)P.push(mk(t,true));
+  const t=CUR_THEME.fx,n=Math.round(COUNTS[t]*(IS_MOBILE?.65:FW<420?1:1.4));for(let i=0;i<n;i++)P.push(mk(t,true));
   let last=performance.now();
   const t0=last;let fc=0,fsum=0,tuned=false;
   const loop=now2=>{if(document.hidden){FX_RAF=0;return;}FX_RAF=requestAnimationFrame(loop);const raw=(now2-last)/16.7;const dt=Math.min(3,raw);last=now2;
+    if(OPEN)return;
     if(!tuned&&now2-t0>1500){fc++;fsum+=Math.min(raw,6);if(fc>=60){tuned=true;if(fsum/fc>1.45){P.length=Math.round(P.length*.55);document.documentElement.classList.add('lowfx');if(!LOWDPR&&DPR>1){LOWDPR=true;sizeFx();}}}}
     drawFx(t,dt,now2/1000);};
   FX_RAF=requestAnimationFrame(loop);}
@@ -1076,11 +1144,26 @@ async function load(manual){
   try{
     rb.classList.add('spin');renderMeta();
     const base='https://docs.google.com/spreadsheets/d/'+SHEET_ID;const ts=Date.now();
-    // 1. Живая таблица в XLSX: свежие дни и объединённые ячейки, без ожидания cron и кэша Pages.
-    try{const rows=await fetchXlsx(12000);
-      if(rows&&rows.length&&addCsv(rows,ts,'replace')){ok=true;LAST=ts;SRC_AT=ts;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}}
-    }catch(e){}
-    // 2. Готовый артефакт Pages (обновляет GitHub Actions) — если Google недоступен.
+    // 1. Готовое расписание от ИИ-парсера на GitHub Actions (быстро, без CORS, с заметками).
+    if(!manual){
+      try{const ai=await fetchJ('ai-schedule.json?t='+ts,5000);
+        if(ai&&ai.days&&ai.updated&&addAiJson(ai,'replace')){
+          ok=true;SRC_AT=+ai.updated*1000;LAST=SRC_AT;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}
+        }}catch(e){}
+    }
+    // 2. Живая таблица в XLSX: свежие дни и объединённые ячейки сразу после правки таблицы.
+    if(!ok||manual){
+      try{const rows=await fetchXlsx(8000);
+        if(rows&&rows.length&&addCsv(rows,ts,'replace')){ok=true;LAST=ts;SRC_AT=ts;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}}
+      }catch(e){}
+    }
+    // 3. Резерв: ИИ-снимок (при ручном обновлении) или сырой sheet-data.json с GitHub Pages.
+    if(!ok){
+      try{const ai=await fetchJ('ai-schedule.json?t='+ts,6000);
+        if(ai&&ai.days&&ai.updated&&addAiJson(ai,'replace')){
+          ok=true;SRC_AT=+ai.updated*1000;LAST=SRC_AT;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}
+        }}catch(e){}
+    }
     if(!ok){
       try{const data=await fetchJ('sheet-data.json?t='+ts,8000);
         if(data&&Array.isArray(data.rows)&&data.updated&&addCsv(data.rows,+data.updated*1000,'replace')){
