@@ -6,7 +6,7 @@ self.SCHEDULE_SNAPSHOT = {
   "class": "8Г",
   "ok": true,
   "error": "",
-  "updated": 1795503274,
+  "updated": 1795508652,
   "sheet_url": "https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit",
   "days": [
     {
@@ -53,5 +53,5 @@ self.SCHEDULE_SNAPSHOT = {
       "changed": 0
     }
   ],
-  "saved_at": 1795503274
+  "saved_at": 1795508652
 };
