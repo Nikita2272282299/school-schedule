@@ -913,12 +913,18 @@ async function pushPost(path,data){const c=new AbortController();const t=setTime
 function webStatus(msg){const el=$('webState');if(el)el.textContent=msg;}
 async function notifySys(title,body,tag){
   if(!('Notification' in window)||Notification.permission!=='granted')return false;
-  const opts={body:body||'',icon:'icon-192.png',badge:'icon-192.png',tag:tag||'schedule',renotify:true,vibrate:[120,60,120],data:{url:location.href}};
-  try{
-    const reg=webReg||('serviceWorker' in navigator&&await navigator.serviceWorker.ready.catch(()=>null));
-    if(reg&&reg.showNotification){await reg.showNotification(title,opts);return true;}
-  }catch(e){}
-  try{new Notification(title,opts);return true;}catch(e){return false;}
+  const iconUrl=new URL('icon-192.png',location.href).href;
+  const fullOpts={body:body||'',icon:iconUrl,badge:iconUrl,tag:tag||('sch-'+Date.now()),renotify:true,vibrate:[120,60,120],data:{url:location.href}};
+  const minOpts={body:body||'',icon:iconUrl};
+  let reg=webReg;
+  if(!reg&&'serviceWorker' in navigator&&window.isSecureContext){
+    try{reg=await Promise.race([navigator.serviceWorker.ready,new Promise(r=>setTimeout(()=>r(null),2000))]);if(reg)webReg=reg;}catch(e){}
+  }
+  if(reg&&reg.showNotification){
+    try{await reg.showNotification(title,fullOpts);return true;}catch(e){}
+    try{await reg.showNotification(title,minOpts);return true;}catch(e){}
+  }
+  try{new Notification(title,minOpts);return true;}catch(e){return false;}
 }
 async function ensureNotifPerm(){
   if(!('Notification' in window)||!window.isSecureContext)return 'unsupported';
@@ -1291,28 +1297,20 @@ async function load(manual){
   try{
     rb.classList.add('spin');renderMeta();
     const base='https://docs.google.com/spreadsheets/d/'+SHEET_ID;const ts=Date.now();
-    // 1. Готовое расписание от ИИ-парсера на GitHub Actions (быстро, без CORS, с заметками).
-    if(!manual){
-      try{const ai=await fetchJ('ai-schedule.json?t='+ts,3500);
+    // 1. Живая таблица в XLSX: всегда проверяем первой, чтобы свежие правки появлялись сами каждые 5 мин.
+    try{const rows=await fetchXlsx(6000);
+      if(rows&&rows.length&&addCsv(rows,ts,'replace')){ok=true;LAST=ts;SRC_AT=ts;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}}
+    }catch(e){}
+    // 2. Резерв: готовое расписание от ИИ-парсера на GitHub Actions (быстро, без CORS, с заметками).
+    if(!ok){
+      try{const ai=await fetchJ('ai-schedule.json?t='+ts,4000);
         if(ai&&ai.days&&ai.updated&&addAiJson(ai,'replace')){
           ok=true;SRC_AT=+ai.updated*1000;LAST=SRC_AT;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}
         }}catch(e){}
     }
-    // 2. Живая таблица в XLSX: свежие дни и объединённые ячейки сразу после правки таблицы.
-    if(!ok||manual){
-      try{const rows=await fetchXlsx(5500);
-        if(rows&&rows.length&&addCsv(rows,ts,'replace')){ok=true;LAST=ts;SRC_AT=ts;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}}
-      }catch(e){}
-    }
-    // 3. Резерв: ИИ-снимок (при ручном обновлении) или сырой sheet-data.json с GitHub Pages.
+    // 3. Резерв: сырой sheet-data.json с GitHub Pages.
     if(!ok){
-      try{const ai=await fetchJ('ai-schedule.json?t='+ts,3500);
-        if(ai&&ai.days&&ai.updated&&addAiJson(ai,'replace')){
-          ok=true;SRC_AT=+ai.updated*1000;LAST=SRC_AT;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}
-        }}catch(e){}
-    }
-    if(!ok){
-      try{const data=await fetchJ('sheet-data.json?t='+ts,3500);
+      try{const data=await fetchJ('sheet-data.json?t='+ts,4000);
         if(data&&Array.isArray(data.rows)&&data.updated&&addCsv(data.rows,+data.updated*1000,'replace')){
           ok=true;SRC_AT=+data.updated*1000;LAST=SRC_AT;try{localStorage.setItem(LS_LAST,LAST);}catch(e){}
         }}catch(e){}
@@ -1337,6 +1335,7 @@ async function load(manual){
 }
 $('refresh').onclick=()=>{buzz();load(true);};
 document.addEventListener('visibilitychange',()=>{if(document.hidden){HIDDEN_AT=Date.now();return;}if(!FX_RAF)startFx();if(HIDDEN_AT&&Date.now()-HIDDEN_AT>5*60e3)USER_PICK=false;autoSel();render();checkLessonNotif();if(Date.now()-LAST_TRY>20e3)load();});
+window.addEventListener('focus',()=>{if(Date.now()-LAST_TRY>60e3)load();});
 window.addEventListener('online',()=>load());
 window.addEventListener('pageshow',e=>{if(e.persisted)load();});
 
@@ -1351,7 +1350,7 @@ SEL=autoKey()||SEL;
 render();startFx();
 document.documentElement.dataset.app='ok';setTimeout(function(){document.documentElement.classList.add('settled');},1900);
 setInterval(()=>{autoSel();render();checkLessonNotif();},20000);setInterval(tickClock,10000);
-setInterval(()=>{if(!document.hidden)load();},3*60e3);
+setInterval(()=>{if(!document.hidden)load();},5*60e3);
 load();
 if(QA_OPEN==='settings')$('setBtn').click();
 if(QA_OPEN==='detail'){const b=document.querySelector('.ls.now .card,.ls .card');if(b)b.click();}

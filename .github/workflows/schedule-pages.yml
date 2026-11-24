@@ -59,6 +59,7 @@ jobs:
                     school-schedule/hf-dist/index.html
             git commit -m "Auto-refresh schedule: $(date -u '+%Y-%m-%d %H:%M UTC')"
             git push
+            curl -fsS --max-time 20 "https://nassda.pythonanywhere.com/api/schedule?force=1" >/dev/null 2>&1 || true
           fi
       - name: Save generated public assets
         run: |

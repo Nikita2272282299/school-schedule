@@ -26,8 +26,8 @@ from pathlib import Path
 
 import app
 
-GITHUB_MODELS_URL = "https://models.github.ai/inference/chat/completions"
-DEFAULT_MODEL = "openai/gpt-4o-mini"
+GITHUB_MODELS_URL = "https://models.inference.ai.azure.com/chat/completions"
+DEFAULT_MODEL = "gpt-4o-mini"
 
 # Фразы, которые в таблице пишут в ячейке урока, но это объявление/заметка, а не урок.
 NOTE_PATTERNS = (
