@@ -6,7 +6,7 @@ self.SCHEDULE_SNAPSHOT = {
   "class": "8Г",
   "ok": true,
   "error": "",
-  "updated": 1795508652,
+  "updated": 1795545961,
   "sheet_url": "https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit",
   "days": [
     {
@@ -51,7 +51,57 @@ self.SCHEDULE_SNAPSHOT = {
       ],
       "first": 0,
       "changed": 0
+    },
+    {
+      "date": "2026-11-25",
+      "weekday": "Среда",
+      "lessons": [
+        {
+          "n": 1,
+          "time": "8:00-8:40",
+          "subject": "",
+          "room": "",
+          "raw": ""
+        },
+        {
+          "n": 2,
+          "time": "8:50-9:30",
+          "subject": "музык",
+          "room": "106",
+          "raw": "музык 106"
+        },
+        {
+          "n": 3,
+          "time": "9:45-10:25",
+          "subject": "биолог",
+          "room": "323",
+          "raw": "биолог 323"
+        },
+        {
+          "n": 4,
+          "time": "10:40-11:20",
+          "subject": "русск",
+          "room": "409",
+          "raw": "русск 409"
+        },
+        {
+          "n": 5,
+          "time": "11:35-12:15",
+          "subject": "англ",
+          "room": "319/208(1)",
+          "raw": "англ319/208(1)"
+        },
+        {
+          "n": 6,
+          "time": "12:25-13:05",
+          "subject": "истор",
+          "room": "303",
+          "raw": "истор 303"
+        }
+      ],
+      "first": 0,
+      "changed": 0
     }
   ],
-  "saved_at": 1795508652
+  "saved_at": 1795545961
 };
