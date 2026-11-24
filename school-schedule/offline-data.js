@@ -6,66 +6,9 @@ self.SCHEDULE_SNAPSHOT = {
   "class": "8Г",
   "ok": true,
   "error": "",
-  "updated": 1795474561,
+  "updated": 1795503274,
   "sheet_url": "https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit",
   "days": [
-    {
-      "date": "2026-11-23",
-      "weekday": "Понедельник",
-      "lessons": [
-        {
-          "n": 1,
-          "time": "8:00-8:40",
-          "subject": "",
-          "room": "",
-          "raw": ""
-        },
-        {
-          "n": 2,
-          "time": "8:50-9:30",
-          "subject": "история",
-          "room": "303",
-          "raw": "история 303"
-        },
-        {
-          "n": 3,
-          "time": "9:45-10:25",
-          "subject": "алгебра",
-          "room": "409",
-          "raw": "алгебра 409"
-        },
-        {
-          "n": 4,
-          "time": "10:40-11:20",
-          "subject": "англ",
-          "room": "319/209",
-          "raw": "англ319/209"
-        },
-        {
-          "n": 5,
-          "time": "11:35-12:15",
-          "subject": "алгебра",
-          "room": "407",
-          "raw": "алгебра 407"
-        },
-        {
-          "n": 6,
-          "time": "12:25-13:05",
-          "subject": "русский",
-          "room": "409",
-          "raw": "русский 409"
-        },
-        {
-          "n": 7,
-          "time": "13:15-13:55",
-          "subject": "РоВ",
-          "room": "323",
-          "raw": "РоВ   323"
-        }
-      ],
-      "first": 0,
-      "changed": 0
-    },
     {
       "date": "2026-11-24",
       "weekday": "Вторник",
@@ -94,9 +37,9 @@ self.SCHEDULE_SNAPSHOT = {
         {
           "n": 4,
           "time": "10:40-11:20",
-          "subject": "ВиС",
-          "room": "423",
-          "raw": "ВиС 423"
+          "subject": "литер",
+          "room": "409",
+          "raw": "литер   409"
         },
         {
           "n": 5,
@@ -104,18 +47,11 @@ self.SCHEDULE_SNAPSHOT = {
           "subject": "географ",
           "room": "326",
           "raw": "географ326"
-        },
-        {
-          "n": 6,
-          "time": "12:25-13:05",
-          "subject": "литер",
-          "room": "409",
-          "raw": "литер 409"
         }
       ],
       "first": 0,
       "changed": 0
     }
   ],
-  "saved_at": 1795474561
+  "saved_at": 1795503274
 };
