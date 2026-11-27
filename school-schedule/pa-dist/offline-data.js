@@ -6,66 +6,9 @@ self.SCHEDULE_SNAPSHOT = {
   "class": "8Г",
   "ok": true,
   "error": "",
-  "updated": 1795732023,
+  "updated": 1795753775,
   "sheet_url": "https://docs.google.com/spreadsheets/d/1OtsY3sw2MqQXUg9FA0GXNbYboSwTw33og-rAn9CofOE/edit",
   "days": [
-    {
-      "date": "2026-11-26",
-      "weekday": "Четверг",
-      "lessons": [
-        {
-          "n": 1,
-          "time": "8:00-8:40",
-          "subject": "",
-          "room": "",
-          "raw": ""
-        },
-        {
-          "n": 2,
-          "time": "8:50-9:30",
-          "subject": "Рос-м.г.",
-          "room": "302",
-          "raw": "Рос-м.г. 302"
-        },
-        {
-          "n": 3,
-          "time": "9:45-10:25",
-          "subject": "алгебр",
-          "room": "205",
-          "raw": "алгебр 205"
-        },
-        {
-          "n": 4,
-          "time": "10:40-11:20",
-          "subject": "англ",
-          "room": "319/221",
-          "raw": "англ319/221"
-        },
-        {
-          "n": 5,
-          "time": "11:35-12:15",
-          "subject": "географ",
-          "room": "326",
-          "raw": "географ326"
-        },
-        {
-          "n": 6,
-          "time": "12:25-13:05",
-          "subject": "литер",
-          "room": "409",
-          "raw": "литер 409"
-        },
-        {
-          "n": 7,
-          "time": "13:15-13:55",
-          "subject": "истор",
-          "room": "313",
-          "raw": "истор 313"
-        }
-      ],
-      "first": 0,
-      "changed": 0
-    },
     {
       "date": "2026-11-27",
       "weekday": "Пятница",
@@ -124,5 +67,5 @@ self.SCHEDULE_SNAPSHOT = {
       "changed": 0
     }
   ],
-  "saved_at": 1795732023
+  "saved_at": 1795753775
 };
